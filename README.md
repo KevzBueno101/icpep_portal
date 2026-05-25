@@ -83,26 +83,23 @@ pip install -r requirements.txt
 
 #### 1c. Configure Database
 
-Create `backend/.env`:
-
-```env
-DB_NAME=icpep_db
-DB_USER=kevin
-DB_PASSWORD=1234
-DB_HOST=localhost
-DB_PORT=5432
-```
-
-**First time setup**: Create the database and user in PostgreSQL:
+Copy `.env.template` to `backend/.env` and fill in your actual database credentials:
 
 ```powershell
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE DATABASE icpep_db;"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE USER kevin WITH PASSWORD '1234';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE kevin SET client_encoding TO 'utf8';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE kevin SET default_transaction_isolation TO 'read committed';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE kevin SET default_transaction_deferrable TO on;"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE kevin SET timezone TO 'UTC';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE icpep_db TO kevin;"
+cp backend\.env.template backend\.env
+# Then edit backend\.env with your actual DB values
+```
+
+**First time setup**: Create the database and user in PostgreSQL. Replace `<db_name>`, `<username>`, and `<password>` with your actual values:
+
+```powershell
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE DATABASE <db_name>;"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE USER <username> WITH PASSWORD '<password>';"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET client_encoding TO 'utf8';"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_isolation TO 'read committed';"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_deferrable TO on;"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET timezone TO 'UTC';"
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE <db_name> TO <username>;"
 ```
 
 #### 1d. Run Migrations
@@ -207,12 +204,12 @@ Frontend automation is handled by `AuthContext` and Axios interceptor (see `fron
 1. Open pgAdmin (usually `http://localhost:5050`)
 2. Register PostgreSQL server:
    - Host: `localhost`, Port: `5432`, Username: `postgres`
-3. Navigate: Servers → Databases → `icpep_db` → Schemas → public → Tables
+3. Navigate: Servers → Databases → your database name → Schemas → public → Tables
 4. Right‑click table → **View/Edit Data** → All Rows
 
 ### Option 2: psql (CLI)
 ```powershell
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U kevin -d icpep_db -h localhost
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U <username> -d <database_name> -h localhost
 
 # In psql:
 \d                    # List tables
@@ -271,18 +268,18 @@ npm install <package>
 ## Troubleshooting
 
 ### Database Connection Error
-**Error**: `FATAL: password authentication failed for user "kevin"`
+**Error**: `FATAL: password authentication failed for user "<username>"`
 
 **Solution**:
 1. Verify credentials in `backend/.env` match PostgreSQL
 2. If password wrong, reset it:
    ```powershell
-   & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER USER kevin WITH PASSWORD 'correct_password';"
+   & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER USER <username> WITH PASSWORD '<new_password>';"
    ```
-3. Update `backend/.env` and retry
+3. Update `backend/.env` with the new password and retry
 
 ### Database Does Not Exist
-**Error**: `FATAL: database "icpep_db" does not exist`
+**Error**: `FATAL: database "<database_name>" does not exist`
 
 **Solution**: Create the database (see section 1c above)
 
@@ -306,19 +303,22 @@ python manage.py ...
 
 ## Environment Variables
 
-Create `backend/.env`:
+Copy `backend/.env.template` to `backend/.env` and fill in your actual values:
+
 ```env
 DEBUG=True
-SECRET_KEY=django-insecure-...  # Already set in settings.py for dev
+SECRET_KEY=<your-secret-key>  # Generate a strong key for production
 
-DB_NAME=icpep_db
-DB_USER=kevin
-DB_PASSWORD=1234
+DB_NAME=<your_database_name>
+DB_USER=<your_db_user>
+DB_PASSWORD=<your_db_password>
 DB_HOST=localhost
 DB_PORT=5432
 ```
 
-Frontend API base URL is hardcoded in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development.
+⚠️ **Never commit `.env` to version control.** It's already in `.gitignore`.
+
+Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development. Update this for production deployments.
 
 ## Deployment Tips
 
