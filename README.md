@@ -81,7 +81,7 @@ cd backend
 pip install -r requirements.txt
 ```
 
-#### 1c. Configure Database
+### 1c. Configure Database
 
 Copy `.env.template` to `backend/.env` and fill in your actual database credentials:
 
@@ -90,17 +90,16 @@ cp backend\.env.template backend\.env
 # Then edit backend\.env with your actual DB values
 ```
 
+> Note: `backend/config/settings.py` loads env vars from `backend/.env` (it uses `load_dotenv(BASE_DIR / '.env')`).
+
 **First time setup**: Create the database and user in PostgreSQL. Replace `<db_name>`, `<username>`, and `<password>` with your actual values:
 
 ```powershell
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE DATABASE <db_name>;"
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE USER <username> WITH PASSWORD '<password>';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET client_encoding TO 'utf8';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_isolation TO 'read committed';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_deferrable TO on;"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET timezone TO 'UTC';"
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE <db_name> TO <username>;"
 ```
+
 
 #### 1d. Run Migrations
 
@@ -278,7 +277,11 @@ npm install <package>
    ```
 3. Update `backend/.env` with the new password and retry
 
+### Django fails to load expected settings/env
+If `DB_NAME`, `DB_USER`, etc. don’t change after updating `backend/.env`, make sure you are running Django from the repo root so `backend/config/settings.py` can locate `.env` correctly.
+
 ### Database Does Not Exist
+
 **Error**: `FATAL: database "<database_name>" does not exist`
 
 **Solution**: Create the database (see section 1c above)
@@ -318,9 +321,17 @@ DB_PORT=5432
 
 ⚠️ **Never commit `.env` to version control.** It's already in `.gitignore`.
 
-Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development. Update this for production deployments.
+### CORS / Frontend origin
+
+CORS is currently permissive (`CORS_ALLOW_ALL_ORIGINS = True`). For production, restrict it to your frontend domain(s) in `backend/config/settings.py`.
+
+### API base URL
+
+Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development.
+Update it for production deployments (or refactor to use a build-time env var).
 
 ## Deployment Tips
+
 
 1. **Environment**: Use production-level `.env` values (strong SECRET_KEY, secure DB password, DEBUG=False).
 2. **CORS**: Adjust `CORS_ALLOW_ALL_ORIGINS` in `backend/config/settings.py` to specific domain(s).
