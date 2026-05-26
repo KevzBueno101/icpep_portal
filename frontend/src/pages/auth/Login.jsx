@@ -93,12 +93,21 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
-          No account yet? {' '} be a member of ICpEP.se and{' '}
-          <Link to="/register" className="text-sky-600 hover:underline">
-            Register here
-          </Link>
-        </p>
+        <div className="mt-6">
+          <div className="text-center">
+            <Link to="/" className="inline-flex items-center justify-center text-sky-600 hover:underline text-sm">
+              Home
+            </Link>
+          </div>
+
+          <p className="text-center text-sm text-slate-500 mt-4">
+            No account yet? {' '} be a member of ICpEP.se and{' '}
+            <Link to="/register" className="text-sky-600 hover:underline">
+              Register here
+            </Link>
+          </p>
+        </div>
+
       </div>
     </div>
   )
