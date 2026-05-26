@@ -1,7 +1,7 @@
 // Lightweight canvas particle system for the hero section.
 // Intentionally dependency-free.
 
-export function startHeroParticles(canvas, { accent = '#06B6D4' } = {}) {
+export function startHeroParticles(canvas, _opts = {}) {
   if (!canvas) return () => {};
 
   const ctx = canvas.getContext('2d');
