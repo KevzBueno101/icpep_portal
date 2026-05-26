@@ -7,6 +7,7 @@ const Login = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
@@ -31,7 +32,7 @@ const Login = () => {
         <div className="mb-8 flex flex-col items-center gap-3">
         <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">ICPEP.SE Portal</h1>
+          <h1 className="text-2xl font-bold text-slate-900">ICpEP.se Portal</h1>
           <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
         </div>
        </div>
@@ -50,17 +51,37 @@ const Login = () => {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm text-slate-600 mb-1">Password</label>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               value={form.password}
               onChange={handleChange}
               required
-              className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+              className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 pr-14 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
               placeholder="••••••••"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-3 flex h-full items-center justify-center px-2 text-slate-500 hover:text-slate-900"
+            >
+              {showPassword ? (
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19.5c-5.52 0-10-4.48-10-10 0-1.44.32-2.8.88-4.02" />
+                  <path d="M1 1l22 22" />
+                  <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
+                  <path d="M14.12 14.12C13.4 14.84 12.29 15.25 11 15.25c-2.21 0-4-1.79-4-4 0-1.29.41-2.4 1.13-3.12" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
           </div>
 
           <button
@@ -73,7 +94,7 @@ const Login = () => {
         </form>
 
         <p className="text-center text-sm text-slate-500 mt-6">
-          No account yet?{' '}
+          No account yet? {' '} be a member of ICpEP.se and{' '}
           <Link to="/register" className="text-sky-600 hover:underline">
             Register here
           </Link>
