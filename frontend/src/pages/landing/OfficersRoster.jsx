@@ -63,7 +63,7 @@ export default function OfficersRoster() {
             Meet Our Officers
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-            Meet the dedicated professionals leading our community forward.
+            Meet the dedicated officers leading our community forward.
           </p>
         </div>
 

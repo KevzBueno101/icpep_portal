@@ -1,0 +1,5 @@
+- [x] Update navbar to glassmorphism effect (light variant)
+- [x] Match mobile dropdown styling to navbar
+- [x] Ensure brand text (ICpEP.SE) contrasts against light glass background
+- [x] Update README
+- [ ] Commit changes
