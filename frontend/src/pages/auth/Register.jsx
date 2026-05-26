@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../context/useAuth'
 import toast from 'react-hot-toast'
 
 const YEAR_LEVELS = [
@@ -81,21 +81,16 @@ const Register = () => {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] ?? null
     setForm({ ...form, profile_picture: file })
+    setPreviewUrl(file ? URL.createObjectURL(file) : '')
   }
 
   useEffect(() => {
-    if (!form.profile_picture) {
-      setPreviewUrl('')
-      return
-    }
-
-    const objectUrl = URL.createObjectURL(form.profile_picture)
-    setPreviewUrl(objectUrl)
-
     return () => {
-      URL.revokeObjectURL(objectUrl)
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
     }
-  }, [form.profile_picture])
+  }, [previewUrl])
 
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3))
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 1))

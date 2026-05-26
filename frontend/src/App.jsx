@@ -1,12 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import Landing from './pages/landing/Landing'
 
-const Dashboard = () => <div className="p-8 text-slate-900 bg-white min-h-screen">Member Dashboard — coming in Phase 4</div>
-const AdminDashboard = () => <div className="p-8 text-slate-900 bg-white min-h-screen">Admin Dashboard — coming in Phase 5</div>
+const Dashboard = () => <div className="min-h-screen bg-white p-8 text-slate-900">Member Dashboard - coming in Phase 4</div>
+const AdminDashboard = () => <div className="min-h-screen bg-white p-8 text-slate-900">Admin Dashboard - coming in Phase 5</div>
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
       <AuthProvider>
         <Toaster position="top-right" />
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={
