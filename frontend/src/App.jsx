@@ -5,8 +5,8 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 
-const Dashboard = () => <div className="p-8 text-white bg-gray-950 min-h-screen">Member Dashboard — coming in Phase 4</div>
-const AdminDashboard = () => <div className="p-8 text-white bg-gray-950 min-h-screen">Admin Dashboard — coming in Phase 5</div>
+const Dashboard = () => <div className="p-8 text-slate-900 bg-white min-h-screen">Member Dashboard — coming in Phase 4</div>
+const AdminDashboard = () => <div className="p-8 text-slate-900 bg-white min-h-screen">Admin Dashboard — coming in Phase 5</div>
 
 function App() {
   return (

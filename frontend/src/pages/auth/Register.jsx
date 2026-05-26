@@ -12,7 +12,7 @@ const YEAR_LEVELS = [
 
 const Field = ({ label, name, type = 'text', placeholder, value, onChange, required = true }) => (
   <div>
-    <label className="block text-sm text-gray-400 mb-1">{label}</label>
+    <label className="block text-sm text-slate-600 mb-1">{label}</label>
     <input
       type={type}
       name={name}
@@ -20,7 +20,7 @@ const Field = ({ label, name, type = 'text', placeholder, value, onChange, requi
       onChange={onChange}
       required={required}
       placeholder={placeholder}
-      className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
     />
   </div>
 )
@@ -61,15 +61,18 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-2xl bg-gray-900 rounded-2xl p-8 shadow-xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-white">Create an Account</h1>
-          <p className="text-gray-400 mt-1 text-sm">ICPEP.SE Membership Registration</p>
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg">
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
+            <p className="text-slate-500 mt-1 text-sm">ICPEP.SE Membership Registration</p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <p className="text-xs text-gray-500 uppercase tracking-widest">Account Info</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest">Account Info</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Email" name="email" type="email" placeholder="you@email.com" value={form.email} onChange={handleChange} />
             <Field label="Username" name="username" placeholder="username" value={form.username} onChange={handleChange} />
@@ -77,36 +80,36 @@ const Register = () => {
             <Field label="Confirm Password" name="confirm_password" type="password" placeholder="••••••••" value={form.confirm_password} onChange={handleChange} />
           </div>
 
-          <p className="text-xs text-gray-500 uppercase tracking-widest pt-2">Personal Info</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest pt-2">Personal Info</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="First Name" name="first_name" placeholder="Juan" value={form.first_name} onChange={handleChange} />
             <Field label="Middle Name" name="middle_name" placeholder="(optional)" value={form.middle_name} onChange={handleChange} required={false} />
             <Field label="Last Name" name="last_name" placeholder="Dela Cruz" value={form.last_name} onChange={handleChange} />
           </div>
 
-          <p className="text-xs text-gray-500 uppercase tracking-widest pt-2">Student Info</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest pt-2">Student Info</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Student Number" name="student_number" placeholder="2021-00001" value={form.student_number} onChange={handleChange} />
             <Field label="Contact Number" name="contact_number" placeholder="09xxxxxxxxx" value={form.contact_number} onChange={handleChange} />
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Course</label>
+              <label className="block text-sm text-slate-600 mb-1">Course</label>
               <input
                 type="text"
                 value="BSCpE"
                 disabled
-                className="w-full bg-gray-700 text-gray-400 rounded-lg px-4 py-3 text-sm cursor-not-allowed"
+                className="w-full bg-slate-100 text-slate-500 rounded-lg px-4 py-3 text-sm cursor-not-allowed ring-1 ring-slate-200"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Year Level</label>
+              <label className="block text-sm text-slate-600 mb-1">Year Level</label>
               <select
                 name="year_level"
                 value={form.year_level}
                 onChange={handleChange}
                 required
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
               >
                 <option value="">Select year</option>
                 {YEAR_LEVELS.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
@@ -119,15 +122,15 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 mt-2"
+            className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 mt-2"
           >
             {loading ? 'Registering...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-400 hover:underline">Sign in</Link>
+          <Link to="/login" className="text-sky-600 hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-slate-100 text-slate-900 antialiased;
+    min-height: 100vh;
+  }
+
+  input,
+  button,
+  select,
+  textarea {
+    @apply font-sans;
+  }
+}
