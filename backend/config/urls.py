@@ -6,14 +6,13 @@ from django.http import JsonResponse
 
 
 def home(request):
-    return JsonResponse({
-        "message": "ICPEP Membership Portal API is running"
-    })
+    return JsonResponse({'message': 'ICPEP Membership Portal API is running'})
 
 
 urlpatterns = [
-    path('', home),
-    path('admin/', admin.site.urls),
-    path('api/auth/', include('authentication.urls')),
+    path('',        home),
+    path('admin/',  admin.site.urls),
+    path('api/auth/',    include('authentication.urls')),
     path('api/members/', include('members.urls')),
+    path('api/users/',   include('users.urls')),       # ← new
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

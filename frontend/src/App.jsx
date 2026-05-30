@@ -1,29 +1,144 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './routes/ProtectedRoute'
+import AdminProtectedRoute from './routes/AdminProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
-import Landing from './pages/landing/Landing'
+import MembershipPending from './pages/auth/MembershipPending'
+import AdminLogin from './pages/auth/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminLayout from './layouts/AdminLayout'
 
-const Dashboard = () => <div className="min-h-screen bg-white p-8 text-slate-900">Member Dashboard - coming in Phase 4</div>
-const AdminDashboard = () => <div className="min-h-screen bg-white p-8 text-slate-900">Admin Dashboard - coming in Phase 5</div>
+import AdminMembership from './pages/admin/placeholder/AdminMembership'
+import AdminAdmins from './pages/admin/placeholder/AdminAdmins'
+import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
+import AdminArchives from './pages/admin/placeholder/AdminArchives'
+import AdminProfile from './pages/admin/placeholder/AdminProfile'
+import AdminLogs from './pages/admin/placeholder/AdminLogs'
+import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
+
+
+// Placeholder — member dashboard still to be implemented
+const Dashboard = () => <div className="p-8 text-white bg-gray-950 min-h-screen">Member Dashboard — Phase 4</div>
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
+        />
         <Routes>
-          <Route path="/" element={<Landing />} />
+          {/* Public */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
-          } />
+          <Route path="/membership-pending" element={<MembershipPending />} />
+
+          {/* Hidden admin login — no links point here */}
+          <Route path="/admin-portal/login" element={<AdminLogin />} />
+
+          {/* Member protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin protected routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/membership"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminMembership />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/membership/:id/verify"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminMembershipVerify />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/admins"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminAdmins />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/announcement"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminAnnouncement />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/archives"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminArchives />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminProfile />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/logs"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminLogs />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+
+          {/* Default admin landing */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

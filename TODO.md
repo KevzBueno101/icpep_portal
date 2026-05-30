@@ -1,5 +1,7 @@
-- [x] Update navbar to glassmorphism effect (light variant)
-- [x] Match mobile dropdown styling to navbar
-- [x] Ensure brand text (ICpEP.SE) contrasts against light glass background
-- [x] Update README
-- [ ] Commit changes
+od# TODO
+
+- [ ] Fix member redirect after admin approves membership on AdminMembershipVerify page
+  - [ ] Update `frontend/src/pages/admin/AdminMembershipVerify.jsx` to navigate to member `/dashboard` when decision is `APPROVED`
+  - [ ] Keep admin flow to `/admin/membership` when decision is `REJECTED`
+  - [ ] Run frontend lint/build (optional if available)
+

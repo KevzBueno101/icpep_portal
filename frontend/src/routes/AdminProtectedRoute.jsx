@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
-const ProtectedRoute = ({ children }) => {
+const AdminProtectedRoute = ({ children, requirePosition = null }) => {
   const { user, loading } = useAuth()
 
   if (loading) {
@@ -13,14 +13,18 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
+    return <Navigate to="/admin-portal/login" replace />
+  }
+
+  if (user.role !== 'ADMIN') {
     return <Navigate to="/login" replace />
   }
 
-  if (user.role !== 'ADMIN' && user.membership_status !== 'APPROVED') {
-    return <Navigate to="/membership-pending" replace />
+  if (requirePosition && user.position !== requirePosition && user.position !== 'PRESIDENT') {
+    return <Navigate to="/admin/dashboard" replace />
   }
 
   return children
 }
 
-export default ProtectedRoute
+export default AdminProtectedRoute

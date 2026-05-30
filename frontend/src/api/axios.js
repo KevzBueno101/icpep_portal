@@ -2,9 +2,6 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 api.interceptors.request.use((config) => {
@@ -19,7 +16,8 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    if (error.response?.status === 401 && !original._retry) {
+    // Don't try to refresh token for /auth/me/ endpoint - let the component handle it
+    if (error.response?.status === 401 && !original._retry && !original.url?.includes('/auth/me/')) {
       original._retry = true
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {
@@ -39,5 +37,10 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Public API instance for unauthenticated requests
+export const publicApi = axios.create({
+  baseURL: 'http://127.0.0.1:8000/api',
+})
 
 export default api

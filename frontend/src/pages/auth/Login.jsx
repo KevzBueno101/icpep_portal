@@ -18,9 +18,14 @@ const Login = () => {
     try {
       const user = await login(form.email, form.password)
       toast.success('Welcome back!')
-      navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard')
+      if (user.role === 'ADMIN') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate(user.membership_status === 'APPROVED' ? '/dashboard' : '/membership-pending')
+      }
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Invalid credentials.')
+      const errorMsg = err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Invalid credentials.'
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
