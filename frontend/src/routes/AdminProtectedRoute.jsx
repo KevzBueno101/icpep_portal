@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
 const AdminProtectedRoute = ({ children, requirePosition = null }) => {
-  const { user, loading } = useAuth()
+  const { user, loading, logout } = useAuth()
 
   if (loading) {
     return (
@@ -16,11 +16,18 @@ const AdminProtectedRoute = ({ children, requirePosition = null }) => {
     return <Navigate to="/admin-portal/login" replace />
   }
 
+  // SAFETY GUARD: Regular members must never access admin routes.
+  // Do not call logout() synchronously during render.
   if (user.role !== 'ADMIN') {
     return <Navigate to="/login" replace />
   }
 
-  if (requirePosition && user.position !== requirePosition && user.position !== 'PRESIDENT') {
+
+  if (
+    requirePosition &&
+    user.position !== requirePosition &&
+    user.position !== 'PRESIDENT'
+  ) {
     return <Navigate to="/admin/dashboard" replace />
   }
 
@@ -28,3 +35,4 @@ const AdminProtectedRoute = ({ children, requirePosition = null }) => {
 }
 
 export default AdminProtectedRoute
+

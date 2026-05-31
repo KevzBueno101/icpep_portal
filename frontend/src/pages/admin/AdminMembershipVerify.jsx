@@ -57,12 +57,17 @@ const MemberMembershipVerify = () => {
 
       toast.success(
         decision === 'APPROVED'
-          ? 'Member verified successfully.'
+          ? 'Member verified and approved successfully.'
           : 'Member request rejected.'
       )
 
-      // Admin action: keep the admin in the admin flow after verifying/rejecting.
+      // ✅ FIXED: Admin always stays in admin flow after any decision.
+      // The member's own session will handle redirecting them to /dashboard
+      // via MembershipPending.jsx's handleRefresh or ProtectedRoute checks.
+      // We must NEVER navigate to /dashboard here — that is the MEMBER's page,
+      // not the admin's. The admin stays on /admin/membership.
       navigate('/admin/membership', { replace: true })
+
     } catch (err) {
       toast.error(
         err.response?.data?.detail ||
@@ -169,7 +174,6 @@ const MemberMembershipVerify = () => {
           <h3 className="mt-2 text-lg font-semibold text-slate-900">Proof of payment</h3>
           <p className="mt-1 text-sm text-slate-600">Review the uploaded proof before approving.</p>
 
-          {/* Ensure responsiveness: wrap images and allow scroll if needed */}
           {proofImages.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
               No payment proof uploaded.
@@ -259,4 +263,3 @@ const MemberMembershipVerify = () => {
 }
 
 export default MemberMembershipVerify
-

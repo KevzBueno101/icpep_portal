@@ -69,10 +69,11 @@ icpep-portal/
 #### 1a. Create Virtual Environment
 
 ```powershell
-cd C:\Users\kevin\icpep-portal
+cd C:\Users\<your-username>\icpep-portal
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
+
 
 #### 1b. Install Dependencies
 
@@ -136,14 +137,35 @@ Backend runs at `http://127.0.0.1:8000`
 **Endpoints**:
 - `GET /` — API health check
 - `GET /admin/` — Django admin
+
+**Auth**
 - `POST /api/auth/register/` — Create account
-- `POST /api/auth/login/` — Login (returns JWT tokens)
+- `POST /api/auth/login/` — Member login (returns JWT tokens)
+- `POST /api/auth/admin-login/` — Admin portal login (returns JWT tokens)
 - `POST /api/auth/refresh/` — Refresh access token
 - `GET /api/auth/me/` — Current user info
-- `GET /api/members/` — List all members (admin only)
+- `GET /api/auth/availability/?email=...&username=...` — Check email/username availability
+
+**Members**
+- `GET /api/members/` — List all members (admin-only)
+- `POST /api/members/` — Create member profile (admin-only)
 - `GET /api/members/<id>/` — Retrieve member profile
 - `PATCH /api/members/<id>/` — Update member profile (owner or admin)
-- `POST /api/members/<id>/approve/` — Approve member (admin only)
+- `POST /api/members/<id>/approve/` — Approve member (admin)
+- `GET /api/members/payment-settings/` — Retrieve payment settings
+- `PATCH /api/members/payment-settings/` — Update payment settings (Admin: President/Treasurer)
+
+**Admin accounts (officer management)**
+- `GET /api/users/admins/` — List all ADMIN accounts (President or delegated Secretary)
+- `POST /api/users/admins/` — Create an ADMIN account (President only)
+- `GET /api/users/admins/<id>/` — View an admin account
+- `PATCH /api/users/admins/<id>/` — Update an admin account
+- `DELETE /api/users/admins/<id>/` — Delete an admin account
+- `PATCH /api/users/admins/<id>/assign-role/` — Assign role/position to a user
+- `PATCH /api/users/admins/<id>/delegate/` — Toggle secretary delegation (President only)
+- `POST /api/users/admins/year-end-reset/` — Reset ALL admin positions to NONE (President only)
+- `POST /api/users/admins/create/` — Create officer accounts (President only)
+
 
 ### Frontend
 

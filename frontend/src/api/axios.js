@@ -1,14 +1,29 @@
 import axios from 'axios'
 
+// ─── Token key constants ──────────────────────────────────────────────────────
+// Use separate keys so admin and member sessions never overwrite each other.
+export const MEMBER_ACCESS_KEY = 'member_access_token'
+export const MEMBER_REFRESH_KEY = 'member_refresh_token'
+export const ADMIN_ACCESS_KEY = 'admin_access_token'
+export const ADMIN_REFRESH_KEY = 'admin_refresh_token'
+
+export const getAccessToken = () =>
+  localStorage.getItem(MEMBER_ACCESS_KEY) ||
+  localStorage.getItem(ADMIN_ACCESS_KEY) ||
+  null
+
+export const getRefreshToken = () =>
+  localStorage.getItem(MEMBER_REFRESH_KEY) ||
+  localStorage.getItem(ADMIN_REFRESH_KEY) ||
+  null
+
 const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  const token = getAccessToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -16,31 +31,52 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    // Don't try to refresh token for /auth/me/ endpoint - let the component handle it
-    if (error.response?.status === 401 && !original._retry && !original.url?.includes('/auth/me/')) {
+
+    if (
+      error.response?.status === 401 &&
+      !original._retry &&
+      !original.url?.includes('/auth/me/')
+    ) {
       original._retry = true
-      const refresh = localStorage.getItem('refresh_token')
+      const refresh = getRefreshToken()
+
       if (refresh) {
         try {
-          const res = await axios.post('http://127.0.0.1:8000/api/auth/refresh/', {
-            refresh,
-          })
-          localStorage.setItem('access_token', res.data.access)
+          const res = await axios.post(
+            'http://127.0.0.1:8000/api/auth/refresh/',
+            { refresh }
+          )
+
+          // Write new access token back to the correct key
+          if (localStorage.getItem(MEMBER_REFRESH_KEY)) {
+            localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
+          } else {
+            localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
+          }
+
           original.headers.Authorization = `Bearer ${res.data.access}`
           return api(original)
         } catch {
-          localStorage.clear()
-          window.location.href = '/login'
+          localStorage.removeItem(MEMBER_ACCESS_KEY)
+          localStorage.removeItem(MEMBER_REFRESH_KEY)
+          localStorage.removeItem(ADMIN_ACCESS_KEY)
+          localStorage.removeItem(ADMIN_REFRESH_KEY)
+
+          const isAdminPath = window.location.pathname.startsWith('/admin')
+          window.location.href = isAdminPath
+            ? '/admin-portal/login'
+            : '/login'
         }
       }
     }
+
     return Promise.reject(error)
   }
 )
 
-// Public API instance for unauthenticated requests
 export const publicApi = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
 })
 
 export default api
+

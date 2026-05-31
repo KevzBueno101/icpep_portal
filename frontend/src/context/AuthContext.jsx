@@ -1,20 +1,47 @@
 import { useContext, useState, useEffect } from 'react'
 import AuthContext from './authState'
 import api, { publicApi } from '../api/axios'
+import {
+  MEMBER_ACCESS_KEY,
+  MEMBER_REFRESH_KEY,
+  ADMIN_ACCESS_KEY,
+  ADMIN_REFRESH_KEY,
+} from '../api/axios'
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
+    // One-time migration: clear old single-key tokens from previous implementation
+    // to prevent stale admin/member token collisions.
+    const legacyAccess = localStorage.getItem('access_token')
+    const legacyRefresh = localStorage.getItem('refresh_token')
+    if (legacyAccess || legacyRefresh) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      setLoading(false)
+      return
+    }
+
+    const memberToken = localStorage.getItem(MEMBER_ACCESS_KEY)
+    const adminToken = localStorage.getItem(ADMIN_ACCESS_KEY)
+    const token = memberToken || adminToken
+
     if (token) {
-      api.get('/auth/me/')
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      api
+        .get('/auth/me/')
         .then((res) => setUser(res.data))
         .catch((err) => {
-          // Handle 401 gracefully - token might be expired
           if (err.response?.status === 401) {
-            localStorage.clear()
+            if (memberToken) {
+              localStorage.removeItem(MEMBER_ACCESS_KEY)
+              localStorage.removeItem(MEMBER_REFRESH_KEY)
+            } else {
+              localStorage.removeItem(ADMIN_ACCESS_KEY)
+              localStorage.removeItem(ADMIN_REFRESH_KEY)
+            }
             setUser(null)
           }
         })
@@ -24,11 +51,17 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  /** Regular member login */
   const login = async (email, password) => {
+    // Clear any existing admin tokens first to avoid collision
+    localStorage.removeItem(ADMIN_ACCESS_KEY)
+    localStorage.removeItem(ADMIN_REFRESH_KEY)
+
     const res = await api.post('/auth/login/', { email, password })
-    localStorage.setItem('access_token',  res.data.access)
-    localStorage.setItem('refresh_token', res.data.refresh)
+    localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
+    localStorage.setItem(MEMBER_REFRESH_KEY, res.data.refresh)
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${res.data.access}`
+
     const me = await api.get('/auth/me/')
     setUser(me.data)
     return me.data
@@ -40,33 +73,58 @@ export const AuthProvider = ({ children }) => {
     return me.data
   }
 
-  /** Admin-only login — hits the restricted endpoint */
   const adminLogin = async (email, password) => {
+    // Clear any existing member tokens first to avoid collision
+    localStorage.removeItem(MEMBER_ACCESS_KEY)
+    localStorage.removeItem(MEMBER_REFRESH_KEY)
+
     const res = await api.post('/auth/admin-login/', { email, password })
-    localStorage.setItem('access_token',  res.data.tokens.access)
-    localStorage.setItem('refresh_token', res.data.tokens.refresh)
+    localStorage.setItem(ADMIN_ACCESS_KEY, res.data.tokens.access)
+    localStorage.setItem(ADMIN_REFRESH_KEY, res.data.tokens.refresh)
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${res.data.tokens.access}`
+
     setUser(res.data.user)
     return res.data.user
   }
 
   const register = async (formData) => {
+    // Clear any existing admin tokens first
+    localStorage.removeItem(ADMIN_ACCESS_KEY)
+    localStorage.removeItem(ADMIN_REFRESH_KEY)
+
     const res = await publicApi.post('/auth/register/', formData)
-    localStorage.setItem('access_token',  res.data.tokens.access)
-    localStorage.setItem('refresh_token', res.data.tokens.refresh)
+    localStorage.setItem(MEMBER_ACCESS_KEY, res.data.tokens.access)
+    localStorage.setItem(MEMBER_REFRESH_KEY, res.data.tokens.refresh)
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${res.data.tokens.access}`
+
     setUser(res.data.user)
     return res.data.user
   }
 
   const logout = () => {
-    localStorage.clear()
+    localStorage.removeItem(MEMBER_ACCESS_KEY)
+    localStorage.removeItem(MEMBER_REFRESH_KEY)
+    localStorage.removeItem(ADMIN_ACCESS_KEY)
+    localStorage.removeItem(ADMIN_REFRESH_KEY)
+
+    // clear legacy keys
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+
+    delete api.defaults.headers.common['Authorization']
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, adminLogin, register, refreshUser, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, adminLogin, register, refreshUser, logout }}
+    >
       {children}
     </AuthContext.Provider>
   )
 }
 
 export const useAuth = () => useContext(AuthContext)
+

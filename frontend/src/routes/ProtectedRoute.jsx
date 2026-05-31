@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, loading, logout } = useAuth()
 
   if (loading) {
     return (
@@ -16,7 +16,14 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />
   }
 
-  if (user.role !== 'ADMIN' && user.membership_status !== 'APPROVED') {
+  // SAFETY GUARD: Admin users must never access member-only routes.
+  // Do not call logout() synchronously during render.
+  if (user.role === 'ADMIN') {
+    return <Navigate to="/login" replace />
+  }
+
+
+  if (user.membership_status !== 'APPROVED') {
     return <Navigate to="/membership-pending" replace />
   }
 
@@ -24,3 +31,4 @@ const ProtectedRoute = ({ children }) => {
 }
 
 export default ProtectedRoute
+
