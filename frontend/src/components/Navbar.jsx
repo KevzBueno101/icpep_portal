@@ -8,7 +8,7 @@ export default function Navbar() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/60 bg-white/60 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.55),0_10px_30px_rgba(2,132,199,0.12)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/60 bg-white/60 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.55),0_10px_30px_rgba(2,132,199,0.12)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex-shrink-0">

@@ -99,8 +99,8 @@ const Login = () => {
         </form>
 
         <div className="mt-6">
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center justify-center text-sky-600 hover:underline text-sm">
+<div className="text-center">
+            <Link to="/landing" className="inline-flex items-center justify-center text-sky-600 hover:underline text-sm">
               Home
             </Link>
           </div>

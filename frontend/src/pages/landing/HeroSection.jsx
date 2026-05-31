@@ -14,7 +14,7 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section className="relative isolate min-h-screen overflow-hidden text-white">
+    <section className="relative isolate min-h-screen overflow-hidden pt-20 text-white sm:pt-24 md:pt-0">
       {/* Background */}
       <div
         className="absolute inset-0 -z-10"

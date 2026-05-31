@@ -8,6 +8,7 @@ import Register from './pages/auth/Register'
 import MembershipPending from './pages/auth/MembershipPending'
 import AdminLogin from './pages/auth/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import Landing from './pages/landing/Landing'
 import AdminLayout from './layouts/AdminLayout'
 
 import AdminMembership from './pages/admin/placeholder/AdminMembership'
@@ -32,7 +33,8 @@ function App() {
         />
         <Routes>
           {/* Public */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/landing" replace />} />
+          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
