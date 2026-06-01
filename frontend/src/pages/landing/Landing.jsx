@@ -3,10 +3,12 @@ import { useLocation } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import HeroSection from './HeroSection'
+import ICPEPValuesSection from './ICPEPValuesSection'
 import FeatureSection from './FeatureSection'
 import AnnouncementFeed from './AnnouncementFeed'
 import MilestonesSection from './MilestonesSection'
 import MovingLogoText from './MovingLogoText'
+
 
 export default function Landing() {
   const location = useLocation()
@@ -33,11 +35,13 @@ export default function Landing() {
       <Navbar />
       <main className="flex-grow">
         <HeroSection />
+        <ICPEPValuesSection />
         <FeatureSection />
         <AnnouncementFeed />
         <MilestonesSection />
         <MovingLogoText />
       </main>
+
       <Footer />
     </div>
   )
