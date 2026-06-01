@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     # Local apps
     'users',
     'authentication',
-    'members',   # ← make sure this line exists
+    'members',
+    'milestones',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

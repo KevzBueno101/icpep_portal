@@ -3,7 +3,7 @@ import Footer from '../../components/Footer'
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
 import AnnouncementFeed from './AnnouncementFeed'
-import OfficersRoster from './OfficersRoster'
+import MilestonesSection from './MilestonesSection'
 
 export default function Landing() {
   return (
@@ -13,10 +13,9 @@ export default function Landing() {
         <HeroSection />
         <FeatureSection />
         <AnnouncementFeed />
-        <OfficersRoster />
+        <MilestonesSection />
       </main>
       <Footer />
     </div>
   )
 }
-

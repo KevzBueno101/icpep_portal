@@ -38,19 +38,21 @@ const AdminLayout = ({
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex gap-6">
-          <AdminSidebar
-            mobileOpen={sidebarOpen}
-            setMobileOpen={setSidebarOpen}
-            badges={{
-              pendingMembership: badges.pendingMembership ?? 0,
-              newLogs: badges.newLogs ?? 0,
-            }}
-            quickActions={quickActions}
-            logout={logout}
-            onYearEndReset={onYearEndReset}
-            yearEndBusy={yearEndBusy}
-            isPresident={isPresident || user?.position === 'PRESIDENT'}
-          />
+          <div className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
+            <AdminSidebar
+              mobileOpen={sidebarOpen}
+              setMobileOpen={setSidebarOpen}
+              badges={{
+                pendingMembership: badges.pendingMembership ?? 0,
+                newLogs: badges.newLogs ?? 0,
+              }}
+              quickActions={quickActions}
+              logout={logout}
+              onYearEndReset={onYearEndReset}
+              yearEndBusy={yearEndBusy}
+              isPresident={isPresident || user?.position === 'PRESIDENT'}
+            />
+          </div>
 
           <div className="min-w-0 flex-1 lg:pl-0">
             <div className="pr-1 pb-8">

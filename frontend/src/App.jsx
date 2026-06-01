@@ -9,10 +9,12 @@ import MembershipPending from './pages/auth/MembershipPending'
 import AdminLogin from './pages/auth/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Landing from './pages/landing/Landing'
+import MilestoneDetail from './pages/landing/MilestoneDetail'
 import AdminLayout from './layouts/AdminLayout'
 
 import AdminMembership from './pages/admin/placeholder/AdminMembership'
 import AdminAdmins from './pages/admin/placeholder/AdminAdmins'
+import AdminAchievements from './pages/admin/AdminAchievements'
 import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
 import AdminArchives from './pages/admin/placeholder/AdminArchives'
 import AdminProfile from './pages/admin/placeholder/AdminProfile'
@@ -35,6 +37,7 @@ function App() {
           {/* Public */}
           <Route path="/" element={<Navigate to="/landing" replace />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/milestone/:id" element={<MilestoneDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
@@ -91,6 +94,16 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <AdminAdmins />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/achievements"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminAchievements />
                 </AdminLayout>
               </AdminProtectedRoute>
             }

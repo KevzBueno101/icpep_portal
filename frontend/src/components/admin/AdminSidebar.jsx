@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', to: '/admin/dashboard' },
   { label: 'Membership', to: '/admin/membership' },
   { label: 'Admins', to: '/admin/admins' },
+  { label: 'Achievements', to: '/admin/achievements' },
   { label: 'Announcement', to: '/admin/announcement' },
   { label: 'Archives', to: '/admin/archives' },
   { label: 'Profile', to: '/admin/profile' },
@@ -30,6 +31,12 @@ const ICONS = {
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2l7 4.5v5.5c0 5.5-3.8 10.7-7 12-3.2-1.3-7-6.5-7-12V6.5L12 2z" />
       <path d="M9 12h6" />
+    </svg>
+  ),
+  '/admin/achievements': (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="7" />
+      <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
     </svg>
   ),
   '/admin/announcement': (
