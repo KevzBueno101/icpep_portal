@@ -14,7 +14,7 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section className="relative isolate min-h-screen overflow-hidden pt-20 text-white sm:pt-24 md:pt-0">
+    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden pt-16 text-white">
       {/* Background */}
       <div
         className="absolute inset-0 -z-10"
@@ -138,8 +138,8 @@ export default function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-12 lg:py-24 py-14">
+      <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10">
+        <div className="grid min-h-[calc(100svh-8rem)] items-center gap-8 py-8 sm:py-10 lg:grid-cols-12 lg:gap-12 lg:py-10">
           {/* Left */}
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur">
@@ -152,15 +152,15 @@ export default function HeroSection() {
               </span>
             </div>
 
-            <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
               Empowering Future Computer Engineers
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
               Innovating, Building, and Leading the Future of Technology.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 to="/register"
                 className="group inline-flex items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-7 py-3 text-[15px] font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/15"
@@ -188,9 +188,6 @@ export default function HeroSection() {
           {/* Right: Events preview cards */}
           <div className="lg:col-span-5">
             <div className="relative">
-              {/* Floating panels */}
-              <div className="absolute -top-8 right-0 hidden h-40 w-40 rounded-3xl border border-cyan-400/25 bg-cyan-500/10 backdrop-blur md:block" />
-
               <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_0_40px_rgba(6,182,212,0.12)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -255,11 +252,6 @@ export default function HeroSection() {
                   }}
                 />
               </div>
-              <img
-                src="/icpep_logo.png"
-                alt="ICPEP.SE Logo"
-                className="pointer-events-none absolute -bottom-10 -left-8 h-28 w-auto opacity-15"
-              />
             </div>
           </div>
         </div>

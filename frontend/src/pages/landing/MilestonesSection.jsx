@@ -187,7 +187,11 @@ function MilestoneCard({ milestone, visible, side }) {
 export default function MilestonesSection() {
   const [milestones, setMilestones] = useState([])
   const [visibleIds, setVisibleIds] = useState(new Set())
+  const [showAllMilestones, setShowAllMilestones] = useState(false)
   const rowRefs = useRef({})
+
+  const displayedMilestones = showAllMilestones ? milestones : milestones.slice(0, 3)
+  const hasHiddenMilestones = milestones.length > displayedMilestones.length
 
   useEffect(() => {
     const fetchMilestones = async () => {
@@ -217,12 +221,20 @@ export default function MilestonesSection() {
     )
     Object.values(rowRefs.current).forEach((el) => el && observer.observe(el))
     return () => observer.disconnect()
-  }, [milestones])
+  }, [milestones, showAllMilestones])
+
+  useEffect(() => {
+    setVisibleIds((prev) => {
+      const next = new Set(prev)
+      displayedMilestones.forEach((milestone) => next.add(milestone.id))
+      return next
+    })
+  }, [milestones, showAllMilestones])
 
   return (
     <section
       id="milestones"
-      className="relative py-24 sm:py-32 overflow-hidden"
+      className="relative scroll-mt-16 py-24 sm:py-32 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
     >
       {/* Subtle grid bg */}
@@ -268,7 +280,7 @@ export default function MilestonesSection() {
           />
 
           <div className="space-y-8">
-            {milestones.map((milestone) => {
+            {displayedMilestones.map((milestone) => {
               const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
               const isVisible = visibleIds.has(milestone.id)
 
@@ -315,7 +327,7 @@ export default function MilestonesSection() {
           />
 
           <div className="space-y-14">
-            {milestones.map((milestone, index) => {
+            {displayedMilestones.map((milestone, index) => {
               const side = index % 2 === 0 ? 'left' : 'right'
               const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
               const isVisible = visibleIds.has(milestone.id)
@@ -395,8 +407,11 @@ export default function MilestonesSection() {
 
         {/* End cap */}
         <div className="mt-16 flex justify-center">
-          <div
-            className="flex items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold"
+          <button
+            type="button"
+            disabled={!hasHiddenMilestones}
+            onClick={() => setShowAllMilestones(true)}
+            className="flex items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition hover:border-sky-300/50 hover:text-white disabled:cursor-default disabled:hover:border-sky-400/25"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(56,189,248,0.25)',
@@ -407,8 +422,8 @@ export default function MilestonesSection() {
               className="h-2 w-2 rounded-full animate-pulse"
               style={{ background: '#38bdf8' }}
             />
-            More milestones ahead
-          </div>
+            {hasHiddenMilestones ? `More milestones ahead (${milestones.length - displayedMilestones.length})` : 'All milestones shown'}
+          </button>
         </div>
 
       </div>

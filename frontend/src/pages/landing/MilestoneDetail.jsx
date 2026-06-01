@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 
 const CATEGORIES = {
@@ -15,6 +15,13 @@ export default function MilestoneDetail() {
   const [milestone, setMilestone] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showAllImages, setShowAllImages] = useState(false)
+
+  const navigate = useNavigate()
+
+  const handleBackToTimeline = () => {
+    // Navigate first, then scroll after Landing renders.
+    navigate('/landing#milestones', { state: { scrollTo: 'milestones' } })
+  }
 
   useEffect(() => {
     const fetchMilestone = async () => {
@@ -43,9 +50,13 @@ export default function MilestoneDetail() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
         <div className="text-center">
           <p className="text-white text-lg">Milestone not found</p>
-          <Link to="/landing#milestones" className="mt-4 inline-block text-sky-400 hover:text-sky-300">
+          <button
+            type="button"
+            onClick={handleBackToTimeline}
+            className="mt-4 inline-block text-sky-400 hover:text-sky-300"
+          >
             Back to timeline
-          </Link>
+          </button>
         </div>
       </div>
     )
@@ -70,8 +81,9 @@ export default function MilestoneDetail() {
       {/* Header */}
       <div className="relative pt-20 pb-12">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <Link
-            to="/landing#milestones"
+          <button
+            type="button"
+            onClick={handleBackToTimeline}
             className="inline-flex items-center gap-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80"
             style={{ color: cat.accent }}
           >
@@ -79,7 +91,7 @@ export default function MilestoneDetail() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
             Back to timeline
-          </Link>
+          </button>
 
           <div className="mt-8">
             <div className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-5" style={{ background: cat.dimAccent, borderColor: cat.border }}>

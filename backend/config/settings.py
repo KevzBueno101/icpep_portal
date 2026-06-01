@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'authentication',
     'members',
     'milestones',
+    'announcements',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

@@ -69,14 +69,16 @@ const ICONS = {
   ),
 }
 
-function SidebarLink({ to, label, badge, onNavigate }) {
+function SidebarLink({ to, label, badge, onNavigate, compact = false }) {
   return (
     <NavLink
       to={to}
       onClick={onNavigate}
       className={({ isActive }) =>
         [
-              'group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition',
+              compact
+                ? 'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-semibold transition'
+                : 'group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition',
               isActive
                 ? 'bg-sky-600 text-white shadow-sm'
                 : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900',
@@ -87,7 +89,9 @@ function SidebarLink({ to, label, badge, onNavigate }) {
         <>
           <span
             aria-hidden
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition ${
+            className={`inline-flex shrink-0 items-center justify-center transition ${
+              compact ? 'h-8 w-8 rounded-xl' : 'h-10 w-10 rounded-2xl'
+            } ${
               isActive
                 ? 'border border-sky-400 bg-sky-500 text-white'
                 : 'border border-slate-200 bg-white text-slate-700 group-hover:border-sky-200'
@@ -248,36 +252,23 @@ const AdminSidebar = ({
       />
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:sticky lg:top-0 w-72 shrink-0 flex-col border-r border-slate-200 bg-white h-screen overflow-y-auto">
+      <aside className="hidden max-h-[calc(100vh-3rem)] w-full shrink-0 flex-col overflow-hidden rounded-none border-r border-slate-200 bg-white lg:flex">
+        <div className="flex-1 min-h-0 overflow-y-auto px-2">
+          <div className="px-2 py-4">
 
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Admin</p>
+          <p className="mt-1 text-base font-bold text-slate-900">Dashboard</p>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="px-5 py-5">
-
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Admin</p>
-          <p className="mt-1 text-lg font-bold text-slate-900">Dashboard</p>
-
-          {quickActions?.enabled !== false && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Quick actions</p>
-              <div className="mt-3 flex items-center justify-between text-sm text-slate-700">
-                <span>Pending</span>
-                <span className="font-bold text-slate-900">{pendingBadge ?? 0}</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between text-sm text-slate-700">
-                <span>New logs</span>
-                <span className="font-bold text-slate-900">{newLogsBadge ?? 0}</span>
-              </div>
-            </div>
-          )}
+          {/* Quick actions removed per request */}
         </div>
 
-        <nav className="px-3 pb-6">
+        <nav className="space-y-1 px-1 pb-5">
           {NAV_ITEMS.map((item) => (
             <SidebarLink
               key={item.to}
               to={item.to}
               label={item.label}
+              compact
               badge={
                 item.to === '/admin/membership'
                   ? pendingBadge
@@ -292,11 +283,11 @@ const AdminSidebar = ({
 
 
           {/* Bottom actions */}
-          <div className="p-4 pt-2 shrink-0">
+          <div className="shrink-0 p-3 pt-2">
             <button
               type="button"
               onClick={() => setConfirmLogoutOpen(true)}
-              className="w-full rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50"
             >
               Sign Out
             </button>
@@ -306,7 +297,7 @@ const AdminSidebar = ({
                 type="button"
                 disabled={yearEndBusy}
                 onClick={() => setConfirmYearEndOpen(true)}
-                className="mt-3 w-full rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-3 w-full rounded-full bg-sky-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {yearEndBusy ? 'Resetting...' : 'Year-End Reset'}
               </button>

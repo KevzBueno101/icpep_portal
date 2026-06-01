@@ -6,6 +6,7 @@ export default function AnnouncementCard({ announcement }) {
     achievement: 'bg-green-100 text-green-700',
     update: 'bg-blue-100 text-blue-700',
     opportunity: 'bg-amber-100 text-amber-800',
+    event: 'bg-purple-100 text-purple-700',
   }
 
   const categoryColor = categoryColors[category] || categoryColors.announcement
@@ -25,7 +26,7 @@ export default function AnnouncementCard({ announcement }) {
         </div>
 
         <h3 className="mb-2 text-lg font-bold text-slate-900">{title}</h3>
-        <p className="mb-4 line-clamp-3 text-sm text-slate-600">{body}</p>
+        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600">{body}</p>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>{author || 'Admin'}</span>
