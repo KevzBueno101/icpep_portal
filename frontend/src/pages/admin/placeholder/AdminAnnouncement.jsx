@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
@@ -23,11 +23,22 @@ const emptyForm = {
 const AdminAnnouncement = () => {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
+
   const [saving, setSaving] = useState(false)
+
+  // Collapsible form
   const [showForm, setShowForm] = useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = useState(null)
+
   const [deletingAnnouncement, setDeletingAnnouncement] = useState(null)
+
   const [formData, setFormData] = useState(emptyForm)
+
+  // Image upload UI (client-side only; actual upload happens after save)
+  const [selectedImages, setSelectedImages] = useState([]) // File[]
+  const [imageUploading, setImageUploading] = useState(false)
+
+  const isEditMode = !!editingAnnouncement
 
   useEffect(() => {
     fetchAnnouncements()
@@ -48,6 +59,7 @@ const AdminAnnouncement = () => {
   const handleCreate = () => {
     setEditingAnnouncement(null)
     setFormData(emptyForm)
+    setSelectedImages([])
     setShowForm(true)
   }
 
@@ -61,7 +73,26 @@ const AdminAnnouncement = () => {
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
     })
+    setSelectedImages([])
+    // IMPORTANT: expand form when clicking edit (requested)
     setShowForm(true)
+  }
+
+  const uploadImages = async (announcementId, files) => {
+    if (!files?.length) return
+    setImageUploading(true)
+    try {
+      // Upload in sequence to keep backend consistent
+      for (const file of files) {
+        const form = new FormData()
+        form.append('image', file)
+        await api.post(`/announcements/admin/${announcementId}/images/`, form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      }
+    } finally {
+      setImageUploading(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -78,13 +109,26 @@ const AdminAnnouncement = () => {
         await api.patch(`/announcements/admin/${editingAnnouncement.id}/`, payload)
         toast.success('Announcement updated.')
       } else {
-        await api.post('/announcements/admin/', payload)
+        const res = await api.post('/announcements/admin/', payload)
+        const created = res.data
         toast.success('Announcement created.')
+        // Upload images for newly created announcement
+        await uploadImages(created.id, selectedImages)
+        setShowForm(false)
+        setEditingAnnouncement(null)
+        setFormData(emptyForm)
+        setSelectedImages([])
+        fetchAnnouncements()
+        return
       }
+
+      // If edit mode, upload images after updating
+      await uploadImages(editingAnnouncement.id, selectedImages)
 
       setShowForm(false)
       setEditingAnnouncement(null)
       setFormData(emptyForm)
+      setSelectedImages([])
       fetchAnnouncements()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to save announcement.')
@@ -117,6 +161,34 @@ const AdminAnnouncement = () => {
     }
   }
 
+  const existingImages = useMemo(() => {
+    return editingAnnouncement?.images || []
+  }, [editingAnnouncement])
+
+  const handleRemoveExistingImage = async (imageId) => {
+    try {
+      await api.delete(`/announcements/admin/images/${imageId}/`)
+      toast.success('Image removed.')
+      setEditingAnnouncement((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          images: prev.images?.filter((img) => img.id !== imageId) || [],
+        }
+      })
+      fetchAnnouncements()
+    } catch (err) {
+      toast.error('Failed to remove image.')
+    }
+  }
+
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setEditingAnnouncement(null)
+    setFormData(emptyForm)
+    setSelectedImages([])
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -143,9 +215,18 @@ const AdminAnnouncement = () => {
 
       {showForm && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">
-            {editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
-          </h3>
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <h3 className="text-lg font-semibold text-slate-900">
+              {isEditMode ? 'Edit Announcement' : 'Create Announcement'}
+            </h3>
+            <button
+              type="button"
+              onClick={handleCloseForm}
+              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -224,20 +305,92 @@ const AdminAnnouncement = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            {/* Images upload */}
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Upload images (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setSelectedImages((prev) => [...prev, ...files])
+                  }}
+                  className="w-full cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                />
+
+                {selectedImages.length > 0 && (
+                  <div className="mt-2 space-y-2 text-xs text-slate-500">
+                    <div>{selectedImages.length} file(s) selected.</div>
+                    <div className="grid gap-2 text-slate-700">
+                      {selectedImages.map((file, idx) => (
+                        <div
+                          key={`${file.name}-${file.size}-${idx}`}
+                          className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
+                        >
+                          <span className="truncate">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
+                            className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {isEditMode && existingImages?.length > 0 && (
+                <div>
+                  <div className="mb-2 text-sm font-semibold text-slate-900">
+                    Existing images
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {existingImages.map((img) => (
+                      <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                        <img
+                          src={img.image}
+                          alt={formData.title || 'Announcement image'}
+                          className="h-32 w-full rounded-lg object-cover"
+                          loading="lazy"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingImage(img.id)}
+                          className="mt-2 w-full rounded-full border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {imageUploading && (
+                <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+                  Uploading images...
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || imageUploading}
                 className="rounded-full bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? 'Saving...' : editingAnnouncement ? 'Update' : 'Create'}
+                {saving ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingAnnouncement(null)
-                }}
+                onClick={handleCloseForm}
                 className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel
@@ -331,3 +484,4 @@ const AdminAnnouncement = () => {
 }
 
 export default AdminAnnouncement
+
