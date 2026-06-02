@@ -49,7 +49,7 @@ const AdminAdmins = () => {
       setLoading(true)
       try {
         const res = await api.get('/users/admins/')
-        setAdmins(res.data.results)
+        setAdmins(res.data.results || [])
       } catch (err) {
         toast.error('Unable to load admin accounts.')
       } finally {
@@ -141,11 +141,11 @@ const AdminAdmins = () => {
       let res
       if (editAdmin) {
         res = await api.patch(`/users/admins/${editAdmin.id}/`, payload)
-        setAdmins((prev) => prev.map((item) => (item.id === editAdmin.id ? res.data.user : item)))
+        setAdmins((prev) => (prev || []).map((item) => (item.id === editAdmin.id ? res.data.user : item)))
         toast.success('Admin account updated.')
       } else {
         res = await api.post('/users/admins/', payload)
-        setAdmins((prev) => [res.data.user, ...prev])
+        setAdmins((prev) => [res.data.user, ...(prev || [])])
         toast.success('Admin account created.')
       }
 
@@ -165,7 +165,7 @@ const AdminAdmins = () => {
     setDeleteBusy(true)
     try {
       await api.delete(`/users/admins/${deleteAdmin.id}/`)
-      setAdmins((prev) => prev.filter((item) => item.id !== deleteAdmin.id))
+      setAdmins((prev) => (prev || []).filter((item) => item.id !== deleteAdmin.id))
       toast.success('Admin account deleted.')
       setDeleteAdmin(null)
     } catch (error) {
@@ -175,6 +175,18 @@ const AdminAdmins = () => {
       setDeleteBusy(false)
     }
   }
+
+  const formatDate = (value) => {
+    try {
+      if (!value) return '-'
+      const d = new Date(value)
+      if (isNaN(d.getTime())) return '-'
+      return d.toLocaleDateString()
+    } catch {
+      return '-'
+    }
+  }
+
 
   return (
     <div className="space-y-6">
@@ -202,7 +214,7 @@ const AdminAdmins = () => {
         <div className="border-b border-slate-200 px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-slate-500">Total admin accounts</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{admins.length}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{(admins || []).length}</p>
           </div>
           <div className="text-sm text-slate-600">
             {canEdit ? 'You can create, update, and delete admin accounts.' : 'You can view admin accounts only.'}
@@ -229,7 +241,7 @@ const AdminAdmins = () => {
                     Loading admin accounts...
                   </td>
                 </tr>
-              ) : admins.length === 0 ? (
+              ) : (admins || []).length === 0 ? (
                 <tr className="md:table-row">
                   <td colSpan={7} className="px-6 py-12 text-center text-slate-500 md:table-cell">
                     No admin accounts found.
@@ -261,12 +273,12 @@ const AdminAdmins = () => {
                           admin.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                         }`
                       }>
-                        {STATUS_LABELS[admin.is_active]}
+                        {STATUS_LABELS[String(admin.is_active)] || (admin.is_active ? 'Active' : 'Inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 align-top md:table-cell">
                       <div className="text-sm text-slate-600">
-                        {new Date(admin.created_at).toLocaleDateString()}
+                          {formatDate(admin.created_at)}
                       </div>
                     </td>
                     <td className="px-6 py-4 align-top md:table-cell">
@@ -299,7 +311,7 @@ const AdminAdmins = () => {
             <div className="rounded-3xl border border-slate-200 p-6 text-center text-slate-500">
               Loading admin accounts...
             </div>
-          ) : admins.length === 0 ? (
+          ) : (admins || []).length === 0 ? (
             <div className="rounded-3xl border border-slate-200 p-6 text-center text-slate-500">
               No admin accounts found.
             </div>
@@ -320,11 +332,11 @@ const AdminAdmins = () => {
                   </div>
                   <div className="flex items-center justify-between rounded-2xl bg-white px-3 py-2">
                     <span>Status</span>
-                    <span>{STATUS_LABELS[admin.is_active]}</span>
+                    <span>{STATUS_LABELS[String(admin.is_active)] || (admin.is_active ? 'Active' : 'Inactive')}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-2xl bg-white px-3 py-2">
                     <span>Joined</span>
-                    <span>{new Date(admin.created_at).toLocaleDateString()}</span>
+                    <span>{formatDate(admin.created_at)}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">

@@ -251,8 +251,8 @@ const AdminSidebar = ({
         onCancel={() => setConfirmYearEndOpen(false)}
       />
 
-      {/* Desktop sidebar */}
-      <aside className="hidden max-h-[calc(100vh-3rem)] w-full shrink-0 flex-col overflow-hidden rounded-none border-r border-slate-200 bg-white lg:flex">
+      {/* Desktop sidebar (fixed on large screens) */}
+      <aside className="hidden lg:flex lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full shrink-0 flex-col overflow-hidden rounded-none border-r border-slate-200 bg-white">
         <div className="flex-1 min-h-0 overflow-y-auto px-2">
           <div className="px-2 py-4">
 

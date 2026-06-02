@@ -90,3 +90,9 @@ VITE_API_URL=http://127.0.0.1:8000/api
 ```
 
 For more information, see the main project README at the repository root.
+
+## Recent changes (developer notes)
+
+- Admin sidebar: desktop sidebar is now fixed on large screens so it stays visible while scrolling. The layout reserves `lg:ml-56` space for the sidebar.
+- Defensive fixes: admin pages (`AdminDashboard`, admin lists) were updated to handle missing or non-paginated API responses safely. If an admin list looks empty, inspect the API response — it should be paginated and include `results`.
+

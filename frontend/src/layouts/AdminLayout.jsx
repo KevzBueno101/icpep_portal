@@ -38,7 +38,7 @@ const AdminLayout = ({
 
       <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-6">
         <div className="flex gap-4 xl:gap-5">
-          <div className="hidden lg:block w-56 shrink-0 sticky top-6 self-start">
+          <div className="hidden lg:block">
             <AdminSidebar
               mobileOpen={sidebarOpen}
               setMobileOpen={setSidebarOpen}
@@ -54,7 +54,7 @@ const AdminLayout = ({
             />
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 lg:ml-56">
             <div className="pb-8">
               {children}
             </div>

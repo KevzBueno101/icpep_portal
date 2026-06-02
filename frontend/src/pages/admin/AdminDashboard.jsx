@@ -74,14 +74,14 @@ const AdminDashboard = () => {
 
         if (canManageRoles) {
           const adminsRes = await api.get('/users/admins/')
-          setAdmins(adminsRes.data.results)
+          setAdmins(adminsRes.data.results || [])
         } else {
           setAdmins([])
         }
 
         if (canApproveMembers) {
           const membersRes = await api.get('/members/')
-          setMembers(membersRes.data.results)
+          setMembers(membersRes.data.results || [])
         } else {
           setMembers([])
         }
@@ -99,11 +99,11 @@ const AdminDashboard = () => {
     }
   }, [canApproveMembers, canManageRoles, user])
 
-  const pendingMembers = members.filter((member) => member.membership_status === 'PENDING')
+  const pendingMembers = (members || []).filter((member) => member.membership_status === 'PENDING')
 
 
-  const totalAdmins = admins.length
-  const totalPending = pendingMembers.length
+  const totalAdmins = (admins || []).length
+  const totalPending = (pendingMembers || []).length
 
   const handleRoleChange = (id, value) => {
     setSelectedRole((prev) => ({ ...prev, [id]: value }))
@@ -126,7 +126,7 @@ const AdminDashboard = () => {
     setSavingAdmins((prev) => [...prev, adminId])
     try {
       const res = await api.patch(`/users/admins/${adminId}/assign-role/`, payload)
-      setAdmins((prev) => prev.map((item) => (item.id === adminId ? res.data.user : item)))
+      setAdmins((prev) => (prev || []).map((item) => (item.id === adminId ? res.data.user : item)))
       toast.success('Admin role updated.')
       setSelectedRole((prev) => {
         const copy = { ...prev }
@@ -153,7 +153,7 @@ const AdminDashboard = () => {
       const res = await api.patch(`/users/admins/${adminId}/delegate/`, {
         is_delegated: !admin.is_delegated,
       })
-      setAdmins((prev) => prev.map((item) => (item.id === adminId ? res.data.user : item)))
+      setAdmins((prev) => (prev || []).map((item) => (item.id === adminId ? res.data.user : item)))
       toast.success(`Secretary ${res.data.user.is_delegated ? 'delegated' : 'delegation removed'}.`)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to toggle delegation.')
@@ -168,10 +168,10 @@ const AdminDashboard = () => {
       const res = await api.post('/users/admins/year-end-reset/')
       toast.success(res.data.message || 'Year-end reset complete.')
       const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data.results)
+      setAdmins(adminsRes.data.results || [])
       if (canApproveMembers) {
         const membersRes = await api.get('/members/')
-        setMembers(membersRes.data.results)
+        setMembers(membersRes.data.results || [])
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Year-end reset failed.')
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
       const res = await api.post(`/members/${memberId}/approve/`, {
         membership_status: decision,
       })
-      setMembers((prev) => prev.map((item) => (item.id === memberId ? res.data : item)))
+      setMembers((prev) => (prev || []).map((item) => (item.id === memberId ? res.data : item)))
       toast.success(`Member ${decision.toLowerCase()} successfully.`)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to update member status.')
@@ -239,7 +239,7 @@ const AdminDashboard = () => {
 
       // refresh admins list
       const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data.results)
+      setAdmins(adminsRes.data.results || [])
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to create officer account.')
     } finally {
@@ -276,7 +276,7 @@ const AdminDashboard = () => {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-slate-500 uppercase">Total Members</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{members.length}</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{(members || []).length}</p>
           <p className="mt-1 text-xs text-slate-500">All registered members in the system.</p>
         </div>
 

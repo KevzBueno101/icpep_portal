@@ -11,6 +11,15 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Prerequisites
 
+## Recent changes (developer notes)
+
+- Backend: admin accounts endpoint (`GET /api/users/admins/`) now returns paginated responses using DRF's `PageNumberPagination` (shape: `{ results: [...], count, next, previous }`). Update frontend calls to use `res.data.results`.
+- Backend: if you encounter `ProgrammingError: column users_user.must_change_password does not exist`, the model includes `must_change_password` but the DB may be missing the column. See "Database migrations" below for a quick fix.
+- Frontend: desktop admin sidebar is fixed on large screens (does not scroll). Admin pages received defensive null-safety fixes to avoid runtime crashes when API responses vary.
+
+When pulling changes, run migrations as described in the "Database migrations" section.
+
+
 - Python 3.10+
 - Node.js 16+ & npm
 - PostgreSQL 15+ (ensure service is running)
@@ -371,6 +380,51 @@ Update it for production deployments (or refactor to use a build-time env var).
 - [ ] Set up CI/CD pipeline (GitHub Actions, GitLab CI)
 - [ ] Configure Cloudinary for image storage
 - [ ] Add pagination and filtering to members list API
+
+## Database migrations (helpers)
+
+If `makemigrations` does not detect model changes (e.g., your models include a field but the DB column is missing), you can create an explicit migration and apply it:
+
+1. Create an empty migration for the `users` app:
+
+```powershell
+cd backend
+python manage.py makemigrations users --empty -n add_must_change_password
+```
+
+2. Edit the generated migration file under `backend/users/migrations/` and add an `AddField` operation, for example:
+
+```python
+from django.db import migrations, models
+
+class Migration(migrations.Migration):
+   dependencies = [
+      ('users', '0003_term_delegation'),
+   ]
+
+   operations = [
+      migrations.AddField(
+         model_name='user',
+         name='must_change_password',
+         field=models.BooleanField(default=False),
+      ),
+   ]
+```
+
+3. Run migrations:
+
+```powershell
+python manage.py migrate
+```
+
+Or, if you prefer a quick SQL fix on PostgreSQL (not recommended for long-term schema management), run:
+
+```powershell
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U <db_admin> -d <db_name> -c "ALTER TABLE users_user ADD COLUMN must_change_password boolean DEFAULT false;"
+```
+
+After applying the migration or the SQL change, re-run the Django shell or your failing command to confirm the `ProgrammingError` is resolved.
+
 
 ## Contributing
 

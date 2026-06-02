@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -58,6 +59,14 @@ def admin_accounts_list(request):
         }, status=status.HTTP_201_CREATED)
 
     admins = User.objects.filter(role='ADMIN').order_by('position', 'email')
+
+    # Apply pagination to match frontend expectations (returns {results: [...]})
+    paginator = PageNumberPagination()
+    page = paginator.paginate_queryset(admins, request)
+    if page is not None:
+        serializer = UserListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
     return Response(UserListSerializer(admins, many=True).data)
 
 
