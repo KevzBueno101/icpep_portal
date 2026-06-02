@@ -51,6 +51,8 @@ const AdminMembership = () => {
     birthdate: '',
     membership_status: 'PENDING',
   })
+  const [isRenewConfirmOpen, setIsRenewConfirmOpen] = useState(false)
+  const [isRenewing, setIsRenewing] = useState(false)
 
   // Fetch members from Django REST API
   const fetchMembers = async () => {
@@ -485,6 +487,14 @@ const AdminMembership = () => {
               >
                 <FileDown className="w-4 h-4" />
                 Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRenewConfirmOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Renew All
               </button>
               <button
                 onClick={handleOpenAddModal}
@@ -1083,6 +1093,30 @@ const AdminMembership = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isRenewConfirmOpen}
+        variant="info"
+        title="Renew all approved memberships?"
+        description="This will move every currently approved member back to Pending. Members will be asked to renew and require admin re-approval."
+        confirmText="Renew All"
+        cancelText="Cancel"
+        busy={isRenewing}
+        onConfirm={async () => {
+          setIsRenewing(true)
+          try {
+            await api.post('/members/renew-all/')
+            toast.success('All approved memberships set to Pending.')
+            await fetchMembers()
+            setIsRenewConfirmOpen(false)
+          } catch (err) {
+            toast.error(err.response?.data?.detail || 'Failed to renew memberships.')
+          } finally {
+            setIsRenewing(false)
+          }
+        }}
+        onCancel={() => setIsRenewConfirmOpen(false)}
+      />
 
       {/* Edit Member Modal */}
       {editTarget && (

@@ -73,3 +73,17 @@ class MemberApproveAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(MemberProfileSerializer(profile).data, status=status.HTTP_200_OK)
+
+
+class MemberRenewAllAPIView(APIView):
+    """Set all currently APPROVED members back to PENDING.
+
+    This is an admin-only endpoint used by the admin UI to force a renewal
+    cycle where approved members must re-submit / be re-approved.
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
+        renewed_count = approved_qs.update(membership_status=MemberProfile.Status.PENDING)
+        return Response({'renewed_count': renewed_count}, status=status.HTTP_200_OK)
