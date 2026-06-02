@@ -8,7 +8,10 @@ from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserSerializer, AdminLoginSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
+from rest_framework.response import Response
+from rest_framework import status
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
@@ -50,6 +53,7 @@ User = get_user_model()
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/m', block=True)
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -68,6 +72,7 @@ def register(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/m', block=True)
 def check_availability(request):
     email = request.query_params.get('email', '').strip()
     username = request.query_params.get('username', '').strip()
@@ -84,12 +89,14 @@ def check_availability(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='ip', rate='5/m', block=True)
 def me(request):
     return Response(UserSerializer(request.user).data)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/m', block=True)
 def admin_login(request):
     """
     Dedicated admin login endpoint.

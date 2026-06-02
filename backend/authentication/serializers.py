@@ -30,6 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'payment_method', 'profile_picture', 'payment_proof_image', 'coe_id_image',
         ]
+    
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -68,6 +69,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         MemberProfile.objects.create(user=user, **profile_fields)
         return user
+    def validate_profile_picture(self, value):
+        return validate_image_file(value)
+
+    def validate_payment_proof_image(self, value):
+        return validate_image_file(value)
 
 
 class UserSerializer(serializers.ModelSerializer):

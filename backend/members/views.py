@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-
+from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 from .models import MemberProfile, PaymentSettings
 from .serializers import (
     MemberProfileSerializer,
@@ -10,11 +10,6 @@ from .serializers import (
     MemberCreateSerializer,
     PaymentSettingsSerializer,
 )
-
-
-class IsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '').upper() == 'ADMIN')
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):

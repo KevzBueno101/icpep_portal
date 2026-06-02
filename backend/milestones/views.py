@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 
 from .models import Milestone, MilestoneImage
 from .serializers import (
@@ -11,10 +12,6 @@ from .serializers import (
     MilestoneImageSerializer,
 )
 
-
-class IsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '').upper() == 'ADMIN')
 
 
 class MilestoneListAPIView(generics.ListAPIView):

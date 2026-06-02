@@ -33,6 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         PRESIDENT = 'PRESIDENT', 'President'
         TREASURER = 'TREASURER', 'Treasurer'
         SECRETARY = 'SECRETARY', 'Secretary'
+    must_change_password = models.BooleanField(default=False)
 
     email    = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=True)

@@ -1,6 +1,25 @@
 from rest_framework import serializers
 from .models import MemberProfile, PaymentSettings
 
+import imghdr
+
+ALLOWED_IMAGE_TYPES = {
+    'rgb', 'gif', 'pbm', 'pgm', 'ppm',
+    'tiff', 'rast', 'xbm', 'jpeg', 'png', 'webp'
+}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+def validate_image_file(value):
+    if value is None:
+        return value
+    if value.size > MAX_IMAGE_SIZE:
+        raise serializers.ValidationError("Max image size is 5 MB.")
+    detected = imghdr.what(value)
+    if detected not in ALLOWED_IMAGE_TYPES:
+        raise serializers.ValidationError(
+            "Upload a valid image (JPEG, PNG, GIF, WebP)."
+        )
+    return value
 
 class MemberProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -62,8 +81,20 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
+        import secrets, string
+        alphabet = string.ascii_letters + string.digits
+        temp_pw = ''.join(secrets.choice(alphabet) for _ in range(16))
+
+        user = User.objects.create_user(
+        email=user_email,
+        username=username,
+        password=temp_pw,
+        role=User.Role.MEMBER,
+        position=User.Position.NONE,
+        must_change_password=True,   # <-- force reset on first login
+    )
+    # Email temp_pw to member securely — never return it in the API response
+        return MemberProfile.objects.create(user=user, **validated_data)
 
         user_email = validated_data.pop('user_email')
 

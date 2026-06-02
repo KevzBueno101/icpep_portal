@@ -49,7 +49,7 @@ const AdminAdmins = () => {
       setLoading(true)
       try {
         const res = await api.get('/users/admins/')
-        setAdmins(res.data)
+        setAdmins(res.data.results)
       } catch (err) {
         toast.error('Unable to load admin accounts.')
       } finally {

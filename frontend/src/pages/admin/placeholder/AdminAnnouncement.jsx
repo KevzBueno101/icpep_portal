@@ -37,7 +37,7 @@ const AdminAnnouncement = () => {
     setLoading(true)
     try {
       const res = await api.get('/announcements/admin/')
-      setAnnouncements(res.data)
+      setAnnouncements(res.data.results)
     } catch (err) {
       toast.error('Failed to load announcements.')
     } finally {

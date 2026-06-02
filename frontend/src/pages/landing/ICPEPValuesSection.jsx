@@ -36,7 +36,7 @@ export default function ICPEPValuesSection() {
           <div className="flex-1" />
 
           <h2 className="mb-6 text-center text-3xl font-black tracking-tight text-white sm:mb-8 sm:text-5xl">
-            ICPEEPS
+            Our Mission, Vision and Goals
             <span className="text-cyan-300">...</span>
           </h2>
 

@@ -197,7 +197,7 @@ export default function MilestonesSection() {
     const fetchMilestones = async () => {
       try {
         const res = await publicApi.get('/milestones/')
-        setMilestones(res.data)
+        setMilestones(res.data.results)
       } catch (err) {
         console.error('Failed to fetch milestones:', err)
         // Fallback to dummy data if API fails

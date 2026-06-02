@@ -39,7 +39,7 @@ const AdminAchievements = () => {
     setLoading(true)
     try {
       const res = await api.get('/milestones/admin/')
-      setMilestones(res.data)
+      setMilestones(res.data.results)
     } catch (err) {
       toast.error('Failed to load milestones.')
     } finally {

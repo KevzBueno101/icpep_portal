@@ -12,7 +12,7 @@ export default function AnnouncementFeed() {
       setLoading(true)
       try {
         const res = await publicApi.get('/announcements/')
-        setAnnouncements(res.data)
+        setAnnouncements(res.data.results)
         setActiveIndex(0)
       } catch (err) {
         console.error('Failed to fetch announcements:', err)

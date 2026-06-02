@@ -74,14 +74,14 @@ const AdminDashboard = () => {
 
         if (canManageRoles) {
           const adminsRes = await api.get('/users/admins/')
-          setAdmins(adminsRes.data)
+          setAdmins(adminsRes.data.results)
         } else {
           setAdmins([])
         }
 
         if (canApproveMembers) {
           const membersRes = await api.get('/members/')
-          setMembers(membersRes.data)
+          setMembers(membersRes.data.results)
         } else {
           setMembers([])
         }
@@ -168,10 +168,10 @@ const AdminDashboard = () => {
       const res = await api.post('/users/admins/year-end-reset/')
       toast.success(res.data.message || 'Year-end reset complete.')
       const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data)
+      setAdmins(adminsRes.data.results)
       if (canApproveMembers) {
         const membersRes = await api.get('/members/')
-        setMembers(membersRes.data)
+        setMembers(membersRes.data.results)
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Year-end reset failed.')
@@ -239,7 +239,7 @@ const AdminDashboard = () => {
 
       // refresh admins list
       const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data)
+      setAdmins(adminsRes.data.results)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to create officer account.')
     } finally {
