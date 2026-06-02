@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 from .models import MemberProfile, PaymentSettings
 from .serializers import (
+    MemberRenewSerializer,
     MemberProfileSerializer,
     MemberApprovalSerializer,
     MemberCreateSerializer,
@@ -87,3 +88,33 @@ class MemberRenewAllAPIView(APIView):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.PENDING)
         return Response({'renewed_count': renewed_count}, status=status.HTTP_200_OK)
+
+
+class MemberRenewAPIView(APIView):
+    """Allow a member to renew their membership by submitting year_level and payment_proof_image.
+
+    This endpoint is used by the frontend MembershipPending page.
+    Resets the member's status to PENDING so an admin can re-approve.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        profile = get_object_or_404(MemberProfile, user=user)
+
+        # Allow EXPIRED or REJECTED members to renew; PENDING/APPROVED are handled elsewhere
+        if profile.membership_status not in [MemberProfile.Status.EXPIRED, MemberProfile.Status.REJECTED]:
+            return Response(
+                {'detail': 'Renewal is only available for expired or rejected memberships.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = MemberRenewSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        profile.membership_status = MemberProfile.Status.PENDING
+        serializer.save()
+
+        return Response(
+            MemberProfileSerializer(profile).data,
+            status=status.HTTP_200_OK
+        )

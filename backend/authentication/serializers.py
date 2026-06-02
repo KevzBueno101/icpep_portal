@@ -70,10 +70,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         MemberProfile.objects.create(user=user, **profile_fields)
         return user
     def validate_profile_picture(self, value):
+        from members.serializers import validate_image_file
         return validate_image_file(value)
 
     def validate_payment_proof_image(self, value):
+        from members.serializers import validate_image_file
         return validate_image_file(value)
+
+    # NOTE: Previous code referenced a validate_image_file symbol that wasn't in scope.
+    # By importing it inside each validator, we avoid NameError during /api/auth/register/.
+
+
 
 
 class UserSerializer(serializers.ModelSerializer):

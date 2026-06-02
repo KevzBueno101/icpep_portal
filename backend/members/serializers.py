@@ -43,11 +43,22 @@ class MemberApprovalSerializer(serializers.ModelSerializer):
         fields = ['membership_status']
 
 
+class MemberRenewSerializer(serializers.ModelSerializer):
+    payment_proof_image = serializers.ImageField(
+        required=True,
+        allow_null=False,
+        validators=[validate_image_file]
+    )
+
+    class Meta:
+        model = MemberProfile
+        fields = ['year_level', 'payment_proof_image']
+
+
 class PaymentSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentSettings
         fields = ['id', 'gcash_number', 'gcash_name']
-
 
 
 class MemberCreateSerializer(serializers.ModelSerializer):
@@ -85,34 +96,20 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         alphabet = string.ascii_letters + string.digits
         temp_pw = ''.join(secrets.choice(alphabet) for _ in range(16))
 
-        user = User.objects.create_user(
-        email=user_email,
-        username=username,
-        password=temp_pw,
-        role=User.Role.MEMBER,
-        position=User.Position.NONE,
-        must_change_password=True,   # <-- force reset on first login
-    )
-    # Email temp_pw to member securely — never return it in the API response
-        return MemberProfile.objects.create(user=user, **validated_data)
-
         user_email = validated_data.pop('user_email')
 
-        # Auto-generate username from email prefix
         username = user_email.split('@')[0]
-        student_number = validated_data.get('student_number')
+        student_number = validated_data.get("student_number")
         if User.objects.filter(username__iexact=username).exists():
             username = f"{username}_{student_number}"
 
-        # Provision corresponding User
         user = User.objects.create_user(
             email=user_email,
             username=username,
-            password="Changeme123!",  # Default temporary password
+            password="Changeme123!",
             role=User.Role.MEMBER,
             position=User.Position.NONE
         )
 
-        # Create Profile linked to User
         profile = MemberProfile.objects.create(user=user, **validated_data)
         return profile

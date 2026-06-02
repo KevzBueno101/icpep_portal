@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.MemberListAPIView.as_view(), name='members-list'),
     path('payment-settings/', views.PaymentSettingsAPIView.as_view(), name='payment-settings'),
     path('renew-all/', views.MemberRenewAllAPIView.as_view(), name='member-renew-all'),
+    path('renew/', views.MemberRenewAPIView.as_view(), name='member-renew'),
     path('<int:pk>/', views.MemberRetrieveUpdateAPIView.as_view(), name='member-detail'),
     path('<int:pk>/approve/', views.MemberApproveAPIView.as_view(), name='member-approve'),
 ]
