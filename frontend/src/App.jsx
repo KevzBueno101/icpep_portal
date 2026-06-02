@@ -16,7 +16,6 @@ import AdminMembership from './pages/admin/placeholder/AdminMembership'
 import AdminAdmins from './pages/admin/placeholder/AdminAdmins'
 import AdminAchievements from './pages/admin/AdminAchievements'
 import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
-import AdminArchives from './pages/admin/placeholder/AdminArchives'
 import AdminProfile from './pages/admin/placeholder/AdminProfile'
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
 import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
@@ -114,16 +113,6 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <AdminAnnouncement />
-                </AdminLayout>
-              </AdminProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/archives"
-            element={
-              <AdminProtectedRoute>
-                <AdminLayout>
-                  <AdminArchives />
                 </AdminLayout>
               </AdminProtectedRoute>
             }

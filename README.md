@@ -11,19 +11,20 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Prerequisites
 
+- Python 3.10+
+- Node.js 16+ & npm
+- PostgreSQL 15+ (ensure service is running)
+- Git
+
 ## Recent changes (developer notes)
 
 - Backend: admin accounts endpoint (`GET /api/users/admins/`) now returns paginated responses using DRF's `PageNumberPagination` (shape: `{ results: [...], count, next, previous }`). Update frontend calls to use `res.data.results`.
 - Backend: if you encounter `ProgrammingError: column users_user.must_change_password does not exist`, the model includes `must_change_password` but the DB may be missing the column. See "Database migrations" below for a quick fix.
 - Frontend: desktop admin sidebar is fixed on large screens (does not scroll). Admin pages received defensive null-safety fixes to avoid runtime crashes when API responses vary.
+- Frontend: Create Account now requires agreeing to the Privacy Policy before continuing.
+- Frontend: Admin `Archives` page and navigation item were removed from the dashboard.
 
 When pulling changes, run migrations as described in the "Database migrations" section.
-
-
-- Python 3.10+
-- Node.js 16+ & npm
-- PostgreSQL 15+ (ensure service is running)
-- Git
 
 ## Project Structure
 

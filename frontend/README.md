@@ -95,4 +95,6 @@ For more information, see the main project README at the repository root.
 
 - Admin sidebar: desktop sidebar is now fixed on large screens so it stays visible while scrolling. The layout reserves `lg:ml-56` space for the sidebar.
 - Defensive fixes: admin pages (`AdminDashboard`, admin lists) were updated to handle missing or non-paginated API responses safely. If an admin list looks empty, inspect the API response — it should be paginated and include `results`.
+- Registration now requires an explicit Privacy Policy agreement before continuing.
+- Admin `Archives` page has been removed from the dashboard navigation and routing.
 

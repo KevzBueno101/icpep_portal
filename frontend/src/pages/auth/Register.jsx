@@ -169,6 +169,8 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -237,7 +239,8 @@ const Register = () => {
         !checkingAvailability.username &&
         form.password.length >= 8 &&
         hasValue(form.confirm_password) &&
-        form.password === form.confirm_password
+        form.password === form.confirm_password &&
+        agreedToPrivacy
       )
     }
 
@@ -281,6 +284,8 @@ const Register = () => {
         toast.error('Please wait while we check email and username availability.')
       } else if (form.password.length < 8) {
         toast.error('Password must be at least 8 characters.')
+      } else if (!agreedToPrivacy) {
+        toast.error('Please agree to the Privacy Policy before continuing.')
       } else {
         toast.error('Passwords do not match.')
       }
@@ -509,6 +514,11 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!agreedToPrivacy) {
+      toast.error('Please agree to the Privacy Policy before registering.')
+      return
+    }
+
     if (![1, 2, 3, 4, 5].every(validateStep)) {
       return
     }
@@ -623,6 +633,31 @@ const Register = () => {
                   onToggle={() => setShowConfirmPassword((prev) => !prev)}
                   error={confirmPasswordError}
                 />
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={agreedToPrivacy}
+                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  <div className="text-sm text-slate-700">
+                    <span>I agree to the </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPrivacyPolicy(true)}
+                      className="font-semibold text-sky-600 hover:underline"
+                    >
+                      Privacy Policy
+                    </button>
+                    <span> and terms.</span>
+                  </div>
+                </label>
+                {!agreedToPrivacy && (
+                  <p className="mt-2 text-xs text-red-500">You must agree before continuing.</p>
+                )}
               </div>
             </div>
           )}
@@ -858,6 +893,67 @@ const Register = () => {
           Already have an account?{' '}
           <Link to="/login" className="text-sky-600 hover:underline">Sign in</Link>
         </p>
+
+        {showPrivacyPolicy && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-6">
+            <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Privacy Policy</h2>
+                  <p className="text-sm text-slate-500">Please read and agree before continuing.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPrivacyPolicy(false)}
+                  className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  aria-label="Close privacy policy"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-5 text-sm text-slate-600">
+                <p className="text-slate-800 font-semibold">Privacy and Data Use</p>
+                <p>
+                  By creating an account, you agree that ICPEP may collect and process your provided
+                  personal information for membership registration, identity verification, and program
+                  administration. This includes your name, email, student number, contact number, uploaded
+                  school ID, profile picture, and payment proof.
+                </p>
+                <p>
+                  We will use your information only for ICPEP membership management, communication, and
+                  event coordination. Your data will not be shared with third parties except as required by law.
+                </p>
+                <p>
+                  You may request access to your data or ask for corrections by contacting the ICPEP admin.
+                  We follow reasonable security measures to protect your information.
+                </p>
+                <p>
+                  By clicking &ldquo;I agree&rdquo;, you confirm that you have read and understood this Privacy
+                  Policy and consent to the collection and use of your data as described.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowPrivacyPolicy(false)}
+                  className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAgreedToPrivacy(true)
+                    setShowPrivacyPolicy(false)
+                  }}
+                  className="rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-700"
+                >
+                  I agree
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

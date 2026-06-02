@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { label: 'Admins', to: '/admin/admins' },
   { label: 'Achievements', to: '/admin/achievements' },
   { label: 'Announcement', to: '/admin/announcement' },
-  { label: 'Archives', to: '/admin/archives' },
   { label: 'Profile', to: '/admin/profile' },
   { label: 'Logs / Audit Trails', to: '/admin/logs' },
 ]
@@ -44,13 +43,6 @@ const ICONS = {
       <path d="M3 10.5a8.5 8.5 0 0 0 16 4.5V6a8.5 8.5 0 0 0-16 4.5z" />
       <path d="M7 9v6" />
       <path d="M11 9l2 2-2 2" />
-    </svg>
-  ),
-  '/admin/archives': (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 6H4v12h16V6z" />
-      <path d="M4 10h16" />
-      <path d="M9 14h6" />
     </svg>
   ),
   '/admin/profile': (
