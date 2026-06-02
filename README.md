@@ -24,6 +24,7 @@ A full-stack Django + React application for managing university member profiles,
 - Frontend: Create Account now requires agreeing to the Privacy Policy before continuing.
 - Frontend: Admin `Archives` page and navigation item were removed from the dashboard.
 - Frontend: Admin announcement form now supports multi-image upload, edit-mode image preview, and removal of existing announcement images.
+- Frontend: Announcement updates and image deletions now propagate to landing announcement views immediately via client-side refresh events.
 
 When pulling changes, run migrations as described in the "Database migrations" section.
 
