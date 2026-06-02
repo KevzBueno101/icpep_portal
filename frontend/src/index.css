@@ -1,3 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-slate-100 text-slate-900 antialiased;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    font-family: Inter, Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+      Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+  }
+
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: Orbitron, Rajdhani, ui-sans-serif, system-ui;
+  }
+
+  input,
+  button,
+  select,
+  textarea {
+    @apply font-sans;
+  }
+}
+

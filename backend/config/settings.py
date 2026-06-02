@@ -21,19 +21,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / '.env')
 
 
-
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-kq=*9_tp@-7ma=n5v^@3iozw9+4e9#f9wrx3@5m_*(!mybuj!6'
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY env var is not set")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 
 # Application definition
@@ -52,7 +54,9 @@ INSTALLED_APPS = [
     # Local apps
     'users',
     'authentication',
-    'members',   # ← make sure this line exists
+    'members',
+    'milestones',
+    'announcements',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -143,8 +147,15 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cross-Origin Resource Sharing (CORS)
+CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Debug prints removed
 
@@ -153,6 +164,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # REST framework defaults
+AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = [
+    'authentication.backends.EmailBackend',
+]
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -162,3 +179,55 @@ REST_FRAMEWORK = {
     ),
 }
 
+from datetime import timedelta
+
+INSTALLED_APPS += ['rest_framework_simplejwt.token_blacklist']
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME':  timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS':  True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 25,
+}
+
+SECURE_BROWSER_XSS_FILTER     = True
+SECURE_CONTENT_TYPE_NOSNIFF    = True
+X_FRAME_OPTIONS                = 'DENY'
+
+DATA_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
+
+# --- Enable ONLY after confirmed HTTPS in production ---
+# SECURE_SSL_REDIRECT            = True
+# SECURE_HSTS_SECONDS            = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD            = True
+# SESSION_COOKIE_SECURE          = True
+# CSRF_COOKIE_SECURE             = True
+INSTALLED_APPS += ['csp']
+MIDDLEWARE    += ['csp.middleware.CSPMiddleware']
+
+
+CONTENT_SECURITY_POLICY = {
+    'DIRECTIVES': {
+        'default-src': ("'self'",),
+        'script-src':  ("'self'",),
+        'style-src':   ("'self'", "'unsafe-inline'"),
+        'img-src':     ("'self'", "data:", "http://127.0.0.1:8000"),
+        'connect-src': ("'self'", "http://127.0.0.1:8000"),
+    }
+}

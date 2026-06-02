@@ -11,6 +11,15 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Prerequisites
 
+## Recent changes (developer notes)
+
+- Backend: admin accounts endpoint (`GET /api/users/admins/`) now returns paginated responses using DRF's `PageNumberPagination` (shape: `{ results: [...], count, next, previous }`). Update frontend calls to use `res.data.results`.
+- Backend: if you encounter `ProgrammingError: column users_user.must_change_password does not exist`, the model includes `must_change_password` but the DB may be missing the column. See "Database migrations" below for a quick fix.
+- Frontend: desktop admin sidebar is fixed on large screens (does not scroll). Admin pages received defensive null-safety fixes to avoid runtime crashes when API responses vary.
+
+When pulling changes, run migrations as described in the "Database migrations" section.
+
+
 - Python 3.10+
 - Node.js 16+ & npm
 - PostgreSQL 15+ (ensure service is running)
@@ -69,10 +78,11 @@ icpep-portal/
 #### 1a. Create Virtual Environment
 
 ```powershell
-cd C:\Users\kevin\icpep-portal
+cd C:\Users\<your-username>\icpep-portal
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
+
 
 #### 1b. Install Dependencies
 
@@ -81,7 +91,7 @@ cd backend
 pip install -r requirements.txt
 ```
 
-#### 1c. Configure Database
+### 1c. Configure Database
 
 Copy `.env.template` to `backend/.env` and fill in your actual database credentials:
 
@@ -90,17 +100,16 @@ cp backend\.env.template backend\.env
 # Then edit backend\.env with your actual DB values
 ```
 
+> Note: `backend/config/settings.py` loads env vars from `backend/.env` (it uses `load_dotenv(BASE_DIR / '.env')`).
+
 **First time setup**: Create the database and user in PostgreSQL. Replace `<db_name>`, `<username>`, and `<password>` with your actual values:
 
 ```powershell
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE DATABASE <db_name>;"
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE USER <username> WITH PASSWORD '<password>';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET client_encoding TO 'utf8';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_isolation TO 'read committed';"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET default_transaction_deferrable TO on;"
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER ROLE <username> SET timezone TO 'UTC';"
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE <db_name> TO <username>;"
 ```
+
 
 #### 1d. Run Migrations
 
@@ -137,14 +146,35 @@ Backend runs at `http://127.0.0.1:8000`
 **Endpoints**:
 - `GET /` — API health check
 - `GET /admin/` — Django admin
+
+**Auth**
 - `POST /api/auth/register/` — Create account
-- `POST /api/auth/login/` — Login (returns JWT tokens)
+- `POST /api/auth/login/` — Member login (returns JWT tokens)
+- `POST /api/auth/admin-login/` — Admin portal login (returns JWT tokens)
 - `POST /api/auth/refresh/` — Refresh access token
 - `GET /api/auth/me/` — Current user info
-- `GET /api/members/` — List all members (admin only)
+- `GET /api/auth/availability/?email=...&username=...` — Check email/username availability
+
+**Members**
+- `GET /api/members/` — List all members (admin-only)
+- `POST /api/members/` — Create member profile (admin-only)
 - `GET /api/members/<id>/` — Retrieve member profile
 - `PATCH /api/members/<id>/` — Update member profile (owner or admin)
-- `POST /api/members/<id>/approve/` — Approve member (admin only)
+- `POST /api/members/<id>/approve/` — Approve member (admin)
+- `GET /api/members/payment-settings/` — Retrieve payment settings
+- `PATCH /api/members/payment-settings/` — Update payment settings (Admin: President/Treasurer)
+
+**Admin accounts (officer management)**
+- `GET /api/users/admins/` — List all ADMIN accounts (President or delegated Secretary)
+- `POST /api/users/admins/` — Create an ADMIN account (President only)
+- `GET /api/users/admins/<id>/` — View an admin account
+- `PATCH /api/users/admins/<id>/` — Update an admin account
+- `DELETE /api/users/admins/<id>/` — Delete an admin account
+- `PATCH /api/users/admins/<id>/assign-role/` — Assign role/position to a user
+- `PATCH /api/users/admins/<id>/delegate/` — Toggle secretary delegation (President only)
+- `POST /api/users/admins/year-end-reset/` — Reset ALL admin positions to NONE (President only)
+- `POST /api/users/admins/create/` — Create officer accounts (President only)
+
 
 ### Frontend
 
@@ -278,7 +308,11 @@ npm install <package>
    ```
 3. Update `backend/.env` with the new password and retry
 
+### Django fails to load expected settings/env
+If `DB_NAME`, `DB_USER`, etc. don’t change after updating `backend/.env`, make sure you are running Django from the repo root so `backend/config/settings.py` can locate `.env` correctly.
+
 ### Database Does Not Exist
+
 **Error**: `FATAL: database "<database_name>" does not exist`
 
 **Solution**: Create the database (see section 1c above)
@@ -318,9 +352,17 @@ DB_PORT=5432
 
 ⚠️ **Never commit `.env` to version control.** It's already in `.gitignore`.
 
-Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development. Update this for production deployments.
+### CORS / Frontend origin
+
+CORS is currently permissive (`CORS_ALLOW_ALL_ORIGINS = True`). For production, restrict it to your frontend domain(s) in `backend/config/settings.py`.
+
+### API base URL
+
+Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development.
+Update it for production deployments (or refactor to use a build-time env var).
 
 ## Deployment Tips
+
 
 1. **Environment**: Use production-level `.env` values (strong SECRET_KEY, secure DB password, DEBUG=False).
 2. **CORS**: Adjust `CORS_ALLOW_ALL_ORIGINS` in `backend/config/settings.py` to specific domain(s).
@@ -338,6 +380,51 @@ Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://12
 - [ ] Set up CI/CD pipeline (GitHub Actions, GitLab CI)
 - [ ] Configure Cloudinary for image storage
 - [ ] Add pagination and filtering to members list API
+
+## Database migrations (helpers)
+
+If `makemigrations` does not detect model changes (e.g., your models include a field but the DB column is missing), you can create an explicit migration and apply it:
+
+1. Create an empty migration for the `users` app:
+
+```powershell
+cd backend
+python manage.py makemigrations users --empty -n add_must_change_password
+```
+
+2. Edit the generated migration file under `backend/users/migrations/` and add an `AddField` operation, for example:
+
+```python
+from django.db import migrations, models
+
+class Migration(migrations.Migration):
+   dependencies = [
+      ('users', '0003_term_delegation'),
+   ]
+
+   operations = [
+      migrations.AddField(
+         model_name='user',
+         name='must_change_password',
+         field=models.BooleanField(default=False),
+      ),
+   ]
+```
+
+3. Run migrations:
+
+```powershell
+python manage.py migrate
+```
+
+Or, if you prefer a quick SQL fix on PostgreSQL (not recommended for long-term schema management), run:
+
+```powershell
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U <db_admin> -d <db_name> -c "ALTER TABLE users_user ADD COLUMN must_change_password boolean DEFAULT false;"
+```
+
+After applying the migration or the SQL change, re-run the Django shell or your failing command to confirm the `ProgrammingError` is resolved.
+
 
 ## Contributing
 

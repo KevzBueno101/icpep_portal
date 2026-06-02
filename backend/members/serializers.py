@@ -1,6 +1,25 @@
 from rest_framework import serializers
-from .models import MemberProfile
+from .models import MemberProfile, PaymentSettings
 
+import imghdr
+
+ALLOWED_IMAGE_TYPES = {
+    'rgb', 'gif', 'pbm', 'pgm', 'ppm',
+    'tiff', 'rast', 'xbm', 'jpeg', 'png', 'webp'
+}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+def validate_image_file(value):
+    if value is None:
+        return value
+    if value.size > MAX_IMAGE_SIZE:
+        raise serializers.ValidationError("Max image size is 5 MB.")
+    detected = imghdr.what(value)
+    if detected not in ALLOWED_IMAGE_TYPES:
+        raise serializers.ValidationError(
+            "Upload a valid image (JPEG, PNG, GIF, WebP)."
+        )
+    return value
 
 class MemberProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -12,7 +31,8 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'user_email', 'user_role', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number', 'address',
-            'birthdate', 'profile_picture', 'membership_status', 'created_at', 'updated_at'
+            'birthdate', 'profile_picture', 'payment_method', 'payment_proof_image',
+            'coe_id_image', 'membership_status', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'membership_status', 'created_at', 'updated_at']
 
@@ -21,3 +41,78 @@ class MemberApprovalSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberProfile
         fields = ['membership_status']
+
+
+class PaymentSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentSettings
+        fields = ['id', 'gcash_number', 'gcash_name']
+
+
+
+class MemberCreateSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(write_only=True)
+
+    class Meta:
+        model = MemberProfile
+        fields = [
+            'id', 'user_email', 'first_name', 'middle_name', 'last_name',
+            'student_number', 'course', 'year_level', 'section', 'contact_number',
+            'address', 'birthdate', 'profile_picture', 'membership_status'
+        ]
+        extra_kwargs = {
+            'middle_name': {'required': False, 'allow_blank': True},
+            'address': {'required': False, 'allow_blank': True},
+            'birthdate': {'required': False, 'allow_null': True},
+            'profile_picture': {'required': False, 'allow_null': True},
+            'membership_status': {'required': False},
+        }
+
+    def validate_user_email(self, value):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_student_number(self, value):
+        if MemberProfile.objects.filter(student_number__iexact=value).exists():
+            raise serializers.ValidationError("A member with this student number already exists.")
+        return value
+
+    def create(self, validated_data):
+        import secrets, string
+        alphabet = string.ascii_letters + string.digits
+        temp_pw = ''.join(secrets.choice(alphabet) for _ in range(16))
+
+        user = User.objects.create_user(
+        email=user_email,
+        username=username,
+        password=temp_pw,
+        role=User.Role.MEMBER,
+        position=User.Position.NONE,
+        must_change_password=True,   # <-- force reset on first login
+    )
+    # Email temp_pw to member securely — never return it in the API response
+        return MemberProfile.objects.create(user=user, **validated_data)
+
+        user_email = validated_data.pop('user_email')
+
+        # Auto-generate username from email prefix
+        username = user_email.split('@')[0]
+        student_number = validated_data.get('student_number')
+        if User.objects.filter(username__iexact=username).exists():
+            username = f"{username}_{student_number}"
+
+        # Provision corresponding User
+        user = User.objects.create_user(
+            email=user_email,
+            username=username,
+            password="Changeme123!",  # Default temporary password
+            role=User.Role.MEMBER,
+            position=User.Position.NONE
+        )
+
+        # Create Profile linked to User
+        profile = MemberProfile.objects.create(user=user, **validated_data)
+        return profile
