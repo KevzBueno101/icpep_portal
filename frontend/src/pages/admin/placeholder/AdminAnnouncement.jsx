@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -29,6 +30,7 @@ const AdminAnnouncement = () => {
   // Collapsible form
   const [showForm, setShowForm] = useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = useState(null)
+  const [expandedAnnouncementId, setExpandedAnnouncementId] = useState(null)
 
   const [deletingAnnouncement, setDeletingAnnouncement] = useState(null)
 
@@ -37,6 +39,13 @@ const AdminAnnouncement = () => {
   // Image upload UI (client-side only; actual upload happens after save)
   const [selectedImages, setSelectedImages] = useState([]) // File[]
   const [imageUploading, setImageUploading] = useState(false)
+
+  // Pagination, search, and filters
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const itemsPerPage = 10
 
   const isEditMode = !!editingAnnouncement
 
@@ -49,6 +58,7 @@ const AdminAnnouncement = () => {
     try {
       const res = await api.get('/announcements/admin/')
       setAnnouncements(res.data.results)
+      setCurrentPage(1)
     } catch (err) {
       toast.error('Failed to load announcements.')
     } finally {
@@ -58,6 +68,7 @@ const AdminAnnouncement = () => {
 
   const handleCreate = () => {
     setEditingAnnouncement(null)
+    setExpandedAnnouncementId(null)
     setFormData(emptyForm)
     setSelectedImages([])
     setShowForm(true)
@@ -65,6 +76,8 @@ const AdminAnnouncement = () => {
 
   const handleEdit = (announcement) => {
     setEditingAnnouncement(announcement)
+    setExpandedAnnouncementId(announcement.id)
+    setShowForm(false)
     setFormData({
       title: announcement.title || '',
       body: announcement.body || '',
@@ -74,8 +87,14 @@ const AdminAnnouncement = () => {
       is_published: announcement.is_published !== false,
     })
     setSelectedImages([])
-    // IMPORTANT: expand form when clicking edit (requested)
-    setShowForm(true)
+  }
+
+  const handleCancelEdit = () => {
+    setShowForm(false)
+    setEditingAnnouncement(null)
+    setExpandedAnnouncementId(null)
+    setFormData(emptyForm)
+    setSelectedImages([])
   }
 
   const uploadImages = async (announcementId, files) => {
@@ -114,6 +133,7 @@ const AdminAnnouncement = () => {
         toast.success('Announcement created.')
         // Upload images for newly created announcement
         await uploadImages(created.id, selectedImages)
+        notifyAnnouncementUpdated(created.id)
         setShowForm(false)
         setEditingAnnouncement(null)
         setFormData(emptyForm)
@@ -124,8 +144,10 @@ const AdminAnnouncement = () => {
 
       // If edit mode, upload images after updating
       await uploadImages(editingAnnouncement.id, selectedImages)
+      notifyAnnouncementUpdated(editingAnnouncement.id)
 
       setShowForm(false)
+      setExpandedAnnouncementId(null)
       setEditingAnnouncement(null)
       setFormData(emptyForm)
       setSelectedImages([])
@@ -143,6 +165,7 @@ const AdminAnnouncement = () => {
     try {
       await api.delete(`/announcements/admin/${deletingAnnouncement.id}/`)
       toast.success('Announcement deleted.')
+      notifyAnnouncementDeleted(deletingAnnouncement.id)
       setDeletingAnnouncement(null)
       fetchAnnouncements()
     } catch (err) {
@@ -171,10 +194,12 @@ const AdminAnnouncement = () => {
       toast.success('Image removed.')
       setEditingAnnouncement((prev) => {
         if (!prev) return prev
-        return {
+        const updated = {
           ...prev,
           images: prev.images?.filter((img) => img.id !== imageId) || [],
         }
+        notifyAnnouncementUpdated(updated.id)
+        return updated
       })
       fetchAnnouncements()
     } catch (err) {
@@ -187,6 +212,45 @@ const AdminAnnouncement = () => {
     setEditingAnnouncement(null)
     setFormData(emptyForm)
     setSelectedImages([])
+  }
+
+  const filteredAnnouncements = announcements.filter((announcement) => {
+    const matchesSearch =
+      announcement.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      announcement.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (announcement.author && announcement.author.toLowerCase().includes(searchQuery.toLowerCase()))
+    const matchesCategory = selectedCategory === 'all' || announcement.category === selectedCategory
+    const matchesStatus =
+      selectedStatus === 'all' ||
+      (selectedStatus === 'published' && announcement.is_published) ||
+      (selectedStatus === 'draft' && !announcement.is_published) ||
+      (selectedStatus === 'pinned' && announcement.pinned)
+    return matchesSearch && matchesCategory && matchesStatus
+  })
+
+  const totalPages = Math.ceil(filteredAnnouncements.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const displayedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+    setCurrentPage(1)
+  }
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value)
+    setCurrentPage(1)
+  }
+
+  const handleStatusChange = (e) => {
+    setSelectedStatus(e.target.value)
+    setCurrentPage(1)
   }
 
   if (loading) {
@@ -211,6 +275,43 @@ const AdminAnnouncement = () => {
         >
           + New Announcement
         </button>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            placeholder="Search announcements..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-64"
+          />
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-48"
+          >
+            <option value="all">All Categories</option>
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedStatus}
+            onChange={handleStatusChange}
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-48"
+          >
+            <option value="all">All Status</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="pinned">Pinned</option>
+          </select>
+        </div>
+        <div className="text-sm text-slate-500">
+          Showing {displayedAnnouncements.length} of {filteredAnnouncements.length} announcements
+        </div>
       </div>
 
       {showForm && (
@@ -401,72 +502,296 @@ const AdminAnnouncement = () => {
       )}
 
       <div className="space-y-4">
-        {announcements.length === 0 ? (
+        {filteredAnnouncements.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-            No announcements yet.
+            {announcements.length === 0 ? 'No announcements yet.' : 'No announcements match your search or filter.'}
           </div>
         ) : (
-          announcements.map((announcement) => (
-            <div key={announcement.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                      {announcement.category}
-                    </span>
-                    {announcement.pinned && (
-                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                        Pinned
-                      </span>
-                    )}
-                    {!announcement.is_published && (
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                        Draft
-                      </span>
-                    )}
-                    <span className="text-xs text-slate-500">
-                      {new Date(announcement.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">{announcement.title}</h3>
-                  <p className="mt-1 text-sm text-slate-500">By {announcement.author || 'Admin'}</p>
-                  <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                    {announcement.body}
-                  </p>
-                </div>
+          displayedAnnouncements.map((announcement) => {
+            const isCardEditing = announcement.id === expandedAnnouncementId
+            return (
+              <div key={announcement.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                {isCardEditing ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Edit Announcement</h3>
+                        <p className="text-sm text-slate-500">Update this announcement inline.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Title *</label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="Announcement title"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
+                          <select
+                            required
+                            value={formData.category}
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          >
+                            {CATEGORY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleTogglePinned(announcement)}
-                    className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50"
-                  >
-                    {announcement.pinned ? 'Unpin' : 'Pin'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(announcement)}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingAnnouncement(announcement)}
-                    className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">Body *</label>
+                        <textarea
+                          required
+                          rows={5}
+                          value={formData.body}
+                          onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          placeholder="Write the announcement details"
+                        />
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Author</label>
+                          <input
+                            type="text"
+                            value={formData.author}
+                            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="Defaults to current admin"
+                          />
+                        </div>
+                        <div className="flex items-center gap-5 pt-6">
+                          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={formData.pinned}
+                              onChange={(e) => setFormData({ ...formData, pinned: e.target.checked })}
+                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            />
+                            Pinned
+                          </label>
+                          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={formData.is_published}
+                              onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            />
+                            Published
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Upload images (optional)
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || [])
+                              setSelectedImages((prev) => [...prev, ...files])
+                            }}
+                            className="w-full cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                          />
+
+                          {selectedImages.length > 0 && (
+                            <div className="mt-2 space-y-2 text-xs text-slate-500">
+                              <div>{selectedImages.length} file(s) selected.</div>
+                              <div className="grid gap-2 text-slate-700">
+                                {selectedImages.map((file, idx) => (
+                                  <div
+                                    key={`${file.name}-${file.size}-${idx}`}
+                                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
+                                  >
+                                    <span className="truncate">{file.name}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
+                                      className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {isEditMode && existingImages?.length > 0 && (
+                          <div>
+                            <div className="mb-2 text-sm font-semibold text-slate-900">
+                              Existing images
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              {existingImages.map((img) => (
+                                <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                                  <img
+                                    src={img.image}
+                                    alt={formData.title || 'Announcement image'}
+                                    className="h-32 w-full rounded-lg object-cover"
+                                    loading="lazy"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveExistingImage(img.id)}
+                                    className="mt-2 w-full rounded-full border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {imageUploading && (
+                          <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+                            Uploading images...
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                        <button
+                          type="submit"
+                          disabled={saving || imageUploading}
+                          className="rounded-full bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {saving ? 'Saving...' : 'Update'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                          {announcement.category}
+                        </span>
+                        {announcement.pinned && (
+                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                            Pinned
+                          </span>
+                        )}
+                        {!announcement.is_published && (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            Draft
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-500">
+                          {new Date(announcement.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900">{announcement.title}</h3>
+                      <p className="mt-1 text-sm text-slate-500">By {announcement.author || 'Admin'}</p>
+                      <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                        {announcement.body}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePinned(announcement)}
+                        className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50"
+                      >
+                        {announcement.pinned ? 'Unpin' : 'Pin'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(announcement)}
+                        className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingAnnouncement(announcement)}
+                        className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => handlePageChange(page)}
+                className={`h-10 w-10 rounded-full text-sm font-semibold ${
+                  currentPage === page
+                    ? 'bg-sky-600 text-white'
+                    : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={!!deletingAnnouncement}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
+import ImageModal from '../../components/ImageModal'
 
 const CATEGORIES = {
   founding:    { label: 'Founding',     accent: '#38bdf8', dimAccent: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.35)'  },
@@ -15,11 +16,16 @@ export default function MilestoneDetail() {
   const [milestone, setMilestone] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showAllImages, setShowAllImages] = useState(false)
+  const [modalImages, setModalImages] = useState(null)
+  const [modalInitialIndex, setModalInitialIndex] = useState(0)
 
   const navigate = useNavigate()
 
   const handleBackToTimeline = () => {
-    // Navigate first, then scroll after Landing renders.
+    // Close modal if open
+    setModalImages(null)
+    setModalInitialIndex(0)
+    // Navigate to landing page with milestones section
     navigate('/landing#milestones', { state: { scrollTo: 'milestones' } })
   }
 
@@ -66,8 +72,29 @@ export default function MilestoneDetail() {
   const images = milestone.images || []
   const displayImages = showAllImages ? images : images.slice(0, 3)
 
+  const handleImageClick = (index) => {
+    const imageUrls = images.map(img => img.image).filter(Boolean)
+    if (imageUrls.length > 0) {
+      setModalImages(imageUrls)
+      setModalInitialIndex(index)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setModalImages(null)
+    setModalInitialIndex(0)
+  }
+
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
+    <>
+      {modalImages && (
+        <ImageModal
+          images={modalImages}
+          initialIndex={modalInitialIndex}
+          onClose={handleCloseModal}
+        />
+      )}
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
       {/* Subtle grid bg */}
       <div
         className="pointer-events-none fixed inset-0 opacity-[0.04]"
@@ -79,7 +106,7 @@ export default function MilestoneDetail() {
       />
 
       {/* Header */}
-      <div className="relative pt-20 pb-12">
+      <div className="relative pt-20 pb-12 z-50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -148,13 +175,18 @@ export default function MilestoneDetail() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-6">Gallery</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {displayImages.map((img) => (
-                  <div key={img.id} className="rounded-xl overflow-hidden">
+                {displayImages.map((img, index) => (
+                  <div 
+                    key={img.id} 
+                    className="rounded-xl overflow-hidden cursor-pointer group"
+                    onClick={() => handleImageClick(index)}
+                  >
                     <img
                       src={img.image}
                       alt={milestone.title}
-                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                   </div>
                 ))}
               </div>
@@ -187,5 +219,6 @@ export default function MilestoneDetail() {
         </div>
       </div>
     </div>
+    </>
   )
 }

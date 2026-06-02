@@ -49,10 +49,15 @@ class MemberRenewSerializer(serializers.ModelSerializer):
         allow_null=False,
         validators=[validate_image_file]
     )
+    coe_id_image = serializers.ImageField(
+        required=True,
+        allow_null=False,
+        validators=[validate_image_file]
+    )
 
     class Meta:
         model = MemberProfile
-        fields = ['year_level', 'payment_proof_image']
+        fields = ['year_level', 'payment_proof_image', 'coe_id_image']
 
 
 class PaymentSettingsSerializer(serializers.ModelSerializer):
@@ -92,10 +97,13 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        from django.contrib.auth import get_user_model
+
         import secrets, string
         alphabet = string.ascii_letters + string.digits
         temp_pw = ''.join(secrets.choice(alphabet) for _ in range(16))
 
+        User = get_user_model()
         user_email = validated_data.pop('user_email')
 
         username = user_email.split('@')[0]

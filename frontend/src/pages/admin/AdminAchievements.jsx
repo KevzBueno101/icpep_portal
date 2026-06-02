@@ -16,8 +16,13 @@ const AdminAchievements = () => {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState(null)
+  const [expandedMilestoneId, setExpandedMilestoneId] = useState(null)
   const [deletingMilestone, setDeletingMilestone] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const itemsPerPage = 10
 
   const [formData, setFormData] = useState({
     title: '',
@@ -40,6 +45,7 @@ const AdminAchievements = () => {
     try {
       const res = await api.get('/milestones/admin/')
       setMilestones(res.data.results)
+      setCurrentPage(1)
     } catch (err) {
       toast.error('Failed to load milestones.')
     } finally {
@@ -49,6 +55,7 @@ const AdminAchievements = () => {
 
   const handleCreate = () => {
     setEditingMilestone(null)
+    setExpandedMilestoneId(null)
     setFormData({
       title: '',
       headline: '',
@@ -63,6 +70,8 @@ const AdminAchievements = () => {
 
   const handleEdit = (milestone) => {
     setEditingMilestone(milestone)
+    setExpandedMilestoneId(milestone.id)
+    setShowForm(false)
     setFormData({
       title: milestone.title,
       headline: milestone.headline,
@@ -72,7 +81,20 @@ const AdminAchievements = () => {
       category: milestone.category,
     })
     setImageFiles([])
-    setShowForm(true)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingMilestone(null)
+    setExpandedMilestoneId(null)
+    setFormData({
+      title: '',
+      headline: '',
+      description: '',
+      content: '',
+      date: '',
+      category: 'achievement',
+    })
+    setImageFiles([])
   }
 
   const handleSubmit = async (e) => {
@@ -100,6 +122,7 @@ const AdminAchievements = () => {
       }
 
       setShowForm(false)
+      setExpandedMilestoneId(null)
       fetchMilestones()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to save milestone.')
@@ -150,6 +173,35 @@ const AdminAchievements = () => {
     }
   }
 
+  const filteredMilestones = milestones.filter((milestone) => {
+    const matchesSearch =
+      milestone.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      milestone.headline.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      milestone.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || milestone.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const totalPages = Math.ceil(filteredMilestones.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const displayedMilestones = filteredMilestones.slice(startIndex, endIndex)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+    setCurrentPage(1)
+  }
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value)
+    setCurrentPage(1)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
@@ -160,7 +212,7 @@ const AdminAchievements = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-900">Achievements & Milestones</h2>
@@ -172,6 +224,33 @@ const AdminAchievements = () => {
         >
           + New Milestone
         </button>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            placeholder="Search achievements..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-64"
+          />
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-48"
+          >
+            <option value="all">All Categories</option>
+            {CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-sm text-slate-500">
+          Showing {displayedMilestones.length} of {filteredMilestones.length} achievements
+        </div>
       </div>
 
       {showForm && (
@@ -290,75 +369,242 @@ const AdminAchievements = () => {
       )}
 
       <div className="space-y-4">
-        {milestones.length === 0 ? (
+        {filteredMilestones.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-            No milestones yet. Create your first achievement!
+            {milestones.length === 0 ? 'No milestones yet. Create your first achievement!' : 'No achievements match your search or filter.'}
           </div>
         ) : (
-          milestones.map((milestone) => (
-            <div
-              key={milestone.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                      {milestone.category}
-                    </span>
-                    <span className="text-xs text-slate-500">{milestone.date}</span>
+          displayedMilestones.map((milestone) => {
+            const isCardEditing = milestone.id === expandedMilestoneId
+            return (
+              <div
+                key={milestone.id}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                {isCardEditing ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">Edit Milestone</h3>
+                        <p className="text-sm text-slate-500">Update this achievement inline.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Title *</label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="Milestone title"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Headline *</label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.headline}
+                            onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="Short headline for timeline"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Description *</label>
+                        <textarea
+                          required
+                          rows={2}
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          placeholder="Short description for timeline card"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Content (Blog) *</label>
+                        <textarea
+                          required
+                          rows={4}
+                          value={formData.content}
+                          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          placeholder="Full content for detail page"
+                        />
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+                          <input
+                            type="date"
+                            required
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Category *</label>
+                          <select
+                            required
+                            value={formData.category}
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          >
+                            {CATEGORY_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Images</label>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => setImageFiles(Array.from(e.target.files))}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">Upload multiple images (will be ordered by upload order)</p>
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          type="submit"
+                          disabled={saving || uploadingImages}
+                          className="rounded-full bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {saving ? 'Saving...' : uploadingImages ? 'Uploading images...' : 'Update'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">{milestone.title}</h3>
-                  <p className="mt-1 text-sm text-slate-600">{milestone.headline}</p>
-                  <p className="mt-1 text-sm text-slate-500 line-clamp-2">{milestone.description}</p>
-                  {milestone.images && milestone.images.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs text-slate-500 mb-2">{milestone.images.length} image(s)</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {milestone.images.map((img) => (
-                          <div key={img.id} className="relative group">
-                            <img
-                              src={img.image}
-                              alt={milestone.title}
-                              className="w-full h-20 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteImage(img.id)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Delete image"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                            {milestone.category}
+                          </span>
+                          <span className="text-xs text-slate-500">{milestone.date}</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900">{milestone.title}</h3>
+                        <p className="mt-1 text-sm text-slate-600">{milestone.headline}</p>
+                        <p className="mt-1 text-sm text-slate-500 line-clamp-2">{milestone.description}</p>
+                        {milestone.images && milestone.images.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs text-slate-500 mb-2">{milestone.images.length} image(s)</p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {milestone.images.map((img) => (
+                                <div key={img.id} className="relative group">
+                                  <img
+                                    src={img.image}
+                                    alt={milestone.title}
+                                    className="w-full h-20 object-cover rounded-lg"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteImage(img.id)}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Delete image"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(milestone)}
+                          className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingMilestone(milestone)}
+                          className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(milestone)}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingMilestone(milestone)}
-                    className="rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </div>
+                  </>
+                )}
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => handlePageChange(page)}
+                className={`h-10 w-10 rounded-full text-sm font-semibold ${
+                  currentPage === page
+                    ? 'bg-sky-600 text-white'
+                    : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={!!deletingMilestone}

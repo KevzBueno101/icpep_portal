@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 
 // How often to silently poll for approval status (in milliseconds)
@@ -10,6 +11,12 @@ const MembershipPending = () => {
   const { user, loading, refreshUser, logout } = useAuth()
   const navigate = useNavigate()
   const [checking, setChecking] = useState(false)
+  const [showRenewModal, setShowRenewModal] = useState(false)
+  const [yearLevel, setYearLevel] = useState(user?.year_level || '1')
+  const [paymentProofFile, setPaymentProofFile] = useState(null)
+  const [coeIdFile, setCoeIdFile] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [renewError, setRenewError] = useState(null)
   const intervalRef = useRef(null)
 
   // ✅ Auto-poll: silently check approval status every 8 seconds.
@@ -97,7 +104,44 @@ const MembershipPending = () => {
     logout()
     navigate('/login', { replace: true })
   }
+  const closeRenewModal = () => {
+    setShowRenewModal(false)
+    setRenewError(null)
+    setPaymentProofFile(null)
+    setCoeIdFile(null)
+  }
 
+  const handleSubmitRenewal = async (event) => {
+    event.preventDefault()
+    setSubmitting(true)
+    setRenewError(null)
+
+    if (!paymentProofFile || !coeIdFile) {
+      setRenewError('Please upload both payment proof and COE/ID document.')
+      setSubmitting(false)
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('year_level', yearLevel)
+    formData.append('payment_proof_image', paymentProofFile)
+    formData.append('coe_id_image', coeIdFile)
+
+    try {
+      await api.post('/members/renew/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      await refreshUser()
+      toast.success('Renewal request submitted. Your membership is now pending review.')
+      closeRenewModal()
+    } catch (error) {
+      const detail = error.response?.data?.detail || error.response?.data?.year_level?.[0] || error.response?.data?.payment_proof_image?.[0] || error.response?.data?.coe_id_image?.[0]
+      setRenewError(detail || 'Unable to submit renewal. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
   // ─── Status display helpers ───────────────────────────────────────────────
 
   const statusConfig = {
@@ -142,9 +186,9 @@ const MembershipPending = () => {
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             {user.membership_status === 'REJECTED'
-              ? 'Your membership request was not approved. Please contact an administrator for more details or register again.'
+              ? 'Your membership request was not approved. You may submit a renewal request again with updated documentation, or contact an administrator for help.'
               : user.membership_status === 'EXPIRED'
-              ? 'Your membership has expired. Please contact an administrator to renew.'
+              ? 'Your membership has expired. Please submit a renewal request using the button below so we can review your updated status and documents.'
               : 'Your registration has been received. An administrator will review your submitted details shortly. This page will automatically update when you are approved.'}
           </p>
         </div>
@@ -162,7 +206,7 @@ const MembershipPending = () => {
         {/* Auto-poll indicator — only show when PENDING */}
         {user.membership_status === 'PENDING' && (
           <p className="mt-3 text-xs text-slate-400">
-            Automatically checking for updates every 8 seconds...
+            Please wait while we automatically check for approval.
           </p>
         )}
 
@@ -178,6 +222,18 @@ const MembershipPending = () => {
               {checking ? 'Checking...' : 'Check Now'}
             </button>
           )}
+
+          {/* Show renew button for expired or rejected members */}
+          {['EXPIRED', 'REJECTED'].includes(user.membership_status) && (
+            <button
+              type="button"
+              onClick={() => setShowRenewModal(true)}
+              className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              Renew Membership
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleLogout}
@@ -186,6 +242,94 @@ const MembershipPending = () => {
             Sign Out
           </button>
         </div>
+
+        {showRenewModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8">
+            <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Renew Your Membership</h2>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Submit your current year level, payment proof, and COE/ID document.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeRenewModal}
+                  className="rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form className="mt-6 space-y-5" onSubmit={handleSubmitRenewal}>
+                <div>
+                  <label htmlFor="year_level" className="block text-sm font-semibold text-slate-700">
+                    Year Level
+                  </label>
+                  <select
+                    id="year_level"
+                    value={yearLevel}
+                    onChange={(e) => setYearLevel(e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                  >
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Payment Proof
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPaymentProofFile(e.target.files?.[0] || null)}
+                    className="mt-2 w-full text-sm text-slate-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    COE / ID Document
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCoeIdFile(e.target.files?.[0] || null)}
+                    className="mt-2 w-full text-sm text-slate-700"
+                  />
+                </div>
+
+                {renewError && (
+                  <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {renewError}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={closeRenewModal}
+                    className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Renewal'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

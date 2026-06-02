@@ -10,6 +10,7 @@ import AdminLogin from './pages/auth/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Landing from './pages/landing/Landing'
 import MilestoneDetail from './pages/landing/MilestoneDetail'
+import AnnouncementDetail from './pages/landing/AnnouncementDetail'
 import AdminLayout from './layouts/AdminLayout'
 
 import AdminMembership from './pages/admin/placeholder/AdminMembership'
@@ -37,6 +38,7 @@ function App() {
           <Route path="/" element={<Navigate to="/landing" replace />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/milestone/:id" element={<MilestoneDetail />} />
+          <Route path="/announcement/:id" element={<AnnouncementDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/membership-pending" element={<MembershipPending />} />

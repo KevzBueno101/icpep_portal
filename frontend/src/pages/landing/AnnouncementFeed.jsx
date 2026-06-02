@@ -1,28 +1,41 @@
 import { useEffect, useMemo, useState } from 'react'
 import AnnouncementCard from '../../components/AnnouncementCard'
 import { publicApi } from '../../api/axios'
+import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 
 export default function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  const fetchAnnouncements = async () => {
+    setLoading(true)
+    try {
+      const res = await publicApi.get('/announcements/')
+      setAnnouncements(res.data.results)
+      setActiveIndex(0)
+    } catch (err) {
+      console.error('Failed to fetch announcements:', err)
+      setAnnouncements([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    const fetchAnnouncements = async () => {
-      setLoading(true)
-      try {
-        const res = await publicApi.get('/announcements/')
-        setAnnouncements(res.data.results)
-        setActiveIndex(0)
-      } catch (err) {
-        console.error('Failed to fetch announcements:', err)
-        setAnnouncements([])
-      } finally {
-        setLoading(false)
-      }
+    fetchAnnouncements()
+
+    const handleAnnouncementChange = () => {
+      fetchAnnouncements()
     }
 
-    fetchAnnouncements()
+    window.addEventListener(ANNOUNCEMENT_UPDATED_EVENT, handleAnnouncementChange)
+    window.addEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementChange)
+
+    return () => {
+      window.removeEventListener(ANNOUNCEMENT_UPDATED_EVENT, handleAnnouncementChange)
+      window.removeEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementChange)
+    }
   }, [])
 
   const sortedAnnouncements = useMemo(

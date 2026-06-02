@@ -8,13 +8,13 @@ export const ADMIN_ACCESS_KEY = 'admin_access_token'
 export const ADMIN_REFRESH_KEY = 'admin_refresh_token'
 
 export const getAccessToken = () =>
-  localStorage.getItem(MEMBER_ACCESS_KEY) ||
   localStorage.getItem(ADMIN_ACCESS_KEY) ||
+  localStorage.getItem(MEMBER_ACCESS_KEY) ||
   null
 
 export const getRefreshToken = () =>
-  localStorage.getItem(MEMBER_REFRESH_KEY) ||
   localStorage.getItem(ADMIN_REFRESH_KEY) ||
+  localStorage.getItem(MEMBER_REFRESH_KEY) ||
   null
 
 const api = axios.create({
@@ -48,10 +48,10 @@ api.interceptors.response.use(
           )
 
           // Write new access token back to the correct key
-          if (localStorage.getItem(MEMBER_REFRESH_KEY)) {
-            localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
-          } else {
+          if (localStorage.getItem(ADMIN_REFRESH_KEY)) {
             localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
+          } else {
+            localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
           }
 
           original.headers.Authorization = `Bearer ${res.data.access}`

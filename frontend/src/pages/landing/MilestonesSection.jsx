@@ -233,10 +233,10 @@ export default function MilestonesSection() {
 
   return (
     <section
-      id="milestones"
-      className="relative scroll-mt-16 py-24 sm:py-32 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
-    >
+        id="milestones"
+        className="relative scroll-mt-16 py-24 sm:py-32 overflow-hidden"
+        style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
+      >
       {/* Subtle grid bg */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"

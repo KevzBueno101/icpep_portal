@@ -1,9 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { startHeroParticles } from './_heroParticles'
+import { publicApi } from '../../api/axios'
+import ImageModal from '../../components/ImageModal'
 
 export default function HeroSection() {
   const canvasRef = useRef(null)
+  const [pinnedAnnouncements, setPinnedAnnouncements] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [modalImages, setModalImages] = useState(null)
+  const [modalInitialIndex, setModalInitialIndex] = useState(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -13,8 +19,49 @@ export default function HeroSection() {
     return () => stop && stop()
   }, [])
 
+  useEffect(() => {
+    const fetchPinnedAnnouncements = async () => {
+      try {
+        const res = await publicApi.get('/announcements/')
+        const pinned = res.data.results
+          .filter(ann => ann.pinned && ann.is_published)
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 2)
+        setPinnedAnnouncements(pinned)
+      } catch (err) {
+        console.error('Failed to fetch pinned announcements:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPinnedAnnouncements()
+  }, [])
+
+  const handleImageClick = (e, images, index = 0) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const imageUrls = images?.map(img => img.image).filter(Boolean) || []
+    if (imageUrls.length > 0) {
+      setModalImages(imageUrls)
+      setModalInitialIndex(index)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setModalImages(null)
+    setModalInitialIndex(0)
+  }
+
   return (
-    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden pt-16 text-white">
+    <>
+      {modalImages && (
+        <ImageModal
+          images={modalImages}
+          initialIndex={modalInitialIndex}
+          onClose={handleCloseModal}
+        />
+      )}
+      <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden pt-16 text-white">
       {/* Background */}
       <div
         className="absolute inset-0 -z-10"
@@ -200,43 +247,61 @@ export default function HeroSection() {
                 </div>
 
                 <div className="mt-5 space-y-3">
-                  {/* Event 1 */}
-                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
-                          Workshop
-                        </div>
-                        <div className="mt-1 text-base font-semibold text-cyan-200">
-                          Embedded Systems Night
-                        </div>
-                        <div className="mt-1 text-sm text-white/70">Hands-on • Circuit design • Debug labs</div>
-                      </div>
-                      <div className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-center">
-                        <div className="text-[11px] font-semibold text-cyan-200">JUNE</div>
-                        <div className="text-xl font-bold text-white">12</div>
-                      </div>
+                  {loading ? (
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-center text-white/60 text-sm">
+                      Loading events...
                     </div>
-                  </div>
-
-                  {/* Event 2 */}
-                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
-                          Meetup
-                        </div>
-                        <div className="mt-1 text-base font-semibold text-purple-200">
-                          AI for Engineers: From Idea to Prototype
-                        </div>
-                        <div className="mt-1 text-sm text-white/70">Talks • Demos • Team building</div>
-                      </div>
-                      <div className="rounded-xl border border-purple-400/25 bg-purple-500/10 px-3 py-2 text-center">
-                        <div className="text-[11px] font-semibold text-purple-200">JULY</div>
-                        <div className="text-xl font-bold text-white">03</div>
-                      </div>
+                  ) : pinnedAnnouncements.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-center text-white/60 text-sm">
+                      No upcoming events
                     </div>
-                  </div>
+                  ) : (
+                    pinnedAnnouncements.map((announcement, index) => {
+                      const firstImage = announcement.first_image || announcement.images?.[0]?.image
+                      const date = announcement.created_at ? new Date(announcement.created_at) : null
+                      const month = date ? date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : 'TBD'
+                      const day = date ? date.getDate() : '--'
+                      const accentColor = index === 0 ? 'cyan' : 'purple'
+                      
+                      return (
+                        <Link
+                          key={announcement.id}
+                          to={`/announcement/${announcement.id}`}
+                          className="block rounded-2xl border border-white/10 bg-black/10 p-4 hover:bg-black/20 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
+                                {announcement.category || 'Event'}
+                              </div>
+                              <div className="mt-1 text-base font-semibold text-white/90 truncate">
+                                {announcement.title}
+                              </div>
+                              <div className="mt-1 text-sm text-white/70 line-clamp-2">
+                                {announcement.body}
+                              </div>
+                              {firstImage && (
+                                <div className="mt-2 h-16 w-24 overflow-hidden rounded-lg cursor-pointer">
+                                  <img
+                                    src={firstImage}
+                                    alt={announcement.title}
+                                    className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                                    onClick={(e) => handleImageClick(e, announcement.images || [firstImage], 0)}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onDragStart={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            <div className={`rounded-xl border border-${accentColor}-400/25 bg-${accentColor}-500/10 px-3 py-2 text-center flex-shrink-0`}>
+                              <div className={`text-[11px] font-semibold text-${accentColor}-200`}>{month}</div>
+                              <div className="text-xl font-bold text-white">{day}</div>
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })
+                  )}
                 </div>
 
                 {/* Diagonal overlay border */}
@@ -266,6 +331,7 @@ export default function HeroSection() {
         }}
       />
     </section>
+    </>
   )
 }
 

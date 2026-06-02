@@ -211,12 +211,10 @@ const AdminMembership = () => {
     if (!deleteTarget) return
     setIsDeleting(true)
     try {
-      const response = await api.post(`/members/${deleteTarget.id}/approve/`, {
-        membership_status: 'EXPIRED',
-      })
-      setMembers((prev) => prev.map((m) => (m.id === deleteTarget.id ? response.data : m)))
+      await api.delete(`/members/${deleteTarget.id}/`)
+      setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id))
       toast.success(
-        `${deleteTarget.first_name} ${deleteTarget.last_name}'s membership has been removed.`
+        `${deleteTarget.first_name} ${deleteTarget.last_name}'s membership has been deleted.`
       )
       setDeleteTarget(null)
     } catch (err) {

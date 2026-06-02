@@ -1,5 +1,30 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import ImageModal from './ImageModal'
+
 export default function AnnouncementCard({ announcement }) {
-  const { title, body, category, created_at, author, pinned } = announcement
+  const { id, title, body, category, created_at, author, pinned, first_image, images } =
+    announcement
+
+  const [modalImages, setModalImages] = useState(null)
+  const [modalInitialIndex, setModalInitialIndex] = useState(0)
+
+  const firstImageUrl = first_image || images?.[0]?.image
+
+  const handleImageClick = (e, index = 0) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const imageUrls = images?.map(img => img.image).filter(Boolean) || [firstImageUrl].filter(Boolean)
+    if (imageUrls.length > 0) {
+      setModalImages(imageUrls)
+      setModalInitialIndex(index)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setModalImages(null)
+    setModalInitialIndex(0)
+  }
 
   const categoryColors = {
     announcement: 'bg-sky-100 text-sky-700',
@@ -12,15 +37,48 @@ export default function AnnouncementCard({ announcement }) {
   const categoryColor = categoryColors[category] || categoryColors.announcement
 
   return (
-    <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      {pinned && (
-        <div className="bg-amber-100 px-4 py-1 text-xs font-semibold text-amber-800">
-          Pinned
-        </div>
+    <>
+      {modalImages && (
+        <ImageModal
+          images={modalImages}
+          initialIndex={modalInitialIndex}
+          onClose={handleCloseModal}
+        />
       )}
-      <div className="p-6">
+      <Link
+        to={`/announcement/${id}`}
+        className="block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+      >
+        {pinned && (
+          <div className="bg-amber-100 px-4 py-1 text-xs font-semibold text-amber-800">
+            Pinned
+          </div>
+        )}
+
+        {firstImageUrl && (
+          <div 
+            className="h-40 w-full overflow-hidden bg-slate-50 cursor-pointer group"
+            onClick={(e) => handleImageClick(e, 0)}
+          >
+            <img
+              src={firstImageUrl}
+              alt={title || 'Announcement image'}
+              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+              onError={(e) => {
+                // Hide broken image safely
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+          </div>
+        )}
+
+      <article className={firstImageUrl ? 'p-6' : 'p-6'}>
         <div className="mb-3 flex items-start justify-between">
-          <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}>
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}
+          >
             {category.charAt(0).toUpperCase() + category.slice(1)}
           </span>
         </div>
@@ -40,7 +98,8 @@ export default function AnnouncementCard({ announcement }) {
               : 'Just now'}
           </span>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
+    </>
   )
 }
