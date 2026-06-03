@@ -1,4 +1,4 @@
-- [ ] Fix hero section modal trigger so it opens ONLY when clicking the event image (not the whole card/other area)
-- [ ] Add stopPropagation guards on the clickable image area and avoid conflicting Link behavior
-- [ ] Run frontend lint/build (optional) and manually test hero section interactions
+- [ ] Fix ImageModal so clicking anywhere does NOT trigger close/while opening from HeroSection
+- [ ] Ensure modal opens only when clicking the announcement image thumbnail
+- [ ] Run frontend lint/build/tests (npm run build)
 

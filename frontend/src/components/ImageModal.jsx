@@ -18,11 +18,7 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') onClose()
-    if (e.key === 'ArrowLeft') goToPrevious()
-    if (e.key === 'ArrowRight') goToNext()
-  }
+
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.changedTouches[0].screenX
@@ -64,14 +60,28 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center bg-black/90 backdrop-blur-sm"
-      onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+      onTouchStart={(e) => {
+        if (e.target === e.currentTarget) handleTouchStart(e)
+      }}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) handleTouchMove(e)
+      }}
+      onTouchEnd={(e) => {
+        if (e.target === e.currentTarget) handleTouchEnd(e)
+      }}
     >
       <div
         className="relative max-w-[95vw] max-h-[95vh]"
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Image */}
         <img
