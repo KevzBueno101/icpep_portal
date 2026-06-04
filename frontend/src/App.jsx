@@ -22,11 +22,12 @@ import AdminLogs from './pages/admin/placeholder/AdminLogs'
 import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
 
 
-// Placeholder — member dashboard still to be implemented
-const Dashboard = () => <div className="p-8 text-white bg-gray-950 min-h-screen">Member Dashboard — Phase 4</div>
+import MemberDashboard from './pages/member/MemberDashboard'
 
 function App() {
   return (
+
+
     <BrowserRouter>
       <AuthProvider>
         <Toaster
@@ -51,10 +52,11 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <MemberDashboard />
               </ProtectedRoute>
             }
           />
+
 
           {/* Admin protected routes */}
           <Route

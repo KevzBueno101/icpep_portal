@@ -57,7 +57,7 @@ export default function AnnouncementCard({ announcement }) {
 
         {firstImageUrl && (
           <div 
-            className="h-40 w-full overflow-hidden bg-slate-50 cursor-pointer group"
+            className="relative h-40 w-full overflow-hidden bg-slate-50 cursor-pointer group"
             onClick={(e) => handleImageClick(e, 0)}
           >
             <img

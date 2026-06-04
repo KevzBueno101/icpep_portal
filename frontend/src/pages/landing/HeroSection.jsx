@@ -215,7 +215,7 @@ export default function HeroSection() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.55)]" />
-                    <div className="text-sm font-semibold text-white/90">Upcoming Events Preview</div>
+                    <div className="text-sm font-semibold text-white/90">Featured</div>
                   </div>
                   <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
                     NEW
@@ -256,7 +256,6 @@ export default function HeroSection() {
                               </div>
 
                               <div className="mt-4">
-                                <div className="text-xs font-semibold text-white/60 mb-1">Want more?</div>
                                 <button
                                   onClick={() => navigate(`/announcement/${announcement.id}`)}
                                   className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
