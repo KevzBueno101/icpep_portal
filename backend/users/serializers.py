@@ -1,6 +1,18 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+# backend/users/serializers.py
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class AdminProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'first_name', 'last_name', 'email',
+                  'position', 'is_staff', 'is_superuser')
+        read_only_fields = ('id', 'username', 'email')
 
 User = get_user_model()
 

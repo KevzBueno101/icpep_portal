@@ -8,6 +8,7 @@ urlpatterns = [
     path('admins/<int:pk>/delegate/',      views.delegate_secretary,  name='delegate-secretary'),
     path('admins/year-end-reset/',         views.year_end_reset,      name='year-end-reset'),
     path('admins/create/',                 views.create_officer_account, name='create-officer'),
+    path('admin/profile/', views.AdminProfileAPIView.as_view(), name='admin-profile'),
 ]
 
 

@@ -38,11 +38,10 @@ export default function DesktopMemberNavbar({ user, onLogout, onHelpClick }) {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'text-sky-600 bg-sky-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
+                    ? 'text-sky-600 bg-sky-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
@@ -57,12 +56,6 @@ export default function DesktopMemberNavbar({ user, onLogout, onHelpClick }) {
           {/* User Info & Actions */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-600 text-white font-bold text-sm shadow-sm">
-                {user?.first_name ? user.first_name[0].toUpperCase() : '?'}
-              </div>
-              <span className="text-sm font-semibold text-slate-700 hidden lg:inline-block mr-1">
-                {user?.first_name || 'Member'}
-              </span>
               <button
                 type="button"
                 onClick={onHelpClick}

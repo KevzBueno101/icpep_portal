@@ -15,6 +15,22 @@ from .serializers import (
     AdminAccountSerializer,
 )
 from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
+# backend/users/views.py
+from rest_framework import generics, permissions
+from .serializers import AdminProfileSerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class AdminProfileAPIView(generics.RetrieveAPIView):
+    """
+    GET /admin/profile/ – returns the currently authenticated admin’s profile.
+    """
+    serializer_class = AdminProfileSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_object(self):
+        return self.request.user
 
 
 User = get_user_model()
