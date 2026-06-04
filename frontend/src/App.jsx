@@ -49,13 +49,17 @@ function App() {
 
           {/* Member protected */}
           <Route
-            path="/dashboard"
+            path="/member/dashboard"
             element={
               <ProtectedRoute>
                 <MemberDashboard />
               </ProtectedRoute>
             }
           />
+
+          {/* Backward-compat: legacy member dashboard */}
+          <Route path="/dashboard" element={<Navigate to="/member/dashboard" replace />} />
+
 
 
           {/* Admin protected routes */}

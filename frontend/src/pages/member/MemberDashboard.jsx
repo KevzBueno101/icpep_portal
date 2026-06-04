@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import MembershipCard from '../../components/member/MembershipCard'
+import MobileMemberNavbar from '../../components/member/MobileMemberNavbar'
+
+
+import AnnouncementFeed from '../landing/AnnouncementFeed'
+
 
 const YEAR_LABEL_BY_VALUE = {
   '1': '1st Year',
@@ -39,6 +45,9 @@ export default function MemberDashboard() {
 
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
+
+  const [activeTab, setActiveTab] = useState('home')
+
 
   const [announcements, setAnnouncements] = useState([])
   const [annLoading, setAnnLoading] = useState(false)
@@ -77,12 +86,25 @@ export default function MemberDashboard() {
       try {
         const res = await api.get('/members/')
         if (!isMounted) return
-        const found = (res.data?.results || []).find((p) => p.user === user.id)
-        if (!found) {
-          setProfile(null)
-          return
-        }
-        setProfile(found)
+
+        // Support both response shapes:
+        // - paginated: { results: [...] }
+        // - non-paginated: [...]
+        const items = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results || []
+
+        // Match robustly (user id may come as number/string)
+        const meId = user?.id
+        const found = items.find((p) => {
+          const pUser = p?.user
+          return (
+            pUser === meId ||
+            String(pUser) === String(meId)
+          )
+        })
+
+        setProfile(found || null)
       } catch (err) {
         if (!isMounted) return
         toast.error(safeDetailFromError(err))
@@ -254,8 +276,13 @@ export default function MemberDashboard() {
         year_level: editForm.year_level,
         section: editForm.section,
         address: editForm.address,
-        birthdate: editForm.birthdate,
       }
+
+      // Omit birthdate when empty; prevents backend 400s from invalid/empty payloads.
+      if (editForm.birthdate) {
+        patchBase.birthdate = editForm.birthdate
+      }
+
 
       if (selectedFile) {
         const fd = new FormData()
@@ -266,8 +293,13 @@ export default function MemberDashboard() {
         fd.append('year_level', patchBase.year_level)
         fd.append('section', patchBase.section)
         fd.append('address', patchBase.address)
-        fd.append('birthdate', patchBase.birthdate)
+
+        if (patchBase.birthdate) {
+          fd.append('birthdate', patchBase.birthdate)
+        }
+
         fd.append('profile_picture', selectedFile)
+
 
         await api.patch(`/members/${profile.id}/`, fd)
       } else {
@@ -288,7 +320,16 @@ export default function MemberDashboard() {
       // Re-fetch profile after update
       const res = await api.get('/members/')
       if (isMounted) {
-        const found = (res.data?.results || []).find((p) => p.user === user.id)
+        const items = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results || []
+
+        const meId = user?.id
+        const found = items.find((p) => {
+          const pUser = p?.user
+          return pUser === meId || String(pUser) === String(meId)
+        })
+
         setProfile(found || null)
       }
     } catch (err) {

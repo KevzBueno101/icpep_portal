@@ -21,8 +21,9 @@ const Login = () => {
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard')
       } else {
-        navigate(user.membership_status === 'APPROVED' ? '/dashboard' : '/membership-pending')
+        navigate(user.membership_status === 'APPROVED' ? '/member/dashboard' : '/membership-pending')
       }
+
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Invalid credentials.'
       toast.error(errorMsg)

@@ -21,9 +21,21 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 
 class MemberListAPIView(generics.ListCreateAPIView):
-    """List all member profiles and create a new member profile (admin only)."""
+    """List member profiles.
+
+    - Admin can list all members.
+    - Member can list their own profile (so the frontend dashboard can load it).
+    """
     queryset = MemberProfile.objects.all().order_by('-created_at')
-    permission_classes = [IsAdmin]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Admins can see all members.
+        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+            return MemberProfile.objects.all().order_by('-created_at')
+        # Members can only see their own profile.
+        return MemberProfile.objects.filter(user=self.request.user).order_by('-created_at')
+
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

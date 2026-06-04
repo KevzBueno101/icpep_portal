@@ -47,12 +47,21 @@ api.interceptors.response.use(
             { refresh }
           )
 
-          // Write new access token back to the correct key
-          if (localStorage.getItem(ADMIN_REFRESH_KEY)) {
-            localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
-          } else {
+          // Write new access token back to the same session type that triggered this request.
+          // This avoids cases where an admin refresh key exists (or is stale) but the current request is a member request.
+          const currentAuthHeader = original.headers?.Authorization
+          const memberAccess = localStorage.getItem(MEMBER_ACCESS_KEY)
+
+          const isMemberRequest =
+            currentAuthHeader?.includes(memberAccess) ||
+            (memberAccess && currentAuthHeader?.includes(`Bearer ${memberAccess}`))
+
+          if (isMemberRequest) {
             localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
+          } else {
+            localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
           }
+
 
           original.headers.Authorization = `Bearer ${res.data.access}`
           return api(original)

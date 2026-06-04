@@ -21,7 +21,7 @@ const MembershipPending = () => {
 
   // ✅ Auto-poll: silently check approval status every 8 seconds.
   // When the admin approves, this will catch it and redirect the member
-  // to /dashboard automatically without them needing to click anything.
+  // to their dashboard without them needing to click anything.
   useEffect(() => {
     // Only start polling if user is logged in, is a MEMBER, and is still PENDING
     if (!user || user.role === 'ADMIN' || user.membership_status === 'APPROVED') return
@@ -31,19 +31,16 @@ const MembershipPending = () => {
         const freshUser = await refreshUser()
         if (freshUser.membership_status === 'APPROVED') {
           toast.success('Your membership has been approved! Welcome!')
-          // Clear the interval before navigating
           if (intervalRef.current) clearInterval(intervalRef.current)
-          navigate('/dashboard', { replace: true })
+          navigate('/member/dashboard', { replace: true })
         }
       } catch {
         // Silent fail — don't show errors for background polling
       }
     }
 
-    // Start polling
     intervalRef.current = setInterval(poll, POLL_INTERVAL_MS)
 
-    // Cleanup on unmount
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
@@ -66,15 +63,12 @@ const MembershipPending = () => {
   // SAFETY GUARD: If an admin token somehow loaded into this member session,
   // do not silently redirect. Log out and send to the correct login page.
   if (user.role === 'ADMIN') {
-    // Do not call logout() synchronously during render.
     return <Navigate to="/login" replace />
   }
 
-
-
   // If member is already approved, redirect them to their dashboard
   if (user.membership_status === 'APPROVED') {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/member/dashboard" replace />
   }
 
   // ─── Manual check handler ─────────────────────────────────────────────────
@@ -86,7 +80,7 @@ const MembershipPending = () => {
       if (freshUser.membership_status === 'APPROVED') {
         toast.success('Your membership has been approved! Welcome!')
         if (intervalRef.current) clearInterval(intervalRef.current)
-        navigate('/dashboard', { replace: true })
+        navigate('/member/dashboard', { replace: true })
       } else if (freshUser.membership_status === 'REJECTED') {
         toast.error('Your membership request was rejected. Please contact the admin.')
       } else {
@@ -104,6 +98,7 @@ const MembershipPending = () => {
     logout()
     navigate('/login', { replace: true })
   }
+
   const closeRenewModal = () => {
     setShowRenewModal(false)
     setRenewError(null)
@@ -136,12 +131,18 @@ const MembershipPending = () => {
       toast.success('Renewal request submitted. Your membership is now pending review.')
       closeRenewModal()
     } catch (error) {
-      const detail = error.response?.data?.detail || error.response?.data?.year_level?.[0] || error.response?.data?.payment_proof_image?.[0] || error.response?.data?.coe_id_image?.[0]
+      const detail =
+        error.response?.data?.detail ||
+        error.response?.data?.year_level?.[0] ||
+        error.response?.data?.payment_proof_image?.[0] ||
+        error.response?.data?.coe_id_image?.[0]
+
       setRenewError(detail || 'Unable to submit renewal. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
+
   // ─── Status display helpers ───────────────────────────────────────────────
 
   const statusConfig = {
@@ -170,13 +171,10 @@ const MembershipPending = () => {
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-lg">
-
         <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="mx-auto h-16 w-auto" />
 
         <div className="mt-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-sky-600">
-            Membership Status
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-sky-600">Membership Status</p>
           <h1 className="mt-3 text-2xl font-bold text-slate-900">
             {user.membership_status === 'REJECTED'
               ? 'Membership Request Rejected'
@@ -196,18 +194,16 @@ const MembershipPending = () => {
         {/* Status badge */}
         <div className={`mt-6 rounded-xl border px-4 py-3 ${currentStatus.bg}`}>
           <div className="flex items-center justify-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${currentStatus.dot} ${user.membership_status === 'PENDING' ? 'animate-pulse' : ''}`} />
-            <span className={`text-sm font-semibold ${currentStatus.text}`}>
-              {currentStatus.label}
-            </span>
+            <span
+              className={`h-2 w-2 rounded-full ${currentStatus.dot} ${user.membership_status === 'PENDING' ? 'animate-pulse' : ''}`}
+            />
+            <span className={`text-sm font-semibold ${currentStatus.text}`}>{currentStatus.label}</span>
           </div>
         </div>
 
         {/* Auto-poll indicator — only show when PENDING */}
         {user.membership_status === 'PENDING' && (
-          <p className="mt-3 text-xs text-slate-400">
-            Please wait while we automatically check for approval.
-          </p>
+          <p className="mt-3 text-xs text-slate-400">Please wait while we automatically check for approval.</p>
         )}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -249,9 +245,7 @@ const MembershipPending = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">Renew Your Membership</h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Submit your current year level, payment proof, and COE/ID document.
-                  </p>
+                  <p className="mt-2 text-sm text-slate-600">Submit your current year level, payment proof, and COE/ID document.</p>
                 </div>
                 <button
                   type="button"
@@ -281,9 +275,7 @@ const MembershipPending = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Payment Proof
-                  </label>
+                  <label className="block text-sm font-semibold text-slate-700">Payment Proof</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -293,9 +285,7 @@ const MembershipPending = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    COE / ID Document
-                  </label>
+                  <label className="block text-sm font-semibold text-slate-700">COE / ID Document</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -304,11 +294,7 @@ const MembershipPending = () => {
                   />
                 </div>
 
-                {renewError && (
-                  <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {renewError}
-                  </p>
-                )}
+                {renewError && <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{renewError}</p>}
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                   <button
@@ -336,3 +322,4 @@ const MembershipPending = () => {
 }
 
 export default MembershipPending
+
