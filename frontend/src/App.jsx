@@ -22,7 +22,13 @@ import AdminLogs from './pages/admin/placeholder/AdminLogs'
 import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
 
 
+import { MemberProvider } from './context/MemberContext'
+import MemberLayout from './layouts/MemberLayout'
 import MemberDashboard from './pages/member/MemberDashboard'
+import MemberAnnouncements from './pages/member/MemberAnnouncements'
+import MemberIdCard from './pages/member/MemberIdCard'
+import MemberAbout from './pages/member/MemberAbout'
+import MemberProfile from './pages/member/MemberProfile'
 
 function App() {
   return (
@@ -47,12 +53,64 @@ function App() {
           {/* Hidden admin login — no links point here */}
           <Route path="/admin-portal/login" element={<AdminLogin />} />
 
-          {/* Member protected */}
+          {/* Member protected routes */}
           <Route
             path="/member/dashboard"
             element={
               <ProtectedRoute>
-                <MemberDashboard />
+                <MemberProvider>
+                  <MemberLayout>
+                    <MemberDashboard />
+                  </MemberLayout>
+                </MemberProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/member/announcements"
+            element={
+              <ProtectedRoute>
+                <MemberProvider>
+                  <MemberLayout>
+                    <MemberAnnouncements />
+                  </MemberLayout>
+                </MemberProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/member/id"
+            element={
+              <ProtectedRoute>
+                <MemberProvider>
+                  <MemberLayout>
+                    <MemberIdCard />
+                  </MemberLayout>
+                </MemberProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/member/about"
+            element={
+              <ProtectedRoute>
+                <MemberProvider>
+                  <MemberLayout>
+                    <MemberAbout />
+                  </MemberLayout>
+                </MemberProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/member/profile"
+            element={
+              <ProtectedRoute>
+                <MemberProvider>
+                  <MemberLayout>
+                    <MemberProfile />
+                  </MemberLayout>
+                </MemberProvider>
               </ProtectedRoute>
             }
           />

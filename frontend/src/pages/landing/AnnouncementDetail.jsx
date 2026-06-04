@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
+import { useAuth } from '../../context/useAuth'
 
 const CATEGORY_COLORS = {
   announcement: {
@@ -46,6 +47,7 @@ function formatDate(value) {
 export default function AnnouncementDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [announcement, setAnnouncement] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -96,7 +98,15 @@ export default function AnnouncementDetail() {
   const images = announcement?.images || []
 
   const handleBackToAnnouncements = () => {
-    navigate('/landing#announcements')
+    if (user && user.role !== 'ADMIN') {
+      if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1)
+      } else {
+        navigate('/member/announcements')
+      }
+    } else {
+      navigate('/landing#announcements')
+    }
   }
 
   if (loading) {
