@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Bell, CreditCard, Info, User, LogOut } from 'lucide-react'
+import { Home, Bell, CreditCard, Info, User, LogOut, HelpCircle } from 'lucide-react'
 
 const NAV_ITEMS = [
   { label: 'Home', to: '/member/dashboard', Icon: Home },
@@ -9,11 +9,11 @@ const NAV_ITEMS = [
   { label: 'Profile', to: '/member/profile', Icon: User },
 ]
 
-export default function DesktopMemberNavbar({ user, onLogout }) {
+export default function DesktopMemberNavbar({ user, onLogout, onHelpClick }) {
   const { pathname } = useLocation()
 
   return (
-    <header className="hidden md:block sticky top-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+    <header className="hidden md:block fixed top-0 left-0 right-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo & Brand */}
@@ -60,9 +60,18 @@ export default function DesktopMemberNavbar({ user, onLogout }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-600 text-white font-bold text-sm shadow-sm">
                 {user?.first_name ? user.first_name[0].toUpperCase() : '?'}
               </div>
-              <span className="text-sm font-semibold text-slate-700 hidden lg:inline-block">
+              <span className="text-sm font-semibold text-slate-700 hidden lg:inline-block mr-1">
                 {user?.first_name || 'Member'}
               </span>
+              <button
+                type="button"
+                onClick={onHelpClick}
+                className="text-slate-400 hover:text-sky-600 transition p-1.5 rounded-lg hover:bg-slate-50"
+                title="Membership Information"
+                aria-label="Membership Info"
+              >
+                <HelpCircle className="h-4.5 w-4.5" />
+              </button>
             </div>
 
             <button

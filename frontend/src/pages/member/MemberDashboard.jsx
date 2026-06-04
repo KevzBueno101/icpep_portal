@@ -39,7 +39,7 @@ export default function MemberDashboard() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight">
-              Welcome back, {memberFirstName}!
+              Welcome, {memberFirstName}!
             </h1>
             <p className="mt-2 text-slate-300 max-w-xl text-sm md:text-base">
               You are an active student member of the Institute of Computer Engineers of the Philippines Student Edition (ICPEP.SE).
