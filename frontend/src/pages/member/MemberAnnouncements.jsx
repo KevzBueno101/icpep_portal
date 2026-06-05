@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMember } from '../../context/MemberContext'
-import { Search, Bell, Filter } from 'lucide-react'
+import { Search, Bell, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function MemberAnnouncements() {
   const navigate = useNavigate()
+  const scrollRef = useRef(null)
   const { announcements, annLoading } = useMember()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
@@ -106,40 +107,63 @@ export default function MemberAnnouncements() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
-          {filteredAnnouncements.map((ann) => (
-            <button
-              key={ann.id}
-              type="button"
-              onClick={() => navigate(`/announcement/${ann.id}`)}
-              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
-                  {ann.category || 'General'}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }) : ''}
-                </span>
-              </div>
-              <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
-                {ann.title}
-              </h2>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1">
-                {ann.body}
-              </p>
-              <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
-                <span>Read announcement</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
-              </div>
-            </button>
-          ))}
+        <div className="relative w-full">
+          {/* Left Arrow */}
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white bg-opacity-80 p-2 shadow-md hover:bg-opacity-100"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-5 w-5 text-slate-600" />
+          </button>
+          {/* Scroll Container */}
+          <div
+            ref={scrollRef}
+            className="flex flex-nowrap gap-6 overflow-x-scroll scroll-smooth py-2 snap-x snap-mandatory w-full"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+          >
+            {filteredAnnouncements.map((ann) => (
+              <button
+                key={ann.id}
+                type="button"
+                onClick={() => navigate(`/announcement/${ann.id}`)}
+                className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 min-w-[280px] snap-start"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
+                    {ann.category || 'General'}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }) : ''}
+                  </span>
+                </div>
+                <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
+                  {ann.title}
+                </h2>
+                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1">
+                  {ann.body}
+                </p>
+                <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
+                  <span>Read announcement</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </div>
+              </button>
+            ))}
+          </div>
+          {/* Right Arrow */}
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white bg-opacity-80 p-2 shadow-md hover:bg-opacity-100"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-5 w-5 text-slate-600" />
+          </button>
         </div>
       )}
     </div>
