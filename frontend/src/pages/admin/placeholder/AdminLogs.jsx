@@ -268,7 +268,13 @@ const AdminLogs = () => {
                       <div className="text-xs text-slate-500">{log.entity_display}</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      {log.ip_address && <div className="text-xs text-slate-500">IP: {log.ip_address}</div>}
+                      {log.details && Object.keys(log.details).length > 0 && (
+                        <div className="text-xs text-slate-500">
+                          {Object.entries(log.details).slice(0, 2).map(([key, value]) => (
+                            <div key={key}>{key}: {String(value).substring(0, 30)}</div>
+                          ))}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
