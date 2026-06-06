@@ -18,6 +18,17 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Recent changes (developer notes)
 
+- Backend: Added `audit_logs` app with comprehensive audit trail system tracking all admin actions (member approvals, role changes, CRUD operations on members/milestones/announcements).
+- Backend: Audit log model includes timestamp, admin user, action type, entity type, entity details, and IP address.
+- Backend: Added logging hooks to `members/views.py`, `users/views.py`, `milestones/views.py`, and `announcements/views.py` for automatic action logging.
+- Backend: Added audit log API endpoints: list (with filtering), CSV export, stats (for badge), and cleanup (retention policy).
+- Backend: Added `AUDIT_LOG_RETENTION_DAYS` setting (default 90 days) for automatic log cleanup.
+- Frontend: Implemented full AdminLogs page with filtering (action type, entity type, date range, search), pagination, CSV export, and cleanup functionality.
+- Frontend: Added badge count for new logs in AdminLayout using localStorage for last visit tracking.
+- Frontend: Updated AdminDashboard to remove Member Approvals section and added more summary cards (Approved, Rejected, Expired members).
+- Frontend: Added icons to all dashboard summary cards using lucide-react.
+- Frontend: Added charts to dashboard: Membership Status Distribution (pie chart) and Member Growth Over Time (bar chart) using recharts.
+- Frontend: Installed recharts library for data visualization.
 - Backend: admin accounts endpoint (`GET /api/users/admins/`) now returns paginated responses using DRF's `PageNumberPagination` (shape: `{ results: [...], count, next, previous }`). Update frontend calls to use `res.data.results`.
 - Backend: if you encounter `ProgrammingError: column users_user.must_change_password does not exist`, the model includes `must_change_password` but the DB may be missing the column. See "Database migrations" below for a quick fix.
 - Frontend: desktop admin sidebar is fixed on large screens (does not scroll). Admin pages received defensive null-safety fixes to avoid runtime crashes when API responses vary.

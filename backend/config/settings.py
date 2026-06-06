@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'members',
     'milestones',
     'announcements',
+    'audit_logs',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -254,3 +255,6 @@ CONTENT_SECURITY_POLICY = {
         'connect-src': ("'self'", "http://127.0.0.1:8000", "http://localhost:8000"),
     }
 }
+
+# Audit log retention policy (days)
+AUDIT_LOG_RETENTION_DAYS = 90

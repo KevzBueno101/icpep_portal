@@ -15,6 +15,8 @@ from .serializers import (
     AdminAccountSerializer,
 )
 from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
+from audit_logs.utils import log_action
+from audit_logs.models import AuditLog
 # backend/users/views.py
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -115,6 +117,23 @@ def admin_accounts_list(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         new_admin = serializer.save()
+        
+        # Log admin creation
+        log_action(
+            user=request.user,
+            action_type=AuditLog.ActionType.ADMIN_CREATED,
+            entity_type=AuditLog.EntityType.USER,
+            entity_id=new_admin.id,
+            entity_name=new_admin.email,
+            details={
+                'email': new_admin.email,
+                'username': new_admin.username,
+                'role': new_admin.role,
+                'position': new_admin.position
+            },
+            request=request
+        )
+        
         return Response({
             'message': 'Admin account created successfully.',
             'user': UserListSerializer(new_admin).data,
@@ -158,7 +177,21 @@ def admin_account_detail(request, pk):
                 {'detail': 'You cannot delete your own account.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        entity_id = target.pk
+        entity_name = target.email
         target.delete()
+        
+        # Log admin deletion
+        log_action(
+            user=request.user,
+            action_type=AuditLog.ActionType.ADMIN_DELETED,
+            entity_type=AuditLog.EntityType.USER,
+            entity_id=entity_id,
+            entity_name=entity_name,
+            details={'email': entity_name},
+            request=request
+        )
+        
         return Response({'message': 'Admin account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
     serializer = AdminAccountSerializer(
@@ -171,6 +204,18 @@ def admin_account_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     updated = serializer.save()
+    
+    # Log admin update
+    log_action(
+        user=request.user,
+        action_type=AuditLog.ActionType.ADMIN_UPDATED,
+        entity_type=AuditLog.EntityType.USER,
+        entity_id=updated.id,
+        entity_name=updated.email,
+        details={'email': updated.email, 'changes': request.data},
+        request=request
+    )
+    
     return Response({
         'message': 'Admin account updated successfully.',
         'user': UserListSerializer(updated).data,
@@ -230,11 +275,31 @@ def assign_role(request, pk):
         request.user.save(update_fields=['position', 'is_delegated', 'term_start'])
 
     # ── Apply changes to target ─────────────────────────────────────────────
+    old_role = target.role
+    old_position = target.position
     target.role         = new_role
     target.position     = new_position
     target.is_delegated = new_delegated if new_position == 'SECRETARY' else False
     target.term_start   = timezone.now().date() if new_position != 'NONE' else None
     target.save(update_fields=['role', 'position', 'is_delegated', 'term_start'])
+
+    # Log role assignment
+    log_action(
+        user=request.user,
+        action_type=AuditLog.ActionType.ROLE_ASSIGNED,
+        entity_type=AuditLog.EntityType.USER,
+        entity_id=target.id,
+        entity_name=target.email,
+        details={
+            'email': target.email,
+            'old_role': old_role,
+            'new_role': new_role,
+            'old_position': old_position,
+            'new_position': new_position,
+            'is_delegated': new_delegated
+        },
+        request=request
+    )
 
     return Response({
         'message': f'Role updated successfully.',
@@ -271,6 +336,21 @@ def delegate_secretary(request, pk):
 
     target.is_delegated = serializer.validated_data['is_delegated']
     target.save(update_fields=['is_delegated'])
+
+    # Log secretary delegation
+    log_action(
+        user=request.user,
+        action_type=AuditLog.ActionType.ROLE_DELEGATED,
+        entity_type=AuditLog.EntityType.USER,
+        entity_id=target.id,
+        entity_name=target.email,
+        details={
+            'email': target.email,
+            'is_delegated': target.is_delegated,
+            'position': target.position
+        },
+        request=request
+    )
 
     action = 'delegated' if target.is_delegated else 'delegation removed from'
     return Response({
@@ -317,6 +397,20 @@ def year_end_reset(request):
         term_start=None,
     )
 
+    # Log year-end reset
+    log_action(
+        user=request.user,
+        action_type=AuditLog.ActionType.YEAR_END_RESET,
+        entity_type=AuditLog.EntityType.USER,
+        entity_name='All Admins and Members',
+        details={
+            'expired_members': expired_members,
+            'reset_admins': updated_admins,
+            'type': 'full_reset'
+        },
+        request=request
+    )
+
     return Response({
         'message': f'Year-end reset complete. {expired_members} member(s) expired, {updated_admins} admin account(s) reset.',
         'expired_members': expired_members,
@@ -349,6 +443,23 @@ def create_officer_account(request):
         position=validated['position'],
         is_delegated=(validated['position'] == 'SECRETARY' and validated['is_delegated']),
         term_start=(timezone.now().date() if validated['position'] != 'NONE' else None),
+    )
+
+    # Log officer account creation
+    log_action(
+        user=request.user,
+        action_type=AuditLog.ActionType.ADMIN_CREATED,
+        entity_type=AuditLog.EntityType.USER,
+        entity_id=new_user.id,
+        entity_name=new_user.email,
+        details={
+            'email': new_user.email,
+            'username': new_user.username,
+            'role': new_user.role,
+            'position': new_user.position,
+            'is_delegated': new_user.is_delegated
+        },
+        request=request
     )
 
     return Response({

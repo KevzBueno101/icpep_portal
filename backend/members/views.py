@@ -11,6 +11,8 @@ from .serializers import (
     MemberCreateSerializer,
     PaymentSettingsSerializer,
 )
+from audit_logs.utils import log_action
+from audit_logs.models import AuditLog
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -46,6 +48,19 @@ class MemberListAPIView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
+        
+        # Log member creation
+        if getattr(request.user, 'role', '').upper() == 'ADMIN':
+            log_action(
+                user=request.user,
+                action_type=AuditLog.ActionType.MEMBER_CREATED,
+                entity_type=AuditLog.EntityType.MEMBER,
+                entity_id=profile.id,
+                entity_name=f"{profile.first_name} {profile.last_name}",
+                details={'email': profile.user.email},
+                request=request
+            )
+        
         # Return full profile in GET format
         response_serializer = MemberProfileSerializer(profile)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -57,7 +72,36 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def perform_update(self, serializer):
-        serializer.save()
+        profile = serializer.save()
+        
+        # Log member update
+        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+            log_action(
+                user=self.request.user,
+                action_type=AuditLog.ActionType.MEMBER_UPDATED,
+                entity_type=AuditLog.EntityType.MEMBER,
+                entity_id=profile.id,
+                entity_name=f"{profile.first_name} {profile.last_name}",
+                details={'email': profile.user.email},
+                request=self.request
+            )
+
+    def perform_destroy(self, instance):
+        entity_name = f"{instance.first_name} {instance.last_name}"
+        entity_id = instance.id
+        super().perform_destroy(instance)
+        
+        # Log member deletion
+        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+            log_action(
+                user=self.request.user,
+                action_type=AuditLog.ActionType.MEMBER_DELETED,
+                entity_type=AuditLog.EntityType.MEMBER,
+                entity_id=entity_id,
+                entity_name=entity_name,
+                details={'email': instance.user.email},
+                request=self.request
+            )
 
 
 class PaymentSettingsAPIView(APIView):
@@ -74,6 +118,18 @@ class PaymentSettingsAPIView(APIView):
         serializer = PaymentSettingsSerializer(settings_obj, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        
+        # Log payment settings update
+        log_action(
+            user=request.user,
+            action_type=AuditLog.ActionType.PAYMENT_SETTINGS_UPDATED,
+            entity_type=AuditLog.EntityType.PAYMENT_SETTINGS,
+            entity_id=1,
+            entity_name='Payment Settings',
+            details=request.data,
+            request=request
+        )
+        
         return Response(serializer.data)
 
 
@@ -84,7 +140,32 @@ class MemberApproveAPIView(APIView):
         profile = get_object_or_404(MemberProfile, pk=pk)
         serializer = MemberApprovalSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        old_status = profile.membership_status
         serializer.save()
+        new_status = profile.membership_status
+        
+        # Log member approval/rejection
+        if new_status == 'APPROVED':
+            action_type = AuditLog.ActionType.MEMBER_APPROVED
+        elif new_status == 'REJECTED':
+            action_type = AuditLog.ActionType.MEMBER_REJECTED
+        else:
+            action_type = AuditLog.ActionType.MEMBER_UPDATED
+        
+        log_action(
+            user=request.user,
+            action_type=action_type,
+            entity_type=AuditLog.EntityType.MEMBER,
+            entity_id=profile.id,
+            entity_name=f"{profile.first_name} {profile.last_name}",
+            details={
+                'email': profile.user.email,
+                'old_status': old_status,
+                'new_status': new_status
+            },
+            request=request
+        )
+        
         return Response(MemberProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 
@@ -100,6 +181,17 @@ class MemberRenewAllAPIView(APIView):
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.EXPIRED)
+        
+        # Log year-end reset (members expired)
+        log_action(
+            user=request.user,
+            action_type=AuditLog.ActionType.YEAR_END_RESET,
+            entity_type=AuditLog.EntityType.MEMBER,
+            entity_name='All Approved Members',
+            details={'expired_count': renewed_count, 'type': 'members_expired'},
+            request=request
+        )
+        
         return Response({'renewed_count': renewed_count}, status=status.HTTP_200_OK)
 
 

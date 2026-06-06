@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/useAuth'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 
 
 const ROLE_OPTIONS = [
@@ -22,6 +24,13 @@ const statusLabels = {
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
   EXPIRED: 'Expired',
+}
+
+const COLORS = {
+  APPROVED: '#22c55e',
+  PENDING: '#f59e0b',
+  REJECTED: '#ef4444',
+  EXPIRED: '#6b7280',
 }
 
 const AdminDashboard = () => {
@@ -99,10 +108,40 @@ const AdminDashboard = () => {
   }, [canApproveMembers, canManageRoles, user])
 
   const pendingMembers = (members || []).filter((member) => member.membership_status === 'PENDING')
+  const approvedMembers = (members || []).filter((member) => member.membership_status === 'APPROVED')
+  const rejectedMembers = (members || []).filter((member) => member.membership_status === 'REJECTED')
+  const expiredMembers = (members || []).filter((member) => member.membership_status === 'EXPIRED')
 
 
   const totalAdmins = (admins || []).length
   const totalPending = (pendingMembers || []).length
+  const totalApproved = (approvedMembers || []).length
+  const totalRejected = (rejectedMembers || []).length
+  const totalExpired = (expiredMembers || []).length
+
+  // Prepare data for charts
+  const statusDistribution = [
+    { name: 'Approved', value: totalApproved, color: COLORS.APPROVED },
+    { name: 'Pending', value: totalPending, color: COLORS.PENDING },
+    { name: 'Rejected', value: totalRejected, color: COLORS.REJECTED },
+    { name: 'Expired', value: totalExpired, color: COLORS.EXPIRED },
+  ].filter(item => item.value > 0)
+
+  // Group members by month for growth chart
+  const memberGrowth = useMemo(() => {
+    const monthGroups = {}
+    ;(members || []).forEach(member => {
+      const date = new Date(member.created_at || member.updated_at)
+      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+      if (!monthGroups[monthKey]) {
+        monthGroups[monthKey] = { month: monthKey, approved: 0, pending: 0, rejected: 0 }
+      }
+      if (member.membership_status === 'APPROVED') monthGroups[monthKey].approved++
+      else if (member.membership_status === 'PENDING') monthGroups[monthKey].pending++
+      else if (member.membership_status === 'REJECTED') monthGroups[monthKey].rejected++
+    })
+    return Object.values(monthGroups).sort((a, b) => new Date(a.month) - new Date(b.month))
+  }, [members])
 
   const handleRoleChange = (id, value) => {
     setSelectedRole((prev) => ({ ...prev, [id]: value }))
@@ -245,37 +284,129 @@ const AdminDashboard = () => {
       <div className="grid gap-3 lg:grid-cols-4 sm:grid-cols-2">
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase">Admin accounts</p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-sky-100 p-2">
+              <Shield className="h-5 w-5 text-sky-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Admin accounts</p>
+          </div>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{totalAdmins}</p>
           <p className="mt-1 text-xs text-slate-500">Total admin users in the system.</p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase">Pending approvals</p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-amber-100 p-2">
+              <Clock className="h-5 w-5 text-amber-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Pending approvals</p>
+          </div>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{totalPending}</p>
           <p className="mt-1 text-xs text-slate-500">Members awaiting approval.</p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase">Total Members</p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-green-100 p-2">
+              <UserCheck className="h-5 w-5 text-green-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Approved members</p>
+          </div>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalApproved}</p>
+          <p className="mt-1 text-xs text-slate-500">Active members in the system.</p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-slate-100 p-2">
+              <Users className="h-5 w-5 text-slate-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Total Members</p>
+          </div>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{(members || []).length}</p>
           <p className="mt-1 text-xs text-slate-500">All registered members in the system.</p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase">Your role</p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-red-100 p-2">
+              <UserX className="h-5 w-5 text-red-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Rejected members</p>
+          </div>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalRejected}</p>
+          <p className="mt-1 text-xs text-slate-500">Members with rejected applications.</p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-purple-100 p-2">
+              <TrendingUp className="h-5 w-5 text-purple-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Expired members</p>
+          </div>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalExpired}</p>
+          <p className="mt-1 text-xs text-slate-500">Members with expired memberships.</p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-blue-100 p-2">
+              <Shield className="h-5 w-5 text-blue-600" />
+            </div>
+            <p className="text-xs text-slate-500 uppercase">Your role</p>
+          </div>
           <p className="mt-2 text-2xl font-semibold text-slate-900">{user.position}</p>
           <p className="mt-1 text-xs text-slate-500">{canManageRoles ? 'You can manage admin roles.' : 'You have view-only access.'}</p>
         </div>
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Status Distribution</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={statusDistribution}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {statusDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Member Growth Over Time</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={memberGrowth}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="approved" fill={COLORS.APPROVED} name="Approved" />
+              <Bar dataKey="pending" fill={COLORS.PENDING} name="Pending" />
+              <Bar dataKey="rejected" fill={COLORS.REJECTED} name="Rejected" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
 
       <section className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin Accounts</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Summary</p>
           {/* Manage admin roles removed per request */}
           <h2 className="mt-2 text-2xl font-semibold text-slate-900"> </h2>
 
@@ -288,52 +419,6 @@ const AdminDashboard = () => {
 
       </section>
 
-      <section className="space-y-6">
-        <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Member Approvals</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Pending member requests</h2>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          {pendingMembers.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-              No pending member approvals at the moment.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pendingMembers.map((member) => (
-                <div key={member.id} className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{member.first_name} {member.last_name}</p>
-                    <p className="text-sm text-slate-500">{member.user_email}</p>
-                    <p className="mt-1 text-xs text-slate-500">{member.course} · Year {member.year_level} · {member.section}</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">{statusLabels[member.membership_status]}</span>
-                    <button
-                      type="button"
-                      disabled={processingMemberId === member.id}
-                      onClick={() => handleMemberDecision(member.id, 'APPROVED')}
-                      className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      disabled={processingMemberId === member.id}
-                      onClick={() => handleMemberDecision(member.id, 'REJECTED')}
-                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-      
     </div>
   )
 }

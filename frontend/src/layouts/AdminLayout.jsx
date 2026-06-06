@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import React from 'react'
 import { useAuth } from '../context/useAuth'
 import AdminSidebar from '../components/admin/AdminSidebar'
@@ -14,10 +14,30 @@ const AdminLayout = ({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [yearEndBusy, setYearEndBusy] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [newLogsBadge, setNewLogsBadge] = useState(0)
 
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1)
   }
+
+  // Fetch logs stats for badge
+  useEffect(() => {
+    const fetchLogsStats = async () => {
+      if (!user) return
+
+      try {
+        const lastVisit = localStorage.getItem('lastLogsVisit')
+        const params = lastVisit ? { last_visit: lastVisit } : {}
+        const res = await api.get('/audit-logs/stats/', { params })
+        setNewLogsBadge(res.data.new_logs || 0)
+      } catch (err) {
+        // Silently fail for badge fetch
+        console.error('Failed to fetch logs stats:', err)
+      }
+    }
+
+    fetchLogsStats()
+  }, [user, refreshTrigger])
 
   const handleYearEndReset = async () => {
     setYearEndBusy(true)
@@ -77,7 +97,7 @@ const AdminLayout = ({
             setMobileOpen={setSidebarOpen}
             badges={{
               pendingMembership: badges.pendingMembership ?? 0,
-              newLogs: badges.newLogs ?? 0,
+              newLogs: newLogsBadge,
             }}
             quickActions={quickActions}
             logout={logout}

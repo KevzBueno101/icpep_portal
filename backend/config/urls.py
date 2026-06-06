@@ -17,5 +17,6 @@ urlpatterns = [
     path('api/users/',   include('users.urls')),
     path('api/milestones/', include('milestones.urls')),
     path('api/announcements/', include('announcements.urls')),
+    path('api/audit-logs/', include('audit_logs.urls')),
     # duplicate include removed
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
