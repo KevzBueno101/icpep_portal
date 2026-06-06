@@ -52,11 +52,12 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user
-        
-        # President can edit all fields, other admins can only edit first_name and last_name
-        if user.position == 'PRESIDENT':
-            allowed_fields = {'first_name', 'last_name', 'email', 'username', 'role', 'position'}
-            
+
+        # President can edit all fields, other admins can only edit first_name, last_name, and profile_picture
+        position_lower = user.position.lower() if user.position else ''
+        if 'president' in position_lower:
+            allowed_fields = {'first_name', 'last_name', 'email', 'username', 'role', 'position', 'profile_picture'}
+
             # Allow President to change their own position (for turnover purposes)
             # But prevent changing their own role to MEMBER
             if 'role' in request.data and request.data['role'] != 'ADMIN':
@@ -64,8 +65,8 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
                     'detail': 'President cannot change their own role to MEMBER.'
                 })
         else:
-            allowed_fields = {'first_name', 'last_name'}
-        
+            allowed_fields = {'first_name', 'last_name', 'profile_picture'}
+
         incoming = set(request.data.keys())
         forbidden = sorted([f for f in incoming if f not in allowed_fields])
         if forbidden:

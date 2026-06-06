@@ -13,6 +13,11 @@ const AdminLayout = ({
   const { user, loading, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [yearEndBusy, setYearEndBusy] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const triggerRefresh = () => {
+    setRefreshTrigger(prev => prev + 1)
+  }
 
   const handleYearEndReset = async () => {
     setYearEndBusy(true)
@@ -35,6 +40,8 @@ const AdminLayout = ({
         onYearEndReset: handleYearEndReset,
         yearEndBusy,
         isPresident: user?.position === 'PRESIDENT',
+        refreshTrigger,
+        triggerRefresh,
       })
     }
     return child

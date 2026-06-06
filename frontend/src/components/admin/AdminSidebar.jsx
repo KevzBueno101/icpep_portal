@@ -3,6 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import { useAuth } from '../../context/useAuth'
+import { resolveProfilePictureUrl } from '../../utils/profilePicture'
+
 
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
@@ -92,10 +94,23 @@ export default function AdminSidebar({
         <div className="px-2 pb-3">
           <div className="rounded-2xl bg-white/5 p-3">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold">{userCard.username}</div>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Badge className="bg-white/15 text-blue-100 border border-white/10">{userCard.userPosition}</Badge>
+              <div className="flex items-center gap-3 min-w-0">
+                {user?.profile_picture ? (
+                  <img
+                    src={resolveProfilePictureUrl(user.profile_picture)}
+                    alt={user.username}
+                    className="h-10 w-10 flex-shrink-0 rounded-full object-cover border-2 border-white/20 overflow-hidden"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white/20">
+                    <User size={18} />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold">{userCard.username}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <Badge className="bg-white/15 text-blue-100 border border-white/10">{userCard.userPosition}</Badge>
+                  </div>
                 </div>
               </div>
 

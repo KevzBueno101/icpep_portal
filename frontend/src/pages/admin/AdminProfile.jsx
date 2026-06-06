@@ -4,6 +4,8 @@ import { User, LogOut, AlertCircle, RotateCcw } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import { resolveProfilePictureUrl } from '../../utils/profilePicture'
+
 
 const { primary, secondary, accent } = {
   primary: '#001F4D',
@@ -109,8 +111,16 @@ export default function AdminProfile({ onYearEndReset, yearEndBusy, isPresident 
           <div className="h-32 bg-gradient-to-r from-[#001F4D] to-[#003C8F]" />
           <div className="-mt-10 px-6 pb-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white shadow">
-                <User className="h-10 w-10 text-slate-700" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white shadow overflow-hidden">
+                {profile.profile_picture ? (
+                  <img
+                    src={resolveProfilePictureUrl(profile.profile_picture)}
+                    alt={profile.username}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-10 w-10 text-slate-700" />
+                )}
               </div>
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-bold text-accent">{displayName}</h1>

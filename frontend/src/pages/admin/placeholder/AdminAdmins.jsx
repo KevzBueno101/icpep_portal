@@ -4,6 +4,7 @@ import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { User, Plus } from 'lucide-react'
+import { resolveProfilePictureUrl } from '../../../utils/profilePicture'
 
 const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Admin' },
@@ -23,7 +24,7 @@ const STATUS_LABELS = {
   false: 'Inactive',
 }
 
-const AdminAdmins = () => {
+const AdminAdmins = ({ refreshTrigger }) => {
   const { user } = useAuth()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
@@ -64,7 +65,7 @@ const AdminAdmins = () => {
     if (user) {
       loadAdmins()
     }
-  }, [user])
+  }, [user, refreshTrigger])
 
   const resetForm = () => {
     setForm({
@@ -261,12 +262,12 @@ const AdminAdmins = () => {
                     <div className="flex items-start gap-4">
                       {admin.profile_picture ? (
                         <img
-                          src={admin.profile_picture}
+                          src={resolveProfilePictureUrl(admin.profile_picture)}
                           alt={admin.username}
-                          className="h-16 w-16 flex-shrink-0 rounded-full object-cover"
+                          className="h-16 w-16 flex-shrink-0 rounded-full object-cover border-2 border-white shadow-sm"
                         />
                       ) : (
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white shadow-sm">
                           <User size={28} />
                         </div>
                       )}

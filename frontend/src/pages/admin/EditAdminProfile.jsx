@@ -4,10 +4,12 @@ import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
-export default function EditAdminProfile() {
+
+export default function EditAdminProfile({ triggerRefresh }) {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -16,11 +18,13 @@ export default function EditAdminProfile() {
     username: '',
     position: '',
     role: '',
+    profile_picture: null,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [showPositionWarning, setShowPositionWarning] = useState(false)
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null)
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -34,7 +38,11 @@ export default function EditAdminProfile() {
         username: res.data.username ?? '',
         position: res.data.position ?? '',
         role: res.data.role ?? '',
+        profile_picture: null,
       })
+      if (res.data.profile_picture) {
+        setProfilePicturePreview(resolveProfilePictureUrl(res.data.profile_picture))
+      }
     } catch (err) {
       const msg = err?.response?.data?.detail || 'Failed to load profile.'
       setError(msg)
@@ -55,7 +63,7 @@ export default function EditAdminProfile() {
 
     const firstName = formData.first_name.trim()
     const lastName = formData.last_name.trim()
-    const isPresident = user?.position === 'PRESIDENT'
+    const isPresident = user?.position?.toLowerCase().includes('president')
 
     if (!firstName || !lastName) {
       const msg = 'Both first name and last name are required.'
@@ -71,7 +79,7 @@ export default function EditAdminProfile() {
         toast.error(msg)
         return
       }
-      
+
       // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
@@ -97,9 +105,29 @@ export default function EditAdminProfile() {
         payload.role = formData.role
       }
 
-      await api.patch('/users/admin/profile/', payload)
+      // Use FormData if profile picture is present
+      if (formData.profile_picture) {
+        const formDataPayload = new FormData()
+        Object.keys(payload).forEach(key => {
+          formDataPayload.append(key, payload[key])
+        })
+        formDataPayload.append('profile_picture', formData.profile_picture)
+        await api.patch('/users/admin/profile/', formDataPayload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      } else {
+        await api.patch('/users/admin/profile/', payload)
+      }
 
       toast.success('Profile updated successfully')
+      // Refresh user data to update profile picture in sidebar
+      await refreshUser()
+      // Trigger refresh of officers list
+      if (triggerRefresh) {
+        triggerRefresh()
+      }
       setTimeout(() => navigate('/admin/profile'), 350)
     } catch (err) {
       const detail = err?.response?.data?.detail
@@ -119,7 +147,15 @@ export default function EditAdminProfile() {
     )
   }
 
-  const isPresident = user?.position === 'PRESIDENT'
+  const isPresident = user?.position?.toLowerCase().includes('president')
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setFormData((s) => ({ ...s, profile_picture: file }))
+      setProfilePicturePreview(URL.createObjectURL(file))
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -152,6 +188,39 @@ export default function EditAdminProfile() {
                 {user?.position && (
                   <p className="mt-1 text-sm text-slate-600">Position: {user.position}</p>
                 )}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <label htmlFor="profile_picture" className="block text-sm font-semibold text-slate-700">
+                  Profile Picture
+                </label>
+                <div className="mt-3 flex items-center gap-4">
+                  <div className="h-20 w-20 flex-shrink-0 rounded-full border-2 border-white shadow overflow-hidden">
+                    {profilePicturePreview ? (
+                      <img
+                        src={profilePicturePreview}
+                        alt="Profile preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                        <span className="text-xs font-semibold">No Photo</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      id="profile_picture"
+                      name="profile_picture"
+                      type="file"
+                      accept="image/*"
+                      disabled={saving}
+                      onChange={handleProfilePictureChange}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">Upload a new profile picture (optional)</p>
+                  </div>
+                </div>
               </div>
 
               {error && (
@@ -235,20 +304,16 @@ export default function EditAdminProfile() {
                       <label htmlFor="position" className="block text-sm font-semibold text-slate-700">
                         Position
                       </label>
-                      <select
+                      <input
                         id="position"
                         name="position"
-                        required
+                        type="text"
                         disabled={saving}
+                        placeholder="e.g., President, Secretary, Treasurer, etc."
                         className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
                         value={formData.position}
                         onChange={(e) => setFormData((s) => ({ ...s, position: e.target.value }))}
-                      >
-                        <option value="NONE">None</option>
-                        <option value="PRESIDENT">President</option>
-                        <option value="TREASURER">Treasurer</option>
-                        <option value="SECRETARY">Secretary</option>
-                      </select>
+                      />
                     </div>
 
                     <div>
@@ -265,12 +330,12 @@ export default function EditAdminProfile() {
                         onChange={(e) => setFormData((s) => ({ ...s, role: e.target.value }))}
                       >
                         <option value="ADMIN">Admin</option>
-                        <option value="MEMBER">Member</option>
+                        <option value="OFFICER">Officer</option>
                       </select>
                     </div>
                   </div>
 
-                  {formData.position !== 'PRESIDENT' && (
+                  {formData.position && !formData.position.toLowerCase().includes('president') && (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                       <div className="flex items-start gap-2">
                         <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />

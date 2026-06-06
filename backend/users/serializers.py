@@ -8,6 +8,8 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class AdminProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -18,6 +20,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'email',
             'role',
             'position',
+            'profile_picture',
             'is_staff',
             'is_superuser',
         )
@@ -75,6 +78,11 @@ class AdminProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('This email is already registered.')
         return value
 
+    def get_profile_picture(self, obj):
+        if hasattr(obj, 'profile_picture') and obj.profile_picture:
+            return obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+        return None
+
     def validate_username(self, value):
         # Check uniqueness if username is being changed
         if self.instance and value != self.instance.username:
@@ -97,6 +105,7 @@ class UserListSerializer(serializers.ModelSerializer):
     is_term_expired  = serializers.BooleanField(read_only=True)
     is_term_active   = serializers.BooleanField(read_only=True)
     can_manage_roles = serializers.BooleanField(read_only=True)
+    profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model  = User
@@ -107,6 +116,11 @@ class UserListSerializer(serializers.ModelSerializer):
             'is_active', 'created_at',
         ]
         read_only_fields = fields
+
+    def get_profile_picture(self, obj):
+        if hasattr(obj, 'profile_picture') and obj.profile_picture:
+            return obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+        return None
 
 
 class AssignRoleSerializer(serializers.Serializer):
