@@ -97,4 +97,12 @@ For more information, see the main project README at the repository root.
 - Defensive fixes: admin pages (`AdminDashboard`, admin lists) were updated to handle missing or non-paginated API responses safely. If an admin list looks empty, inspect the API response — it should be paginated and include `results`.
 - Registration now requires an explicit Privacy Policy agreement before continuing.
 - Admin `Archives` page has been removed from the dashboard navigation and routing.
+- Officers section: changed from table to responsive card grid layout with detailed officer info and hover actions.
+- Officer management: Position field changed from dropdown to dynamic text input for flexible position entry.
+- Officer management: Added year level dropdown (1st-4th year) in officer creation/edit modal.
+- Officer management: Added profile picture upload functionality in officer creation/edit modal.
+- Officer management: Modal text updated from "admin account" to "officer account" throughout the system.
+- Officer management: Modal form is now scrollable on mobile devices for better UX.
+- Role system: Updated to use OFFICER as default role (removed MEMBER, added OFFICER).
+- Password validation: Added frontend validation to ensure password is at least 8 characters.
 

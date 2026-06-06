@@ -17,7 +17,9 @@ import AdminMembership from './pages/admin/placeholder/AdminMembership'
 import AdminAdmins from './pages/admin/placeholder/AdminAdmins'
 import AdminAchievements from './pages/admin/AdminAchievements'
 import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
-import AdminProfile from './pages/admin/placeholder/AdminProfile'
+import AdminProfile from './pages/admin/AdminProfile'
+import EditAdminProfile from './pages/admin/EditAdminProfile'
+
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
 import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
 
@@ -193,6 +195,17 @@ function App() {
               </AdminProtectedRoute>
             }
           />
+          <Route
+            path="/admin/edit-profile"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <EditAdminProfile />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin/logs"
             element={

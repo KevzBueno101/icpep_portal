@@ -17,20 +17,65 @@ from .serializers import (
 from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 # backend/users/views.py
 from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from .serializers import AdminProfileSerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class AdminProfileAPIView(generics.RetrieveAPIView):
-    """
-    GET /admin/profile/ – returns the currently authenticated admin’s profile.
-    """
+class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
+    """GET/PATCH /admin/profile/ – returns/updates the currently authenticated admin's profile."""
+
     serializer_class = AdminProfileSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        try:
+            if not self.request.user or not self.request.user.is_authenticated:
+                raise PermissionDenied('Authentication required.')
+            
+            # Debug: Check user attributes
+            user = self.request.user
+            if not hasattr(user, 'role'):
+                raise PermissionDenied('User object missing role attribute.')
+            
+            if user.role != 'ADMIN':
+                raise PermissionDenied(f'Only admin users can edit their profile. Current role: {user.role}')
+            
+            return user
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in AdminProfileAPIView.get_object: {str(e)}", exc_info=True)
+            raise
+
+    def patch(self, request, *args, **kwargs):
+        user = self.request.user
+        
+        # President can edit all fields, other admins can only edit first_name and last_name
+        if user.position == 'PRESIDENT':
+            allowed_fields = {'first_name', 'last_name', 'email', 'username', 'role', 'position'}
+            
+            # Allow President to change their own position (for turnover purposes)
+            # But prevent changing their own role to MEMBER
+            if 'role' in request.data and request.data['role'] != 'ADMIN':
+                raise ValidationError({
+                    'detail': 'President cannot change their own role to MEMBER.'
+                })
+        else:
+            allowed_fields = {'first_name', 'last_name'}
+        
+        incoming = set(request.data.keys())
+        forbidden = sorted([f for f in incoming if f not in allowed_fields])
+        if forbidden:
+            # Match requested UX: "Cannot update fields: email, username"
+            raise ValidationError({
+                'detail': f"Cannot update fields: {', '.join(forbidden)}. Only President can edit these fields."
+            })
+
+        return self.partial_update(request, *args, **kwargs)
+
 
 
 User = get_user_model()
@@ -239,13 +284,12 @@ def delegate_secretary(request, pk):
 @permission_classes([IsAuthenticated])
 def year_end_reset(request):
     """
-    Resets ALL admin positions to NONE.
-    - role stays ADMIN
-    - position → NONE
-    - is_delegated → False
-    - term_start → None
-    President only. The President's own position is also reset.
-    After this, President must re-assign everyone including themselves.
+    Year-end reset:
+    - Expires all members (membership_status → EXPIRED)
+    - Resets all admin/officer positions to NONE EXCEPT President
+    - Clears is_delegated and term_start for all admins
+    - President keeps their PRESIDENT position
+    President only.
     """
     if not _is_president(request.user):
         return Response(
@@ -253,15 +297,29 @@ def year_end_reset(request):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    updated = User.objects.filter(role='ADMIN').update(
+    # Get the MemberProfile model
+    from members.models import MemberProfile
+    
+    # Expire all members
+    expired_members = MemberProfile.objects.filter(
+        membership_status='APPROVED'
+    ).update(membership_status='EXPIRED')
+    
+    # Reset all admin/officer positions to NONE EXCEPT the current President
+    updated_admins = User.objects.filter(
+        role='ADMIN'
+    ).exclude(
+        position='PRESIDENT'
+    ).update(
         position='NONE',
         is_delegated=False,
         term_start=None,
     )
 
     return Response({
-        'message': f'Year-end reset complete. {updated} admin account(s) were reset.',
-        'reset_count': updated,
+        'message': f'Year-end reset complete. {expired_members} member(s) expired, {updated_admins} admin account(s) reset.',
+        'expired_members': expired_members,
+        'reset_admins': updated_admins,
     })
 
 

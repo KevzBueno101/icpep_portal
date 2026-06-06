@@ -25,6 +25,17 @@ A full-stack Django + React application for managing university member profiles,
 - Frontend: Admin `Archives` page and navigation item were removed from the dashboard.
 - Frontend: Admin announcement form now supports multi-image upload, edit-mode image preview, and removal of existing announcement images.
 - Frontend: Announcement updates and image deletions now propagate to landing announcement views immediately via client-side refresh events.
+- Backend: Position field changed from dropdown (TextChoices) to dynamic text input - positions are now free-form text fields.
+- Backend: Role system updated - removed MEMBER role, added OFFICER role (default). Roles: ADMIN, OFFICER.
+- Backend: Permission system updated - Officers can add announcements, Admins can manage roles (assign positions).
+- Backend: Added `year_level` field to User model (1st-4th year).
+- Backend: Added `profile_picture` field to User model for officer profile photos.
+- Frontend: Officers section changed from table to responsive card grid layout with detailed officer info.
+- Frontend: Modal text updated from "admin account" to "officer account" throughout the system.
+- Frontend: Position dropdown changed to text input for dynamic position entry.
+- Frontend: Added year level dropdown in officer creation/edit modal.
+- Frontend: Added profile picture upload in officer creation/edit modal.
+- Frontend: Modal form is now scrollable on mobile devices.
 
 When pulling changes, run migrations as described in the "Database migrations" section.
 

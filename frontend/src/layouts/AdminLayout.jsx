@@ -1,17 +1,44 @@
 import { useState } from 'react'
+import React from 'react'
 import { useAuth } from '../context/useAuth'
 import AdminSidebar from '../components/admin/AdminSidebar'
+import api from '../api/axios'
+import toast from 'react-hot-toast'
 
 const AdminLayout = ({
   children,
   badges = {},
-  onYearEndReset,
-  yearEndBusy = false,
-  isPresident = false,
   quickActions = { enabled: true },
 }) => {
   const { user, loading, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [yearEndBusy, setYearEndBusy] = useState(false)
+
+  const handleYearEndReset = async () => {
+    setYearEndBusy(true)
+    try {
+      const res = await api.post('/users/admins/year-end-reset/')
+      toast.success(res.data.message || 'Year-end reset complete.')
+      // Reload the page to refresh all data
+      window.location.reload()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Year-end reset failed.')
+    } finally {
+      setYearEndBusy(false)
+    }
+  }
+
+  // Clone children and pass Year-End reset props
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, {
+        onYearEndReset: handleYearEndReset,
+        yearEndBusy,
+        isPresident: user?.position === 'PRESIDENT',
+      })
+    }
+    return child
+  })
 
   if (loading) {
     return (
@@ -47,18 +74,19 @@ const AdminLayout = ({
             }}
             quickActions={quickActions}
             logout={logout}
-            onYearEndReset={onYearEndReset}
+            onYearEndReset={handleYearEndReset}
             yearEndBusy={yearEndBusy}
-            isPresident={isPresident || user?.position === 'PRESIDENT'}
+            isPresident={user?.position === 'PRESIDENT'}
           />
 
           <div className="min-w-0 flex-1 lg:ml-56">
             <div className="pb-8">
-              {children}
+              {childrenWithProps}
             </div>
           </div>
         </div>
       </div>
+
     </div>
   )
 }

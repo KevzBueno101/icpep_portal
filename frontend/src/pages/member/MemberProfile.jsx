@@ -263,7 +263,7 @@ export default function MemberProfile() {
               { label: 'Student Number', key: 'student_number', value: profile?.student_number || '', disabled: true },
               { label: 'Contact Number', key: 'contact_number', disabled: false },
               { label: 'Course', key: 'course', value: profile?.course || '', disabled: true },
-              { label: 'Section', key: 'section', disabled: false },
+              { label: 'Section/Block', key: 'section', disabled: false },
               { label: 'Birthdate', key: 'birthdate', type: 'date', disabled: false },
             ].map((field) => {
               const isReadOnly = !editMode || field.disabled

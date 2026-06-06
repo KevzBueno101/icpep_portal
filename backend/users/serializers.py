@@ -10,22 +10,85 @@ User = get_user_model()
 class AdminProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email',
-                  'position', 'is_staff', 'is_superuser')
-        read_only_fields = ('id', 'username', 'email')
+        fields = (
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'role',
+            'position',
+            'is_staff',
+            'is_superuser',
+        )
+        read_only_fields = (
+            'id',
+            'is_staff',
+            'is_superuser',
+        )
+        extra_kwargs = {
+            'first_name': {
+                'required': False,
+                'allow_blank': True,
+                'max_length': 150,
+            },
+            'last_name': {
+                'required': False,
+                'allow_blank': True,
+                'max_length': 150,
+            },
+            'email': {
+                'required': False,
+            },
+            'username': {
+                'required': False,
+            },
+            'role': {
+                'required': False,
+            },
+            'position': {
+                'required': False,
+            },
+        }
+
+    def validate_first_name(self, value):
+        # Allow blank (empty string) but enforce max length
+        if value is None:
+            return value
+        if len(value) > 150:
+            raise serializers.ValidationError('first_name must be at most 150 characters.')
+        return value
+
+    def validate_last_name(self, value):
+        # Allow blank (empty string) but enforce max length
+        if value is None:
+            return value
+        if len(value) > 150:
+            raise serializers.ValidationError('last_name must be at most 150 characters.')
+        return value
+
+    def validate_email(self, value):
+        # Check uniqueness if email is being changed
+        if self.instance and value != self.instance.email:
+            existing = User.objects.filter(email=value)
+            if existing.exists():
+                raise serializers.ValidationError('This email is already registered.')
+        return value
+
+    def validate_username(self, value):
+        # Check uniqueness if username is being changed
+        if self.instance and value != self.instance.username:
+            existing = User.objects.filter(username=value)
+            if existing.exists():
+                raise serializers.ValidationError('This username is already taken.')
+        return value
+
 
 User = get_user_model()
 
 ROLE_CHOICES = [
-    ('ADMIN',  'Admin'),
-    ('MEMBER', 'Member'),
-]
-
-POSITION_CHOICES = [
-    ('NONE',      'None'),
-    ('PRESIDENT', 'President'),
-    ('TREASURER', 'Treasurer'),
-    ('SECRETARY', 'Secretary'),
+    ('ADMIN',   'Admin'),
+    ('OFFICER', 'Officer'),
 ]
 
 
@@ -39,7 +102,7 @@ class UserListSerializer(serializers.ModelSerializer):
         model  = User
         fields = [
             'id', 'email', 'username', 'role', 'position',
-            'is_delegated', 'term_start',
+            'is_delegated', 'term_start', 'profile_picture', 'year_level',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
             'is_active', 'created_at',
         ]
@@ -49,7 +112,7 @@ class UserListSerializer(serializers.ModelSerializer):
 class AssignRoleSerializer(serializers.Serializer):
     """Payload for assigning a role/position to a user."""
     role         = serializers.ChoiceField(choices=ROLE_CHOICES)
-    position     = serializers.ChoiceField(choices=POSITION_CHOICES)
+    position     = serializers.CharField(max_length=100, required=False, allow_blank=True)
     is_delegated = serializers.BooleanField(default=False)
 
     def validate(self, data):
@@ -58,24 +121,6 @@ class AssignRoleSerializer(serializers.Serializer):
         if not requester.can_manage_roles:
             raise serializers.ValidationError(
                 'You do not have permission to assign roles.'
-            )
-
-        target_position = data.get('position')
-
-        # Delegated Secretary cannot assign President
-        if (
-            requester.position == 'SECRETARY'
-            and requester.is_delegated
-            and target_position == 'PRESIDENT'
-        ):
-            raise serializers.ValidationError(
-                'Secretary cannot assign the President position.'
-            )
-
-        # Member role must have NONE position
-        if data['role'] == 'MEMBER' and target_position != 'NONE':
-            raise serializers.ValidationError(
-                'Members cannot have an admin position. Set position to NONE.'
             )
 
         return data
@@ -94,7 +139,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'role', 'position', 'is_delegated',
             'is_active', 'term_start', 'created_at', 'updated_at', 'password',
-            'is_term_active', 'is_term_expired', 'can_manage_roles',
+            'is_term_active', 'is_term_expired', 'can_manage_roles', 'profile_picture', 'year_level',
         ]
         read_only_fields = [
             'id', 'term_start', 'created_at', 'updated_at',
@@ -122,13 +167,10 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         if not requester.can_manage_roles:
             raise serializers.ValidationError('You do not have permission to manage admin accounts.')
 
-        role = data.get('role', getattr(self.instance, 'role', None))
-        position = data.get('position', getattr(self.instance, 'position', None))
+        position = data.get('position', getattr(self.instance, 'position', ''))
 
-        if role == 'MEMBER' and position != 'NONE':
-            raise serializers.ValidationError('Members cannot have an admin position. Set position to NONE.')
-
-        if position != 'SECRETARY' and data.get('is_delegated', getattr(self.instance, 'is_delegated', False)):
+        position_lower = position.lower() if position else ''
+        if 'secretary' not in position_lower and data.get('is_delegated', getattr(self.instance, 'is_delegated', False)):
             data['is_delegated'] = False
 
         return data
@@ -136,7 +178,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         validated_data['is_staff'] = True
-        validated_data['term_start'] = timezone.now().date() if validated_data.get('position') != 'NONE' else None
+        validated_data['term_start'] = timezone.now().date() if validated_data.get('position') else None
         user = User.objects.create_user(**validated_data)
         user.set_password(password)
         user.save(update_fields=['password'])
@@ -144,8 +186,10 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        if 'position' in validated_data and validated_data['position'] != 'SECRETARY':
-            validated_data['is_delegated'] = False
+        if 'position' in validated_data:
+            position_lower = validated_data['position'].lower() if validated_data['position'] else ''
+            if 'secretary' not in position_lower:
+                validated_data['is_delegated'] = False
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -153,7 +197,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         if password:
             instance.set_password(password)
         if 'position' in validated_data:
-            instance.term_start = timezone.now().date() if instance.position != 'NONE' else None
+            instance.term_start = timezone.now().date() if instance.position else None
 
         instance.save()
         return instance

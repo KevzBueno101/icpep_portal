@@ -31,7 +31,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [savingAdmins, setSavingAdmins] = useState([])
   const [processingMemberId, setProcessingMemberId] = useState(null)
-  const [yearEndBusy, setYearEndBusy] = useState(false)
   const [selectedRole, setSelectedRole] = useState({})
   const [selectedPosition, setSelectedPosition] = useState({})
 
@@ -162,23 +161,6 @@ const AdminDashboard = () => {
     }
   }
 
-  const handleYearEndReset = async () => {
-    setYearEndBusy(true)
-    try {
-      const res = await api.post('/users/admins/year-end-reset/')
-      toast.success(res.data.message || 'Year-end reset complete.')
-      const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data.results || [])
-      if (canApproveMembers) {
-        const membersRes = await api.get('/members/')
-        setMembers(membersRes.data.results || [])
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Year-end reset failed.')
-    } finally {
-      setYearEndBusy(false)
-    }
-  }
 
   const handleMemberDecision = async (memberId, decision) => {
     setProcessingMemberId(memberId)

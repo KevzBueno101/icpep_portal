@@ -25,20 +25,24 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
-        ADMIN  = 'ADMIN',  'Admin'
-        MEMBER = 'MEMBER', 'Member'
+        ADMIN   = 'ADMIN',   'Admin'
+        OFFICER = 'OFFICER', 'Officer'
 
-    class Position(models.TextChoices):
-        NONE      = 'NONE',      'None'
-        PRESIDENT = 'PRESIDENT', 'President'
-        TREASURER = 'TREASURER', 'Treasurer'
-        SECRETARY = 'SECRETARY', 'Secretary'
+    class YearLevel(models.TextChoices):
+        FOURTH = '4', '4th Year'
+        THIRD = '3', '3rd Year'
+        SECOND = '2', '2nd Year'
+        FIRST = '1', '1st Year'
     must_change_password = models.BooleanField(default=False)
 
     email    = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=True)
-    role     = models.CharField(max_length=10, choices=Role.choices,     default=Role.MEMBER)
-    position = models.CharField(max_length=20, choices=Position.choices, default=Position.NONE)
+    first_name = models.CharField(max_length=150, blank=True, default='')
+    last_name = models.CharField(max_length=150, blank=True, default='')
+    profile_picture = models.ImageField(upload_to='admin_profiles/', null=True, blank=True)
+    role     = models.CharField(max_length=10, choices=Role.choices,     default=Role.OFFICER)
+    position = models.CharField(max_length=100, blank=True, default='')
+    year_level = models.CharField(max_length=1, choices=YearLevel.choices, null=True, blank=True)
 
     # Term tracking
     term_start = models.DateField(null=True, blank=True)
@@ -73,58 +77,68 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN
+        return self.role in [self.Role.ADMIN, self.Role.OFFICER]
 
     @property
     def is_term_active(self):
-        """False if position is NONE (no active term)."""
-        return self.position != self.Position.NONE
+        """False if position is empty (no active term)."""
+        return bool(self.position)
 
     @property
     def is_term_expired(self):
         """
-        True when role=ADMIN but position=NONE.
+        True when role=ADMIN but position is empty.
         UI shows 'Term Expired' badge.
         """
-        return self.role == self.Role.ADMIN and self.position == self.Position.NONE
+        return self.role == self.Role.ADMIN and not self.position
 
     @property
     def has_payment_access(self):
-        return self.position in [self.Position.PRESIDENT, self.Position.TREASURER]
+        """President and Finance-related positions have payment access."""
+        position_lower = self.position.lower() if self.position else ''
+        return (
+            'president' in position_lower or
+            'finance' in position_lower or
+            'treasurer' in position_lower
+        )
 
     @property
     def has_approval_access(self):
-        return self.position in [self.Position.PRESIDENT, self.Position.SECRETARY]
+        """President, Vice Presidents, and Secretaries have approval access."""
+        position_lower = self.position.lower() if self.position else ''
+        return (
+            'president' in position_lower or
+            'vice president' in position_lower or
+            'secretary' in position_lower
+        )
 
     @property
     def can_manage_roles(self):
         """
         True if this user is allowed to assign roles to others.
-        President always can. Secretary only if is_delegated=True.
+        Admin always can. Officer with President position can.
+        Secretary only if is_delegated=True.
         """
-        if self.position == self.Position.PRESIDENT:
+        if self.role == self.Role.ADMIN:
             return True
-        if self.position == self.Position.SECRETARY and self.is_delegated:
+        position_lower = self.position.lower() if self.position else ''
+        if self.role == self.Role.OFFICER and 'president' in position_lower:
+            return True
+        if 'secretary' in position_lower and self.is_delegated:
             return True
         return False
+
+    @property
+    def can_add_announcements(self):
+        """
+        True if this user is allowed to add announcements.
+        Officers can add announcements.
+        """
+        return self.role in [self.Role.ADMIN, self.Role.OFFICER]
 
     def assignable_positions(self):
         """
         Returns which positions this user is allowed to assign to others.
-        President → all (including President for transfer-of-power).
-        Delegated Secretary → Treasurer & Secretary only.
+        Since positions are now dynamic, return empty list (all positions allowed).
         """
-        if self.position == self.Position.PRESIDENT:
-            return [
-                self.Position.PRESIDENT,
-                self.Position.TREASURER,
-                self.Position.SECRETARY,
-                self.Position.NONE,
-            ]
-        if self.position == self.Position.SECRETARY and self.is_delegated:
-            return [
-                self.Position.TREASURER,
-                self.Position.SECRETARY,
-                self.Position.NONE,
-            ]
         return []
