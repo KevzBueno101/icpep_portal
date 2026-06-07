@@ -1,15 +1,12 @@
-# TODO - Profile Picture Debug and Fix
+# TODO - Dynamic Admin Profile Picture + Editable Profile Fields
 
-## Plan (approved)
+## Completed
+- [x] Make Admin profile picture updates reflect in Admin Sidebar/Profile by refreshing `AuthContext.user` after saving from `frontend/src/pages/admin/AdminProfile.jsx`.
 
-1. Add a frontend helper to build an absolute image URL from the serialized `profile_picture` value.
-2. Replace hardcoded `http://127.0.0.1:8000${...}` usage in all profile-picture renderers.
-   - AdminSidebar
-   - AdminProfile page
-   - AdminAdmins/officer cards area (where admin/officer listing uses profile picture)
-3. Update backend CSP (`img-src`) to allow the frontend-served backend origin used in development.
-4. Run basic smoke tests:
-   - Load `/auth/me/` response and confirm `profile_picture` is present.
-   - Verify profile picture loads on Sidebar and Admin Profile after refresh.
-   - Verify after upload via EditAdminProfile, Sidebar/Profile/Officers update.
+## Next
+- [ ] Investigate why UI circle still doesn’t update: confirm `/api/auth/me/` returned `profile_picture` changed and matches AdminSidebar image `src`.
+- [ ] Implement “Admin Profile: editable all fields including password” for **all admins** (frontend form + backend serializer + backend view permissions).
+- [ ] Add password fields (password + confirm_password optional) to `AdminProfile.jsx` UI + submit payload.
+- [ ] Update backend `AdminProfileAPIView` to allow password in PATCH + implement `set_password`.
+- [ ] Ensure frontend uses `multipart/form-data` correctly when profile_picture is present alongside password.
 

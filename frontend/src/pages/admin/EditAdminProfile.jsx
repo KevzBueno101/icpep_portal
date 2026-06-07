@@ -19,6 +19,9 @@ export default function EditAdminProfile({ triggerRefresh }) {
     position: '',
     role: '',
     profile_picture: null,
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -39,6 +42,9 @@ export default function EditAdminProfile({ triggerRefresh }) {
         position: res.data.position ?? '',
         role: res.data.role ?? '',
         profile_picture: null,
+        current_password: '',
+        new_password: '',
+        confirm_password: '',
       })
       if (res.data.profile_picture) {
         setProfilePicturePreview(resolveProfilePictureUrl(res.data.profile_picture))
@@ -72,18 +78,38 @@ export default function EditAdminProfile({ triggerRefresh }) {
       return
     }
 
-    if (isPresident) {
-      if (!formData.email || !formData.username) {
-        const msg = 'Email and username are required.'
+    if (!formData.email || !formData.username) {
+      const msg = 'Email and username are required.'
+      setError(msg)
+      toast.error(msg)
+      return
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      const msg = 'Please enter a valid email address.'
+      setError(msg)
+      toast.error(msg)
+      return
+    }
+
+    // Password validation if trying to change password
+    if (formData.new_password) {
+      if (!formData.current_password) {
+        const msg = 'Current password is required to change password.'
         setError(msg)
         toast.error(msg)
         return
       }
-
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(formData.email)) {
-        const msg = 'Please enter a valid email address.'
+      if (formData.new_password !== formData.confirm_password) {
+        const msg = 'New password and confirm password do not match.'
+        setError(msg)
+        toast.error(msg)
+        return
+      }
+      if (formData.new_password.length < 8) {
+        const msg = 'New password must be at least 8 characters.'
         setError(msg)
         toast.error(msg)
         return
@@ -95,14 +121,21 @@ export default function EditAdminProfile({ triggerRefresh }) {
       const payload = {
         first_name: firstName,
         last_name: lastName,
+        email: formData.email.trim(),
+        username: formData.username.trim(),
       }
 
       // President can edit additional fields
       if (isPresident) {
-        payload.email = formData.email.trim()
-        payload.username = formData.username.trim()
         payload.position = formData.position
         payload.role = formData.role
+      }
+
+      // Add password fields if changing password
+      if (formData.new_password) {
+        payload.current_password = formData.current_password
+        payload.new_password = formData.new_password
+        payload.confirm_password = formData.confirm_password
       }
 
       // Use FormData if profile picture is present
@@ -175,9 +208,9 @@ export default function EditAdminProfile({ triggerRefresh }) {
           <div className="rounded-2xl bg-white p-5 shadow">
             <h1 className="text-xl font-bold text-slate-900">Edit Admin Profile</h1>
             <p className="mt-1 text-sm text-slate-600">
-              {isPresident 
-                ? 'As President, you can edit all profile fields.'
-                : 'Only <span className="font-semibold">first name</span> and <span className="font-semibold">last name</span> can be edited.'
+              {isPresident
+                ? 'As President, you can edit all profile fields including role and position.'
+                : 'You can edit your profile information and change your password.'
               }
             </p>
 
@@ -263,42 +296,95 @@ export default function EditAdminProfile({ triggerRefresh }) {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    disabled={saving}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                    value={formData.email}
+                    onChange={(e) => setFormData((s) => ({ ...s, email: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="username" className="block text-sm font-semibold text-slate-700">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    disabled={saving}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                    value={formData.username}
+                    onChange={(e) => setFormData((s) => ({ ...s, username: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Password Change Section */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-700 mb-3">Change Password (Optional)</p>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <label htmlFor="current_password" className="block text-sm font-semibold text-slate-700">
+                      Current Password
+                    </label>
+                    <input
+                      id="current_password"
+                      name="current_password"
+                      type="password"
+                      disabled={saving}
+                      placeholder="Required to change password"
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                      value={formData.current_password}
+                      onChange={(e) => setFormData((s) => ({ ...s, current_password: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="new_password" className="block text-sm font-semibold text-slate-700">
+                      New Password
+                    </label>
+                    <input
+                      id="new_password"
+                      name="new_password"
+                      type="password"
+                      disabled={saving}
+                      placeholder="Min 8 characters"
+                      minLength={8}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                      value={formData.new_password}
+                      onChange={(e) => setFormData((s) => ({ ...s, new_password: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirm_password" className="block text-sm font-semibold text-slate-700">
+                      Confirm New Password
+                    </label>
+                    <input
+                      id="confirm_password"
+                      name="confirm_password"
+                      type="password"
+                      disabled={saving}
+                      placeholder="Re-enter new password"
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                      value={formData.confirm_password}
+                      onChange={(e) => setFormData((s) => ({ ...s, confirm_password: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {isPresident && (
                 <>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-                        Email
-                      </label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        disabled={saving}
-                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
-                        value={formData.email}
-                        onChange={(e) => setFormData((s) => ({ ...s, email: e.target.value }))}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="username" className="block text-sm font-semibold text-slate-700">
-                        Username
-                      </label>
-                      <input
-                        id="username"
-                        name="username"
-                        type="text"
-                        required
-                        disabled={saving}
-                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
-                        value={formData.username}
-                        onChange={(e) => setFormData((s) => ({ ...s, username: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <label htmlFor="position" className="block text-sm font-semibold text-slate-700">

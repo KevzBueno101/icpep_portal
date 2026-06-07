@@ -54,7 +54,7 @@ function App() {
 
           {/* Hidden admin login — no links point here */}
           <Route path="/admin-portal/login" element={<AdminLogin />} />
-
+    
           {/* Member protected routes */}
           <Route
             path="/member/dashboard"

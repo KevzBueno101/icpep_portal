@@ -130,7 +130,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_profile_picture(self, obj):
         if hasattr(obj, 'profile_picture') and obj.profile_picture:
-            return obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            # Add cache-busting timestamp to force browser to reload new image
+            import time
+            timestamp = int(obj.updated_at.timestamp())
+            return f"{url}?v={timestamp}"
         return None
 
 

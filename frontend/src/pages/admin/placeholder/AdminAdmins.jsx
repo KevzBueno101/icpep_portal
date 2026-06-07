@@ -25,7 +25,7 @@ const STATUS_LABELS = {
 }
 
 const AdminAdmins = ({ refreshTrigger }) => {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -153,8 +153,26 @@ const AdminAdmins = ({ refreshTrigger }) => {
 
       let res
       if (editAdmin) {
-        res = await api.patch(`/users/admins/${editAdmin.id}/`, payload)
+        // Use FormData if profile picture is present
+        if (form.profile_picture) {
+          const formDataPayload = new FormData()
+          Object.keys(payload).forEach(key => {
+            formDataPayload.append(key, payload[key])
+          })
+          formDataPayload.append('profile_picture', form.profile_picture)
+          res = await api.patch(`/users/admins/${editAdmin.id}/`, formDataPayload, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+        } else {
+          res = await api.patch(`/users/admins/${editAdmin.id}/`, payload)
+        }
         setAdmins((prev) => (prev || []).map((item) => (item.id === editAdmin.id ? res.data.user : item)))
+        // If the updated admin is the current user, refresh the auth context to update sidebar
+        if (editAdmin.id === user?.id) {
+          await refreshUser()
+        }
         toast.success('Officer account updated.')
       } else {
         res = await api.post('/users/admins/', payload)
@@ -380,7 +398,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
                 <div className="flex items-center gap-4">
                   {editAdmin?.profile_picture && !form.profile_picture && (
                     <img
-                      src={editAdmin.profile_picture}
+                      src={resolveProfilePictureUrl(editAdmin.profile_picture)}
                       alt="Current profile"
                       className="h-20 w-20 rounded-full object-cover"
                     />

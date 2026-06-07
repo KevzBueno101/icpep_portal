@@ -9,6 +9,9 @@ User = get_user_model()
 
 class AdminProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
+    current_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False, min_length=8)
+    confirm_password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
@@ -23,6 +26,9 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'profile_picture',
             'is_staff',
             'is_superuser',
+            'current_password',
+            'new_password',
+            'confirm_password',
         )
         read_only_fields = (
             'id',
@@ -80,7 +86,11 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 
     def get_profile_picture(self, obj):
         if hasattr(obj, 'profile_picture') and obj.profile_picture:
-            return obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            # Add cache-busting timestamp
+            import time
+            timestamp = int(obj.updated_at.timestamp())
+            return f"{url}?v={timestamp}"
         return None
 
     def validate_username(self, value):
@@ -90,6 +100,39 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             if existing.exists():
                 raise serializers.ValidationError('This username is already taken.')
         return value
+
+    def validate(self, data):
+        # Password change validation
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if new_password or confirm_password:
+            if not current_password:
+                raise serializers.ValidationError('Current password is required to change password.')
+            if new_password != confirm_password:
+                raise serializers.ValidationError('New password and confirm password do not match.')
+            if not self.instance.check_password(current_password):
+                raise serializers.ValidationError('Current password is incorrect.')
+
+        return data
+
+    def update(self, instance, validated_data):
+        # Remove password fields from validated_data before updating the instance
+        current_password = validated_data.pop('current_password', None)
+        new_password = validated_data.pop('new_password', None)
+        confirm_password = validated_data.pop('confirm_password', None)
+
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Handle password change
+        if new_password:
+            instance.set_password(new_password)
+
+        instance.save()
+        return instance
 
 
 User = get_user_model()
@@ -116,11 +159,15 @@ class UserListSerializer(serializers.ModelSerializer):
             'is_active', 'created_at',
         ]
         read_only_fields = fields
-
     def get_profile_picture(self, obj):
         if hasattr(obj, 'profile_picture') and obj.profile_picture:
-            return obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+            # Add timestamp to force browser to reload new image
+            import time
+            timestamp = int(obj.updated_at.timestamp())
+            return f"{url}?v={timestamp}"
         return None
+        
 
 
 class AssignRoleSerializer(serializers.Serializer):
