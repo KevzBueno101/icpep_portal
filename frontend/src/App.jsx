@@ -25,12 +25,16 @@ import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
 
 
 import { MemberProvider } from './context/MemberContext'
+import { OfficersProvider } from './context/OfficersContext'
+
 import MemberLayout from './layouts/MemberLayout'
+
 import MemberDashboard from './pages/member/MemberDashboard'
 import MemberAnnouncements from './pages/member/MemberAnnouncements'
 import MemberIdCard from './pages/member/MemberIdCard'
 import MemberAbout from './pages/member/MemberAbout'
 import MemberProfile from './pages/member/MemberProfile'
+
 
 function App() {
   return (
@@ -61,9 +65,11 @@ function App() {
             element={
               <ProtectedRoute>
                 <MemberProvider>
-                  <MemberLayout>
-                    <MemberDashboard />
-                  </MemberLayout>
+                  <OfficersProvider>
+                    <MemberLayout>
+                      <MemberDashboard />
+                    </MemberLayout>
+                  </OfficersProvider>
                 </MemberProvider>
               </ProtectedRoute>
             }

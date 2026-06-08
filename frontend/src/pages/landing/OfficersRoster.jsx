@@ -67,7 +67,11 @@ export default function OfficersRoster() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/*
+          Use row-major auto-flow so cards fill left-to-right, then next row (FIFO / first in at top).
+          Tailwind: grid-flow-row = row-major
+        */}
+        <div className="grid grid-flow-row grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {officers.map((officer) => (
             <OfficerCard key={officer.id} officer={officer} />
           ))}

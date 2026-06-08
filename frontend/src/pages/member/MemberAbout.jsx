@@ -1,16 +1,13 @@
 import { Info, Shield, Users, Mail, Globe, MapPin } from 'lucide-react'
-
-const OFFICERS = [
-  { name: 'Kevz Bueno', role: 'President', program: 'BS Computer Engineering' },
-  { name: 'Maria Santos', role: 'Vice President', program: 'BS Computer Engineering' },
-  { name: 'James Doe', role: 'Secretary', program: 'BS Computer Engineering' },
-  { name: 'Ana Alawi', role: 'Treasurer', program: 'BS Computer Engineering' },
-  { name: 'John Cruz', role: 'Auditor', program: 'BS Computer Engineering' },
-]
+import { useOfficers } from '../../context/OfficersContext'
 
 export default function MemberAbout() {
+  const { officers, officersLoading } = useOfficers()
+
   return (
+
     <div className="space-y-10">
+
       {/* Hero section */}
       <div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
@@ -93,26 +90,46 @@ export default function MemberAbout() {
           <h2 className="text-xl font-bold text-slate-900">Student Leadership Board</h2>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {OFFICERS.map((officer, index) => (
-            <div
-              key={index}
-              className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 hover:bg-slate-50 transition"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold">
-                  {officer.name[0]}
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm">{officer.name}</h4>
-                  <p className="text-xs text-sky-600 font-semibold">{officer.role}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{officer.program}</p>
+        {officersLoading ? (
+          <div className="flex items-center justify-center py-10 text-slate-500 text-sm">Loading officers...</div>
+        ) : officers?.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {officers.map((officer, idx) => (
+              <div
+                key={officer.user_id ?? idx}
+                className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  {officer.profile_picture ? (
+                    <img
+                      src={officer.profile_picture}
+                      alt={`${officer.first_name} ${officer.last_name}`}
+                      className="h-10 w-10 rounded-full object-cover bg-slate-200"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold">
+                      {(officer.first_name?.[0] ?? 'O')}
+                      {(officer.last_name?.[0] ?? '')}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-slate-900 text-sm truncate">
+                      {officer.first_name || '—'} {officer.last_name || ''}
+                    </h4>
+                    <p className="text-xs text-sky-600 font-semibold truncate">{officer.position || ''}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">{officer.username ? `@${officer.username}` : ''}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+            No officers available.
+          </div>
+        )}
       </div>
+
 
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">

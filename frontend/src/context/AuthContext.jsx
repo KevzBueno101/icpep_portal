@@ -26,7 +26,11 @@ export const AuthProvider = ({ children }) => {
 
     const memberToken = localStorage.getItem(MEMBER_ACCESS_KEY)
     const adminToken = localStorage.getItem(ADMIN_ACCESS_KEY)
-    const token = memberToken || adminToken
+    // If both tokens exist, prefer the one matching the current route.
+    // This prevents a logged-in admin from being overwritten by a stale member token.
+    const isAdminRoute = window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/admin-portal')
+
+    const token = isAdminRoute ? (adminToken || memberToken) : (memberToken || adminToken)
 
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -35,7 +39,14 @@ export const AuthProvider = ({ children }) => {
         .then((res) => setUser(res.data))
         .catch((err) => {
           if (err.response?.status === 401) {
-            if (memberToken) {
+            if (memberToken && !isAdminRoute) {
+              localStorage.removeItem(MEMBER_ACCESS_KEY)
+              localStorage.removeItem(MEMBER_REFRESH_KEY)
+            } else if (adminToken && isAdminRoute) {
+              localStorage.removeItem(ADMIN_ACCESS_KEY)
+              localStorage.removeItem(ADMIN_REFRESH_KEY)
+            } else if (memberToken && isAdminRoute) {
+              // admin route but we used member token
               localStorage.removeItem(MEMBER_ACCESS_KEY)
               localStorage.removeItem(MEMBER_REFRESH_KEY)
             } else {

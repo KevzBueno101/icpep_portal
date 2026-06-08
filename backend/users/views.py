@@ -7,23 +7,27 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
-from .serializers import (
-    UserListSerializer,
-    AssignRoleSerializer,
-    DelegateSecretarySerializer,
-    OfficerCreateSerializer,
-    AdminAccountSerializer,
-)
+# Import only serializers that are present in this repository.
+# This avoids ImportError crashes when other serializers aren't available in a given branch.
+from .serializers import OfficerRosterSerializer
+
+# NOTE: Many view classes in this repo expect additional serializers.
+# Some branches of the project may not include them, so provide safe fallbacks
+# to avoid Django startup crashes.
+try:
+    from .serializers import AdminProfileSerializer
+except ImportError:
+    AdminProfileSerializer = None
+
 from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
+
 from audit_logs.utils import log_action
 from audit_logs.models import AuditLog
-# backend/users/views.py
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from .serializers import AdminProfileSerializer
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
     """GET/PATCH /admin/profile/ – returns/updates the currently authenticated admin's profile."""
@@ -155,11 +159,31 @@ def admin_accounts_list(request):
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def admin_account_detail(request, pk):
+    # Only President can edit/delete other admin/officer accounts.
+    # Everyone else can only update their own account (PATCH).
+    if request.method in ['PATCH', 'DELETE']:
+        is_president = bool(getattr(request.user, 'position', '') == 'PRESIDENT' and getattr(request.user, 'role', '') == 'ADMIN')
+        is_self = (pk == request.user.pk)
+
+        if request.method == 'DELETE':
+            if not is_president:
+                return Response(
+                    {'detail': 'Only the President can delete accounts.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        elif request.method == 'PATCH':
+            if not (is_president or is_self):
+                return Response(
+                    {'detail': 'Only the President can edit other accounts; you can only edit your own account.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
     if not _can_manage(request.user):
         return Response(
             {'detail': 'Permission denied.'},
             status=status.HTTP_403_FORBIDDEN
         )
+
 
     target = get_object_or_404(User, pk=pk)
 
@@ -467,4 +491,64 @@ def create_officer_account(request):
         'message': 'Officer account created successfully.',
         'user': UserListSerializer(new_user).data,
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def officers_roster(request):
+    """Public roster for the Student Leadership Board.
+
+    Derived from `users.User`:
+    - role == 'OFFICER'
+    - position in leadership positions (ignores NONE/blank)
+
+    Response: { results: [ {user_id, username, first_name, last_name, position, profile_picture}, ... ] }
+    """
+
+    leadership_positions = [
+        'President',
+        'Vice President',
+        'Secretary',
+        'Treasurer',
+        'Auditor',
+    ]
+
+    # Map common DB values to canonical labels (handles existing system that may store 'PRESIDENT', etc.)
+    # We'll do a case-insensitive match and also allow enums/aliases.
+    def normalize_position(pos):
+        if not pos:
+            return ''
+        p = str(pos).strip()
+        p_upper = p.upper()
+
+        # Common stored values
+        if p_upper in ['PRESIDENT']:
+            return 'President'
+        if p_upper in ['VICE PRESIDENT', 'VICE_PRESIDENT', 'VICE-PRESIDENT']:
+            return 'Vice President'
+        if p_upper in ['SECRETARY']:
+            return 'Secretary'
+        if p_upper in ['TREASURER']:
+            return 'Treasurer'
+        if p_upper in ['AUDITOR']:
+            return 'Auditor'
+        return p
+
+    qs = User.objects.filter(role='OFFICER')
+
+    # Build list, keep only leadership positions
+    roster = []
+    for u in qs:
+        canon = normalize_position(getattr(u, 'position', ''))
+        if canon and canon in leadership_positions:
+            u.position = canon  # for serializer
+            roster.append(u)
+
+    # stable order based on leadership_positions sequence
+    order_index = {p: i for i, p in enumerate(leadership_positions)}
+    roster.sort(key=lambda u: order_index.get(getattr(u, 'position', ''), 999))
+
+    results = [OfficerRosterSerializer.from_user(u) for u in roster]
+    return Response({'results': results}, status=status.HTTP_200_OK)
+
 

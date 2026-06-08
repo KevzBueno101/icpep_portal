@@ -1,12 +1,15 @@
-# TODO - Dynamic Admin Profile Picture + Editable Profile Fields
+# TODO
 
-## Completed
-- [x] Make Admin profile picture updates reflect in Admin Sidebar/Profile by refreshing `AuthContext.user` after saving from `frontend/src/pages/admin/AdminProfile.jsx`.
+- [x] Add backend endpoint to fetch current officers dynamically from `users.User` where `role='OFFICER'`, mapping `position` strings into the leadership board.
 
-## Next
-- [ ] Investigate why UI circle still doesn’t update: confirm `/api/auth/me/` returned `profile_picture` changed and matches AdminSidebar image `src`.
-- [ ] Implement “Admin Profile: editable all fields including password” for **all admins** (frontend form + backend serializer + backend view permissions).
-- [ ] Add password fields (password + confirm_password optional) to `AdminProfile.jsx` UI + submit payload.
-- [ ] Update backend `AdminProfileAPIView` to allow password in PATCH + implement `set_password`.
-- [ ] Ensure frontend uses `multipart/form-data` correctly when profile_picture is present alongside password.
+- [x] Add frontend MemberContext support (fetch officers list and expose it).
+
+- [x] Update `MemberDashboard.jsx` to include “Student Leadership Board” using fetched officers.
+
+- [x] Update `MemberAbout.jsx` to replace hardcoded leadership board with dynamic rendering.
+
+
+
+- [ ] (Optional) Update `frontend/src/pages/landing/OfficersRoster.jsx` to use the same dynamic data.
+- [ ] Run backend + frontend to verify roster renders and UI doesn’t break when no officers exist.
 

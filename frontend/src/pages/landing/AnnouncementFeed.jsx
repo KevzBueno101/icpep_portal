@@ -87,8 +87,7 @@ export default function AnnouncementFeed() {
             </p>
           </div>
 
-            <div className="flex items-center justify-center gap-3">
-
+            <div className="flex items-center justify-between gap-3">
             
             <button
               type="button"

@@ -167,18 +167,13 @@ function CardBack({
             {/* Custom Circular Data Node Layout */}
             <div className="flex-1 space-y-0.5 font-mono text-[7.5px] tracking-wide text-white/90 pb-0.5">
               <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 font-sans font-bold text-[6.5px]">ID#</div>
-                {/* PINALITAN: Tinanggal ang truncate para iwas clipping sa dulo */}
-                <span className="tracking-normal font-sans font-bold">{profile?.student_number || '—'}</span>
+                <span className="tracking-normal font-sans font-bold">ID# {profile?.student_number || '—'}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 font-sans font-bold text-[6.5px]">Block</div>
-                {/* PINALITAN: Tinanggal ang truncate para iwas clipping sa dulo */}
-                <span className="tracking-normal font-sans font-bold">{profile?.section || '—'}</span>
+                <span className="tracking-normal font-sans font-bold">Block {profile?.section || '—'}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 font-sans font-bold text-[6.5px]">A.Y</div>
-                <span className="tracking-normal font-sans font-bold">AY 2025–2026</span>
+                <span className="tracking-normal font-sans font-bold">A.Y 2025–2026</span>
               </div>
             </div>
           </div>

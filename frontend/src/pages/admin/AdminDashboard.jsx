@@ -6,25 +6,10 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 
 
-const ROLE_OPTIONS = [
-  { value: 'ADMIN', label: 'Admin' },
-  { value: 'MEMBER', label: 'Member' },
-]
-
-const POSITION_OPTIONS = [
-  { value: 'NONE', label: 'None' },
-  { value: 'PRESIDENT', label: 'President' },
-  { value: 'MEMBERSHIP_DIRECTOR', label: 'Membership Director' },
-  { value: 'SECRETARY', label: 'Secretary' },
-]
 
 
-const statusLabels = {
-  PENDING: 'Pending',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  EXPIRED: 'Expired',
-}
+
+
 
 const COLORS = {
   APPROVED: '#22c55e',
@@ -120,12 +105,13 @@ const AdminDashboard = () => {
   const totalExpired = (expiredMembers || []).length
 
   // Prepare data for charts
-  const statusDistribution = [
-    { name: 'Approved', value: totalApproved, color: COLORS.APPROVED },
-    { name: 'Pending', value: totalPending, color: COLORS.PENDING },
-    { name: 'Rejected', value: totalRejected, color: COLORS.REJECTED },
-    { name: 'Expired', value: totalExpired, color: COLORS.EXPIRED },
+  // Membership Status Distribution has been replaced with a count-based
+  // view of how many Members and Officers have been visited/registered.
+  const membersVsOfficersDistribution = [
+    { name: 'Members', value: (members || []).length, color: '#22c55e' },
+    { name: 'Officers', value: (admins || []).length, color: '#3b82f6' },
   ].filter(item => item.value > 0)
+
 
   // Group members by month for growth chart
   const memberGrowth = useMemo(() => {
@@ -363,20 +349,24 @@ const AdminDashboard = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Status Distribution</h3>
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Members vs Officers Visited</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={statusDistribution}
+                data={membersVsOfficersDistribution}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent, value }) => {
+                  const count = typeof value === 'number' ? value : 0
+                  return `${name}: ${count}`
+                }}
+
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
               >
-                {statusDistribution.map((entry, index) => (
+                {membersVsOfficersDistribution.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
