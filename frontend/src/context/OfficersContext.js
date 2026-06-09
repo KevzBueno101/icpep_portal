@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React from 'react'
 import api from '../api/axios'
+
 
 const OfficersContext = createContext(null)
 
@@ -26,15 +28,10 @@ export const OfficersProvider = ({ children }) => {
     fetchOfficers()
   }, [fetchOfficers])
 
-  return (
-    // JSX intentionally avoided to keep build compatible.
-    // Using React.createElement keeps runtime + build happy even if JSX parsing is disabled.
-    // eslint-disable-next-line react/react-in-jsx-scope
-    React.createElement(
-      OfficersContext.Provider,
-      { value: { officers, officersLoading, refreshOfficers: fetchOfficers } },
-      children
-    )
+  return React.createElement(
+    OfficersContext.Provider,
+    { value: { officers, officersLoading, refreshOfficers: fetchOfficers } },
+    children
   )
 }
 

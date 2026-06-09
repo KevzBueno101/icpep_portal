@@ -1,15 +1,18 @@
-# TODO
+# TODO - Fix & Dynamicize Admin Profile Page
 
-- [x] Add backend endpoint to fetch current officers dynamically from `users.User` where `role='OFFICER'`, mapping `position` strings into the leadership board.
+## Backend
+- [x] Add `AdminProfileSerializer` to `backend/users/serializers.py`
+- [x] Verify `AdminProfileAPIView` now returns 200 for `GET /api/users/admin/profile/`
+  - [x] `python manage.py check`
+  - [x] `python manage.py debug_admin_profile --user-id <id>`
 
-- [x] Add frontend MemberContext support (fetch officers list and expose it).
+## Frontend
+- [ ] Update `frontend/src/hooks/useAdminProfile.js` to return `{ profile, loading, error, refetch, profilePictureUrl }`
+- [ ] Update `frontend/src/pages/admin/AdminProfile.jsx` to consume the new hook shape and render fields dynamically
+- [ ] Verify edit flow loads pre-populated data (optional: update `EditAdminProfile.jsx` if needed)
 
-- [x] Update `MemberDashboard.jsx` to include “Student Leadership Board” using fetched officers.
-
-- [x] Update `MemberAbout.jsx` to replace hardcoded leadership board with dynamic rendering.
-
-
-
-- [ ] (Optional) Update `frontend/src/pages/landing/OfficersRoster.jsx` to use the same dynamic data.
-- [ ] Run backend + frontend to verify roster renders and UI doesn’t break when no officers exist.
+## Verification
+- [ ] Confirm Admin Profile page shows Name, Email, Role, Position, Photo
+- [ ] Confirm Edit form saves profile picture with cache-busting
+- [ ] Confirm password change requires current password
 

@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-
+import re
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -151,14 +151,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Cross-Origin Resource Sharing (CORS)
 CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
-    # CORS headers must not include a trailing path slash.
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
 ]
 
 

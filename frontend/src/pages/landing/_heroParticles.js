@@ -1,7 +1,7 @@
 // Lightweight canvas particle system for the hero section.
 // Intentionally dependency-free.
 
-export function startHeroParticles(canvas, _opts = {}) {
+export function startHeroParticles(canvas) { /* opts intentionally removed */
   if (!canvas) return () => {};
 
   const ctx = canvas.getContext('2d');

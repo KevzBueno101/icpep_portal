@@ -66,6 +66,9 @@ export default function AdminSidebar({
   yearEndBusy = false,
   isPresident = false,
 }) {
+  // Ensure optional props don’t trigger lint errors when not used in some builds.
+  void logout
+  void quickActions
   const { user } = useAuth()
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)

@@ -1,47 +1,35 @@
-import { useState, useCallback } from 'react';
-import axios from '../api/axios';
+import { useState, useEffect, useCallback } from 'react'
+import api from '../api/axios'
 
-export const useAdminProfile = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export default function useAdminProfile() {
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const fetchProfile = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const response = await axios.get('/users/admin/profile/');
-      setUser(response.data);
-      return response.data;
+      const res = await api.get('/users/admin/profile/')
+      setProfile(res.data)
     } catch (err) {
-      setError(err.message);
-      console.error('Failed to fetch profile:', err);
+      console.error('Failed to fetch profile:', err)
+      setError(err?.response?.data?.detail || 'Failed to load profile.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
-  const updateProfile = useCallback(async (data) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.patch('/users/admin/profile/', data);
-      setUser(response.data);
-      return response.data;
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to update profile:', err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
 
-  return { 
-    user, 
-    loading, 
-    error, 
-    fetchProfile, 
-    updateProfile 
-  };
-};
+  const profilePictureUrl = profile?.profile_picture
+    ? `${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}v=${Date.now()}`
+    : null
+
+  const refetch = fetchProfile
+
+  return { profile, loading, error, refetch, profilePictureUrl }
+}
+

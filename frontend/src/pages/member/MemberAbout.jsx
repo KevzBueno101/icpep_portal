@@ -2,10 +2,20 @@ import { Info, Shield, Users, Mail, Globe, MapPin } from 'lucide-react'
 import { useOfficers } from '../../context/OfficersContext'
 
 export default function MemberAbout() {
-  const { officers, officersLoading } = useOfficers()
+  // MemberAbout can be rendered on routes that may not wrap it in OfficersProvider
+  // depending on navigation/state hydration.
+  let officers = []
+  let officersLoading = false
+
+  try {
+    const value = useOfficers()
+    officers = value.officers || []
+    officersLoading = !!value.officersLoading
+  } catch (e) {
+    console.error('[MemberAbout] OfficersContext unavailable:', e)
+  }
 
   return (
-
     <div className="space-y-10">
 
       {/* Hero section */}
@@ -160,3 +170,4 @@ export default function MemberAbout() {
     </div>
   )
 }
+

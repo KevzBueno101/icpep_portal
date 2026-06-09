@@ -103,9 +103,11 @@ function App() {
             element={
               <ProtectedRoute>
                 <MemberProvider>
-                  <MemberLayout>
-                    <MemberAbout />
-                  </MemberLayout>
+                  <OfficersProvider>          {/* ← dagdag lang ito */}
+                    <MemberLayout>
+                      <MemberAbout />
+                    </MemberLayout>
+                  </OfficersProvider>
                 </MemberProvider>
               </ProtectedRoute>
             }
