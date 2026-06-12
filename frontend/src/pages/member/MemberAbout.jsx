@@ -127,6 +127,8 @@ export default function MemberAbout() {
                       {officer.first_name || '—'} {officer.last_name || ''}
                     </h4>
                     <p className="text-xs text-sky-600 font-semibold truncate">{officer.position || ''}</p>
+                    {officer.department && <p className="text-xs text-slate-500 truncate">{officer.department}</p>}
+                    {officer.academic_year && <p className="text-xs text-slate-400 truncate">AY {officer.academic_year}</p>}
                     <p className="text-[10px] text-slate-400 mt-0.5 truncate">{officer.username ? `@${officer.username}` : ''}</p>
                   </div>
                 </div>

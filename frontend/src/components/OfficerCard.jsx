@@ -1,11 +1,30 @@
+import { resolveProfilePictureUrl } from '../utils/profilePicture'
+
 export default function OfficerCard({ officer }) {
-  const { user, position, photo, department, academic_year } = officer
-  const initials = `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? ''}` || 'IC'
+  const {
+    user,
+    position,
+    photo,
+    profile_picture,
+    department,
+    academic_year,
+    first_name,
+    last_name,
+    username
+  } = officer
+
+  const fname = first_name || user?.first_name || ''
+  const lname = last_name || user?.last_name || ''
+  const uname = username || user?.username || ''
+  const rawPic = profile_picture || photo || null
+  const pic = resolveProfilePictureUrl(rawPic)
+
+  const initials = `${fname?.[0] ?? ''}${lname?.[0] ?? ''}`.toUpperCase() || 'IC'
 
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      {photo ? (
-        <img src={photo} alt={user?.username} className="h-56 w-full bg-slate-200 object-cover" />
+      {pic ? (
+        <img src={pic} alt={uname || 'Officer'} className="w-full bg-slate-200 object-contain" />
       ) : (
         <div className="flex h-56 w-full items-center justify-center bg-slate-200">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-700 text-2xl font-bold text-white">
@@ -15,7 +34,7 @@ export default function OfficerCard({ officer }) {
       )}
       <div className="p-6 text-center">
         <h3 className="mb-1 text-lg font-bold text-slate-900">
-          {user?.first_name || 'Officer'} {user?.last_name}
+          {fname || uname || 'Officer'} {lname}
         </h3>
         <p className="mb-2 font-semibold text-sky-600">{position}</p>
         {department && <p className="mb-2 text-sm text-slate-600">{department}</p>}

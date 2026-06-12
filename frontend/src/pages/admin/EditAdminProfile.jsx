@@ -4,7 +4,6 @@ import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
-import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 
 export default function EditAdminProfile({ triggerRefresh }) {
@@ -18,16 +17,16 @@ export default function EditAdminProfile({ triggerRefresh }) {
     username: '',
     position: '',
     role: '',
-    profile_picture: null,
     current_password: '',
     new_password: '',
     confirm_password: '',
+    department: '',
+    academic_year: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [showPositionWarning, setShowPositionWarning] = useState(false)
-  const [profilePicturePreview, setProfilePicturePreview] = useState(null)
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -41,14 +40,12 @@ export default function EditAdminProfile({ triggerRefresh }) {
         username: res.data.username ?? '',
         position: res.data.position ?? '',
         role: res.data.role ?? '',
-        profile_picture: null,
         current_password: '',
         new_password: '',
         confirm_password: '',
+        department: res.data.department ?? '',
+        academic_year: res.data.academic_year ?? '',
       })
-      if (res.data.profile_picture) {
-        setProfilePicturePreview(resolveProfilePictureUrl(res.data.profile_picture))
-      }
     } catch (err) {
       const msg = err?.response?.data?.detail || 'Failed to load profile.'
       setError(msg)
@@ -123,6 +120,8 @@ export default function EditAdminProfile({ triggerRefresh }) {
         last_name: lastName,
         email: formData.email.trim(),
         username: formData.username.trim(),
+        department: formData.department.trim(),
+        academic_year: formData.academic_year.trim(),
       }
 
       // President can edit additional fields
@@ -138,21 +137,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
         payload.confirm_password = formData.confirm_password
       }
 
-      // Use FormData if profile picture is present
-      if (formData.profile_picture) {
-        const formDataPayload = new FormData()
-        Object.keys(payload).forEach(key => {
-          formDataPayload.append(key, payload[key])
-        })
-        formDataPayload.append('profile_picture', formData.profile_picture)
-        await api.patch('/users/admin/profile/', formDataPayload, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-      } else {
-        await api.patch('/users/admin/profile/', payload)
-      }
+      await api.patch('/users/admin/profile/', payload)
 
       toast.success('Profile updated successfully')
       // Refresh user data to update profile picture in sidebar
@@ -181,14 +166,6 @@ export default function EditAdminProfile({ triggerRefresh }) {
   }
 
   const isPresident = user?.position?.toLowerCase().includes('president')
-
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData((s) => ({ ...s, profile_picture: file }))
-      setProfilePicturePreview(URL.createObjectURL(file))
-    }
-  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -223,38 +200,6 @@ export default function EditAdminProfile({ triggerRefresh }) {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <label htmlFor="profile_picture" className="block text-sm font-semibold text-slate-700">
-                  Profile Picture
-                </label>
-                <div className="mt-3 flex items-center gap-4">
-                  <div className="h-20 w-20 flex-shrink-0 rounded-full border-2 border-white shadow overflow-hidden">
-                    {profilePicturePreview ? (
-                      <img
-                        src={profilePicturePreview}
-                        alt="Profile preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-500 to-sky-600 text-white">
-                        <span className="text-xs font-semibold">No Photo</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      id="profile_picture"
-                      name="profile_picture"
-                      type="file"
-                      accept="image/*"
-                      disabled={saving}
-                      onChange={handleProfilePictureChange}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">Upload a new profile picture (optional)</p>
-                  </div>
-                </div>
-              </div>
 
               {error && (
                 <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -326,6 +271,40 @@ export default function EditAdminProfile({ triggerRefresh }) {
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
                     value={formData.username}
                     onChange={(e) => setFormData((s) => ({ ...s, username: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="department" className="block text-sm font-semibold text-slate-700">
+                    Department
+                  </label>
+                  <input
+                    id="department"
+                    name="department"
+                    type="text"
+                    disabled={saving}
+                    placeholder="e.g., Executive Office"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                    value={formData.department}
+                    onChange={(e) => setFormData((s) => ({ ...s, department: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="academic_year" className="block text-sm font-semibold text-slate-700">
+                    Academic Year
+                  </label>
+                  <input
+                    id="academic_year"
+                    name="academic_year"
+                    type="text"
+                    disabled={saving}
+                    placeholder="e.g., 2025-2026"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+                    value={formData.academic_year}
+                    onChange={(e) => setFormData((s) => ({ ...s, academic_year: e.target.value }))}
                   />
                 </div>
               </div>

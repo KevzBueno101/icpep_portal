@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import React from 'react'
-import api from '../api/axios'
+import { publicApi } from '../api/axios'
 
 
 const OfficersContext = createContext(null)
@@ -13,7 +13,7 @@ export const OfficersProvider = ({ children }) => {
   const fetchOfficers = useCallback(async () => {
     setOfficersLoading(true)
     try {
-      const res = await api.get('/users/officers/roster/')
+      const res = await publicApi.get('/users/officers/roster/')
       const results = res.data?.results
       setOfficers(Array.isArray(results) ? results : [])
     } catch (err) {

@@ -8,6 +8,8 @@ import FeatureSection from './FeatureSection'
 import AnnouncementFeed from './AnnouncementFeed'
 import MilestonesSection from './MilestonesSection'
 import MovingLogoText from './MovingLogoText'
+import { OfficersProvider } from '../../context/OfficersContext'
+import OfficersRoster from './OfficersRoster'
 
 
 export default function Landing() {
@@ -31,18 +33,21 @@ export default function Landing() {
   }, [location.hash, location.state])
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Navbar />
-      <main className="flex-grow">
-        <HeroSection />
-        <ICPEPValuesSection />
-        <FeatureSection />
-        <AnnouncementFeed />
-        <MilestonesSection />
-        <MovingLogoText />
-      </main>
+    <OfficersProvider>
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Navbar />
+        <main className="flex-grow">
+          <HeroSection />
+          <ICPEPValuesSection />
+          <FeatureSection />
+          <AnnouncementFeed />
+          <MilestonesSection />
+          <OfficersRoster />
+          <MovingLogoText />
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </OfficersProvider>
   )
 }

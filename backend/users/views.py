@@ -58,6 +58,7 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
                 'first_name', 'last_name', 'email', 'username',
                 'role', 'position', 'profile_picture',
                 'current_password', 'new_password', 'confirm_password',
+                'department', 'academic_year',
             }
             if 'role' in request.data and request.data['role'] != 'ADMIN':
                 raise ValidationError({'detail': 'President cannot change their own role to MEMBER.'})
@@ -65,6 +66,7 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
             allowed_fields = {
                 'first_name', 'last_name', 'email', 'username',
                 'profile_picture', 'current_password', 'new_password', 'confirm_password',
+                'department', 'academic_year',
             }
 
         incoming = set(request.data.keys())
@@ -466,7 +468,12 @@ def create_officer_account(request):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def officers_roster(request):
-    """Public roster for the Student Leadership Board."""
+    """Public roster for the Student Leadership Board.
+    
+    Returns all users with role OFFICER or ADMIN who have recognized leadership
+    positions. Position matching is flexible (contains-based) to handle
+    variations like 'Vice Pres', 'External Vice President', etc.
+    """
 
     leadership_positions = [
         'President',
@@ -477,22 +484,36 @@ def officers_roster(request):
     ]
 
     def normalize_position(pos):
+        """Map a raw position string to one of the canonical leadership titles.
+        
+        Uses contains-based matching so entries like 'External Vice President'
+        or 'Vice Pres' still resolve correctly.
+        Returns the canonical title, or the original position string if no
+        match is found (so non-standard positions still show up as-is).
+        """
         if not pos:
             return ''
-        p_upper = str(pos).strip().upper()
-        if p_upper == 'PRESIDENT':
-            return 'President'
-        if p_upper in ['VICE PRESIDENT', 'VICE_PRESIDENT', 'VICE-PRESIDENT']:
+        p_lower = str(pos).strip().lower()
+        # Check specific matches first (most to least specific)
+        if 'vice president' in p_lower or 'vice pres' in p_lower:
             return 'Vice President'
-        if p_upper == 'SECRETARY':
+        if 'president' in p_lower:
+            return 'President'
+        if 'secretary' in p_lower:
             return 'Secretary'
-        if p_upper == 'TREASURER':
+        if 'treasurer' in p_lower:
             return 'Treasurer'
-        if p_upper == 'AUDITOR':
+        if 'auditor' in p_lower:
             return 'Auditor'
         return str(pos).strip()
 
-    qs = User.objects.filter(role='OFFICER')
+    # Include both OFFICER and ADMIN roles — all active officers/admins
+    # with positions belong in the public-facing leadership board.
+    qs = User.objects.filter(
+        role__in=['OFFICER', 'ADMIN'],
+        is_active=True,
+    ).exclude(position__isnull=True).exclude(position='').exclude(position__iexact='NONE')
+
     roster = []
     for u in qs:
         canon = normalize_position(getattr(u, 'position', ''))

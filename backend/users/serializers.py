@@ -22,6 +22,8 @@ class OfficerRosterSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     position = serializers.CharField(allow_blank=True)
     profile_picture = serializers.CharField(allow_null=True)
+    department = serializers.CharField(allow_blank=True, required=False)
+    academic_year = serializers.CharField(allow_blank=True, required=False)
 
     @staticmethod
     def _profile_picture_url(profile_picture):
@@ -47,6 +49,8 @@ class OfficerRosterSerializer(serializers.Serializer):
             'last_name': getattr(user, 'last_name', '') or '',
             'position': getattr(user, 'position', '') or '',
             'profile_picture': cls._profile_picture_url(getattr(user, 'profile_picture', None)),
+            'department': getattr(user, 'department', '') or '',
+            'academic_year': getattr(user, 'academic_year', '') or '',
         }
 
 
@@ -62,6 +66,7 @@ class UserListSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'role', 'position', 'is_delegated', 'is_active',
             'year_level', 'created_at', 'profile_picture',
+            'department', 'academic_year',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -86,6 +91,8 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'is_active',
             'profile_picture',
             'can_manage_roles',
+            'department',
+            'academic_year',
         ]
         read_only_fields = ['id', 'role', 'position', 'can_manage_roles']
 
@@ -100,6 +107,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'role', 'position', 'is_delegated', 'is_active',
             'year_level', 'profile_picture', 'password',
+            'department', 'academic_year',
         ]
         read_only_fields = ['id']
 

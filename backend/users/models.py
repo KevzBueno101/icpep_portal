@@ -43,6 +43,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     role     = models.CharField(max_length=10, choices=Role.choices,     default=Role.OFFICER)
     position = models.CharField(max_length=100, blank=True, default='')
     year_level = models.CharField(max_length=1, choices=YearLevel.choices, null=True, blank=True)
+    department = models.CharField(max_length=100, blank=True, default='')
+    academic_year = models.CharField(max_length=20, blank=True, default='')
 
     # Term tracking
     term_start = models.DateField(null=True, blank=True)

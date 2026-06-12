@@ -35,6 +35,8 @@ const AdminDashboard = () => {
     password: '',
     position: 'NONE',
     is_delegated: false,
+    department: '',
+    academic_year: '',
   })
   const [gcashNumber, setGcashNumber] = useState('')
   const [gcashName, setGcashName] = useState('')
@@ -230,6 +232,8 @@ const AdminDashboard = () => {
         role: 'ADMIN',
         position: createForm.position,
         is_delegated: createForm.position === 'SECRETARY' ? createForm.is_delegated : false,
+        department: createForm.department,
+        academic_year: createForm.academic_year,
       }
 
       await api.post('/users/admins/create/', payload)
@@ -242,6 +246,8 @@ const AdminDashboard = () => {
         password: '',
         position: 'NONE',
         is_delegated: false,
+        department: '',
+        academic_year: '',
       })
 
       // refresh admins list

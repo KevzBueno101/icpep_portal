@@ -18,6 +18,12 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Recent changes (developer notes)
 
+- Frontend: Officers carousel updated - mobile now uses 2-column grid layout instead of horizontal scroll, desktop cards have max-width constraint, arrow navigation buttons removed.
+- Frontend: OfficerCard image changed from object-cover to object-contain to display at natural dimensions.
+- Frontend: Added Department and Academic Year fields to AdminProfile display with icons (Building2, GraduationCap).
+- Frontend: Added Department and Academic Year fields to officer creation/edit forms in AdminDashboard and AdminAdmins placeholder.
+- Frontend: Updated Department placeholder text from "e.g., Computer Engineering" to "e.g., Executive Office".
+- Frontend: Removed profile picture upload circle from EditAdminProfile page.
 - Backend: Added `audit_logs` app with comprehensive audit trail system tracking all admin actions (member approvals, role changes, CRUD operations on members/milestones/announcements).
 - Backend: Audit log model includes timestamp, admin user, action type, entity type, entity details, and IP address.
 - Backend: Added logging hooks to `members/views.py`, `users/views.py`, `milestones/views.py`, and `announcements/views.py` for automatic action logging.

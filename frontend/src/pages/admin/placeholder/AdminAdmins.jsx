@@ -45,6 +45,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
     is_active: true,
     profile_picture: null,
     year_level: '',
+    department: '',
+    academic_year: '',
   })
 
   const canEdit = useMemo(() => user?.can_manage_roles, [user])
@@ -79,6 +81,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
       is_active: true,
       profile_picture: null,
       year_level: '',
+      department: '',
+      academic_year: '',
     })
     setEditAdmin(null)
   }
@@ -101,6 +105,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
       is_active: admin.is_active ?? true,
       profile_picture: null,
       year_level: admin.year_level || '',
+      department: admin.department || '',
+      academic_year: admin.academic_year || '',
     })
     setModalOpen(true)
   }
@@ -149,6 +155,14 @@ const AdminAdmins = ({ refreshTrigger }) => {
 
       if (form.year_level && form.year_level !== '') {
         payload.year_level = form.year_level
+      }
+
+      if (form.department) {
+        payload.department = form.department
+      }
+
+      if (form.academic_year) {
+        payload.academic_year = form.academic_year
       }
 
       let res
@@ -488,6 +502,30 @@ const AdminAdmins = ({ refreshTrigger }) => {
                       </option>
                     ))}
                   </select>
+                </label>
+
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span>Department</span>
+                  <input
+                    type="text"
+                    value={form.department}
+                    onChange={(e) => handleFormChange('department', e.target.value)}
+                    placeholder="e.g., Executive Office"
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span>Academic Year</span>
+                  <input
+                    type="text"
+                    value={form.academic_year}
+                    onChange={(e) => handleFormChange('academic_year', e.target.value)}
+                    placeholder="e.g., 2025-2026"
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                  />
                 </label>
 
                 <div className="space-y-2 text-sm text-slate-700">

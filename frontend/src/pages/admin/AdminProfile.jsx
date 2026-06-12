@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Mail, Shield, Briefcase } from 'lucide-react'
+import { User, Mail, Shield, Briefcase, GraduationCap, Building2 } from 'lucide-react'
 import useAdminProfile from '../../hooks/useAdminProfile'
 
 export default function AdminProfile() {
@@ -68,6 +68,8 @@ export default function AdminProfile() {
             { label: 'Username', value: profile?.username ? `@${profile.username}` : '—', icon: <User className="h-4 w-4" /> },
             { label: 'Role', value: profile?.role, icon: <Shield className="h-4 w-4" /> },
             { label: 'Position', value: positionDisplay, icon: <Briefcase className="h-4 w-4" /> },
+            { label: 'Department', value: profile?.department || '—', icon: <Building2 className="h-4 w-4" /> },
+            { label: 'Academic Year', value: profile?.academic_year ? `AY ${profile.academic_year}` : '—', icon: <GraduationCap className="h-4 w-4" /> },
           ].map(({ label, value, icon }) => (
             <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">

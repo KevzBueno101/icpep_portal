@@ -38,6 +38,12 @@ export default function Navbar() {
               >
                 Achievements
               </a>
+              <a
+                href="#officers"
+                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700"
+              >
+                Officers
+              </a>
               <Link
                 to="/login"
                 className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
@@ -97,6 +103,13 @@ export default function Navbar() {
               className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
             >
               Achievements
+            </a>
+            <a
+              href="#officers"
+              onClick={closeMobileMenu}
+              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+            >
+              Officers
             </a>
             <Link
               to="/login"
