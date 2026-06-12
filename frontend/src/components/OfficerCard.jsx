@@ -24,7 +24,7 @@ export default function OfficerCard({ officer }) {
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       {pic ? (
-        <img src={pic} alt={uname || 'Officer'} className="w-full bg-slate-200 object-contain" />
+        <img src={pic} alt={uname || 'Officer'} className="h-56 w-full bg-slate-200 object-cover" />
       ) : (
         <div className="flex h-56 w-full items-center justify-center bg-slate-200">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-700 text-2xl font-bold text-white">
