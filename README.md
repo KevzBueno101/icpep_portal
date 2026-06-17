@@ -18,7 +18,11 @@ A full-stack Django + React application for managing university member profiles,
 
 ## Recent changes (developer notes)
 
-- Frontend: Officers carousel updated - mobile now uses 2-column grid layout instead of horizontal scroll, desktop cards have max-width constraint, arrow navigation buttons removed.
+- Frontend: Implemented OfficersCarousel component with auto-scroll animation (30s duration), manual left/right arrow buttons (always visible), pause on hover, infinite looping by duplicating officer cards 3 times, responsive grid (1 card mobile, 2 tablet, 4 desktop).
+- Frontend: Updated OfficersRoster (landing page) to use OfficersCarousel instead of LeadershipBoard grid.
+- Frontend: Updated MemberAbout page to use OfficersCarousel for Leadership Board section.
+- Frontend: Fixed image display issue in OfficersCarousel by resolving avatar URLs - prepends backend URL (http://127.0.0.1:8000) to relative image paths for proper image loading.
+- Frontend: Removed Leadership Board side card from MemberDashboard to reduce clutter.
 - Frontend: OfficerCard image changed from object-cover to object-contain to display at natural dimensions.
 - Frontend: Added Department and Academic Year fields to AdminProfile display with icons (Building2, GraduationCap).
 - Frontend: Added Department and Academic Year fields to officer creation/edit forms in AdminDashboard and AdminAdmins placeholder.
