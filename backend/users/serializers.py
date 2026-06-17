@@ -16,14 +16,14 @@ def _safe_profile_picture_url(field):
 
 
 class OfficerRosterSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
+    id = serializers.IntegerField()
+    fullName = serializers.CharField()
+    position = serializers.CharField()
+    office = serializers.CharField(allow_blank=True, required=False)
+    academicYear = serializers.CharField(allow_blank=True, required=False)
     username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    position = serializers.CharField(allow_blank=True)
-    profile_picture = serializers.CharField(allow_null=True)
-    department = serializers.CharField(allow_blank=True, required=False)
-    academic_year = serializers.CharField(allow_blank=True, required=False)
+    avatarUrl = serializers.CharField(allow_null=True, required=False)
+    isActive = serializers.BooleanField()
 
     @staticmethod
     def _profile_picture_url(profile_picture):
@@ -42,15 +42,19 @@ class OfficerRosterSerializer(serializers.Serializer):
 
     @classmethod
     def from_user(cls, user):
+        first_name = getattr(user, 'first_name', '') or ''
+        last_name = getattr(user, 'last_name', '') or ''
+        full_name = f"{first_name} {last_name}".strip() or getattr(user, 'username', '')
+        
         return {
-            'user_id': user.id,
-            'username': getattr(user, 'username', ''),
-            'first_name': getattr(user, 'first_name', '') or '',
-            'last_name': getattr(user, 'last_name', '') or '',
+            'id': user.id,
+            'fullName': full_name,
             'position': getattr(user, 'position', '') or '',
-            'profile_picture': cls._profile_picture_url(getattr(user, 'profile_picture', None)),
-            'department': getattr(user, 'department', '') or '',
-            'academic_year': getattr(user, 'academic_year', '') or '',
+            'office': getattr(user, 'department', '') or '',
+            'academicYear': getattr(user, 'academic_year', '') or '',
+            'username': getattr(user, 'username', ''),
+            'avatarUrl': cls._profile_picture_url(getattr(user, 'profile_picture', None)),
+            'isActive': getattr(user, 'is_active', True),
         }
 
 

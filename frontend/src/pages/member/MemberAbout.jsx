@@ -1,20 +1,8 @@
 import { Info, Shield, Users, Mail, Globe, MapPin } from 'lucide-react'
-import { useOfficers } from '../../context/OfficersContext'
+import OfficersCarousel from '../../components/OfficersCarousel'
+import { OfficersProvider } from '../../context/OfficersContext'
 
 export default function MemberAbout() {
-  // MemberAbout can be rendered on routes that may not wrap it in OfficersProvider
-  // depending on navigation/state hydration.
-  let officers = []
-  let officersLoading = false
-
-  try {
-    const value = useOfficers()
-    officers = value.officers || []
-    officersLoading = !!value.officersLoading
-  } catch (e) {
-    console.error('[MemberAbout] OfficersContext unavailable:', e)
-  }
-
   return (
     <div className="space-y-10">
 
@@ -92,56 +80,18 @@ export default function MemberAbout() {
       </div>
 
       {/* Leadership Board */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-            <Users className="h-5 w-5" />
+      <OfficersProvider>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Users className="h-5 w-5" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Student Leadership Board</h2>
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Student Leadership Board</h2>
+
+          <OfficersCarousel />
         </div>
-
-        {officersLoading ? (
-          <div className="flex items-center justify-center py-10 text-slate-500 text-sm">Loading officers...</div>
-        ) : officers?.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {officers.map((officer, idx) => (
-              <div
-                key={officer.user_id ?? idx}
-                className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 hover:bg-slate-50 transition"
-              >
-                <div className="flex items-center gap-3">
-                  {officer.profile_picture ? (
-                    <img
-                      src={officer.profile_picture}
-                      alt={`${officer.first_name} ${officer.last_name}`}
-                      className="h-10 w-10 rounded-full object-cover bg-slate-200"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold">
-                      {(officer.first_name?.[0] ?? 'O')}
-                      {(officer.last_name?.[0] ?? '')}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-slate-900 text-sm truncate">
-                      {officer.first_name || '—'} {officer.last_name || ''}
-                    </h4>
-                    <p className="text-xs text-sky-600 font-semibold truncate">{officer.position || ''}</p>
-                    {officer.department && <p className="text-xs text-slate-500 truncate">{officer.department}</p>}
-                    {officer.academic_year && <p className="text-xs text-slate-400 truncate">AY {officer.academic_year}</p>}
-                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">{officer.username ? `@${officer.username}` : ''}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-            No officers available.
-          </div>
-        )}
-      </div>
-
+      </OfficersProvider>
 
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">

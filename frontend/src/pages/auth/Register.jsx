@@ -798,25 +798,33 @@ const Register = () => {
                       <option value="GCASH">GCash</option>
                     </select>
                   </div>
-                  <div className="rounded-3xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+                  <div className="rounded-3xl border border-sky-200 bg-sky-50 p-5 text-sm text-slate-700">
                     <p className="font-semibold text-slate-900">GCash payment details</p>
+
                     {gcashNumber || gcashName ? (
-                      <p className="mt-2 text-slate-600">
-                        Send payment to <span className="font-semibold text-slate-900">{gcashName || 'GCash account'}</span>
-                        {gcashNumber ? (
-                          <>
-                            {' '}
-                            (GCash number: <span className="font-semibold text-slate-900">{gcashNumber}</span>)
-                          </>
-                        ) : null}
-                        .
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="text-slate-600">Name</span>
+                          <span className="font-semibold text-slate-900 text-right">
+                            {gcashName || 'GCash account'}
+                          </span>
+                        </div>
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="text-slate-600">GCash #</span>
+                          <span className="font-semibold text-slate-900 text-right">
+                            {gcashNumber || '—'}
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      <p className="mt-2 text-slate-600">The GCash details have not been set yet. Please ask the admin for the current payment account before uploading proof.</p>
+                      <p className="mt-2 text-slate-600">
+                        The GCash details have not been set yet. Ask the admin for the current payment account before uploading proof.
+                      </p>
                     )}
 
-                    <p className="mt-2 text-slate-600">Upload the screenshot of payment proof after sending.</p>
+                    <p className="mt-3 text-slate-600">Upload the screenshot of payment proof after sending.</p>
                   </div>
+
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Proof of Payment</label>
                     <label className="group block cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-sky-400 hover:bg-slate-100">
@@ -851,6 +859,7 @@ const Register = () => {
                   <ul className="list-disc list-inside space-y-2">
                     <li>Piliin ang payment method: On-hand / Personal o GCash.</li>
                     <li>I-upload ang screenshot ng payment receipt o transaction reference.</li>
+                    <li>If On-hand payment, please take a picture together with the officer in-charge then upload it here.</li>
                     <li>Siguraduhing malinaw ang halagang binayaran at reference code.</li>
                     <li>Wait for the approval.</li>
                   </ul>

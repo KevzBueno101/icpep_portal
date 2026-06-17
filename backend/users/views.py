@@ -223,7 +223,25 @@ def admin_account_detail(request, pk):
             request=request
         )
 
+        # Broadcast roster update to all connected clients
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+
+            channel_layer = get_channel_layer()
+            if channel_layer is not None:
+                async_to_sync(channel_layer.group_send)(
+                    "officers",
+                    {
+                        "type": "officers.roster.updated",
+                        "payload": {"updated_by": request.user.id},
+                    },
+                )
+        except Exception:
+            pass
+
         return Response({'message': 'Admin account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
 
     # PATCH
     serializer = AdminAccountSerializer(
@@ -247,10 +265,28 @@ def admin_account_detail(request, pk):
         request=request
     )
 
+    # Broadcast roster update to all connected clients
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "officers",
+                {
+                    "type": "officers.roster.updated",
+                    "payload": {"updated_by": request.user.id},
+                },
+            )
+    except Exception:
+        pass
+
     return Response({
         'message': 'Admin account updated successfully.',
         'user': UserListSerializer(updated).data,
     })
+
 
 
 # ── Assign role / position to a user ────────────────────────────────────────
@@ -315,10 +351,29 @@ def assign_role(request, pk):
         request=request
     )
 
+    # Broadcast roster update to all connected clients
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "officers",
+                {
+                    "type": "officers.roster.updated",
+                    "payload": {"updated_by": request.user.id},
+                },
+            )
+    except Exception:
+        # Real-time updates are best-effort; do not fail request.
+        pass
+
     return Response({
         'message': 'Role updated successfully.',
         'user': UserListSerializer(target).data,
     })
+
 
 
 # ── Delegate / un-delegate Secretary ────────────────────────────────────────
@@ -327,6 +382,7 @@ def assign_role(request, pk):
 @permission_classes([IsAuthenticated])
 def delegate_secretary(request, pk):
     if not _is_president(request.user):
+
         return Response(
             {'detail': 'Only the President can delegate the Secretary.'},
             status=status.HTTP_403_FORBIDDEN
@@ -361,11 +417,29 @@ def delegate_secretary(request, pk):
         request=request
     )
 
+    # Broadcast roster update to all connected clients
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "officers",
+                {
+                    "type": "officers.roster.updated",
+                    "payload": {"updated_by": request.user.id},
+                },
+            )
+    except Exception:
+        pass
+
     action = 'delegated' if target.is_delegated else 'delegation removed from'
     return Response({
         'message': f'Secretary {action} successfully.',
         'user': UserListSerializer(target).data,
     })
+
 
 
 # ── Year-end reset ───────────────────────────────────────────────────────────
@@ -457,10 +531,28 @@ def create_officer_account(request):
         request=request
     )
 
+    # Broadcast roster update to all connected clients
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "officers",
+                {
+                    "type": "officers.roster.updated",
+                    "payload": {"updated_by": request.user.id},
+                },
+            )
+    except Exception:
+        pass
+
     return Response({
         'message': 'Officer account created successfully.',
         'user': UserListSerializer(new_user).data,
     }, status=status.HTTP_201_CREATED)
+
 
 
 # ── Officers roster (public) ─────────────────────────────────────────────────
@@ -471,8 +563,8 @@ def officers_roster(request):
     """Public roster for the Student Leadership Board.
     
     Returns all users with role OFFICER or ADMIN who have recognized leadership
-    positions. Position matching is flexible (contains-based) to handle
-    variations like 'Vice Pres', 'External Vice President', etc.
+    positions. Filters out invalid records and only returns active officers
+    with complete information.
     """
 
     leadership_positions = [
@@ -524,5 +616,12 @@ def officers_roster(request):
     order_index = {p: i for i, p in enumerate(leadership_positions)}
     roster.sort(key=lambda u: order_index.get(getattr(u, 'position', ''), 999))
 
-    results = [OfficerRosterSerializer.from_user(u) for u in roster]
+    # Serialize and filter out invalid records
+    results = []
+    for u in roster:
+        officer_data = OfficerRosterSerializer.from_user(u)
+        # Data integrity check: only include officers with valid full name and position
+        if officer_data['fullName'] and officer_data['fullName'] != '-' and officer_data['position']:
+            results.append(officer_data)
+
     return Response({'results': results}, status=status.HTTP_200_OK)

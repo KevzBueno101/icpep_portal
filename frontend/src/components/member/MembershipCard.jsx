@@ -51,7 +51,7 @@ function CardFront({ onFlip }) {
           ICpEP.SE
         </h2>
         <p className="text-[9px] font-medium tracking-[0.15em] text-gray-400 uppercase mt-1 mb-0">
-          Membership Card
+          Membership ID Card
         </p>
         <em className="text-[5px] font-medium tracking-[0.15em] text-gray-500 mt-1 mb-0">
           Valid for 1 Academic Year

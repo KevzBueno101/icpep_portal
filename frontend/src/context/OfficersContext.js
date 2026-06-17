@@ -10,14 +10,14 @@ export const OfficersProvider = ({ children }) => {
   const [officers, setOfficers] = useState([])
   const [officersLoading, setOfficersLoading] = useState(false)
 
-  const fetchOfficers = useCallback(async () => {
+  const fetchOfficers = useCallback(async (params = undefined) => {
     setOfficersLoading(true)
     try {
-      const res = await publicApi.get('/users/officers/roster/')
+      const res = await publicApi.get('/users/officers/roster/', { params })
       const results = res.data?.results
       setOfficers(Array.isArray(results) ? results : [])
     } catch (err) {
-      console.error(err)
+      console.error('[OfficersContext] Error fetching officers:', err)
       setOfficers([])
     } finally {
       setOfficersLoading(false)
@@ -27,6 +27,76 @@ export const OfficersProvider = ({ children }) => {
   useEffect(() => {
     fetchOfficers()
   }, [fetchOfficers])
+
+  // Listen for custom event to refresh officers (backward compatibility)
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('[OfficersContext] Refreshing officers due to event')
+      fetchOfficers()
+    }
+
+    window.addEventListener('officers-refresh', handleRefresh)
+    return () => window.removeEventListener('officers-refresh', handleRefresh)
+  }, [fetchOfficers])
+
+  // Real-time updates via WebSocket (Channels)
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    // Backend is fixed in this project (127.0.0.1)
+    const wsUrl = `${protocol}://127.0.0.1:8000/ws/officers/`
+
+    let ws
+    let isCancelled = false
+
+    try {
+      ws = new WebSocket(wsUrl)
+    } catch (e) {
+      console.warn('[OfficersContext] WebSocket init failed:', e)
+      return
+    }
+
+    ws.onopen = () => {
+      // console.log('[OfficersContext] WebSocket connected')
+    }
+
+    ws.onmessage = (event) => {
+      if (isCancelled) return
+      try {
+        const data = JSON.parse(event.data)
+        console.log('[OfficersContext] ws message', data)
+
+        if (data?.type === 'officers.roster.updated') {
+          // bust any potential caching by adding a unique param
+          fetchOfficers({ t: Date.now() })
+        }
+      } catch (e) {
+        console.warn('[OfficersContext] ws message parse error')
+      }
+    }
+
+    ws.onerror = (err) => {
+      // avoid spamming console
+      console.warn('[OfficersContext] WebSocket error')
+    }
+
+    ws.onclose = () => {
+      // Best-effort reconnect with backoff
+      if (isCancelled) return
+      setTimeout(() => {
+        if (!isCancelled) fetchOfficers()
+      }, 1500)
+    }
+
+    return () => {
+      isCancelled = true
+      try {
+        ws?.close()
+      } catch {
+        // ignore
+      }
+    }
+  }, [fetchOfficers])
+
 
   return React.createElement(
     OfficersContext.Provider,

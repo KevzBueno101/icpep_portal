@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../../context/useAuth'
+import { useOfficers } from '../../../context/OfficersContext'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../../components/common/ConfirmModal'
@@ -26,6 +27,7 @@ const STATUS_LABELS = {
 
 const AdminAdmins = ({ refreshTrigger }) => {
   const { user, refreshUser } = useAuth()
+  const { refreshOfficers } = useOfficers()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -194,6 +196,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
         toast.success('Officer account created.')
       }
 
+      // Refresh officers context to update landing page and other pages
+      refreshOfficers()
+
       setModalOpen(false)
       resetForm()
     } catch (error) {
@@ -215,6 +220,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
       setAdmins((prev) => (prev || []).filter((item) => item.id !== deleteAdmin.id))
       toast.success('Admin account deleted.')
       setDeleteAdmin(null)
+      
+      // Refresh officers context to update landing page and other pages
+      refreshOfficers()
     } catch (error) {
       const message = error.response?.data?.detail || 'Unable to delete admin account.'
       toast.error(message)

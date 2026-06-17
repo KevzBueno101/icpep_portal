@@ -167,9 +167,11 @@ function App() {
             path="/admin/admins"
             element={
               <AdminProtectedRoute>
-                <AdminLayout>
-                  <AdminAdmins />
-                </AdminLayout>
+                <OfficersProvider>
+                  <AdminLayout>
+                    <AdminAdmins />
+                  </AdminLayout>
+                </OfficersProvider>
               </AdminProtectedRoute>
             }
           />

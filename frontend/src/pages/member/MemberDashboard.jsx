@@ -2,8 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
-import { useOfficers } from '../../context/OfficersContext'
-import { Bell, CreditCard, ArrowRight, UserCheck, Users } from 'lucide-react'
+import { Bell, CreditCard, ArrowRight, UserCheck } from 'lucide-react'
 
 
 
@@ -25,7 +24,6 @@ export default function MemberDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { profile, paymentSettings, announcements, annLoading, paymentLoading } = useMember()
-  const { officers, officersLoading } = useOfficers()
 
 
   const memberFirstName = profile?.first_name || user?.first_name || ''
@@ -85,56 +83,6 @@ export default function MemberDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column: ID Quick access & Payment info */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Student Leadership Board (Officers) */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-                <Users className="h-5 w-5" />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900">Student Leadership Board</h2>
-            </div>
-
-            {officersLoading ? (
-              <div className="flex items-center justify-center py-6 text-slate-500 text-sm">
-                Loading officers...
-              </div>
-            ) : officers?.length ? (
-              <div className="grid gap-4">
-                {officers.map((officer, idx) => (
-                  <div
-                    key={officer.user_id ?? idx}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4"
-                  >
-                    {officer.profile_picture ? (
-                      <img
-                        src={officer.profile_picture}
-                        alt={`${officer.first_name} ${officer.last_name}`}
-                        className="h-10 w-10 rounded-full object-cover bg-slate-200"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold">
-                        {(officer.first_name?.[0] ?? 'O')}
-                        {(officer.last_name?.[0] ?? '')}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate">
-                        {officer.first_name || '—'} {officer.last_name || ''}
-                      </div>
-                      <div className="text-xs text-sky-600 font-semibold truncate">
-                        {officer.position || ''}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                No officers available.
-              </div>
-            )}
-          </div>
-
           {/* Quick ID Card */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
             <div>

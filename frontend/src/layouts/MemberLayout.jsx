@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
 import { useMember } from '../context/MemberContext'
+import { OfficersProvider } from '../context/OfficersContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
 import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, DollarSign } from 'lucide-react'
@@ -45,13 +46,14 @@ export default function MemberLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
-      {/* Desktop Header */}
-      <DesktopMemberNavbar
-        user={user}
-        onLogout={() => setShowLogoutConfirm(true)}
-        onHelpClick={() => setShowHelpModal(true)}
-      />
+    <OfficersProvider>
+      <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
+        {/* Desktop Header */}
+        <DesktopMemberNavbar
+          user={user}
+          onLogout={() => setShowLogoutConfirm(true)}
+          onHelpClick={() => setShowHelpModal(true)}
+        />
 
       {/* Mobile Header (fixed top) */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
@@ -208,6 +210,7 @@ export default function MemberLayout({ children }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </OfficersProvider>
   )
 }

@@ -146,6 +146,8 @@ export default function EditAdminProfile({ triggerRefresh }) {
       if (triggerRefresh) {
         triggerRefresh()
       }
+      // Refresh leadership board across all pages
+      window.dispatchEvent(new Event('officers-refresh'))
       setTimeout(() => navigate('/admin/profile'), 350)
     } catch (err) {
       const detail = err?.response?.data?.detail

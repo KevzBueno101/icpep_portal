@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/useAuth'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 
 
@@ -164,6 +164,8 @@ const AdminDashboard = () => {
         delete copy[adminId]
         return copy
       })
+      // Refresh leadership board across all pages
+      window.dispatchEvent(new Event('officers-refresh'))
     } catch (err) {
       const errorText = err.response?.data?.detail || 'Unable to update admin account.'
       toast.error(errorText)
@@ -181,6 +183,8 @@ const AdminDashboard = () => {
       })
       setAdmins((prev) => (prev || []).map((item) => (item.id === adminId ? res.data.user : item)))
       toast.success(`Secretary ${res.data.user.is_delegated ? 'delegated' : 'delegation removed'}.`)
+      // Refresh leadership board across all pages
+      window.dispatchEvent(new Event('officers-refresh'))
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to toggle delegation.')
     } finally {
@@ -220,6 +224,7 @@ const AdminDashboard = () => {
   }
 
 
+
   const handleCreateOfficer = async (e) => {
     e.preventDefault()
     setCreateBusy(true)
@@ -238,6 +243,9 @@ const AdminDashboard = () => {
 
       await api.post('/users/admins/create/', payload)
       toast.success('Officer account created.')
+
+      // Refresh leadership board across all pages
+      window.dispatchEvent(new Event('officers-refresh'))
 
       // reset form
       setCreateForm({
@@ -354,47 +362,97 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">Members vs Officers Visited</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={membersVsOfficersDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent, value }) => {
-                  const count = typeof value === 'number' ? value : 0
-                  return `${name}: ${count}`
-                }}
+        {/* Membership Analytics (Executive Redesign) */}
 
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {membersVsOfficersDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Growth Trend</h3>
+
+          <div className="h-[320px]">
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={memberGrowth} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" />
+                <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12 }}
+                  labelStyle={{ color: '#0f172a' }}
+                  formatter={(value) => [value, 'Members']}
+                />
+                <Legend />
+
+                {/* Total growth line (approved+pending+rejected) */}
+                <Line
+                  type="monotone"
+                  dataKey={(row) => (row.approved ?? 0) + (row.pending ?? 0) + (row.rejected ?? 0)}
+                  name="Total Members"
+                  stroke="#0284c7"
+                  strokeWidth={3}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p className="mt-3 text-xs text-slate-500">
+            Shows overall membership growth per month (derived from status counts).
+          </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">Member Growth Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={memberGrowth}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="approved" fill={COLORS.APPROVED} name="Approved" />
-              <Bar dataKey="pending" fill={COLORS.PENDING} name="Pending" />
-              <Bar dataKey="rejected" fill={COLORS.REJECTED} name="Rejected" />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Status Distribution</h3>
+
+          {(() => {
+            const total = (approvedMembers?.length || 0) + (pendingMembers?.length || 0) + (rejectedMembers?.length || 0)
+            const data = [
+              { key: 'APPROVED', label: 'Approved', value: approvedMembers?.length || 0, color: '#22c55e' },
+              { key: 'PENDING', label: 'Pending', value: pendingMembers?.length || 0, color: '#f59e0b' },
+              { key: 'REJECTED', label: 'Rejected', value: rejectedMembers?.length || 0, color: '#ef4444' },
+            ]
+
+            const safeTotal = total === 0 ? 1 : total
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div className="h-[220px] w-full">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={data}
+                        dataKey="value"
+                        nameKey="label"
+                        innerRadius={55}
+                        outerRadius={85}
+                        stroke="none"
+                      >
+                        {data.map((entry) => (
+                          <Cell key={entry.key} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="space-y-3">
+                  {data.map((d) => {
+                    const pct = Math.round((d.value / safeTotal) * 100)
+                    return (
+                      <div key={d.key} className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full" style={{ background: d.color }} />
+                          <span className="text-sm font-semibold text-slate-700">{d.label}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-slate-900">{d.value}</div>
+                          <div className="text-xs text-slate-500">{pct}%</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -402,17 +460,55 @@ const AdminDashboard = () => {
       <section className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Summary</p>
-          {/* Manage admin roles removed per request */}
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900"> </h2>
-
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">GCash Payment</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Payment Settings</h2>
           </div>
           {!canManageRoles && (
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">Read-only</span>
           )}
         </div>
 
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm text-slate-600">GCash Name</label>
+              <input
+                value={gcashName}
+                onChange={(e) => setGcashName(e.target.value)}
+                disabled={!canManageRoles}
+                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                placeholder="GCash account name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm text-slate-600">GCash #</label>
+              <input
+                value={gcashNumber}
+                onChange={(e) => setGcashNumber(e.target.value)}
+                disabled={!canManageRoles}
+                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                placeholder="09XXXXXXXXX or account number"
+              />
+            </div>
+          </div>
 
+          <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="text-sm text-slate-600">
+              Current values:
+              <span className="font-semibold ml-2 text-slate-900">{gcashName || '—'}</span>
+              <span className="font-semibold ml-2 text-slate-900">{gcashNumber || '—'}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSaveGcashSettings}
+              disabled={!canManageRoles || gcashSaving}
+              className="rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {gcashSaving ? 'Saving...' : 'Save GCash Settings'}
+            </button>
+          </div>
+        </div>
       </section>
 
     </div>
