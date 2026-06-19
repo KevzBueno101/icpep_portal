@@ -611,7 +611,7 @@ def officers_roster(request):
         canon = normalize_position(getattr(u, 'position', ''))
         if canon and canon in leadership_positions:
             u.position = canon
-            roster.append(u)
+        roster.append(u)
 
     order_index = {p: i for i, p in enumerate(leadership_positions)}
     roster.sort(key=lambda u: order_index.get(getattr(u, 'position', ''), 999))
@@ -619,7 +619,8 @@ def officers_roster(request):
     # Serialize and filter out invalid records
     results = []
     for u in roster:
-        officer_data = OfficerRosterSerializer.from_user(u)
+        officer_data = OfficerRosterSerializer.from_user(u, request=request)
+
         # Data integrity check: only include officers with valid full name and position
         if officer_data['fullName'] and officer_data['fullName'] != '-' and officer_data['position']:
             results.append(officer_data)

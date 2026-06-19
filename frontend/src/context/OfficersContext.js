@@ -41,9 +41,9 @@ export const OfficersProvider = ({ children }) => {
 
   // Real-time updates via WebSocket (Channels)
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    // Backend is fixed in this project (127.0.0.1)
-    const wsUrl = `${protocol}://127.0.0.1:8000/ws/officers/`
+    const wsUrl = import.meta.env.VITE_WS_URL
+      ? `${import.meta.env.VITE_WS_URL}/ws/officers/`
+      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://127.0.0.1:8000/ws/officers/`
 
     let ws
     let isCancelled = false

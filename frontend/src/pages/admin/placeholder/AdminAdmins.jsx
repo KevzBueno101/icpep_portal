@@ -28,6 +28,7 @@ const STATUS_LABELS = {
 const AdminAdmins = ({ refreshTrigger }) => {
   const { user, refreshUser } = useAuth()
   const { refreshOfficers } = useOfficers()
+
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -113,6 +114,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
     setModalOpen(true)
   }
 
+
+
   const handleFormChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
@@ -150,6 +153,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
         is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
       }
+
 
       if (form.password) {
         payload.password = form.password
@@ -198,6 +202,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
 
       // Refresh officers context to update landing page and other pages
       refreshOfficers()
+
+      const resAdmins = await api.get('/users/admins/')
+      setAdmins(resAdmins.data.results || [])
 
       setModalOpen(false)
       resetForm()
@@ -332,6 +339,18 @@ const AdminAdmins = ({ refreshTrigger }) => {
                           {admin.position || 'No position'}
                         </span>
                       </div>
+                      {admin.department && (
+                        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                          <span className="text-xs text-slate-600">Department</span>
+                          <span className="text-xs font-semibold text-slate-700">{admin.department}</span>
+                        </div>
+                      )}
+                      {admin.academic_year && (
+                        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                          <span className="text-xs text-slate-600">Academic Year</span>
+                          <span className="text-xs font-semibold text-slate-700">AY {admin.academic_year}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
                         <span className="text-xs text-slate-600">Status</span>
                         <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${

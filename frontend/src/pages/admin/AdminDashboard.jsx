@@ -4,6 +4,7 @@ import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
+import OfficersCarousel from '../../components/OfficersCarousel'
 
 
 
@@ -508,6 +509,18 @@ const AdminDashboard = () => {
               {gcashSaving ? 'Saving...' : 'Save GCash Settings'}
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Leadership Team</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Student Leadership Board</h2>
+          </div>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+          <OfficersCarousel />
         </div>
       </section>
 

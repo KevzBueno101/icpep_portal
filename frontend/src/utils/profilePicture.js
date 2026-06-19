@@ -1,6 +1,6 @@
 const BACKEND_BASES = [
-  // Match axios baseURL in this repo
-  'http://127.0.0.1:8000',
+  // Reads from Vite env, fallback to local dev
+  import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
 ]
 
 export const resolveProfilePictureUrl = (profilePicture) => {

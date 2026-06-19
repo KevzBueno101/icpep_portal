@@ -20,31 +20,13 @@ export default function LeadershipBoard() {
     setError('Unable to load leadership board. Please try again later.')
   }
 
-  // Map old data structure to new structure if needed
-  const mappedOfficers = officers.map(officer => {
-    // Check if already in new format
-    if (officer.fullName && officer.position) {
-      return officer
-    }
-    // Convert old format to new format
-    const fname = officer.first_name || officer.user?.first_name || ''
-    const lname = officer.last_name || officer.user?.last_name || ''
-    const fullName = `${fname} ${lname}`.trim() || officer.username || officer.user?.username || ''
-    
-    return {
-      id: officer.user_id || officer.id,
-      fullName,
-      position: officer.position || '',
-      office: officer.department || '',
-      academicYear: officer.academic_year || '',
-      username: officer.username || officer.user?.username || '',
-      avatarUrl: officer.profile_picture || officer.photo || null,
-      isActive: officer.is_active !== false,
-    }
-  })
+  const normalizedOfficers = officers.map(officer => ({
+    ...officer,
+    avatarUrl: officer?.avatarUrl,
+  }))
 
   // Filter out invalid records
-  const validOfficers = mappedOfficers.filter(
+  const validOfficers = normalizedOfficers.filter(
     officer => officer.isActive && officer.fullName && officer.fullName !== '-' && officer.position
   )
 

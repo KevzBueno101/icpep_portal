@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
+
 // ─── Token key constants ──────────────────────────────────────────────────────
 // Use separate keys so admin and member sessions never overwrite each other.
 export const MEMBER_ACCESS_KEY = 'member_access_token'
@@ -18,7 +20,7 @@ export const getRefreshToken = () =>
   null
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: API_BASE,
 })
 
 api.interceptors.request.use((config) => {
@@ -43,7 +45,7 @@ api.interceptors.response.use(
       if (refresh) {
         try {
           const res = await axios.post(
-            'http://127.0.0.1:8000/api/auth/refresh/',
+            `${API_BASE}/auth/refresh/`,
             { refresh }
           )
 
@@ -84,7 +86,7 @@ api.interceptors.response.use(
 )
 
 export const publicApi = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: API_BASE,
 })
 
 export default api

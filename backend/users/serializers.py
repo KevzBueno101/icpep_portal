@@ -25,37 +25,41 @@ class OfficerRosterSerializer(serializers.Serializer):
     avatarUrl = serializers.CharField(allow_null=True, required=False)
     isActive = serializers.BooleanField()
 
-    @staticmethod
-    def _profile_picture_url(profile_picture):
-        if not profile_picture:
-            return None
-        try:
-            url = profile_picture.url
-        except Exception:
-            url = str(profile_picture)
-
-        try:
-            ts = int(getattr(profile_picture, 'updated_at', None) or timezone.now().timestamp())
-        except Exception:
-            ts = int(timezone.now().timestamp())
-        return f"{url}?v={ts}"
-
     @classmethod
-    def from_user(cls, user):
+    def from_user(cls, user, request=None):
         first_name = getattr(user, 'first_name', '') or ''
         last_name = getattr(user, 'last_name', '') or ''
         full_name = f"{first_name} {last_name}".strip() or getattr(user, 'username', '')
-        
+
+        position = getattr(user, 'position', '') or ''
+        department = getattr(user, 'department', '') or ''
+        academic_year = getattr(user, 'academic_year', '') or ''
+        username = getattr(user, 'username', '') or ''
+        is_active = getattr(user, 'is_active', True)
+
+        avatar_url = None
+        pic = getattr(user, 'profile_picture', None)
+        if pic and getattr(pic, 'name', None):
+            try:
+                url = pic.url
+                if request:
+                    avatar_url = request.build_absolute_uri(url)
+                else:
+                    avatar_url = f"http://127.0.0.1:8000{url}" if url.startswith('/') else url
+            except Exception:
+                avatar_url = None
+
         return {
             'id': user.id,
             'fullName': full_name,
-            'position': getattr(user, 'position', '') or '',
-            'office': getattr(user, 'department', '') or '',
-            'academicYear': getattr(user, 'academic_year', '') or '',
-            'username': getattr(user, 'username', ''),
-            'avatarUrl': cls._profile_picture_url(getattr(user, 'profile_picture', None)),
-            'isActive': getattr(user, 'is_active', True),
+            'position': position,
+            'office': department,
+            'academicYear': academic_year,
+            'username': username,
+            'avatarUrl': avatar_url,
+            'isActive': is_active,
         }
+
 
 
 class UserListSerializer(serializers.ModelSerializer):

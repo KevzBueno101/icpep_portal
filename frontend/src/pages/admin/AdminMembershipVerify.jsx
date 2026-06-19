@@ -4,10 +4,12 @@ import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import ProofModal from '../../components/admin/ProofModal'
 
+const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+
 const getFileUrl = (path) => {
   if (!path) return ''
   if (/^https?:\/\//.test(path)) return path
-  return `http://127.0.0.1:8000${path}`
+  return `${BACKEND_ORIGIN}${path}`
 }
 
 const MemberMembershipVerify = () => {

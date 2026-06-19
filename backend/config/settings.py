@@ -31,7 +31,7 @@ if not SECRET_KEY:
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 
 
@@ -162,13 +162,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Static files collected by `collectstatic` for production (whitenoise serves these)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Whitenoise middleware must come right after SecurityMiddleware
+# (already handled by middleware order in MIDDLEWARE list above)
+
 # Cross-Origin Resource Sharing (CORS)
 CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^http://localhost:\d+$",
-    r"^http://127\.0\.0\.1:\d+$",
-]
+# Support multiple origins via comma-separated env var (for production Vercel URL)
+_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+if _cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://localhost:\d+$",
+        r"^http://127\.0\.0\.1:\d+$",
+    ]
 
 
 # Frontend uses Authorization: Bearer <token> (no cookies),
@@ -192,9 +204,33 @@ CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # Debug prints removed
 
-# Media files (for profile pictures etc.)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files — use Cloudinary in production, local filesystem in dev
+_cloudinary_configured = all([
+    os.getenv('CLOUDINARY_CLOUD_NAME'),
+    os.getenv('CLOUDINARY_API_KEY'),
+    os.getenv('CLOUDINARY_API_SECRET'),
+])
+
+if _cloudinary_configured:
+    import cloudinary
+    cloudinary.config(
+        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+        api_key=os.getenv('CLOUDINARY_API_KEY'),
+        api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+        secure=True,
+    )
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/"
+else:
+    # Local development — store media on disk
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # REST framework defaults
 AUTH_USER_MODEL = 'users.User'
@@ -244,24 +280,31 @@ X_FRAME_OPTIONS                = 'DENY'
 DATA_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
 
-# --- Enable ONLY after confirmed HTTPS in production ---
-# SECURE_SSL_REDIRECT            = True
-# SECURE_HSTS_SECONDS            = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD            = True
-# SESSION_COOKIE_SECURE          = True
-# CSRF_COOKIE_SECURE             = True
+# HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
+if not DEBUG:
+    SECURE_SSL_REDIRECT            = True
+    SECURE_HSTS_SECONDS            = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD            = True
+    SESSION_COOKIE_SECURE          = True
+    CSRF_COOKIE_SECURE             = True
 INSTALLED_APPS += ['csp']
 MIDDLEWARE    += ['csp.middleware.CSPMiddleware']
 
+
+# Build allowed image/connect sources dynamically
+_cloudinary_img_src = ('https://res.cloudinary.com',) if _cloudinary_configured else ()
+_backend_host = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')[0].strip()
+_backend_http = f"https://{_backend_host}" if not DEBUG else f"http://{_backend_host}:8000"
 
 CONTENT_SECURITY_POLICY = {
     'DIRECTIVES': {
         'default-src': ("'self'",),
         'script-src':  ("'self'",),
         'style-src':   ("'self'", "'unsafe-inline'"),
-        'img-src':     ("'self'", "data:", "http://127.0.0.1:8000", "http://localhost:8000"),
-        'connect-src': ("'self'", "http://127.0.0.1:8000", "http://localhost:8000"),
+        'img-src':     ("'self'", "data:", _backend_http, 'http://127.0.0.1:8000', 'http://localhost:8000') + _cloudinary_img_src,
+        'connect-src': ("'self'", _backend_http, 'http://127.0.0.1:8000', 'http://localhost:8000',
+                        f"wss://{_backend_host}", 'ws://127.0.0.1:8000'),
     }
 }
 
