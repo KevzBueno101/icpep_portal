@@ -283,7 +283,8 @@ FILE_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
 
 # HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
 if not DEBUG:
-    SECURE_SSL_REDIRECT            = True
+    SECURE_SSL_REDIRECT            = False  # Render handles HTTPS at proxy level
+    SECURE_PROXY_SSL_HEADER        = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS            = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD            = True
