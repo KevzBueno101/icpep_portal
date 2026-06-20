@@ -42,8 +42,9 @@ export const OfficersProvider = ({ children }) => {
   // Real-time updates via WebSocket (Channels)
   useEffect(() => {
     const wsUrl = import.meta.env.VITE_WS_URL
-      ? `${import.meta.env.VITE_WS_URL}/ws/officers/`
+      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/officers/`
       : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/officers/`
+
 
 
     let ws
