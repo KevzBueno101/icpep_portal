@@ -136,13 +136,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_picture = validated_data.pop('profile_picture', None)
 
-        # Prevent DB DataError: character varying(max_length) when UI sends long strings.
-        # User model constraints:
-        # - position: max_length=100
-        # - department: max_length=100
-        for attr, value in list(validated_data.items()):
-            if value is None:
-                continue
+
             if attr in {'position', 'department'} and isinstance(value, str):
                 # Safety clamp for Postgres varchar(100)
                 validated_data[attr] = value[:100]
