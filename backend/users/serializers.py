@@ -5,11 +5,14 @@ from django.utils import timezone
 User = get_user_model()
 
 
-def _safe_profile_picture_url(field):
-    """Returns URL string or None — never crashes on missing/broken files."""
+def _safe_profile_picture_url(field, request=None):
+    """Returns absolute URL string or None — never crashes on missing/broken files."""
     try:
         if field and field.name:
-            return field.url
+            url = field.url
+            if request and isinstance(url, str) and url.startswith('/'):
+                return request.build_absolute_uri(url)
+            return url
     except (ValueError, AttributeError):
         pass
     return None
@@ -61,12 +64,12 @@ class OfficerRosterSerializer(serializers.Serializer):
         }
 
 
-
 class UserListSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
 
     def get_profile_picture(self, obj):
-        return _safe_profile_picture_url(obj.profile_picture)
+        request = self.context.get('request')
+        return _safe_profile_picture_url(obj.profile_picture, request=request)
 
     class Meta:
         model = User
@@ -83,7 +86,8 @@ class AdminProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
 
     def get_profile_picture(self, obj):
-        return _safe_profile_picture_url(getattr(obj, 'profile_picture', None))
+        request = self.context.get('request')
+        return _safe_profile_picture_url(getattr(obj, 'profile_picture', None), request=request)
 
     class Meta:
         model = User
@@ -136,7 +140,8 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_picture = validated_data.pop('profile_picture', None)
 
-
+        # Clamp potentially-long strings to avoid Postgres varchar(100) DataError.
+        # (Your model uses max_length=100 for most string fields, academic_year is 20.)
         for attr, value in list(validated_data.items()):
             if value is None:
                 continue
@@ -144,14 +149,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
                 if attr == 'academic_year':
                     validated_data[attr] = value[:20]
                 else:
-                    # Postgres varchar(100) safety clamp for all string fields
                     validated_data[attr] = value[:100]
-
-
-        # Also clamp academic_year defensively in case DB differs by migration.
-        if 'academic_year' in validated_data and isinstance(validated_data.get('academic_year'), str):
-            validated_data['academic_year'] = validated_data['academic_year'][:20]
-
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
