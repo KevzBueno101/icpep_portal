@@ -253,7 +253,16 @@ def admin_account_detail(request, pk):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    updated = serializer.save()
+    try:
+        updated = serializer.save()
+    except Exception as e:
+        # Return actionable error instead of generic 500 HTML.
+        # Frontend currently logs only "Server Error (500)".
+        return Response(
+            {'detail': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
 
     log_action(
         user=request.user,

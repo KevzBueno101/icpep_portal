@@ -143,10 +143,14 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         for attr, value in list(validated_data.items()):
             if value is None:
                 continue
-            if attr == 'position' and isinstance(value, str):
-                validated_data['position'] = value[:100]
-            if attr == 'department' and isinstance(value, str):
-                validated_data['department'] = value[:100]
+            if attr in {'position', 'department'} and isinstance(value, str):
+                # Safety clamp for Postgres varchar(100)
+                validated_data[attr] = value[:100]
+
+        # Also clamp academic_year defensively in case DB differs by migration.
+        if 'academic_year' in validated_data and isinstance(validated_data.get('academic_year'), str):
+            validated_data['academic_year'] = validated_data['academic_year'][:20]
+
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
