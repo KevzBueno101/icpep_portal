@@ -39,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=150, blank=True, default='')
     last_name = models.CharField(max_length=150, blank=True, default='')
-    profile_picture = models.ImageField(upload_to='admin_profiles/', null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='admin_profiles/', null=True, blank=True, max_length=500)
     role     = models.CharField(max_length=10, choices=Role.choices,     default=Role.OFFICER)
     position = models.CharField(max_length=100, blank=True, default='')
     year_level = models.CharField(max_length=1, choices=YearLevel.choices, null=True, blank=True)

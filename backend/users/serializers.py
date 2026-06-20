@@ -6,10 +6,18 @@ User = get_user_model()
 
 
 def _safe_profile_picture_url(field, request=None):
-    """Returns absolute URL string or None — never crashes on missing/broken files."""
+    """Returns absolute URL string or None — never crashes on missing/broken files.
+    
+    Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
+    Local storage returns relative URLs (/media/...), which we convert to absolute.
+    """
     try:
         if field and field.name:
             url = field.url
+            # Cloudinary URLs are already absolute (start with http:// or https://)
+            if isinstance(url, str) and url.startswith(('http://', 'https://')):
+                return url
+            # Local storage URLs are relative, make them absolute
             if request and isinstance(url, str) and url.startswith('/'):
                 return request.build_absolute_uri(url)
             return url

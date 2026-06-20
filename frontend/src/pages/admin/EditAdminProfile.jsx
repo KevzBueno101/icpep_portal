@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Camera, X } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/useAuth'
 export default function EditAdminProfile({ triggerRefresh }) {
   const navigate = useNavigate()
   const { user, refreshUser } = useAuth()
+  const fileInputRef = useRef(null)
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -27,6 +28,9 @@ export default function EditAdminProfile({ triggerRefresh }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [showPositionWarning, setShowPositionWarning] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const previewUrlRef = useRef(null)
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -46,6 +50,10 @@ export default function EditAdminProfile({ triggerRefresh }) {
         department: res.data.department ?? '',
         academic_year: res.data.academic_year ?? '',
       })
+      // Set existing profile picture as preview
+      if (res.data.profile_picture) {
+        setPreviewUrl(res.data.profile_picture)
+      }
     } catch (err) {
       const msg = err?.response?.data?.detail || 'Failed to load profile.'
       setError(msg)
@@ -59,6 +67,53 @@ export default function EditAdminProfile({ triggerRefresh }) {
     fetchProfile()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+      }
+    }
+  }, [])
+
+  const handleFileSelect = (file) => {
+    if (!file) return
+
+    // Validate file size (max 5MB)
+    const maxBytes = 5 * 1024 * 1024
+    if (file.size > maxBytes) {
+      toast.error('Profile picture must be less than 5MB.')
+      return
+    }
+
+    // Validate file type
+    if (file.type && !file.type.startsWith('image/')) {
+      toast.error('Profile picture must be an image file.')
+      return
+    }
+
+    // Clean up previous preview
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current)
+    }
+
+    const url = URL.createObjectURL(file)
+    previewUrlRef.current = url
+    setPreviewUrl(url)
+    setSelectedFile(file)
+  }
+
+  const handleRemoveFile = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current)
+      previewUrlRef.current = null
+    }
+    setPreviewUrl(null)
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -115,32 +170,62 @@ export default function EditAdminProfile({ triggerRefresh }) {
 
     setSaving(true)
     try {
-      const payload = {
-        first_name: firstName,
-        last_name: lastName,
-        email: formData.email.trim(),
-        username: formData.username.trim(),
-        // DB columns: department varchar(100), position varchar(100)
-        // Clamp to prevent DataError( varchar(100) ) => 500.
-        department: formData.department.trim().slice(0, 100),
-        academic_year: formData.academic_year.trim().slice(0, 20),
+      // Use FormData if uploading a file, otherwise use JSON
+      if (selectedFile) {
+        const formDataPayload = new FormData()
+        formDataPayload.append('first_name', firstName)
+        formDataPayload.append('last_name', lastName)
+        formDataPayload.append('email', formData.email.trim())
+        formDataPayload.append('username', formData.username.trim())
+        formDataPayload.append('department', formData.department.trim().slice(0, 100))
+        formDataPayload.append('academic_year', formData.academic_year.trim().slice(0, 20))
+        formDataPayload.append('profile_picture', selectedFile)
+
+        // President can edit additional fields
+        if (isPresident) {
+          formDataPayload.append('position', formData.position)
+          formDataPayload.append('role', formData.role)
+        }
+
+        // Add password fields if changing password
+        if (formData.new_password) {
+          formDataPayload.append('current_password', formData.current_password)
+          formDataPayload.append('new_password', formData.new_password)
+          formDataPayload.append('confirm_password', formData.confirm_password)
+        }
+
+        await api.patch('/users/admin/profile/', formDataPayload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      } else {
+        const payload = {
+          first_name: firstName,
+          last_name: lastName,
+          email: formData.email.trim(),
+          username: formData.username.trim(),
+          // DB columns: department varchar(100), position varchar(100)
+          // Clamp to prevent DataError( varchar(100) ) => 500.
+          department: formData.department.trim().slice(0, 100),
+          academic_year: formData.academic_year.trim().slice(0, 20),
+        }
+
+        // President can edit additional fields
+        if (isPresident) {
+          payload.position = formData.position
+          payload.role = formData.role
+        }
+
+        // Add password fields if changing password
+        if (formData.new_password) {
+          payload.current_password = formData.current_password
+          payload.new_password = formData.new_password
+          payload.confirm_password = formData.confirm_password
+        }
+
+        await api.patch('/users/admin/profile/', payload)
       }
-
-
-      // President can edit additional fields
-      if (isPresident) {
-        payload.position = formData.position
-        payload.role = formData.role
-      }
-
-      // Add password fields if changing password
-      if (formData.new_password) {
-        payload.current_password = formData.current_password
-        payload.new_password = formData.new_password
-        payload.confirm_password = formData.confirm_password
-      }
-
-      await api.patch('/users/admin/profile/', payload)
 
       toast.success('Profile updated successfully')
       // Refresh user data to update profile picture in sidebar
@@ -311,6 +396,50 @@ export default function EditAdminProfile({ triggerRefresh }) {
                     value={formData.academic_year}
                     onChange={(e) => setFormData((s) => ({ ...s, academic_year: e.target.value }))}
                   />
+                </div>
+              </div>
+
+              {/* Profile Picture Upload Section */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-700 mb-3">Profile Picture</p>
+                <div className="space-y-4">
+                  {previewUrl ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={previewUrl}
+                        alt="Profile picture preview"
+                        className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        disabled={saving}
+                        className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 disabled:opacity-60 shadow-md"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="block cursor-pointer">
+                      <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-white hover:border-sky-400 transition">
+                        <Camera className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          handleFileSelect(file)
+                          e.target.value = ''
+                        }}
+                      />
+                    </label>
+                  )}
+                  {!previewUrl && (
+                    <p className="text-xs text-slate-500">Supported formats: JPG, PNG, JPEG (Max 5MB)</p>
+                  )}
                 </div>
               </div>
 

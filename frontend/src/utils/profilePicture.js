@@ -6,12 +6,12 @@ const BACKEND_BASES = [
 export const resolveProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
 
-  // If backend already returns absolute URL
-  if (typeof profilePicture === 'string' && profilePicture.startsWith('http')) {
+  // If backend already returns absolute URL (Cloudinary URLs or full URLs)
+  if (typeof profilePicture === 'string' && (profilePicture.startsWith('http://') || profilePicture.startsWith('https://'))) {
     return profilePicture
   }
 
-  // Relative path like /media/...
+  // Relative path like /media/... (local storage)
   if (typeof profilePicture === 'string' && profilePicture.startsWith('/')) {
     // Use backend origin explicitly if possible; otherwise fall back to current origin.
     // This avoids breaking when frontend runs on a different host/port.
@@ -28,7 +28,7 @@ export const resolveProfilePictureUrl = (profilePicture) => {
     return `${backendBase}${profilePicture}`
   }
 
-  // Fallback: just return as-is
+  // Fallback: just return as-is (for Cloudinary public_ids or other formats)
   return profilePicture
 }
 

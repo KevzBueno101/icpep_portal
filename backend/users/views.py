@@ -91,11 +91,20 @@ def _can_manage(user):
 
 
 def _safe_profile_picture_url(user):
-    """Safely extract profile picture URL. Returns None if file is missing or broken."""
+    """Safely extract profile picture URL. Returns None if file is missing or broken.
+    
+    Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
+    Local storage returns relative URLs (/media/...), which we return as-is for frontend resolution.
+    """
     try:
         field = getattr(user, 'profile_picture', None)
         if field and field.name:
-            return field.url
+            url = field.url
+            # Cloudinary URLs are already absolute (start with http:// or https://)
+            if isinstance(url, str) and url.startswith(('http://', 'https://')):
+                return url
+            # Local storage URLs are relative, return as-is for frontend to resolve
+            return url
     except (ValueError, AttributeError):
         pass
     return None
