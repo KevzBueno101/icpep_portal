@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+import os
 
 User = get_user_model()
 
@@ -10,6 +11,7 @@ def _safe_profile_picture_url(field, request=None):
     
     Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
     Local storage returns relative URLs (/media/...), which we convert to absolute.
+    If Cloudinary returns only a public_id, we construct the full URL.
     """
     try:
         if field and field.name:
@@ -20,6 +22,10 @@ def _safe_profile_picture_url(field, request=None):
             # Local storage URLs are relative, make them absolute
             if request and isinstance(url, str) and url.startswith('/'):
                 return request.build_absolute_uri(url)
+            # Fallback: if it's just a public_id, construct Cloudinary URL
+            cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+            if cloud_name and isinstance(url, str):
+                return f"https://res.cloudinary.com/{cloud_name}/{url}"
             return url
     except (ValueError, AttributeError):
         pass
@@ -53,10 +59,20 @@ class OfficerRosterSerializer(serializers.Serializer):
         if pic and getattr(pic, 'name', None):
             try:
                 url = pic.url
-                if request:
+                # Cloudinary URLs are already absolute (start with http:// or https://)
+                if isinstance(url, str) and url.startswith(('http://', 'https://')):
+                    avatar_url = url
+                # Local storage URLs are relative, make them absolute
+                elif request and isinstance(url, str) and url.startswith('/'):
                     avatar_url = request.build_absolute_uri(url)
                 else:
-                    avatar_url = f"http://127.0.0.1:8000{url}" if url.startswith('/') else url
+                    # Fallback: if it's just a public_id, construct Cloudinary URL
+                    # This handles cases where Cloudinary returns only the public_id
+                    cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+                    if cloud_name and isinstance(url, str):
+                        avatar_url = f"https://res.cloudinary.com/{cloud_name}/{url}"
+                    else:
+                        avatar_url = url
             except Exception:
                 avatar_url = None
 

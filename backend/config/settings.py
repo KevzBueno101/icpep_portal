@@ -232,7 +232,7 @@ if _cloudinary_configured:
     # Use your Cloudinary cloud name from env.
     # Your current code accidentally hardcodes a wrong env lookup key,
     # resulting in URLs like: https://res.cloudinary.com/None/... (404).
-    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/"
+    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/image/upload/"
 
 else:
     # Local development — store media on disk

@@ -95,6 +95,7 @@ def _safe_profile_picture_url(user):
     
     Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
     Local storage returns relative URLs (/media/...), which we return as-is for frontend resolution.
+    If Cloudinary returns only a public_id, we construct the full URL.
     """
     try:
         field = getattr(user, 'profile_picture', None)
@@ -104,6 +105,12 @@ def _safe_profile_picture_url(user):
             if isinstance(url, str) and url.startswith(('http://', 'https://')):
                 return url
             # Local storage URLs are relative, return as-is for frontend to resolve
+            if isinstance(url, str) and url.startswith('/'):
+                return url
+            # Fallback: if it's just a public_id, construct Cloudinary URL
+            cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+            if cloud_name and isinstance(url, str):
+                return f"https://res.cloudinary.com/{cloud_name}/{url}"
             return url
     except (ValueError, AttributeError):
         pass
