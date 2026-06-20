@@ -196,7 +196,7 @@ export default function HeroSection() {
               <a
                 href={
                   import.meta.env.VITE_FACEBOOK_URL ||
-                  'https://www.facebook.com/'
+                  'https://www.facebook.com/Icpep.seCatSu'
                 }
                 target="_blank"
                 rel="noreferrer"
