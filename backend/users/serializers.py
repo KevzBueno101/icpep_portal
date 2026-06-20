@@ -137,9 +137,16 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         profile_picture = validated_data.pop('profile_picture', None)
 
 
-            if attr in {'position', 'department'} and isinstance(value, str):
-                # Safety clamp for Postgres varchar(100)
-                validated_data[attr] = value[:100]
+        for attr, value in list(validated_data.items()):
+            if value is None:
+                continue
+            if isinstance(value, str):
+                if attr == 'academic_year':
+                    validated_data[attr] = value[:20]
+                else:
+                    # Postgres varchar(100) safety clamp for all string fields
+                    validated_data[attr] = value[:100]
+
 
         # Also clamp academic_year defensively in case DB differs by migration.
         if 'academic_year' in validated_data and isinstance(validated_data.get('academic_year'), str):
