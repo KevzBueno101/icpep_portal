@@ -229,7 +229,11 @@ if _cloudinary_configured:
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('dbcvnlnbi')}/"
+    # Use your Cloudinary cloud name from env.
+    # Your current code accidentally hardcodes a wrong env lookup key,
+    # resulting in URLs like: https://res.cloudinary.com/None/... (404).
+    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/"
+
 else:
     # Local development — store media on disk
     MEDIA_URL = '/media/'

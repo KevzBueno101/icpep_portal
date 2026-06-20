@@ -136,6 +136,18 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_picture = validated_data.pop('profile_picture', None)
 
+        # Prevent DB DataError: character varying(max_length) when UI sends long strings.
+        # User model constraints:
+        # - position: max_length=100
+        # - department: max_length=100
+        for attr, value in list(validated_data.items()):
+            if value is None:
+                continue
+            if attr == 'position' and isinstance(value, str):
+                validated_data['position'] = value[:100]
+            if attr == 'department' and isinstance(value, str):
+                validated_data['department'] = value[:100]
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
@@ -147,3 +159,4 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
