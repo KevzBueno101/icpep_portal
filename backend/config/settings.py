@@ -232,7 +232,7 @@ if _cloudinary_configured:
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/"
+    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('dbcvnlnbi')}/"
 else:
     # Local development — store media on disk
     MEDIA_URL = '/media/'
