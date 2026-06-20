@@ -120,9 +120,12 @@ export default function EditAdminProfile({ triggerRefresh }) {
         last_name: lastName,
         email: formData.email.trim(),
         username: formData.username.trim(),
-        department: formData.department.trim(),
-        academic_year: formData.academic_year.trim(),
+        // DB columns: department varchar(100), position varchar(100)
+        // Clamp to prevent DataError( varchar(100) ) => 500.
+        department: formData.department.trim().slice(0, 100),
+        academic_year: formData.academic_year.trim().slice(0, 20),
       }
+
 
       // President can edit additional fields
       if (isPresident) {
