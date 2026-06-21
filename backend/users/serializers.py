@@ -7,27 +7,25 @@ User = get_user_model()
 
 
 def _safe_profile_picture_url(field, request=None):
-    """Returns absolute URL string or None — never crashes on missing/broken files.
-    
-    Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
-    Local storage returns relative URLs (/media/...), which we convert to absolute.
-    If Cloudinary returns only a public_id, we construct the full URL.
+    """
+    Returns the Cloudinary URL as-is, or constructs an absolute local URL.
+    NEVER appends ?v= cache-busting — Cloudinary 404s on unknown query params.
     """
     try:
         if field and field.name:
             url = field.url
-            # Cloudinary URLs are already absolute (start with http:// or https://)
+            # Cloudinary returns full absolute URLs — return as-is
             if isinstance(url, str) and url.startswith(('http://', 'https://')):
                 return url
-            # Local storage URLs are relative, make them absolute
+            # Local storage: make absolute using request
             if request and isinstance(url, str) and url.startswith('/'):
                 return request.build_absolute_uri(url)
-            # Fallback: if it's just a public_id, construct Cloudinary URL
+            # Fallback: public_id only — construct Cloudinary URL
             cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
             if cloud_name and isinstance(url, str):
-                return f"https://res.cloudinary.com/{cloud_name}/{url}"
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{url}"
             return url
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, Exception):
         pass
     return None
 
@@ -59,18 +57,17 @@ class OfficerRosterSerializer(serializers.Serializer):
         if pic and getattr(pic, 'name', None):
             try:
                 url = pic.url
-                # Cloudinary URLs are already absolute (start with http:// or https://)
+                # Cloudinary returns full absolute URL — use as-is
                 if isinstance(url, str) and url.startswith(('http://', 'https://')):
                     avatar_url = url
-                # Local storage URLs are relative, make them absolute
+                # Local storage — make absolute
                 elif request and isinstance(url, str) and url.startswith('/'):
                     avatar_url = request.build_absolute_uri(url)
                 else:
-                    # Fallback: if it's just a public_id, construct Cloudinary URL
-                    # This handles cases where Cloudinary returns only the public_id
+                    # Fallback: construct Cloudinary URL from public_id
                     cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
                     if cloud_name and isinstance(url, str):
-                        avatar_url = f"https://res.cloudinary.com/{cloud_name}/{url}"
+                        avatar_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/{url}"
                     else:
                         avatar_url = url
             except Exception:
@@ -164,8 +161,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_picture = validated_data.pop('profile_picture', None)
 
-        # Clamp potentially-long strings to avoid Postgres varchar(100) DataError.
-        # (Your model uses max_length=100 for most string fields, academic_year is 20.)
+        # Clamp strings to avoid Postgres varchar DataError
         for attr, value in list(validated_data.items()):
             if value is None:
                 continue
@@ -186,4 +182,3 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-

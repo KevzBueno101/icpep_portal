@@ -215,7 +215,6 @@ _cloudinary_configured = all([
 ])
 import cloudinary
 if _cloudinary_configured:
-    
     cloudinary.config(
         cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
         api_key=os.getenv('CLOUDINARY_API_KEY'),
@@ -229,13 +228,9 @@ if _cloudinary_configured:
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    # Use your Cloudinary cloud name from env.
-    # Your current code accidentally hardcodes a wrong env lookup key,
-    # resulting in URLs like: https://res.cloudinary.com/None/... (404).
-    MEDIA_URL = f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/image/upload/"
-
+    MEDIA_URL = '/media/'
+    # ← DO NOT set MEDIA_URL here; cloudinary-storage generates its own full URLs
 else:
-    # Local development — store media on disk
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 

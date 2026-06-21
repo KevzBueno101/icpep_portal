@@ -24,12 +24,12 @@ export default function useAdminProfile() {
     fetchProfile()
   }, [fetchProfile])
 
-  const profilePictureUrl = profile?.profile_picture
-    ? `${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}v=${Date.now()}`
-    : null
+  // Return the Cloudinary URL as-is — DO NOT append ?v=timestamp.
+  // Cloudinary 404s on unknown query params, which was causing all
+  // profile pictures to fail loading in production.
+  const profilePictureUrl = profile?.profile_picture || null
 
   const refetch = fetchProfile
 
   return { profile, loading, error, refetch, profilePictureUrl }
 }
-

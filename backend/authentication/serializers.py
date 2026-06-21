@@ -30,7 +30,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'payment_method', 'profile_picture', 'payment_proof_image', 'coe_id_image',
         ]
-    
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -39,36 +38,33 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_coe_id_image(self, value):
         if value:
-            # Validate file size (max 5MB)
             if value.size > 5 * 1024 * 1024:
                 raise serializers.ValidationError('File size must not exceed 5MB.')
-            
-            # Validate file type
             allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
             if value.content_type not in allowed_types:
                 raise serializers.ValidationError('Only JPG, PNG, and PDF files are allowed.')
-        
         return value
 
     def create(self, validated_data):
         profile_fields = {
-            'first_name':         validated_data.pop('first_name'),
-            'middle_name':        validated_data.pop('middle_name', ''),
-            'last_name':          validated_data.pop('last_name'),
-            'student_number':     validated_data.pop('student_number'),
-            'course':             validated_data.pop('course'),
-            'year_level':         validated_data.pop('year_level'),
-            'section':            validated_data.pop('section'),
-            'contact_number':     validated_data.pop('contact_number'),
-            'payment_method':     validated_data.pop('payment_method', 'ON_HAND'),
+            'first_name':          validated_data.pop('first_name'),
+            'middle_name':         validated_data.pop('middle_name', ''),
+            'last_name':           validated_data.pop('last_name'),
+            'student_number':      validated_data.pop('student_number'),
+            'course':              validated_data.pop('course'),
+            'year_level':          validated_data.pop('year_level'),
+            'section':             validated_data.pop('section'),
+            'contact_number':      validated_data.pop('contact_number'),
+            'payment_method':      validated_data.pop('payment_method', 'ON_HAND'),
             'profile_picture':     validated_data.pop('profile_picture', None),
             'payment_proof_image': validated_data.pop('payment_proof_image', None),
-            'coe_id_image':       validated_data.pop('coe_id_image', None),
+            'coe_id_image':        validated_data.pop('coe_id_image', None),
         }
         validated_data.pop('confirm_password')
         user = User.objects.create_user(**validated_data)
         MemberProfile.objects.create(user=user, **profile_fields)
         return user
+
     def validate_profile_picture(self, value):
         from members.serializers import validate_image_file
         return validate_image_file(value)
@@ -77,21 +73,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         from members.serializers import validate_image_file
         return validate_image_file(value)
 
-    # NOTE: Previous code referenced a validate_image_file symbol that wasn't in scope.
-    # By importing it inside each validator, we avoid NameError during /api/auth/register/.
-
-
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Used in auth responses + /me endpoint."""
-    role = serializers.SerializerMethodField()
-    position = serializers.SerializerMethodField()
-    is_term_expired = serializers.SerializerMethodField()
-    is_term_active  = serializers.SerializerMethodField()
+    role             = serializers.SerializerMethodField()
+    position         = serializers.SerializerMethodField()
+    is_term_expired  = serializers.SerializerMethodField()
+    is_term_active   = serializers.SerializerMethodField()
     can_manage_roles = serializers.SerializerMethodField()
     membership_status = serializers.SerializerMethodField()
-    profile_picture = serializers.SerializerMethodField()
+    profile_picture  = serializers.SerializerMethodField()
 
     class Meta:
         model  = User
@@ -129,12 +120,18 @@ class UserSerializer(serializers.ModelSerializer):
         return getattr(profile, 'membership_status', None)
 
     def get_profile_picture(self, obj):
-        if hasattr(obj, 'profile_picture') and obj.profile_picture:
-            url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
-            # Add cache-busting timestamp to force browser to reload new image
-            import time
-            timestamp = int(obj.updated_at.timestamp())
-            return f"{url}?v={timestamp}"
+        """
+        Return the Cloudinary URL as-is.
+        DO NOT append ?v=timestamp — Cloudinary 404s on unknown query params
+        when strict delivery settings are enabled, and the ?v= was literally
+        showing up in the failed resource URLs in the browser console.
+        """
+        try:
+            if hasattr(obj, 'profile_picture') and obj.profile_picture:
+                url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
+                return url  # Cloudinary returns full https://res.cloudinary.com/... URL
+        except Exception:
+            pass
         return None
 
 
