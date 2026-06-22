@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import HeroSection from './HeroSection'
-import ICPEPValuesSection from './ICPEPValuesSection'
 import FeatureSection from './FeatureSection'
 import AnnouncementFeed from './AnnouncementFeed'
 import MilestonesSection from './MilestonesSection'
@@ -38,9 +37,8 @@ export default function Landing() {
         <Navbar />
         <main className="flex-grow">
           <HeroSection />
-          <ICPEPValuesSection />
-          <FeatureSection />
           <AnnouncementFeed />
+          <FeatureSection />
           <MilestonesSection />
           <OfficersRoster />
           <MovingLogoText />

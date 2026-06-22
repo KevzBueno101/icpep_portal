@@ -1,21 +1,20 @@
 import { useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import { useAuth } from '../../context/useAuth'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Members', to: '/admin/membership', icon: Users },
-  { label: 'Admins', to: '/admin/admins', icon: UserCog },
-  { label: 'Officers Roster', to: '/admin/officers-accounts', icon: UserCog },
-
-  { label: 'Achievements', to: '/admin/achievements', icon: LayoutDashboard },
-  { label: 'Announcement', to: '/admin/announcement', icon: Users },
-  { label: 'Profile', to: '/admin/profile', icon: User },
-  { label: 'Logs / Audit Trails', to: '/admin/logs', icon: LayoutDashboard },
+  { label: 'Dashboard',         to: '/admin/dashboard',         icon: LayoutDashboard },
+  { label: 'Members',           to: '/admin/membership',         icon: Users },
+  { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
+  { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },
+  { label: 'Achievements',      to: '/admin/achievements',       icon: Trophy },
+  { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
+  { label: 'Profile',           to: '/admin/profile',            icon: User },
+  { label: 'Logs / Audit Trails', to: '/admin/logs',            icon: ClipboardList },
 ]
 
 function Badge({ children, className = '' }) {
