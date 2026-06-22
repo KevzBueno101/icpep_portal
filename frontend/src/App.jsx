@@ -19,6 +19,8 @@ import AdminAchievements from './pages/admin/AdminAchievements'
 import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
 import AdminProfile from './pages/admin/AdminProfile'
 import EditAdminProfile from './pages/admin/EditAdminProfile'
+import AdminOfficersAccounts from './pages/admin/AdminOfficersAccounts'
+
 
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
 import AdminMembershipVerify from './pages/admin/AdminMembershipVerify'
@@ -177,6 +179,19 @@ function App() {
               </AdminProtectedRoute>
             }
           />
+          <Route
+            path="/admin/officers-accounts"
+            element={
+              <AdminProtectedRoute>
+                <OfficersProvider>
+                  <AdminLayout>
+                    <AdminOfficersAccounts />
+                  </AdminLayout>
+                </OfficersProvider>
+              </AdminProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin/achievements"
             element={

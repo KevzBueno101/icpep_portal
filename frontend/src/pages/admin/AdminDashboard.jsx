@@ -12,12 +12,22 @@ import OfficersCarousel from '../../components/OfficersCarousel'
 
 
 
+
+
+
+
+
+
+
+
 const COLORS = {
+
   APPROVED: '#22c55e',
   PENDING: '#f59e0b',
   REJECTED: '#ef4444',
   EXPIRED: '#6b7280',
 }
+
 
 const AdminDashboard = () => {
   const { user } = useAuth()
@@ -522,6 +532,8 @@ const AdminDashboard = () => {
         <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
           <OfficersCarousel />
         </div>
+
+
       </section>
 
     </div>

@@ -9,7 +9,9 @@ import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Members', to: '/admin/membership', icon: Users },
-  { label: 'Officers', to: '/admin/admins', icon: UserCog },
+  { label: 'Admins', to: '/admin/admins', icon: UserCog },
+  { label: 'Officers Roster', to: '/admin/officers-accounts', icon: UserCog },
+
   { label: 'Achievements', to: '/admin/achievements', icon: LayoutDashboard },
   { label: 'Announcement', to: '/admin/announcement', icon: Users },
   { label: 'Profile', to: '/admin/profile', icon: User },

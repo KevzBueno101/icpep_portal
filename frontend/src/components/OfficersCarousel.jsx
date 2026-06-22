@@ -29,8 +29,28 @@ export default function OfficersCarousel() {
   }))
 
   const validOfficers = normalizedOfficers.filter(
-    officer => officer.isActive && officer.fullName && officer.fullName !== '-' && officer.position
+    // Public roster payload should include: fullName + position + isActive.
+    // But admin accounts roster may have different field shapes.
+    // Keep it permissive so cards always render for valid officers.
+    (officer) => {
+      const isActive = officer.isActive
+      const fullName = officer.fullName
+      const position = officer.position
+
+      // treat undefined isActive as active
+      const activeOk = isActive === undefined ? true : !!isActive
+
+      // fullName/position are required for OfficerCard aria-label and main text
+      return (
+        activeOk &&
+        !!fullName &&
+        fullName !== '-' &&
+        !!position
+      )
+    }
   )
+
+
 
   // Only duplicate and animate if we have enough officers to fill the screen
   const shouldAnimate = validOfficers.length > 3
