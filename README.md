@@ -57,6 +57,8 @@ A full-stack Django + React application for managing university member profiles,
 - Frontend: Added year level dropdown in officer creation/edit modal.
 - Frontend: Added profile picture upload in officer creation/edit modal.
 - Frontend: Modal form is now scrollable on mobile devices.
+- Frontend: Fixed officer edit modal to fetch officer details directly by ID using `/users/admins/{id}/` endpoint instead of searching in the admin list. This resolves the issue where officers with role='OFFICER' were not found since `/users/admins/` only returns role='ADMIN' users.
+- Backend: Cloudinary integration is configured and ready for production. When CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables are set, the app automatically uses Cloudinary for image storage. Falls back to local filesystem when not configured.
 
 When pulling changes, run migrations as described in the "Database migrations" section.
 
@@ -401,7 +403,11 @@ Update it for production deployments (or refactor to use a build-time env var).
 
 1. **Environment**: Use production-level `.env` values (strong SECRET_KEY, secure DB password, DEBUG=False).
 2. **CORS**: Adjust `CORS_ALLOW_ALL_ORIGINS` in `backend/config/settings.py` to specific domain(s).
-3. **Static & Media Files**: Use Cloudinary or S3 for production file storage (Cloudinary package available, currently unused).
+3. **Static & Media Files**: Cloudinary is configured and ready for production. Set these environment variables in your deployment:
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+   The app will automatically use Cloudinary for image storage when configured. Falls back to local filesystem when not configured.
 4. **Database**: Use managed PostgreSQL (AWS RDS, Azure Database, etc.).
 5. **Server**: Use Gunicorn + Nginx for production (not Django development server).
 6. **Secrets**: Use environment variables or a secrets manager (never hardcode credentials).
@@ -413,7 +419,7 @@ Update it for production deployments (or refactor to use a build-time env var).
 - [ ] Implement email notifications for approval workflows
 - [ ] Add comprehensive unit tests
 - [ ] Set up CI/CD pipeline (GitHub Actions, GitLab CI)
-- [ ] Configure Cloudinary for image storage
+- [x] Configure Cloudinary for image storage (ready for production, set env vars to enable)
 - [ ] Add pagination and filtering to members list API
 
 ## Database migrations (helpers)
