@@ -36,6 +36,7 @@ import MemberAnnouncements from './pages/member/MemberAnnouncements'
 import MemberIdCard from './pages/member/MemberIdCard'
 import MemberAbout from './pages/member/MemberAbout'
 import MemberProfile from './pages/member/MemberProfile'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           position="top-right"
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
         />
+        <PWAInstallPrompt />
         <Routes>
           {/* Public */}
           <Route path="/" element={<Navigate to="/landing" replace />} />
