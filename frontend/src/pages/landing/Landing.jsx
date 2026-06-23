@@ -33,7 +33,7 @@ export default function Landing() {
 
   return (
     <OfficersProvider>
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow">
           <HeroSection />

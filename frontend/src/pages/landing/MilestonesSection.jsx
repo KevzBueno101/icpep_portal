@@ -234,8 +234,7 @@ export default function MilestonesSection() {
   return (
     <section
         id="milestones"
-        className="relative scroll-mt-16 py-24 sm:py-32 overflow-hidden"
-        style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
+        className="bg-transparent py-24 sm:py-32 relative z-10 overflow-hidden"
       >
       {/* Subtle grid bg */}
       <div
