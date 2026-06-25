@@ -8,6 +8,7 @@ class Milestone(models.Model):
         RECOGNITION = 'recognition', 'Recognition'
         EVENT = 'event', 'Event'
         COMMUNITY = 'community', 'Community'
+        FEATURE = 'feature', 'Feature'
 
     title = models.CharField(max_length=200)
     headline = models.CharField(max_length=200)

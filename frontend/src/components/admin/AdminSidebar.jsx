@@ -8,11 +8,11 @@ import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 const NAV_ITEMS = [
   { label: 'Dashboard',         to: '/admin/dashboard',         icon: LayoutDashboard },
+  { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
   { label: 'Members',           to: '/admin/membership',         icon: Users },
   { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
   { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },
   { label: 'Achievements',      to: '/admin/achievements',       icon: Trophy },
-  { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
   { label: 'Profile',           to: '/admin/profile',            icon: User },
   { label: 'Logs / Audit Trails', to: '/admin/logs',            icon: ClipboardList },
 ]

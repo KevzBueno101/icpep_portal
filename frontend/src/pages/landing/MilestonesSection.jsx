@@ -27,6 +27,7 @@ const CATEGORIES = {
   recognition: { label: 'Recognition',  accent: '#a78bfa', dimAccent: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)' },
   event:       { label: 'Event',        accent: '#fbbf24', dimAccent: 'rgba(251,191,36,0.15)',  border: 'rgba(251,191,36,0.35)'  },
   community:   { label: 'Community',    accent: '#f472b6', dimAccent: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.35)' },
+  feature:     { label: 'Feature',      accent: '#fb923c', dimAccent: 'rgba(251,146,60,0.15)',  border: 'rgba(251,146,60,0.35)'  },
 }
 
 const DUMMY_MILESTONES = [

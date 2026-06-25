@@ -9,6 +9,7 @@ const CATEGORY_OPTIONS = [
   { value: 'recognition', label: 'Recognition' },
   { value: 'event', label: 'Event' },
   { value: 'community', label: 'Community' },
+  { value: 'feature', label: 'Feature' },
 ]
 
 const AdminAchievements = () => {

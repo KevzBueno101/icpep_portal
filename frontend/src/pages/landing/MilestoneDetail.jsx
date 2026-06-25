@@ -9,6 +9,7 @@ const CATEGORIES = {
   recognition: { label: 'Recognition',  accent: '#a78bfa', dimAccent: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)' },
   event:       { label: 'Event',        accent: '#fbbf24', dimAccent: 'rgba(251,191,36,0.15)',  border: 'rgba(251,191,36,0.35)'  },
   community:   { label: 'Community',    accent: '#f472b6', dimAccent: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.35)' },
+  feature:     { label: 'Feature',      accent: '#fb923c', dimAccent: 'rgba(251,146,60,0.15)',  border: 'rgba(251,146,60,0.35)'  },
 }
 
 export default function MilestoneDetail() {
@@ -140,7 +141,7 @@ export default function MilestoneDetail() {
       {/* Content */}
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-20">
         <div className="space-y-12">
-          {/* Description */}
+          {/* Combined Description + Content */}
           <div
             className="rounded-2xl p-6 sm:p-8"
             style={{
@@ -149,24 +150,17 @@ export default function MilestoneDetail() {
               backdropFilter: 'blur(4px)',
             }}
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
-            <p className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {milestone.description}
-            </p>
-          </div>
-
-          {/* Full Content */}
-          <div
-            className="rounded-2xl p-6 sm:p-8"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: `1px solid ${cat.border}`,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <h2 className="text-2xl font-bold text-white mb-4">Details</h2>
-            <div className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {milestone.content}
+            <div className="space-y-6">
+              {milestone.description && (
+                <p className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  {milestone.description}
+                </p>
+              )}
+              {milestone.content && (
+                <div className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  {milestone.content}
+                </div>
+              )}
             </div>
           </div>
 

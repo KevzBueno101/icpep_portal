@@ -571,19 +571,9 @@ const Register = () => {
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">Step {step} of 5</p>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <span
-                  key={item}
-                  className={`h-2 w-8 rounded-full ${step >= item ? 'bg-sky-600' : 'bg-slate-200'}`}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="mt-3 h-2 rounded-full bg-slate-200">
+        <div className="mb-6 space-y-2">
+          <p className="text-sm text-slate-500">Step {step} of 5</p>
+          <div className="h-2 rounded-full bg-slate-200">
             <div
               className="h-2 rounded-full bg-sky-600 transition-all duration-300"
               style={{ width: `${(step / 5) * 100}%` }}
