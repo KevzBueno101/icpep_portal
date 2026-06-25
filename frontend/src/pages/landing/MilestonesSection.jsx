@@ -95,6 +95,31 @@ const DUMMY_MILESTONES = [
   },
 ]
 
+function SkeletonCard() {
+  return (
+    <div className="w-full animate-pulse">
+      <div
+        className="relative rounded-2xl p-6 sm:p-7"
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="h-5 w-24 rounded-full bg-white/10" />
+          <div className="h-4 w-20 rounded bg-white/10" />
+        </div>
+        <div className="h-6 w-3/4 rounded bg-white/10 mb-3" />
+        <div className="space-y-2">
+          <div className="h-4 w-full rounded bg-white/10" />
+          <div className="h-4 w-5/6 rounded bg-white/10" />
+        </div>
+        <div className="h-4 w-20 rounded bg-white/10 mt-5" />
+      </div>
+    </div>
+  )
+}
+
 function MilestoneCard({ milestone, visible, side }) {
   const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
 
@@ -186,6 +211,7 @@ function MilestoneCard({ milestone, visible, side }) {
 
 export default function MilestonesSection() {
   const [milestones, setMilestones] = useState([])
+  const [loading, setLoading] = useState(true)
   const [visibleIds, setVisibleIds] = useState(new Set())
   const [showAllMilestones, setShowAllMilestones] = useState(false)
   const rowRefs = useRef({})
@@ -200,8 +226,9 @@ export default function MilestonesSection() {
         setMilestones(res.data.results)
       } catch (err) {
         console.error('Failed to fetch milestones:', err)
-        // Fallback to dummy data if API fails
         setMilestones(DUMMY_MILESTONES)
+      } finally {
+        setLoading(false)
       }
     }
     fetchMilestones()
@@ -272,158 +299,199 @@ export default function MilestonesSection() {
 
         {/* ── MOBILE: Single column timeline ── */}
         <div className="relative md:hidden">
-          {/* Left gutter line */}
           <div
             className="absolute left-[19px] top-2 bottom-2 w-px"
             style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.3) 90%, transparent)' }}
           />
 
-          <div className="space-y-8">
-            {displayedMilestones.map((milestone) => {
-              const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
-              const isVisible = visibleIds.has(milestone.id)
-
-              return (
-                <div
-                  key={milestone.id}
-                  data-id={milestone.id}
-                  ref={(el) => { rowRefs.current[milestone.id] = el }}
-                  className="relative flex gap-5 items-start"
-                >
-                  {/* Dot */}
+          {loading ? (
+            <div className="space-y-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="relative flex gap-5 items-start">
                   <div className="relative shrink-0 mt-1 z-10">
-                    <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500"
-                      style={{
-                        background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.05)',
-                        border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
-                        boxShadow: isVisible ? `0 0 16px ${cat.dimAccent}` : 'none',
-                      }}
-                    >
-                      <span
-                        className="h-3 w-3 rounded-full transition-all duration-500"
-                        style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.2)' }}
-                      />
-                    </div>
+                    <div className="h-10 w-10 rounded-full bg-white/5 animate-pulse" />
                   </div>
-
-                  {/* Card */}
                   <div className="flex-1 min-w-0">
-                    <MilestoneCard milestone={milestone} visible={isVisible} side="left" />
+                    <SkeletonCard />
                   </div>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {displayedMilestones.map((milestone) => {
+                const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
+                const isVisible = visibleIds.has(milestone.id)
+
+                return (
+                  <div
+                    key={milestone.id}
+                    data-id={milestone.id}
+                    ref={(el) => { rowRefs.current[milestone.id] = el }}
+                    className="relative flex gap-5 items-start"
+                  >
+                    <div className="relative shrink-0 mt-1 z-10">
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500"
+                        style={{
+                          background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.05)',
+                          border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
+                          boxShadow: isVisible ? `0 0 16px ${cat.dimAccent}` : 'none',
+                        }}
+                      >
+                        <span
+                          className="h-3 w-3 rounded-full transition-all duration-500"
+                          style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.2)' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <MilestoneCard milestone={milestone} visible={isVisible} side="left" />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── DESKTOP: Alternating left/right timeline ── */}
         <div className="relative hidden md:block">
-          {/* Center line */}
           <div
             className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2"
             style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 8%, rgba(56,189,248,0.3) 92%, transparent)' }}
           />
 
-          <div className="space-y-14">
-            {displayedMilestones.map((milestone, index) => {
-              const side = index % 2 === 0 ? 'left' : 'right'
-              const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
-              const isVisible = visibleIds.has(milestone.id)
-
-              return (
-                <div
-                  key={milestone.id}
-                  data-id={milestone.id}
-                  ref={(el) => { rowRefs.current[milestone.id] = el }}
-                  className="relative grid grid-cols-2 gap-0 items-center"
-                >
-                  {/* Left slot */}
-                  <div className="pr-12 flex justify-end">
-                    {side === 'left' ? (
-                      <div className="w-full max-w-[400px]">
-                        <MilestoneCard milestone={milestone} visible={isVisible} side="left" />
-                      </div>
-                    ) : (
-                      /* Date label on empty side */
-                      <div
-                        className={`text-right transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-                      >
-                        <span
-                          className="text-sm font-mono font-semibold tracking-wider"
-                          style={{ color: cat.accent }}
-                        >
-                          {milestone.date}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Center dot */}
-                  <div
-                    className="absolute left-1/2 -translate-x-1/2 z-10"
-                  >
-                    <div
-                      className="h-12 w-12 rounded-full flex items-center justify-center transition-all duration-500"
-                      style={{
-                        background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.04)',
-                        border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
-                        boxShadow: isVisible ? `0 0 24px ${cat.dimAccent}` : 'none',
-                      }}
-                    >
-                      <span
-                        className="h-3.5 w-3.5 rounded-full transition-all duration-500"
-                        style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.15)' }}
-                      />
+          {loading ? (
+            <div className="space-y-14">
+              {[1, 2, 3, 4].map((_, index) => {
+                const side = index % 2 === 0 ? 'left' : 'right'
+                return (
+                  <div key={index} className="relative grid grid-cols-2 gap-0 items-center">
+                    <div className="pr-12 flex justify-end">
+                      {side === 'left' ? (
+                        <div className="w-full max-w-[400px]">
+                          <SkeletonCard />
+                        </div>
+                      ) : (
+                        <div className="h-4 w-24 rounded bg-white/10 animate-pulse ml-auto" />
+                      )}
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 z-10">
+                      <div className="h-12 w-12 rounded-full bg-white/5 animate-pulse" />
+                    </div>
+                    <div className="pl-12 flex justify-start">
+                      {side === 'right' ? (
+                        <div className="w-full max-w-[400px]">
+                          <SkeletonCard />
+                        </div>
+                      ) : (
+                        <div className="h-4 w-24 rounded bg-white/10 animate-pulse" />
+                      )}
                     </div>
                   </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="space-y-14">
+              {displayedMilestones.map((milestone, index) => {
+                const side = index % 2 === 0 ? 'left' : 'right'
+                const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
+                const isVisible = visibleIds.has(milestone.id)
 
-                  {/* Right slot */}
-                  <div className="pl-12 flex justify-start">
-                    {side === 'right' ? (
-                      <div className="w-full max-w-[400px]">
-                        <MilestoneCard milestone={milestone} visible={isVisible} side="right" />
-                      </div>
-                    ) : (
-                      /* Date label on empty side */
+                return (
+                  <div
+                    key={milestone.id}
+                    data-id={milestone.id}
+                    ref={(el) => { rowRefs.current[milestone.id] = el }}
+                    className="relative grid grid-cols-2 gap-0 items-center"
+                  >
+                    <div className="pr-12 flex justify-end">
+                      {side === 'left' ? (
+                        <div className="w-full max-w-[400px]">
+                          <MilestoneCard milestone={milestone} visible={isVisible} side="left" />
+                        </div>
+                      ) : (
+                        <div
+                          className={`text-right transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+                        >
+                          <span
+                            className="text-sm font-mono font-semibold tracking-wider"
+                            style={{ color: cat.accent }}
+                          >
+                            {milestone.date}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 z-10"
+                    >
                       <div
-                        className={`transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+                        className="h-12 w-12 rounded-full flex items-center justify-center transition-all duration-500"
+                        style={{
+                          background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.04)',
+                          border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
+                          boxShadow: isVisible ? `0 0 24px ${cat.dimAccent}` : 'none',
+                        }}
                       >
                         <span
-                          className="text-sm font-mono font-semibold tracking-wider"
-                          style={{ color: cat.accent }}
-                        >
-                          {milestone.date}
-                        </span>
+                          className="h-3.5 w-3.5 rounded-full transition-all duration-500"
+                          style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.15)' }}
+                        />
                       </div>
-                    )}
+                    </div>
+
+                    <div className="pl-12 flex justify-start">
+                      {side === 'right' ? (
+                        <div className="w-full max-w-[400px]">
+                          <MilestoneCard milestone={milestone} visible={isVisible} side="right" />
+                        </div>
+                      ) : (
+                        <div
+                          className={`transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+                        >
+                          <span
+                            className="text-sm font-mono font-semibold tracking-wider"
+                            style={{ color: cat.accent }}
+                          >
+                            {milestone.date}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* End cap */}
-        <div className="mt-16 flex justify-center">
-          <button
-            type="button"
-            disabled={!hasHiddenMilestones}
-            onClick={() => setShowAllMilestones(true)}
-            className="flex items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition hover:border-sky-300/50 hover:text-white disabled:cursor-default disabled:hover:border-sky-400/25"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(56,189,248,0.25)',
-              color: 'rgba(255,255,255,0.5)',
-            }}
-          >
-            <span
-              className="h-2 w-2 rounded-full animate-pulse"
-              style={{ background: '#38bdf8' }}
-            />
-            {hasHiddenMilestones ? `More milestones ahead (${milestones.length - displayedMilestones.length})` : 'All milestones shown'}
-          </button>
-        </div>
+        {!loading && (
+          <div className="mt-16 flex justify-center">
+            <button
+              type="button"
+              disabled={!hasHiddenMilestones}
+              onClick={() => setShowAllMilestones(true)}
+              className="flex items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition hover:border-sky-300/50 hover:text-white disabled:cursor-default disabled:hover:border-sky-400/25"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(56,189,248,0.25)',
+                color: 'rgba(255,255,255,0.5)',
+              }}
+            >
+              <span
+                className="h-2 w-2 rounded-full animate-pulse"
+                style={{ background: '#38bdf8' }}
+              />
+              {hasHiddenMilestones ? `More milestones ahead (${milestones.length - displayedMilestones.length})` : 'All milestones shown'}
+            </button>
+          </div>
+        )}
 
       </div>
     </section>
