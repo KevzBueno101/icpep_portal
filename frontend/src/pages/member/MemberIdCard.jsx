@@ -16,7 +16,7 @@ export default function MemberIdCard() {
           Digital ID Card
         </h1>
         <p className="mt-2 text-slate-600 text-sm">
-          Your official ICPEP.SE digital student membership pass. Tap to flip to show the verification QR code.
+          Your official ICPEP.SE digital student membership pass. Flip to view the terms and conditions.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ export default function MemberIdCard() {
           <div>
             <h3 className="text-sm font-bold text-slate-900">Official Student Member Pass</h3>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              This card verifies your registration for the academic year. Tap the card to flip and expose the QR verification payload.
+              This card verifies your membership for the academic year. The front displays your photo and membership details with a QR code. Flip to view the terms and conditions.
             </p>
           </div>
         </div>
