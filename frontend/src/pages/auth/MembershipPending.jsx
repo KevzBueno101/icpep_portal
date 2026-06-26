@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { Upload } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 
@@ -15,6 +16,8 @@ const MembershipPending = () => {
   const [yearLevel, setYearLevel] = useState(user?.year_level || '1')
   const [paymentProofFile, setPaymentProofFile] = useState(null)
   const [coeIdFile, setCoeIdFile] = useState(null)
+  const [paymentProofPreview, setPaymentProofPreview] = useState(null)
+  const [coeIdPreview, setCoeIdPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [renewError, setRenewError] = useState(null)
   const intervalRef = useRef(null)
@@ -104,6 +107,8 @@ const MembershipPending = () => {
     setRenewError(null)
     setPaymentProofFile(null)
     setCoeIdFile(null)
+    setPaymentProofPreview(null)
+    setCoeIdPreview(null)
   }
 
   const handleSubmitRenewal = async (event) => {
@@ -275,23 +280,67 @@ const MembershipPending = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Payment Proof</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPaymentProofFile(e.target.files?.[0] || null)}
-                    className="mt-2 w-full text-sm text-slate-700"
-                  />
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Payment Proof</label>
+                  <label className="group block cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-[#F8FAFC] px-6 py-8 text-center transition hover:border-sky-400 hover:bg-sky-50/50">
+                    {paymentProofPreview ? (
+                      <div className="space-y-2">
+                        <img src={paymentProofPreview} alt="Payment proof" className="mx-auto h-28 w-auto rounded-lg object-cover" />
+                        <p className="text-sm font-medium text-slate-700">{paymentProofFile?.name}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#E0F2FE]">
+                          <Upload className="h-6 w-6 text-[#2563EB]" strokeWidth={2} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold text-[#111827]">Drag & drop or choose file to upload</p>
+                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG</p>
+                        </div>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        setPaymentProofFile(file)
+                        setPaymentProofPreview(file ? URL.createObjectURL(file) : null)
+                      }}
+                    />
+                  </label>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">COE / ID Document</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setCoeIdFile(e.target.files?.[0] || null)}
-                    className="mt-2 w-full text-sm text-slate-700"
-                  />
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">COE / ID Document</label>
+                  <label className="group block cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-[#F8FAFC] px-6 py-8 text-center transition hover:border-sky-400 hover:bg-sky-50/50">
+                    {coeIdPreview ? (
+                      <div className="space-y-2">
+                        <img src={coeIdPreview} alt="COE/ID" className="mx-auto h-28 w-auto rounded-lg object-cover" />
+                        <p className="text-sm font-medium text-slate-700">{coeIdFile?.name}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#E0F2FE]">
+                          <Upload className="h-6 w-6 text-[#2563EB]" strokeWidth={2} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold text-[#111827]">Drag & drop or choose file to upload</p>
+                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG, PDF (Max 5MB)</p>
+                        </div>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        setCoeIdFile(file)
+                        setCoeIdPreview(file ? URL.createObjectURL(file) : null)
+                      }}
+                    />
+                  </label>
                 </div>
 
                 {renewError && <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{renewError}</p>}
