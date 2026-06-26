@@ -48,7 +48,7 @@ export default function AnnouncementFeed() {
   const recentAnnouncements = sortedAnnouncements.filter(a => a?.id !== featuredAnnouncement?.id)
 
   return (
-    <section id="announcements" className="relative bg-[#F5F7FA] py-20 overflow-hidden">
+    <section id="announcements" className="relative bg-[#F5F7FA] py-16 sm:py-20 overflow-hidden">
       {/* Subtle Background Enhancements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -72,7 +72,7 @@ export default function AnnouncementFeed() {
         {loading ? (
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-6 flex flex-col gap-4">
-              <div className="h-[400px] w-full animate-pulse rounded-2xl bg-slate-200"></div>
+              <div className="h-64 md:h-[400px] w-full animate-pulse rounded-2xl bg-slate-200"></div>
             </div>
             <div className="lg:col-span-6 flex flex-col gap-4">
               <div className="mb-2 h-8 w-1/2 animate-pulse rounded bg-slate-200"></div>
@@ -90,7 +90,7 @@ export default function AnnouncementFeed() {
             <div className="lg:col-span-6 lg:col-start-7 flex flex-col relative">
               <h3 className="mb-6 text-xl font-bold text-slate-900 shrink-0">Recent Updates</h3>
               <div className="relative">
-                <div className="flex flex-col gap-4 max-h-[448px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
+                <div className="flex flex-col gap-4 max-h-[300px] sm:max-h-[400px] md:max-h-[448px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
                   {recentAnnouncements.map((announcement) => (
                     <AnnouncementCard key={announcement.id} announcement={announcement} variant="compact" />
                   ))}
@@ -108,7 +108,7 @@ export default function AnnouncementFeed() {
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/50 p-12 text-center backdrop-blur-sm">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/50 p-8 sm:p-12 text-center backdrop-blur-sm">
             <p className="text-slate-500">No announcements yet.</p>
           </div>
         )}

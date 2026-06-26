@@ -80,7 +80,7 @@ export default function OfficersCarousel() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-dashed border-red-200 bg-red-50 p-12 text-center">
+      <div className="rounded-2xl border border-dashed border-red-200 bg-red-50 p-8 sm:p-12 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
           <svg
             className="h-8 w-8 text-red-500"

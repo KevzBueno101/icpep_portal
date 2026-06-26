@@ -107,7 +107,7 @@ export default function MilestoneDetail() {
       />
 
       {/* Header */}
-      <div className="relative pt-20 pb-12 z-50">
+      <div className="relative pt-16 sm:pt-20 pb-12 z-50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -121,17 +121,17 @@ export default function MilestoneDetail() {
             Back to timeline
           </button>
 
-          <div className="mt-8">
-            <div className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-5" style={{ background: cat.dimAccent, borderColor: cat.border }}>
+          <div className="mt-6 sm:mt-8">
+            <div className="inline-flex items-center gap-2 rounded-full border px-3 sm:px-4 py-1.5 mb-4 sm:mb-5" style={{ background: cat.dimAccent, borderColor: cat.border }}>
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
               <span className="text-xs font-semibold uppercase tracking-[0.25em]" style={{ color: cat.accent }}>
                 {cat.label}
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3 sm:mb-4">
               {milestone.title}
             </h1>
-            <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <p className="text-base sm:text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
               {milestone.date}
             </p>
           </div>
@@ -139,7 +139,7 @@ export default function MilestoneDetail() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-20">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
         <div className="space-y-12">
           {/* Combined Description + Content */}
           <div
@@ -178,7 +178,7 @@ export default function MilestoneDetail() {
                     <img
                       src={img.image}
                       alt={milestone.title}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                   </div>

@@ -1,6 +1,6 @@
 export default function EmptyLeadershipState() {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+    <div className="rounded-2xl border border-dashed border-slate-200 p-8 sm:p-12 text-center">
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
         <svg
           className="h-8 w-8 text-slate-400"
