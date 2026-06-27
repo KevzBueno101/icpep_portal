@@ -1,22 +1,3 @@
-/**
- * MilestonesSection.jsx
- *
- * Backend-ready milestone/achievement timeline — dark theme, large cards, mobile-first.
- *
- * ─── BACKEND INTEGRATION ─────────────────────────────────────────────────────
- * 1. Create a Django `Milestone` model with fields matching DUMMY_MILESTONES.
- * 2. Expose GET /api/milestones/ with AllowAny permission.
- * 3. Replace useState(DUMMY_MILESTONES) with useState([]) and add:
- *
- *    import { publicApi } from '../../api/axios'
- *    useEffect(() => {
- *      publicApi.get('/milestones/')
- *        .then(res => setMilestones(res.data))
- *        .catch(() => setMilestones(DUMMY_MILESTONES))
- *    }, [])
- * ──────────────────────────────────────────────────────────────────────────────
- */
-
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
@@ -30,71 +11,7 @@ const CATEGORIES = {
   feature:     { label: 'Feature',      accent: '#fb923c', dimAccent: 'rgba(251,146,60,0.15)',  border: 'rgba(251,146,60,0.35)'  },
 }
 
-const DUMMY_MILESTONES = [
-  {
-    id: 1,
-    title: 'ICPEP.SE Chapter Founded',
-    description: 'The Catanduanes State University chapter of ICPEP.SE was officially established, uniting computer engineering students under one professional organization.',
-    date: 'August 2019',
-    category: 'founding',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 2,
-    title: '1st General Assembly',
-    description: 'Over 120 students attended our inaugural general assembly, marking the official launch of chapter programs and the election of the first set of officers.',
-    date: 'September 2019',
-    category: 'event',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 3,
-    title: 'Best New Chapter Award',
-    description: 'Recognized by the ICPEP.SE National Board as the Best New Chapter of the Year for outstanding membership growth and community engagement initiatives.',
-    date: 'February 2020',
-    category: 'recognition',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 4,
-    title: 'Hackathon Ika-Apat Championship',
-    description: 'Our members swept the top three spots in the regional hackathon, developing a smart irrigation prototype that went on to compete at the national level.',
-    date: 'November 2021',
-    category: 'achievement',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 5,
-    title: 'Free Coding Bootcamp',
-    description: 'Launched a free 6-week coding bootcamp open to all CatSU students, with over 200 enrollees completing modules in Python, web development, and Arduino.',
-    date: 'March 2022',
-    category: 'community',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 6,
-    title: 'National Quiz Bowl Finalist',
-    description: 'Team Bitstream represented CatSU at the ICPEP National Quiz Bowl in Manila, finishing in the top 5 out of 38 competing chapters nationwide.',
-    date: 'October 2023',
-    category: 'achievement',
-    link: null,
-    link_label: null,
-  },
-  {
-    id: 7,
-    title: 'Membership Portal Launched',
-    description: 'Deployed this full-stack membership portal to digitize and streamline member registration, approval workflows, and officer management for the chapter.',
-    date: 'June 2026',
-    category: 'community',
-    link: null,
-    link_label: null,
-  },
-]
+
 
 function SkeletonCard() {
   return (
@@ -227,7 +144,7 @@ export default function MilestonesSection() {
         setMilestones(res.data.results)
       } catch (err) {
         console.error('Failed to fetch milestones:', err)
-        setMilestones(DUMMY_MILESTONES)
+        setMilestones([])
       } finally {
         setLoading(false)
       }
@@ -298,8 +215,20 @@ export default function MilestonesSection() {
           </p>
         </div>
 
+        {/* ── Empty state ── */}
+        {!loading && milestones.length === 0 && (
+          <div className="mx-auto max-w-md text-center py-12">
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-white/5 mb-5">
+              <svg className="h-8 w-8 text-white/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-base text-white/40">No milestones recorded yet.</p>
+          </div>
+        )}
+
         {/* ── MOBILE: Single column timeline ── */}
-        <div className="relative md:hidden">
+        {milestones.length > 0 && <div className="relative md:hidden">
           <div
             className="absolute left-[19px] top-2 bottom-2 w-px"
             style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.3) 90%, transparent)' }}
@@ -355,10 +284,10 @@ export default function MilestonesSection() {
               })}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* ── DESKTOP: Alternating left/right timeline ── */}
-        <div className="relative hidden md:block">
+        {milestones.length > 0 && <div className="relative hidden md:block">
           <div
             className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2"
             style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 8%, rgba(56,189,248,0.3) 92%, transparent)' }}
@@ -469,10 +398,10 @@ export default function MilestonesSection() {
               })}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* End cap */}
-        {!loading && (
+        {!loading && milestones.length > 0 && (
           <div className="mt-16 flex justify-center">
             <button
               type="button"
