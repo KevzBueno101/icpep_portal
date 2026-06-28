@@ -13,8 +13,6 @@ def get_client_ip(request):
 
 
 def record_failed_attempt(email, ip):
-    cutoff = timezone.now() - timedelta(hours=24)
-    FailedLoginAttempt.objects.filter(created_at__lt=cutoff).delete()
     FailedLoginAttempt.objects.create(email=email, ip_address=ip)
 
 

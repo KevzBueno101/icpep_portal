@@ -9,9 +9,6 @@ from .serializers import RegisterSerializer, UserSerializer, AdminLoginSerialize
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django_ratelimit.decorators import ratelimit
-from django_ratelimit.exceptions import Ratelimited
-from rest_framework.response import Response
-from rest_framework import status
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .utils import get_client_ip, record_failed_attempt, recent_failures, send_password_reset_email
 
@@ -201,8 +198,14 @@ def failed_attempts(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='3/15m', block=True)
+@ratelimit(key='ip', rate='3/15m', block=False)
 def forgot_password(request):
+    if getattr(request, 'limited', False):
+        return Response(
+            {'detail': 'Too many password reset requests. Try again in 15 minutes.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     from django.conf import settings
     email = request.data.get('email', '').strip()
     if not email:
