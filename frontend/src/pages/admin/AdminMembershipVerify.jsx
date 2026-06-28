@@ -170,6 +170,14 @@ const MemberMembershipVerify = () => {
               {member.membership_status}
             </span>
           </div>
+
+          {/* Existing admin message */}
+          {member.admin_message && (
+            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-1">Admin note</p>
+              <p className="text-sm leading-relaxed text-amber-900">{member.admin_message}</p>
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">

@@ -82,7 +82,8 @@ class UserSerializer(serializers.ModelSerializer):
     is_term_active   = serializers.SerializerMethodField()
     can_manage_roles = serializers.SerializerMethodField()
     membership_status = serializers.SerializerMethodField()
-    profile_picture  = serializers.SerializerMethodField()
+    admin_message     = serializers.SerializerMethodField()
+    profile_picture   = serializers.SerializerMethodField()
 
     class Meta:
         model  = User
@@ -90,7 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'role', 'position',
             'is_delegated', 'term_start',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
-            'membership_status', 'profile_picture',
+            'membership_status', 'admin_message', 'profile_picture',
             'created_at',
         ]
 
@@ -118,6 +119,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_membership_status(self, obj):
         profile = getattr(obj, 'profile', None)
         return getattr(profile, 'membership_status', None)
+
+    def get_admin_message(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'admin_message', None)
 
     def get_profile_picture(self, obj):
         """
