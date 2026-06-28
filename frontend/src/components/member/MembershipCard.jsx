@@ -94,12 +94,12 @@ function CardBack({
         <div className="w-[42%] h-full bg-white" />
       </div>
 
-      {/* Asymmetric Structural Geometric Vectors */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 384 224" preserveAspectRatio="none">
-        <polygon points="0,0 215,0 250,224 0,224" fill={COLORS.navyDark} />
-        <polygon points="215,0 225,0 260,224 250,224" fill={COLORS.white} />
-        <polygon points="225,0 240,0 275,224 260,224" fill={COLORS.accentBlue} />
-      </svg>
+      {/* Asymmetric Structural Geometric Vectors (CSS clip-path for reliable html2canvas capture) */}
+      <div className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
+        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(0 0, 215px 0, 250px 224px, 0 224px)', background: COLORS.navyDark }} />
+        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(215px 0, 225px 0, 260px 224px, 250px 224px)', background: COLORS.white }} />
+        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(225px 0, 240px 0, 275px 224px, 260px 224px)', background: COLORS.accentBlue }} />
+      </div>
 
       {/* Interactive Interface Elements Overlay Grid */}
       <div className="absolute inset-0 flex z-10 p-3.5">
@@ -247,10 +247,26 @@ export default function MembershipCard({ profile, userId }) {
     if (!exportRef.current) return
     try {
       setSaving(true)
+
+      // Preload images so html2canvas captures them
+      const images = exportRef.current.querySelectorAll('img')
+      await Promise.all(
+        Array.from(images).map(
+          (img) =>
+            new Promise((resolve) => {
+              if (img.complete) return resolve()
+              img.onload = resolve
+              img.onerror = resolve
+            })
+        )
+      )
+
       const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: null,
+        backgroundColor: '#010914',
         useCORS: true,
+        allowTaint: true,
         scale: 3,
+        logging: false,
       })
       const a = document.createElement('a')
       a.href = canvas.toDataURL('image/png')
@@ -288,7 +304,7 @@ export default function MembershipCard({ profile, userId }) {
       </div>
 
       {/* Hidden Layout Block Used For Image Generation Engine */}
-      <div className="absolute top-[-9999px] left-[-9999px] pointer-events-none">
+      <div className="fixed left-[9999px] top-0 opacity-0 pointer-events-none">
         <div 
           ref={exportRef}
           style={{
