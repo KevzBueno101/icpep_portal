@@ -5,11 +5,6 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
   const touchStartX = useRef(0)
   const touchEndX = useRef(0)
 
-  if (!images || images.length === 0) return null
-
-  const currentImage = images[currentIndex]
-  const hasMultiple = images.length > 1
-
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
   }
@@ -56,6 +51,11 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
       document.body.style.overflow = 'unset'
     }
   }, [onClose, images.length])
+
+  if (!images || images.length === 0) return null
+
+  const currentImage = images[currentIndex]
+  const hasMultiple = images.length > 1
 
   return (
       <div className="fixed inset-0 z-40 bg-black/90 backdrop-blur-sm">
