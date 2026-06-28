@@ -146,10 +146,16 @@ class AdminLoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         from django.contrib.auth import authenticate
-        user = authenticate(email=data['email'], password=data['password'])
+        email = data.get('email', '')
+        password = data.get('password', '')
+
+        if not User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError('No account found with this email.')
+
+        user = authenticate(email=email, password=password)
 
         if not user:
-            raise serializers.ValidationError('Invalid credentials.')
+            raise serializers.ValidationError('Incorrect password.')
 
         if not user.is_active:
             raise serializers.ValidationError('This account is disabled.')

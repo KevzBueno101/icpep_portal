@@ -19,11 +19,31 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
 
     def validate(self, attrs):
-        # First authenticate the user
-        data = super().validate(attrs)
-        user = self.user
+        from django.contrib.auth import authenticate
+        email = attrs.get('email', '')
+        password = attrs.get('password', '')
 
-        # Reject admin users - they must use the admin portal login
+        if not User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError('No account found with this email.')
+
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email,
+            password=password,
+        )
+        if not user:
+            user_by_email = User.objects.filter(email__iexact=email).first()
+            if user_by_email and (
+                getattr(user_by_email, 'role', None) == 'ADMIN'
+                or user_by_email.is_staff
+            ):
+                raise serializers.ValidationError(
+                    'Admin users must use the admin portal login at /admin-portal/login'
+                )
+            raise serializers.ValidationError('Incorrect password.')
+
+        self.user = user
+
         if hasattr(user, 'role'):
             if user.role == 'ADMIN':
                 raise serializers.ValidationError(
@@ -35,6 +55,15 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                     'Admin users must use the admin portal login at /admin-portal/login'
                 )
 
+        from rest_framework_simplejwt.settings import api_settings
+        from django.contrib.auth import update_last_login
+        refresh = self.get_token(user)
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+        if api_settings.UPDATE_LAST_LOGIN:
+            update_last_login(None, user)
         return data
 
     @classmethod
