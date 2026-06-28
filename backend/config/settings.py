@@ -314,5 +314,13 @@ CONTENT_SECURITY_POLICY = {
     }
 }
 
+# Resend email configuration
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
+# Password reset token expiry (seconds) — Django default is 3 days (259200)
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
+
 # Audit log retention policy (days)
 AUDIT_LOG_RETENTION_DAYS = 90

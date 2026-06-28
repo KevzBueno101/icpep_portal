@@ -7,6 +7,8 @@ import AdminProtectedRoute from './routes/AdminProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import MembershipPending from './pages/auth/MembershipPending'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 import AdminLogin from './pages/auth/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Landing from './pages/landing/Landing'
@@ -60,6 +62,8 @@ function App() {
           <Route path="/announcement/:id" element={<AnnouncementDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:pk/:token" element={<ResetPassword />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
 
           {/* Hidden admin login — no links point here */}
