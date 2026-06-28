@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
+import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 const Login = () => {
@@ -9,6 +10,7 @@ const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [failedCount, setFailedCount] = useState(0)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -17,6 +19,7 @@ const Login = () => {
     setLoading(true)
     try {
       const user = await login(form.email, form.password)
+      setFailedCount(0)
       toast.success('Welcome back!')
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard')
@@ -26,7 +29,24 @@ const Login = () => {
 
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Invalid credentials.'
+      const nextCount = failedCount + 1
+      setFailedCount(nextCount)
       toast.error(errorMsg)
+
+      // Show rate limit warning if server says 5+
+      if (err.response?.status === 429) {
+        toast.error('Too many attempts. Reset your password or try again later.', { duration: 5000 })
+      }
+
+      // Fetch server-side count to update failedCount non-intrusively
+      try {
+        const res = await publicApi.get(`/auth/failed-attempts/?email=${encodeURIComponent(form.email)}`)
+        if (res.data.count > nextCount) {
+          setFailedCount(res.data.count)
+        }
+      } catch {
+        // ignore
+      }
     } finally {
       setLoading(false)
     }
@@ -89,6 +109,17 @@ const Login = () => {
               )}
             </button>
           </div>
+
+          {failedCount >= 3 && (
+            <div className="text-right -mt-3">
+              <Link
+                to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+                className="text-xs font-semibold text-sky-600 hover:text-sky-700 underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          )}
 
           <button
             type="submit"

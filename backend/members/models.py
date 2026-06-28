@@ -47,6 +47,7 @@ class MemberProfile(models.Model):
     birthdate = models.DateField(null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
     coe_id_image = models.ImageField(upload_to='coe_id_documents/', null=True, blank=True, verbose_name='COE/ID Document')
+    admin_message = models.TextField(blank=True, verbose_name='Admin Message')
     membership_status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -194,6 +194,14 @@ const MembershipPending = () => {
               ? 'Your membership has expired. Please submit a renewal request using the button below so we can review your updated status and documents.'
               : 'Your registration has been received. An administrator will review your submitted details shortly. This page will automatically update when you are approved.'}
           </p>
+
+          {/* Admin message — only show when REJECTED and a message exists */}
+          {user.membership_status === 'REJECTED' && user.admin_message && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-wider text-red-600 mb-1.5">Admin note</p>
+              <p className="text-sm leading-relaxed text-red-800">{user.admin_message}</p>
+            </div>
+          )}
         </div>
 
         {/* Status badge */}

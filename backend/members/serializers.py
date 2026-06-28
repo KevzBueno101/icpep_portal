@@ -32,15 +32,15 @@ class MemberProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_email', 'user_role', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number', 'address',
             'birthdate', 'profile_picture', 'payment_method', 'payment_proof_image',
-            'coe_id_image', 'membership_status', 'created_at', 'updated_at'
+            'coe_id_image', 'admin_message', 'membership_status', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user', 'membership_status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
 
 
 class MemberApprovalSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberProfile
-        fields = ['membership_status']
+        fields = ['membership_status', 'admin_message']
 
 
 class MemberRenewSerializer(serializers.ModelSerializer):

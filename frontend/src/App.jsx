@@ -1,11 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import NetworkStatus from './components/NetworkStatus'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import AdminProtectedRoute from './routes/AdminProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import MembershipPending from './pages/auth/MembershipPending'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 import AdminLogin from './pages/auth/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Landing from './pages/landing/Landing'
@@ -50,6 +53,7 @@ function App() {
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
         />
         <PWAInstallPrompt />
+        <NetworkStatus />
         <Routes>
           {/* Public */}
           <Route path="/" element={<Navigate to="/landing" replace />} />
@@ -58,6 +62,8 @@ function App() {
           <Route path="/announcement/:id" element={<AnnouncementDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:pk/:token" element={<ResetPassword />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
 
           {/* Hidden admin login — no links point here */}

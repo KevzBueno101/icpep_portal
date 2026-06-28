@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 const AdminLogin = () => {
@@ -9,6 +10,7 @@ const AdminLogin = () => {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
+  const [failedCount, setFailedCount] = useState(0)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -17,6 +19,7 @@ const AdminLogin = () => {
     setLoading(true)
     try {
       const user = await adminLogin(form.email, form.password)
+      setFailedCount(0)
       toast.success(`Welcome, ${user.position}!`)
       navigate('/admin/dashboard')
     } catch (err) {
@@ -25,7 +28,22 @@ const AdminLogin = () => {
         data?.non_field_errors?.[0] ||
         data?.detail ||
         'Login failed.'
+      const nextCount = failedCount + 1
+      setFailedCount(nextCount)
       toast.error(msg)
+
+      if (err.response?.status === 429) {
+        toast.error('Too many attempts. Reset your password or try again later.', { duration: 5000 })
+      }
+
+      try {
+        const res = await publicApi.get(`/auth/failed-attempts/?email=${encodeURIComponent(form.email)}`)
+        if (res.data.count > nextCount) {
+          setFailedCount(res.data.count)
+        }
+      } catch {
+        // ignore
+      }
     } finally {
       setLoading(false)
     }
@@ -134,6 +152,17 @@ const AdminLogin = () => {
                 </button>
               </div>
             </div>
+
+            {failedCount >= 3 && (
+              <div className="text-right -mt-2">
+                <Link
+                  to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+                  className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
 
             <button
               type="submit"

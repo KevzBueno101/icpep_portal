@@ -82,7 +82,8 @@ class UserSerializer(serializers.ModelSerializer):
     is_term_active   = serializers.SerializerMethodField()
     can_manage_roles = serializers.SerializerMethodField()
     membership_status = serializers.SerializerMethodField()
-    profile_picture  = serializers.SerializerMethodField()
+    admin_message     = serializers.SerializerMethodField()
+    profile_picture   = serializers.SerializerMethodField()
 
     class Meta:
         model  = User
@@ -90,7 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'role', 'position',
             'is_delegated', 'term_start',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
-            'membership_status', 'profile_picture',
+            'membership_status', 'admin_message', 'profile_picture',
             'created_at',
         ]
 
@@ -119,6 +120,10 @@ class UserSerializer(serializers.ModelSerializer):
         profile = getattr(obj, 'profile', None)
         return getattr(profile, 'membership_status', None)
 
+    def get_admin_message(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return getattr(profile, 'admin_message', None)
+
     def get_profile_picture(self, obj):
         """
         Return the Cloudinary URL as-is.
@@ -141,10 +146,16 @@ class AdminLoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         from django.contrib.auth import authenticate
-        user = authenticate(email=data['email'], password=data['password'])
+        email = data.get('email', '')
+        password = data.get('password', '')
+
+        if not User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError('No account found with this email.')
+
+        user = authenticate(email=email, password=password)
 
         if not user:
-            raise serializers.ValidationError('Invalid credentials.')
+            raise serializers.ValidationError('Incorrect password.')
 
         if not user.is_active:
             raise serializers.ValidationError('This account is disabled.')
