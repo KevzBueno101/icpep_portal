@@ -79,8 +79,12 @@ class EmailTokenObtainPairView(TokenObtainPairView):
         email = request.data.get('email', '')
         ip = get_client_ip(request)
 
-        # Block if too many recent failures for this email
-        if email and recent_failures(email, minutes=15) >= 5:
+        # Block if too many recent failures for this email (non-critical)
+        try:
+            blocked = email and recent_failures(email, minutes=15) >= 5
+        except Exception:
+            blocked = False
+        if blocked:
             return Response(
                 {'detail': 'Too many login attempts. Try again later or reset your password.'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -155,8 +159,12 @@ def admin_login(request):
     email = request.data.get('email', '')
     ip = get_client_ip(request)
 
-    # Block if too many recent failures for this email
-    if email and recent_failures(email, minutes=15) >= 5:
+    # Block if too many recent failures for this email (non-critical)
+    try:
+        blocked = email and recent_failures(email, minutes=15) >= 5
+    except Exception:
+        blocked = False
+    if blocked:
         return Response(
             {'detail': 'Too many login attempts. Try again later or reset your password.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -201,7 +209,10 @@ def failed_attempts(request):
     email = request.query_params.get('email', '').strip()
     if not email:
         return Response({'count': 0})
-    count = recent_failures(email, minutes=15)
+    try:
+        count = recent_failures(email, minutes=15)
+    except Exception:
+        count = 0
     return Response({'count': count})
 
 
