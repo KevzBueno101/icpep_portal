@@ -1,8 +1,39 @@
 from datetime import timedelta
+from urllib.parse import urlsplit, urlunsplit
+
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.conf import settings
 from .models import FailedLoginAttempt
+
+
+def build_password_reset_url(user, token, frontend_url=None, request=None):
+    user_pk = getattr(user, 'pk', user)
+    base_url = (frontend_url or getattr(settings, 'FRONTEND_URL', '') or '').strip().rstrip('/')
+
+    if base_url:
+        return f"{base_url}/reset-password/{user_pk}/{token}"
+
+    if request is not None:
+        try:
+            origin = (request.headers.get('Origin') or '').strip()
+            if origin:
+                return f"{origin.rstrip('/')}/reset-password/{user_pk}/{token}"
+
+            referer = (request.headers.get('Referer') or '').strip()
+            if referer:
+                parsed_referer = urlsplit(referer)
+                if parsed_referer.scheme and parsed_referer.netloc:
+                    return urlunsplit((parsed_referer.scheme, parsed_referer.netloc, f"/reset-password/{user_pk}/{token}", '', ''))
+
+            forwarded_proto = request.headers.get('X-Forwarded-Proto', request.scheme)
+            forwarded_host = request.headers.get('X-Forwarded-Host') or request.headers.get('Host')
+            if forwarded_host:
+                return f"{forwarded_proto}://{forwarded_host.rstrip('/')}/reset-password/{user_pk}/{token}"
+        except Exception:
+            pass
+
+    return f'http://localhost:5173/reset-password/{user_pk}/{token}'
 
 
 def get_client_ip(request):

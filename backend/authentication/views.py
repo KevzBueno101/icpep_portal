@@ -10,7 +10,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django_ratelimit.decorators import ratelimit
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from .utils import get_client_ip, record_failed_attempt, recent_failures, send_password_reset_email
+from .utils import (
+    build_password_reset_url,
+    get_client_ip,
+    record_failed_attempt,
+    recent_failures,
+    send_password_reset_email,
+)
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
@@ -226,7 +232,6 @@ def forgot_password(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    from django.conf import settings
     email = request.data.get('email', '').strip()
     if not email:
         return Response(
@@ -241,7 +246,7 @@ def forgot_password(request):
 
     if user:
         token = PasswordResetTokenGenerator().make_token(user)
-        reset_url = f"{settings.FRONTEND_URL}/reset-password/{user.pk}/{token}"
+        reset_url = build_password_reset_url(user, token, request=request)
 
         try:
             send_password_reset_email(email, reset_url)
