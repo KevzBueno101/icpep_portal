@@ -88,9 +88,12 @@ class EmailTokenObtainPairView(TokenObtainPairView):
 
         response = super().post(request, *args, **kwargs)
 
-        # Record failed attempts
+        # Record failed attempts (non-critical — must not break login)
         if response.status_code >= 400 and email:
-            record_failed_attempt(email, ip)
+            try:
+                record_failed_attempt(email, ip)
+            except Exception:
+                pass
 
         return response
 
@@ -179,9 +182,12 @@ def admin_login(request):
             }
         })
 
-    # Record failed attempt
+    # Record failed attempt (non-critical)
     if email:
-        record_failed_attempt(email, ip)
+        try:
+            record_failed_attempt(email, ip)
+        except Exception:
+            pass
     return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -271,9 +277,12 @@ def reset_password(request):
     user.set_password(password)
     user.save()
 
-    # Blacklist all existing refresh tokens for this user
-    from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-    for token_obj in OutstandingToken.objects.filter(user=user):
-        BlacklistedToken.objects.get_or_create(token=token_obj)
+    # Blacklist all existing refresh tokens (non-critical)
+    try:
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+        for token_obj in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token_obj)
+    except Exception:
+        pass
 
     return Response({'message': 'Password reset successful.'})
