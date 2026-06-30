@@ -193,8 +193,11 @@ def admin_login(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='10/m', block=True)
+@ratelimit(key='ip', rate='10/m', block=False)
 def failed_attempts(request):
+    if getattr(request, 'limited', False):
+        return Response({'count': 5}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     email = request.query_params.get('email', '').strip()
     if not email:
         return Response({'count': 0})
@@ -242,8 +245,14 @@ def forgot_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=True)
+@ratelimit(key='ip', rate='5/15m', block=False)
 def reset_password(request):
+    if getattr(request, 'limited', False):
+        return Response(
+            {'detail': 'Too many password reset attempts. Try again in 15 minutes.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     pk = request.data.get('pk', '').strip()
     token = request.data.get('token', '').strip()
     password = request.data.get('password', '')
