@@ -295,20 +295,40 @@ if not DEBUG:
 INSTALLED_APPS += ['csp']
 MIDDLEWARE    += ['csp.middleware.CSPMiddleware']
 
-
 # Build allowed image/connect sources dynamically
 _cloudinary_img_src = ('https://res.cloudinary.com',) if _cloudinary_configured else ()
 _backend_host = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')[0].strip()
 _backend_http = f"https://{_backend_host}" if not DEBUG else f"http://{_backend_host}:8000"
+_frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
+# All allowed backend origins for connect-src
+_extra_connect = tuple(
+    o.strip()
+    for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+    if o.strip()
+)
 
 CONTENT_SECURITY_POLICY = {
     'DIRECTIVES': {
         'default-src': ("'self'",),
         'script-src':  ("'self'",),
         'style-src':   ("'self'", "'unsafe-inline'"),
-        'img-src':     ("'self'", "data:", _backend_http, 'http://127.0.0.1:8000', 'http://localhost:8000') + _cloudinary_img_src,
-        'connect-src': ("'self'", _backend_http, 'http://127.0.0.1:8000', 'http://localhost:8000',
-                        f"wss://{_backend_host}", 'ws://127.0.0.1:8000'),
+        'img-src': (
+            "'self'", "data:",
+            _backend_http,
+            'http://127.0.0.1:8000',
+            'http://localhost:8000',
+        ) + _cloudinary_img_src,
+        'connect-src': (
+            "'self'",
+            _backend_http,
+            'https://icpep-backend-mriy.onrender.com',  # ← explicit Render URL
+            'http://127.0.0.1:8000',
+            'http://localhost:8000',
+            f"wss://{_backend_host}",
+            'ws://127.0.0.1:8000',
+            _frontend_url,
+        ) + _extra_connect,
     }
 }
 
