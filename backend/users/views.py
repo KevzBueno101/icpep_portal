@@ -11,6 +11,9 @@ from rest_framework.response import Response
 
 from .serializers import (
     AdminAccountSerializer,
+    AssignRoleSerializer,
+    DelegateSecretarySerializer,
+    OfficerCreateSerializer,
     OfficerRosterSerializer,
     UserListSerializer,
 )
