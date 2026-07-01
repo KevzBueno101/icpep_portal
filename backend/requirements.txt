@@ -8,6 +8,7 @@ channels_redis==4.3.0
 charset-normalizer==3.4.7
 cloudinary==1.44.2
 cryptography==49.0.0
+daphne==4.2.2
 deprecation==2.1.0
 Django==5.2.15
 django-cloudinary-storage==0.3.0
