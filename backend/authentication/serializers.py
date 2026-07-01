@@ -126,16 +126,17 @@ class UserSerializer(serializers.ModelSerializer):
         return getattr(profile, 'admin_message', None)
 
     def get_profile_picture(self, obj):
-        """
-        Return the Cloudinary URL as-is.
-        DO NOT append ?v=timestamp — Cloudinary 404s on unknown query params
-        when strict delivery settings are enabled, and the ?v= was literally
-        showing up in the failed resource URLs in the browser console.
-        """
         try:
             if hasattr(obj, 'profile_picture') and obj.profile_picture:
                 url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
-                return url  # Cloudinary returns full https://res.cloudinary.com/... URL
+                if url and 'res.cloudinary.com' not in url:
+                    from django.conf import settings
+                    if getattr(settings, 'CLOUDINARY_STORAGE', None):
+                        cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', '')
+                        if cloud_name:
+                            path = str(obj.profile_picture)
+                            return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
+                return url
         except Exception:
             pass
         return None

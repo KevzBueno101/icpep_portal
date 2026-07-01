@@ -170,45 +170,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Static files collected by `collectstatic` for production (whitenoise serves these)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Whitenoise middleware must come right after SecurityMiddleware
-# (already handled by middleware order in MIDDLEWARE list above)
-
-# Cross-Origin Resource Sharing (CORS)
-CORS_ALLOW_ALL_ORIGINS = False
-
-# Support multiple origins via comma-separated env var (for production Vercel URL)
-_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
-if _cors_origins_env:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
-else:
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^http://localhost:\d+$",
-        r"^http://127\.0\.0\.1:\d+$",
-    ]
-
-
-# Frontend uses Authorization: Bearer <token> (no cookies),
-# so we don't need credentialed CORS.
-CORS_ALLOW_CREDENTIALS = False
-
-# Make sure preflight responses include needed headers
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-# Debug prints removed
 
 # Media files — use Cloudinary in production, local filesystem in dev
 _cloudinary_configured = all([
@@ -226,19 +187,46 @@ if _cloudinary_configured:
         secure=True,
     )
     INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    # cloudinary_storage returns full https://res.cloudinary.com/... URLs
-    # so MEDIA_URL is not needed and must NOT be set to a local path.
-    MEDIA_URL = ''
-    MEDIA_ROOT = ''
+    _media_backend = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
+    _media_backend = 'django.core.files.storage.FileSystemStorage'
+
+# Django 5.1+ requires STORAGES dict instead of DEFAULT_FILE_STORAGE / STATICFILES_STORAGE
+STORAGES = {
+    'default': {
+        'BACKEND': _media_backend,
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cross-Origin Resource Sharing (CORS)
+CORS_ALLOW_ALL_ORIGINS = False
+
+_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+if _cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://localhost:\d+$",
+        r"^http://127\.0\.0\.1:\d+$",
+    ]
+
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_HEADERS = [
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
+]
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # REST framework defaults
 AUTH_USER_MODEL = 'users.User'

@@ -37,6 +37,27 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
 
+    def _resolve_cloudinary_url(self, url, field_instance):
+        if not url or 'res.cloudinary.com' in url:
+            return url
+        from django.conf import settings
+        cld = getattr(settings, 'CLOUDINARY_STORAGE', None)
+        if cld:
+            cloud_name = cld.get('CLOUD_NAME', '')
+            if cloud_name:
+                path = str(field_instance)
+                return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
+        return url
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        for field_name in ('profile_picture', 'payment_proof_image', 'coe_id_image'):
+            val = data.get(field_name)
+            if val:
+                f_instance = getattr(instance, field_name, None)
+                data[field_name] = self._resolve_cloudinary_url(val, f_instance)
+        return data
+
 
 class MemberApprovalSerializer(serializers.ModelSerializer):
     class Meta:
