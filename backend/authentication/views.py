@@ -238,15 +238,18 @@ def forgot_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    user = User.objects.filter(email__iexact=email).first()
-
     # Always return the same message to prevent user enumeration
     message = 'If an account with that email exists, a reset link has been sent.'
 
-    if user:
-        token = PasswordResetTokenGenerator().make_token(user)
-        reset_url = build_password_reset_url(user, token, request=request)
-        send_password_reset_email(email, reset_url)
+    try:
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            token = PasswordResetTokenGenerator().make_token(user)
+            reset_url = build_password_reset_url(user, token, request=request)
+            send_password_reset_email(email, reset_url)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Forgot-password error for %s", email)
 
     return Response({'message': message})
 
