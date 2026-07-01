@@ -1,7 +1,7 @@
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from django.utils import timezone
 import os
+
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -182,3 +182,33 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class AssignRoleSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=User.Role.choices)
+    # NOTE: positions are dynamic (free text) — there is no User.Position
+    # choices class on the model, so this must be a CharField, not ChoiceField.
+    position = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    is_delegated = serializers.BooleanField(default=False)
+
+    def validate(self, attrs):
+        if attrs.get('position', '').lower() == 'president':
+            # Add extra validation if needed, handled in views mostly
+            pass
+        return attrs
+
+
+class DelegateSecretarySerializer(serializers.Serializer):
+    is_delegated = serializers.BooleanField()
+
+
+class OfficerCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+    first_name = serializers.CharField(max_length=50)
+    last_name = serializers.CharField(max_length=50)
+    # NOTE: positions are dynamic (free text) — there is no User.Position
+    # choices class on the model, so this must be a CharField, not ChoiceField.
+    position = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    department = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    academic_year = serializers.CharField(max_length=20, allow_blank=True, required=False)

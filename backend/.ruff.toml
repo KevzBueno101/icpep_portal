@@ -1,8 +1,11 @@
 target-version = "py311"
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM"]
-ignore = ["E501", "N802", "N803", "N806", "SIM114"]
 exclude = ["*/migrations/*", "*/tests/*", "__pycache__/*"]
 
-[per-file-ignores]
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM"]
+ignore = ["E501", "N802", "N803", "N806", "SIM114"]
+
+[lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "*/settings.py" = ["E402"]
+"users/serializers.py" = ["N815"]

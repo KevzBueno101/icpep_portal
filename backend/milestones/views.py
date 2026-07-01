@@ -1,19 +1,19 @@
-from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from audit_logs.models import AuditLog
+from audit_logs.utils import log_action
+from permissions import IsAdmin
 
 from .models import Milestone, MilestoneImage
 from .serializers import (
-    MilestoneListSerializer,
-    MilestoneDetailSerializer,
     MilestoneCreateUpdateSerializer,
+    MilestoneDetailSerializer,
     MilestoneImageSerializer,
+    MilestoneListSerializer,
 )
-from audit_logs.utils import log_action
-from audit_logs.models import AuditLog
-
 
 
 class MilestoneListAPIView(generics.ListAPIView):
@@ -43,7 +43,7 @@ class MilestoneAdminListCreateAPIView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         milestone = serializer.save()
-        
+
         # Log milestone creation
         log_action(
             user=self.request.user,
@@ -69,7 +69,7 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         milestone = serializer.save()
-        
+
         # Log milestone update
         log_action(
             user=self.request.user,
@@ -89,7 +89,7 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
         entity_id = instance.id
         entity_name = instance.title
         super().perform_destroy(instance)
-        
+
         # Log milestone deletion
         log_action(
             user=self.request.user,
@@ -138,7 +138,7 @@ class MilestoneImageUploadAPIView(APIView):
         milestone_id = image.milestone.id
         milestone_title = image.milestone.title
         image.delete()
-        
+
         # Log milestone image deletion
         log_action(
             user=request.user,
@@ -149,5 +149,5 @@ class MilestoneImageUploadAPIView(APIView):
             details={'image_id': image_id},
             request=request
         )
-        
+
         return Response(status=status.HTTP_204_NO_CONTENT)

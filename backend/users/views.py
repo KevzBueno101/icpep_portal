@@ -1,25 +1,34 @@
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+import os
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .serializers import OfficerRosterSerializer, UserListSerializer, AdminAccountSerializer
+from .serializers import (
+    AdminAccountSerializer,
+    AssignRoleSerializer,
+    DelegateSecretarySerializer,
+    OfficerCreateSerializer,
+    OfficerRosterSerializer,
+    UserListSerializer,
+)
 
 try:
     from .serializers import AdminProfileSerializer
 except ImportError:
     AdminProfileSerializer = None
 
-from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 
-from audit_logs.utils import log_action
-from audit_logs.models import AuditLog
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
+
+from audit_logs.models import AuditLog
+from audit_logs.utils import log_action
 
 User = get_user_model()
 
@@ -92,7 +101,7 @@ def _can_manage(user):
 
 def _safe_profile_picture_url(user):
     """Safely extract profile picture URL. Returns None if file is missing or broken.
-    
+
     Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
     Local storage returns relative URLs (/media/...), which we return as-is for frontend resolution.
     If Cloudinary returns only a public_id, we construct the full URL.
@@ -241,8 +250,8 @@ def admin_account_detail(request, pk):
 
         # Broadcast roster update to all connected clients
         try:
-            from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
 
             channel_layer = get_channel_layer()
             if channel_layer is not None:
@@ -257,7 +266,6 @@ def admin_account_detail(request, pk):
             pass
 
         return Response({'message': 'Admin account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-
 
     # PATCH
     serializer = AdminAccountSerializer(
@@ -279,7 +287,6 @@ def admin_account_detail(request, pk):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-
     log_action(
         user=request.user,
         action_type=AuditLog.ActionType.ADMIN_UPDATED,
@@ -292,8 +299,8 @@ def admin_account_detail(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -311,7 +318,6 @@ def admin_account_detail(request, pk):
         'message': 'Admin account updated successfully.',
         'user': UserListSerializer(updated).data,
     })
-
 
 
 # ── Assign role / position to a user ────────────────────────────────────────
@@ -343,10 +349,10 @@ def assign_role(request, pk):
 
     if (
         _is_president(request.user) and
-        new_position == User.Position.PRESIDENT and
+        new_position == 'PRESIDENT' and
         target.pk != request.user.pk
     ):
-        request.user.position     = User.Position.NONE
+        request.user.position     = 'NONE'
         request.user.is_delegated = False
         request.user.term_start   = None
         request.user.save(update_fields=['position', 'is_delegated', 'term_start'])
@@ -378,8 +384,8 @@ def assign_role(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -400,7 +406,6 @@ def assign_role(request, pk):
     })
 
 
-
 # ── Delegate / un-delegate Secretary ────────────────────────────────────────
 
 @api_view(['PATCH'])
@@ -415,7 +420,7 @@ def delegate_secretary(request, pk):
 
     target = get_object_or_404(User, pk=pk)
 
-    if target.position != User.Position.SECRETARY:
+    if target.position != 'SECRETARY':
         return Response(
             {'detail': 'Target user must have Secretary position to be delegated.'},
             status=status.HTTP_400_BAD_REQUEST
@@ -444,8 +449,8 @@ def delegate_secretary(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -464,7 +469,6 @@ def delegate_secretary(request, pk):
         'message': f'Secretary {action} successfully.',
         'user': UserListSerializer(target).data,
     })
-
 
 
 # ── Year-end reset ───────────────────────────────────────────────────────────
@@ -558,8 +562,8 @@ def create_officer_account(request):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -579,14 +583,13 @@ def create_officer_account(request):
     }, status=status.HTTP_201_CREATED)
 
 
-
 # ── Officers roster (public) ─────────────────────────────────────────────────
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def officers_roster(request):
     """Public roster for the Student Leadership Board.
-    
+
     Returns all users with role OFFICER or ADMIN who have recognized leadership
     positions. Filters out invalid records and only returns active officers
     with complete information.
@@ -602,7 +605,7 @@ def officers_roster(request):
 
     def normalize_position(pos):
         """Map a raw position string to one of the canonical leadership titles.
-        
+
         Uses contains-based matching so entries like 'External Vice President'
         or 'Vice Pres' still resolve correctly.
         Returns the canonical title, or the original position string if no

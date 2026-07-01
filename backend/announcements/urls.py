@@ -2,7 +2,6 @@ from django.urls import path
 
 from . import views
 
-
 urlpatterns = [
     path('', views.AnnouncementListAPIView.as_view(), name='announcement-list'),
     path('<int:id>/', views.AnnouncementDetailAPIView.as_view(), name='announcement-detail'),

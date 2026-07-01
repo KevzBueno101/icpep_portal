@@ -1,6 +1,5 @@
-import os
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 
 
 def send_password_reset_email(user, reset_link):
