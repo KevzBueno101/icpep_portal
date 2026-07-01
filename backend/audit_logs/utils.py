@@ -23,7 +23,7 @@ def log_action(user, action_type, entity_type, entity_id=None, entity_name='', d
                 ip_address = x_forwarded_for.split(',')[0].strip()
             else:
                 ip_address = request.META.get('REMOTE_ADDR')
-        
+
         AuditLog.objects.create(
             admin_user=user,
             action_type=action_type,

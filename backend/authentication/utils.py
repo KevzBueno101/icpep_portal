@@ -1,10 +1,11 @@
+import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
-import threading
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
-from django.conf import settings
+
 from .models import FailedLoginAttempt
 
 

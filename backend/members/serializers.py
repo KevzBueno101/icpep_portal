@@ -1,7 +1,8 @@
-from rest_framework import serializers
-from .models import MemberProfile, PaymentSettings
-
 import imghdr
+
+from rest_framework import serializers
+
+from .models import MemberProfile, PaymentSettings
 
 ALLOWED_IMAGE_TYPES = {
     'rgb', 'gif', 'pbm', 'pgm', 'ppm',
@@ -97,9 +98,10 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        from django.contrib.auth import get_user_model
+        import secrets
+        import string
 
-        import secrets, string
+        from django.contrib.auth import get_user_model
         alphabet = string.ascii_letters + string.digits
         temp_pw = ''.join(secrets.choice(alphabet) for _ in range(16))
 

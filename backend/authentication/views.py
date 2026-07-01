@@ -1,22 +1,23 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
-
-from .serializers import RegisterSerializer, UserSerializer, AdminLoginSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django_ratelimit.decorators import ratelimit
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
+from .serializers import AdminLoginSerializer, RegisterSerializer, UserSerializer
 from .utils import (
     build_password_reset_url,
     get_client_ip,
-    record_failed_attempt,
     recent_failures,
+    record_failed_attempt,
     send_password_reset_email,
 )
+
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
@@ -58,8 +59,8 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                     'Admin users must use the admin portal login at /admin-portal/login'
                 )
 
-        from rest_framework_simplejwt.settings import api_settings
         from django.contrib.auth import update_last_login
+        from rest_framework_simplejwt.settings import api_settings
         refresh = self.get_token(user)
         data = {
             'refresh': str(refresh),
@@ -304,7 +305,10 @@ def reset_password(request):
 
     # Blacklist all existing refresh tokens (non-critical)
     try:
-        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
         for token_obj in OutstandingToken.objects.filter(user=user):
             BlacklistedToken.objects.get_or_create(token=token_obj)
     except Exception:

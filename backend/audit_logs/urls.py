@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import AuditLogListAPIView, AuditLogExportAPIView, AuditLogStatsAPIView, AuditLogCleanupAPIView
+
+from .views import (
+    AuditLogCleanupAPIView,
+    AuditLogExportAPIView,
+    AuditLogListAPIView,
+    AuditLogStatsAPIView,
+)
 
 urlpatterns = [
     path('', AuditLogListAPIView.as_view(), name='audit-log-list'),

@@ -3,13 +3,12 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from audit_logs.models import AuditLog
+from audit_logs.utils import log_action
+from permissions import IsAdmin
+
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
-
-
-from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
-from audit_logs.utils import log_action
-from audit_logs.models import AuditLog
 
 
 class AnnouncementListAPIView(generics.ListAPIView):
@@ -37,7 +36,7 @@ class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
             created_by=self.request.user,
             author=author or fallback_author,
         )
-        
+
         # Log announcement creation
         log_action(
             user=self.request.user,
@@ -62,7 +61,7 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         announcement = serializer.save()
-        
+
         # Log announcement update
         log_action(
             user=self.request.user,
@@ -82,7 +81,7 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         entity_id = instance.id
         entity_name = instance.title
         super().perform_destroy(instance)
-        
+
         # Log announcement deletion
         log_action(
             user=self.request.user,
@@ -130,7 +129,7 @@ class AnnouncementImageUploadAPIView(APIView):
         announcement_id = image.announcement.id
         announcement_title = image.announcement.title
         image.delete()
-        
+
         # Log announcement image deletion
         log_action(
             user=request.user,
@@ -141,5 +140,5 @@ class AnnouncementImageUploadAPIView(APIView):
             details={'image_id': image_id},
             request=request
         )
-        
+
         return Response(status=status.HTTP_204_NO_CONTENT)

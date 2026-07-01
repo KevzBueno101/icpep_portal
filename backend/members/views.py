@@ -1,18 +1,20 @@
-from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from audit_logs.models import AuditLog
+from audit_logs.utils import log_action
+from permissions import IsAdmin, IsOwnerOrAdmin
+
 from .models import MemberProfile, PaymentSettings
 from .serializers import (
-    MemberRenewSerializer,
-    MemberProfileSerializer,
     MemberApprovalSerializer,
     MemberCreateSerializer,
+    MemberProfileSerializer,
+    MemberRenewSerializer,
     PaymentSettingsSerializer,
 )
-from audit_logs.utils import log_action
-from audit_logs.models import AuditLog
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -48,7 +50,7 @@ class MemberListAPIView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
-        
+
         # Log member creation
         if getattr(request.user, 'role', '').upper() == 'ADMIN':
             log_action(
@@ -60,7 +62,7 @@ class MemberListAPIView(generics.ListCreateAPIView):
                 details={'email': profile.user.email},
                 request=request
             )
-        
+
         # Return full profile in GET format
         response_serializer = MemberProfileSerializer(profile)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -73,7 +75,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         profile = serializer.save()
-        
+
         # Log member update
         if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
             log_action(
@@ -90,7 +92,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
         entity_name = f"{instance.first_name} {instance.last_name}"
         entity_id = instance.id
         super().perform_destroy(instance)
-        
+
         # Log member deletion
         if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
             log_action(
@@ -118,7 +120,7 @@ class PaymentSettingsAPIView(APIView):
         serializer = PaymentSettingsSerializer(settings_obj, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        
+
         # Log payment settings update
         log_action(
             user=request.user,
@@ -129,7 +131,7 @@ class PaymentSettingsAPIView(APIView):
             details=request.data,
             request=request
         )
-        
+
         return Response(serializer.data)
 
 
@@ -143,7 +145,7 @@ class MemberApproveAPIView(APIView):
         old_status = profile.membership_status
         serializer.save()
         new_status = profile.membership_status
-        
+
         # Log member approval/rejection
         if new_status == 'APPROVED':
             action_type = AuditLog.ActionType.MEMBER_APPROVED
@@ -151,7 +153,7 @@ class MemberApproveAPIView(APIView):
             action_type = AuditLog.ActionType.MEMBER_REJECTED
         else:
             action_type = AuditLog.ActionType.MEMBER_UPDATED
-        
+
         log_action(
             user=request.user,
             action_type=action_type,
@@ -165,7 +167,7 @@ class MemberApproveAPIView(APIView):
             },
             request=request
         )
-        
+
         return Response(MemberProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 
@@ -181,7 +183,7 @@ class MemberRenewAllAPIView(APIView):
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.EXPIRED)
-        
+
         # Log year-end reset (members expired)
         log_action(
             user=request.user,
@@ -191,7 +193,7 @@ class MemberRenewAllAPIView(APIView):
             details={'expired_count': renewed_count, 'type': 'members_expired'},
             request=request
         )
-        
+
         return Response({'renewed_count': renewed_count}, status=status.HTTP_200_OK)
 
 

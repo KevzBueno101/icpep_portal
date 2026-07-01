@@ -1,26 +1,31 @@
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+import os
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-import os
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .serializers import OfficerRosterSerializer, UserListSerializer, AdminAccountSerializer
+from .serializers import (
+    AdminAccountSerializer,
+    OfficerRosterSerializer,
+    UserListSerializer,
+)
 
 try:
     from .serializers import AdminProfileSerializer
 except ImportError:
     AdminProfileSerializer = None
 
-from permissions import IsAdmin, IsOwnerOrAdmin, CanManageRoles
 
-from audit_logs.utils import log_action
-from audit_logs.models import AuditLog
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
+
+from audit_logs.models import AuditLog
+from audit_logs.utils import log_action
 
 User = get_user_model()
 
@@ -242,8 +247,8 @@ def admin_account_detail(request, pk):
 
         # Broadcast roster update to all connected clients
         try:
-            from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
 
             channel_layer = get_channel_layer()
             if channel_layer is not None:
@@ -293,8 +298,8 @@ def admin_account_detail(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -379,8 +384,8 @@ def assign_role(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -445,8 +450,8 @@ def delegate_secretary(request, pk):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
@@ -559,8 +564,8 @@ def create_officer_account(request):
 
     # Broadcast roster update to all connected clients
     try:
-        from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
 
         channel_layer = get_channel_layer()
         if channel_layer is not None:
