@@ -232,8 +232,10 @@ if _cloudinary_configured:
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    MEDIA_URL = '/media/'
-    # ← DO NOT set MEDIA_URL here; cloudinary-storage generates its own full URLs
+    # cloudinary_storage returns full https://res.cloudinary.com/... URLs
+    # so MEDIA_URL is not needed and must NOT be set to a local path.
+    MEDIA_URL = ''
+    MEDIA_ROOT = ''
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'

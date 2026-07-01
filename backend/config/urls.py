@@ -19,4 +19,8 @@ urlpatterns = [
     path('api/announcements/', include('announcements.urls')),
     path('api/audit-logs/', include('audit_logs.urls')),
     # duplicate include removed
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve locally stored media files only when DEBUG=True and MEDIA_ROOT is set.
+if settings.DEBUG and settings.MEDIA_ROOT:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
