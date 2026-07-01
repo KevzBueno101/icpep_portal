@@ -186,11 +186,13 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
 class AssignRoleSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=User.Role.choices)
-    position = serializers.ChoiceField(choices=User.Position.choices)
+    # NOTE: positions are dynamic (free text) — there is no User.Position
+    # choices class on the model, so this must be a CharField, not ChoiceField.
+    position = serializers.CharField(max_length=100, allow_blank=True, required=False)
     is_delegated = serializers.BooleanField(default=False)
 
     def validate(self, attrs):
-        if attrs.get('position') == User.Position.PRESIDENT:
+        if attrs.get('position', '').lower() == 'president':
             # Add extra validation if needed, handled in views mostly
             pass
         return attrs
@@ -205,7 +207,8 @@ class OfficerCreateSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
     first_name = serializers.CharField(max_length=50)
     last_name = serializers.CharField(max_length=50)
-    position = serializers.ChoiceField(choices=User.Position.choices)
+    # NOTE: positions are dynamic (free text) — there is no User.Position
+    # choices class on the model, so this must be a CharField, not ChoiceField.
+    position = serializers.CharField(max_length=100, allow_blank=True, required=False)
     department = serializers.CharField(max_length=100, allow_blank=True, required=False)
     academic_year = serializers.CharField(max_length=20, allow_blank=True, required=False)
-
