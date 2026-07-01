@@ -45,7 +45,9 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         if cld:
             cloud_name = cld.get('CLOUD_NAME', '')
             if cloud_name:
-                path = str(field_instance)
+                path = str(field_instance).lstrip('/')
+                if path.startswith('media/'):
+                    path = path[6:]
                 return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
         return url
 

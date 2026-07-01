@@ -206,8 +206,16 @@ STORAGES = {
     },
 }
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# cloudinary_storage's PREFIX defaults to MEDIA_URL (/media/), which gets
+# baked into every Cloudinary public_id. Override to empty so new uploads
+# use a clean path (e.g. profiles/xxx.png not media/profiles/xxx.png).
+if _cloudinary_configured:
+    CLOUDINARY_STORAGE['PREFIX'] = ''
+    MEDIA_URL = ''
+    MEDIA_ROOT = ''
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Cross-Origin Resource Sharing (CORS)
 CORS_ALLOW_ALL_ORIGINS = False

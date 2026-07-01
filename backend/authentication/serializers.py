@@ -131,10 +131,14 @@ class UserSerializer(serializers.ModelSerializer):
                 url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
                 if url and 'res.cloudinary.com' not in url:
                     from django.conf import settings
-                    if getattr(settings, 'CLOUDINARY_STORAGE', None):
-                        cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', '')
+                    cld = getattr(settings, 'CLOUDINARY_STORAGE', None)
+                    if cld:
+                        cloud_name = cld.get('CLOUD_NAME', '')
                         if cloud_name:
-                            path = str(obj.profile_picture)
+                            path = str(obj.profile_picture).lstrip('/')
+                            # Strip old /media/ prefix if present
+                            if path.startswith('media/'):
+                                path = path[6:]
                             return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
                 return url
         except Exception:
