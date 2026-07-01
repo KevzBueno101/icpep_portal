@@ -1,4 +1,3 @@
-import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
@@ -57,14 +56,18 @@ def recent_failures(email, minutes=15):
 
 
 def send_password_reset_email(email, reset_url):
-    def send():
-        try:
-            send_mail(
-                subject="Reset your ICPEP.SE password",
-                message=f"Reset your password at: {reset_url}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=f"""<!DOCTYPE html>
+    """
+    Sends the password reset email synchronously.
+    Raises an exception on failure so the caller (the view) can catch it
+    and return an accurate error to the frontend, instead of silently
+    failing inside a detached background thread.
+    """
+    send_mail(
+        subject="Reset your ICPEP.SE password",
+        message=f"Reset your password at: {reset_url}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        html_message=f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
@@ -85,10 +88,4 @@ This link expires in 24 hours.
 </div>
 </body>
 </html>""",
-            )
-        except Exception as e:
-            print(f"Error sending email in background thread: {e}")
-
-    # Start the email sending in a background thread
-    email_thread = threading.Thread(target=send)
-    email_thread.start()
+    )
