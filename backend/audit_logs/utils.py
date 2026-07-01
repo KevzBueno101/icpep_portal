@@ -4,7 +4,7 @@ from .models import AuditLog
 def log_action(user, action_type, entity_type, entity_id=None, entity_name='', details=None, request=None):
     """
     Helper function to create an audit log entry.
-    
+
     Args:
         user: The User object who performed the action
         action_type: ActionType enum value (e.g., AuditLog.ActionType.MEMBER_APPROVED)

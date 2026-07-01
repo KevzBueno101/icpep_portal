@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import IsAdmin, IsOwnerOrAdmin
+from permissions import IsAdmin
 
 from .models import MemberProfile, PaymentSettings
 from .serializers import (
@@ -39,7 +39,6 @@ class MemberListAPIView(generics.ListCreateAPIView):
             return MemberProfile.objects.all().order_by('-created_at')
         # Members can only see their own profile.
         return MemberProfile.objects.filter(user=self.request.user).order_by('-created_at')
-
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

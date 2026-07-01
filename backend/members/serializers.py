@@ -116,9 +116,9 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             email=user_email,
             username=username,
-            password="Changeme123!",
-            role=User.Role.MEMBER,
-            position=User.Position.NONE
+            password=temp_pw,
+            role='MEMBER',
+            position='NONE'
         )
 
         profile = MemberProfile.objects.create(user=user, **validated_data)

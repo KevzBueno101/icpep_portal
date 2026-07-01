@@ -1,3 +1,5 @@
+import contextlib
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django_ratelimit.decorators import ratelimit
@@ -101,10 +103,8 @@ class EmailTokenObtainPairView(TokenObtainPairView):
 
         # Record failed attempts (non-critical — must not break login)
         if response.status_code >= 400 and email:
-            try:
+            with contextlib.suppress(Exception):
                 record_failed_attempt(email, ip)
-            except Exception:
-                pass
 
         return response
 
@@ -199,10 +199,8 @@ def admin_login(request):
 
     # Record failed attempt (non-critical)
     if email:
-        try:
+        with contextlib.suppress(Exception):
             record_failed_attempt(email, ip)
-        except Exception:
-            pass
     return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 

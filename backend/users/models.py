@@ -130,9 +130,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         position_lower = self.position.lower() if self.position else ''
         if self.role == self.Role.OFFICER and 'president' in position_lower:
             return True
-        if 'secretary' in position_lower and self.is_delegated:
-            return True
-        return False
+        return 'secretary' in position_lower and self.is_delegated
 
     @property
     def can_add_announcements(self):

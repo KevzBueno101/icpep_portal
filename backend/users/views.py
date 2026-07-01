@@ -101,7 +101,7 @@ def _can_manage(user):
 
 def _safe_profile_picture_url(user):
     """Safely extract profile picture URL. Returns None if file is missing or broken.
-    
+
     Cloudinary returns absolute URLs (https://res.cloudinary.com/...), so we return them as-is.
     Local storage returns relative URLs (/media/...), which we return as-is for frontend resolution.
     If Cloudinary returns only a public_id, we construct the full URL.
@@ -267,7 +267,6 @@ def admin_account_detail(request, pk):
 
         return Response({'message': 'Admin account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
-
     # PATCH
     serializer = AdminAccountSerializer(
         target,
@@ -287,7 +286,6 @@ def admin_account_detail(request, pk):
             {'detail': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
-
 
     log_action(
         user=request.user,
@@ -322,7 +320,6 @@ def admin_account_detail(request, pk):
     })
 
 
-
 # ── Assign role / position to a user ────────────────────────────────────────
 
 @api_view(['PATCH'])
@@ -352,10 +349,10 @@ def assign_role(request, pk):
 
     if (
         _is_president(request.user) and
-        new_position == User.Position.PRESIDENT and
+        new_position == 'PRESIDENT' and
         target.pk != request.user.pk
     ):
-        request.user.position     = User.Position.NONE
+        request.user.position     = 'NONE'
         request.user.is_delegated = False
         request.user.term_start   = None
         request.user.save(update_fields=['position', 'is_delegated', 'term_start'])
@@ -409,7 +406,6 @@ def assign_role(request, pk):
     })
 
 
-
 # ── Delegate / un-delegate Secretary ────────────────────────────────────────
 
 @api_view(['PATCH'])
@@ -424,7 +420,7 @@ def delegate_secretary(request, pk):
 
     target = get_object_or_404(User, pk=pk)
 
-    if target.position != User.Position.SECRETARY:
+    if target.position != 'SECRETARY':
         return Response(
             {'detail': 'Target user must have Secretary position to be delegated.'},
             status=status.HTTP_400_BAD_REQUEST
@@ -473,7 +469,6 @@ def delegate_secretary(request, pk):
         'message': f'Secretary {action} successfully.',
         'user': UserListSerializer(target).data,
     })
-
 
 
 # ── Year-end reset ───────────────────────────────────────────────────────────
@@ -588,14 +583,13 @@ def create_officer_account(request):
     }, status=status.HTTP_201_CREATED)
 
 
-
 # ── Officers roster (public) ─────────────────────────────────────────────────
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def officers_roster(request):
     """Public roster for the Student Leadership Board.
-    
+
     Returns all users with role OFFICER or ADMIN who have recognized leadership
     positions. Filters out invalid records and only returns active officers
     with complete information.
@@ -611,7 +605,7 @@ def officers_roster(request):
 
     def normalize_position(pos):
         """Map a raw position string to one of the canonical leadership titles.
-        
+
         Uses contains-based matching so entries like 'External Vice President'
         or 'Vice Pres' still resolve correctly.
         Returns the canonical title, or the original position string if no
