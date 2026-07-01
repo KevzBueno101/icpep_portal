@@ -63,7 +63,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                     'Admin users must use the admin portal login at /admin-portal/login'
                 )
 
-        from django.contrib.auth import update_last_login
+        from django.utils import timezone
         from rest_framework_simplejwt.settings import api_settings
         refresh = self.get_token(user)
         data = {
@@ -71,7 +71,8 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
             'access': str(refresh.access_token),
         }
         if api_settings.UPDATE_LAST_LOGIN:
-            update_last_login(None, user)
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
         return data
 
     @classmethod
