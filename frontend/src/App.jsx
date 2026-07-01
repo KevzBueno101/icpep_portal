@@ -63,7 +63,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:pk/:token" element={<ResetPassword />} />
+          <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
 
           {/* Hidden admin login — no links point here */}

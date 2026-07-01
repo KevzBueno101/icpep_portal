@@ -4,7 +4,7 @@ import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 export default function ResetPassword() {
-  const { pk, token } = useParams()
+  const { uidb64, token } = useParams()
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -24,7 +24,7 @@ export default function ResetPassword() {
     }
     setLoading(true)
     try {
-      await publicApi.post('/auth/reset-password/', { pk, token, password })
+      await publicApi.post('/auth/reset-password/', { uidb64, token, password })
       setDone(true)
       toast.success('Password reset successful!')
       setTimeout(() => navigate('/login', { replace: true }), 2000)
@@ -38,7 +38,7 @@ export default function ResetPassword() {
     }
   }
 
-  if (!pk || !token) {
+  if (!uidb64 || !token) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg text-center">

@@ -2,6 +2,8 @@ import contextlib
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
@@ -264,11 +266,11 @@ def reset_password(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    pk = request.data.get('pk', '').strip()
+    uidb64 = request.data.get('uidb64', '').strip()
     token = request.data.get('token', '').strip()
     password = request.data.get('password', '')
 
-    if not pk or not token or not password:
+    if not uidb64 or not token or not password:
         return Response(
             {'detail': 'User ID, token, and new password are required.'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -281,8 +283,9 @@ def reset_password(request):
         )
 
     try:
-        user = User.objects.get(pk=pk)
-    except User.DoesNotExist:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         return Response(
             {'detail': 'Invalid reset link.'},
             status=status.HTTP_400_BAD_REQUEST,
