@@ -1,3 +1,4 @@
+import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
@@ -57,17 +58,17 @@ def recent_failures(email, minutes=15):
 
 def send_password_reset_email(email, reset_url):
     """
-    Sends the password reset email synchronously.
-    Raises an exception on failure so the caller (the view) can catch it
-    and return an accurate error to the frontend, instead of silently
-    failing inside a detached background thread.
+    Sends the password reset email in a background thread.
+    Returns immediately — the caller gets a response without waiting for SMTP.
     """
-    send_mail(
-        subject="Reset your ICPEP.SE password",
-        message=f"Reset your password at: {reset_url}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        html_message=f"""<!DOCTYPE html>
+    def _send():
+        try:
+            send_mail(
+                subject="Reset your ICPEP.SE password",
+                message=f"Reset your password at: {reset_url}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
@@ -88,4 +89,11 @@ This link expires in 24 hours.
 </div>
 </body>
 </html>""",
-    )
+            )
+        except Exception:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception("Failed to send password reset email to %s", email)
+
+    thread = threading.Thread(target=_send, daemon=True)
+    thread.start()

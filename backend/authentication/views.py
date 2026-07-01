@@ -246,17 +246,7 @@ def forgot_password(request):
     if user:
         token = PasswordResetTokenGenerator().make_token(user)
         reset_url = build_password_reset_url(user, token, request=request)
-
-        try:
-            send_password_reset_email(email, reset_url)
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Failed to send password reset email to {email}: {str(e)}", exc_info=True)
-            return Response(
-                {'detail': 'Unable to send reset email. Please try again later.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        send_password_reset_email(email, reset_url)
 
     return Response({'message': message})
 
