@@ -335,7 +335,9 @@ CONTENT_SECURITY_POLICY = {
     }
 }
 
-# Email configuration (Gmail SMTP)
+# Email configuration — SendGrid preferred (HTTP API, works on Render free tier)
+# Falls back to Gmail SMTP for local dev
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587

@@ -3,10 +3,12 @@ from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from .models import FailedLoginAttempt
 
@@ -60,17 +62,14 @@ def recent_failures(email, minutes=15):
 
 def send_password_reset_email(email, reset_url):
     """
-    Sends the password reset email in a background thread.
-    Returns immediately — the caller gets a response without waiting for SMTP.
+    Sends the password reset email via SendGrid HTTP API in a background thread.
+    Uses port 443, so it works on Render's free tier.
+    Falls back to django.core.mail.send_mail if SENDGRID_API_KEY is not set.
     """
     def _send():
         try:
-            send_mail(
-                subject="Reset your ICPEP.SE password",
-                message=f"Reset your password at: {reset_url}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=f"""<!DOCTYPE html>
+            subject = "Reset your ICPEP.SE password"
+            html = f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
@@ -90,8 +89,27 @@ This link expires in 24 hours.
 </p>
 </div>
 </body>
-</html>""",
-            )
+</html>"""
+
+            api_key = getattr(settings, 'SENDGRID_API_KEY', '')
+            if api_key:
+                message = Mail(
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to_emails=email,
+                    subject=subject,
+                    html_content=html,
+                )
+                sg = SendGridAPIClient(api_key)
+                sg.send(message)
+            else:
+                from django.core.mail import send_mail
+                send_mail(
+                    subject=subject,
+                    message=f"Reset your password at: {reset_url}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html,
+                )
         except Exception:
             import logging
             logger = logging.getLogger(__name__)
