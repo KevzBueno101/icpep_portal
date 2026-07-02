@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { User, Mail, Shield, Briefcase, GraduationCap, Building2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User, Mail, Shield, Briefcase, GraduationCap, Building2, BadgeCheck } from 'lucide-react'
 import useAdminProfile from '../../hooks/useAdminProfile'
 
 export default function AdminProfile() {
+  const navigate = useNavigate()
   const { profile, loading, error, profilePictureUrl } = useAdminProfile()
 
   if (loading) {
@@ -52,12 +53,22 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        <Link
-          to="/admin/edit-profile"
-          className="flex-shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition"
-        >
-          Edit Profile
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/officer-id')}
+            className="flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+          >
+            <BadgeCheck className="h-4 w-4" />
+            Officer ID
+          </button>
+          <Link
+            to="/admin/edit-profile"
+            className="flex-shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          >
+            Edit Profile
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

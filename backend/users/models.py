@@ -50,6 +50,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     department = models.CharField(max_length=100, blank=True, default='')
     academic_year = models.CharField(max_length=20, blank=True, default='')
 
+    # Auto-generated officer ID (e.g. ICPEP-0001)
+    officer_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+
     # Term tracking
     term_start = models.DateField(null=True, blank=True)
 
@@ -146,3 +149,18 @@ class User(AbstractBaseUser, PermissionsMixin):
         Since positions are now dynamic, return empty list (all positions allowed).
         """
         return []
+
+    def save(self, *args, **kwargs):
+        if not self.officer_id:
+            prefix = 'ICPEP-'
+            existing = User.objects.filter(officer_id__startswith=prefix).values_list('officer_id', flat=True)
+            max_num = 0
+            for oid in existing:
+                try:
+                    num = int(oid[len(prefix):])
+                    if num > max_num:
+                        max_num = num
+                except (ValueError, IndexError):
+                    pass
+            self.officer_id = f'{prefix}{max_num + 1:04d}'
+        super().save(*args, **kwargs)

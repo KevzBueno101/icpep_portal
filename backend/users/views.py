@@ -182,6 +182,7 @@ def admin_accounts_list(request):
             'year_level': getattr(u, 'year_level', None),
             'created_at': getattr(u, 'created_at', None),
             'profile_picture': _safe_profile_picture_url(u),
+            'officer_id': getattr(u, 'officer_id', None),
         }
 
     results = [serialize_user(u) for u in (page if page is not None else admins)]
