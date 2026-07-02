@@ -149,6 +149,8 @@ export default function MemberProfile() {
       await refreshUser()
       await refreshProfile()
 
+      window.dispatchEvent(new CustomEvent('profile-updated'))
+
       toast.success('Profile updated successfully!')
       setEditMode(false)
       setSelectedFile(null)
