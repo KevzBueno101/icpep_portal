@@ -249,8 +249,11 @@ export default function OfficerIdCard({ profile, user }) {
 
   const qrPayload = useMemo(() => {
     const uid = user?.id || profile?.id || ''
-    const pos = profile?.position || '—'
-    return `ICPEP-OFF|${officerId}|${fullName}|${pos}|${uid}`
+    const pos = profile?.position || '\u2014'
+    const nameValue = fullName || 'Authorized Officer'
+    const positionValue = pos || '\u2014'
+    const idValue = officerId || ''
+    return `name=${encodeURIComponent(nameValue)}|position=${encodeURIComponent(positionValue)}|id=${encodeURIComponent(idValue)}|uid=${uid}`
   }, [officerId, fullName, profile, user])
 
   const avatarInitial = String(profile?.first_name || '?').slice(0, 1).toUpperCase()

@@ -57,6 +57,7 @@ A full-stack Django + React application for managing university member profiles,
 - Frontend: Added year level dropdown in officer creation/edit modal.
 - Frontend: Added profile picture upload in officer creation/edit modal.
 - Frontend: Modal form is now scrollable on mobile devices.
+- Frontend: Updated the Officer ID card to surface the officer name, position, and ID in the QR payload for verification use cases.
 - Frontend: Fixed officer edit modal to fetch officer details directly by ID using `/users/admins/{id}/` endpoint instead of searching in the admin list. This resolves the issue where officers with role='OFFICER' were not found since `/users/admins/` only returns role='ADMIN' users.
 - Backend: Cloudinary integration is configured and ready for production. When CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables are set, the app automatically uses Cloudinary for image storage. Falls back to local filesystem when not configured.
 
