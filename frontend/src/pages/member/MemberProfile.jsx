@@ -29,7 +29,7 @@ const safeDetailFromError = (err) => {
 
 export default function MemberProfile() {
   const { user, refreshUser } = useAuth()
-  const { profile, refreshProfile } = useMember()
+  const { profile, refreshProfile, profileCacheKey } = useMember()
 
   const [editMode, setEditMode] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
@@ -164,7 +164,7 @@ export default function MemberProfile() {
   }
 
   const avatarInitial = getInitials(profile?.first_name || user?.first_name)
-  const displayAvatar = previewUrl || profile?.profile_picture
+  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}#cache=${profileCacheKey}` : null)
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
