@@ -577,7 +577,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFormChange('profile_picture', e.target.files[0])}
-                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
+                    disabled={!canEdit}
+                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
                   />
                 </div>
               </label>
@@ -589,7 +590,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="email"
                     value={form.email}
                     onChange={(e) => handleFormChange('email', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -598,7 +600,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="text"
                     value={form.username}
                     onChange={(e) => handleFormChange('username', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -609,7 +612,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <select
                     value={form.role}
                     onChange={(e) => handleFormChange('role', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     {ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -626,7 +630,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.position}
                     onChange={(e) => handleFormChange('position', e.target.value)}
                     placeholder="e.g., President, Secretary, Treasurer, etc."
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -637,7 +642,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <select
                     value={form.year_level}
                     onChange={(e) => handleFormChange('year_level', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     <option value="">Select year level</option>
                     {YEAR_LEVEL_OPTIONS.map((option) => (
@@ -655,7 +661,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.department}
                     onChange={(e) => handleFormChange('department', e.target.value)}
                     placeholder="e.g., Executive Office"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -668,7 +675,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.academic_year}
                     onChange={(e) => handleFormChange('academic_year', e.target.value)}
                     placeholder="e.g., 2025-2026"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
 
@@ -702,7 +710,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.password}
                     onChange={(e) => handleFormChange('password', e.target.value)}
                     placeholder={editAdmin ? 'Leave blank to keep the same password' : ''}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
 
@@ -712,7 +721,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="password"
                     value={form.confirmPassword}
                     onChange={(e) => handleFormChange('confirmPassword', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -723,7 +733,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="checkbox"
                     checked={form.is_active}
                     onChange={(e) => handleFormChange('is_active', e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    disabled={!canEdit}
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <span>Active account</span>
                 </label>
@@ -744,7 +755,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={!canEdit || saving}
                 className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? 'Saving…' : editAdmin ? 'Save changes' : 'Create admin'}
