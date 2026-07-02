@@ -2,104 +2,178 @@ import { useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import html2canvas from 'html2canvas'
 
-const COLORS = {
-  navyDark: '#03152B',
-  navyLight: '#071F3D',
-  white: '#FFFFFF',
+const C = {
+  navy:       '#0B1830',
+  navyLight:  '#132244',
+  royal:      '#1C3B6B',
+  accent:     '#2B7BE4',
+  cyan:       '#0BC5EA',
+  white:      '#FFFFFF',
+  silver:     '#E2E8F0',
+  slate:      '#475569',
+  cardBg:     '#F8FAFC',
 }
 
 const CARD_W = 300
-const CARD_H = 470
+const CARD_H = 480
 
-/* ─── Display Card (Tailwind) ───────────────────────────────────────────── */
+/* ─── Decorative diagonal accent bar ───────────────────────────────────── */
+
+function DiagonalBar({ className = '' }) {
+  return (
+    <svg className={`absolute ${className}`} width="100%" height="100%" viewBox={`0 0 ${CARD_W} ${CARD_H}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <clipPath id="diagonalClip">
+        <polygon points={`0,0 ${CARD_W},0 ${CARD_W},0 0,${Math.round(CARD_H * 0.38)}`} />
+      </clipPath>
+    </svg>
+  )
+}
+
+/* ─── Display Card ─────────────────────────────────────────────────────── */
 
 function DisplayCard({ qrPayload, fullName, position, yearText, officerId, profilePictureUrl, avatarInitial }) {
   return (
     <div
-      className="relative w-full rounded-[28px] shadow-2xl overflow-hidden select-none"
-      style={{ maxWidth: CARD_W, height: CARD_H, background: `linear-gradient(145deg, ${COLORS.navyDark} 0%, ${COLORS.navyLight} 100%)` }}
+      className="relative w-full overflow-hidden rounded-[28px] shadow-[0_24px_64px_-12px_rgba(11,24,48,0.45)] select-none"
+      style={{ maxWidth: CARD_W, height: CARD_H, background: C.white }}
     >
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full border border-white/30" />
-        <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full border border-white/20" />
+      {/* ── Top navy block with diagonal cut ── */}
+      <div className="absolute inset-x-0 top-0" style={{ height: '44%' }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(160deg, ${C.navy} 0%, ${C.navyLight} 40%, ${C.royal} 100%)`,
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        {/* Diagonal accent stripe */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(160deg, transparent 58%, ${C.accent}20 58%, ${C.accent}40 62%, transparent 62%)`,
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)`,
+            backgroundSize: '28px 28px',
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        {/* Decorative circles */}
+        <div className="absolute -top-6 -right-6 h-28 w-28 rounded-full opacity-20" style={{ border: `1.5px solid ${C.white}`, clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)` }} />
+        <div className="absolute bottom-[15%] -left-4 h-16 w-16 rounded-full opacity-15" style={{ border: `1.5px solid ${C.white}` }} />
+        <div className="absolute top-[18%] left-[42%] h-10 w-10 rotate-12 rounded-2xl opacity-15" style={{ border: `1.5px solid ${C.white}` }} />
+
+        {/* Glass header panel */}
+        <div className="absolute left-5 right-5" style={{ top: 18 }}>
+          <div
+            className="relative flex items-center gap-3 rounded-[18px] px-4 py-3"
+            style={{
+              background: 'rgba(255,255,255,0.09)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md flex-shrink-0">
+              <img
+                src="/icpep_logo.jpg"
+                alt="ICpEP"
+                className="h-[34px] w-[34px] rounded-full object-cover"
+                onError={(e) => { e.target.style.display = 'none' }}
+              />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-[11px] font-black tracking-[0.28em] text-white uppercase">
+                ICpEP.SE
+              </h2>
+              <p className="text-[7.5px] font-semibold tracking-[0.32em] text-white/70 uppercase">
+                Officer Identification
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="relative h-full flex flex-col px-5 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/95 shadow-md">
-            <img
-              src="/icpep_logo.jpg"
-              alt="ICpEP Logo"
-              className="h-9 w-9 rounded-full object-cover"
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
+      {/* ── Profile photo — bridges navy and white ── */}
+      <div className="absolute z-10" style={{ left: '50%', top: '36%', transform: 'translate(-50%, -50%)' }}>
+        <div
+          className="flex items-center justify-center overflow-hidden border-[3px] shadow-[0_8px_28px_-6px_rgba(11,24,48,0.25)]"
+          style={{
+            width: 84,
+            height: 84,
+            borderRadius: 22,
+            background: C.cardBg,
+            borderColor: C.white,
+            transform: 'rotate(45deg)',
+          }}
+        >
+          <div style={{ transform: 'rotate(-45deg)', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {profilePictureUrl ? (
+              <img src={profilePictureUrl} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl font-black" style={{ color: C.slate }}>{avatarInitial}</span>
+            )}
           </div>
-          <div>
-            <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-white">
-              ICpEP.SE
-            </h2>
-            <p className="text-[8px] uppercase tracking-[0.3em] text-sky-200/90">
-              Officer ID Card
+        </div>
+      </div>
+
+      {/* ── White content area ── */}
+      <div className="absolute inset-x-0" style={{ top: '44%', bottom: 0 }}>
+        <div className="flex h-full flex-col px-6 pt-2">
+          {/* Name + Position */}
+          <div className="text-center mt-8">
+            <div className="text-[8px] font-bold uppercase tracking-[0.3em]" style={{ color: C.accent }}>
+              Officer
+            </div>
+            <h1 className="mt-1.5 text-[18px] font-black leading-tight" style={{ color: C.navy, wordBreak: 'break-word' }}>
+              {fullName}
+            </h1>
+            <div className="mx-auto mt-2.5 h-px w-12 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+            <p className="mt-2.5 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: C.royal }}>
+              {position || '—'}
             </p>
           </div>
-        </div>
 
-        <div className="mt-4 flex-1 rounded-[24px] bg-white/95 p-4 shadow-[0_10px_30px_rgba(2,12,24,0.2)]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 shadow-sm">
-              {profilePictureUrl ? (
-                <img src={profilePictureUrl} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-xl font-black text-slate-700">{avatarInitial}</span>
-              )}
+          {/* Info cards */}
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <div className="rounded-[14px] px-3.5 py-2.5" style={{ background: C.cardBg, border: `1px solid ${C.silver}` }}>
+              <p className="text-[7px] font-bold uppercase tracking-[0.2em]" style={{ color: C.slate }}>A.Y.</p>
+              <p className="mt-0.5 text-[11px] font-bold" style={{ color: C.navy }}>{yearText || '—'}</p>
             </div>
+            <div className="rounded-[14px] px-3.5 py-2.5" style={{ background: C.cardBg, border: `1px solid ${C.silver}` }}>
+              <p className="text-[7px] font-bold uppercase tracking-[0.2em]" style={{ color: C.slate }}>ID No.</p>
+              <p className="mt-0.5 text-[10px] font-bold break-all" style={{ color: C.navy }}>{officerId || '—'}</p>
+            </div>
+          </div>
+
+          {/* QR + Verification */}
+          <div
+            className="mt-3 flex items-center justify-between gap-3 rounded-[18px] px-4 py-3"
+            style={{
+              background: `linear-gradient(135deg, ${C.cardBg} 0%, white 100%)`,
+              border: `1px solid ${C.silver}`,
+            }}
+          >
             <div className="min-w-0">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.3em] text-slate-500">
-                Officer
+              <p className="text-[7px] font-bold uppercase tracking-[0.2em]" style={{ color: C.slate }}>Verification</p>
+              <p className="mt-0.5 text-[9px] font-semibold" style={{ color: C.slate }}>
+                Scan QR to confirm officer identity
               </p>
-              <h1 className="text-[15px] font-black leading-tight text-slate-900 break-words">
-                {fullName}
-              </h1>
+            </div>
+            <div className="rounded-xl bg-white p-2 shadow-[0_4px_12px_-4px_rgba(11,24,48,0.12)] flex-shrink-0">
+              <QRCodeSVG value={qrPayload} size={64} includeMargin={false} fgColor={C.navy} />
             </div>
           </div>
 
-          <div className="mt-4 space-y-2">
-            <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Position
-              </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-slate-900">
-                {position || '—'}
-              </p>
-            </div>
-            <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                A.Y.
-              </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-slate-900">
-                {yearText || '—'}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                ID
-              </p>
-              <p className="mt-0.5 text-[10px] font-semibold text-slate-900 break-all">
-                #{officerId || '—'}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white p-2 shadow-md">
-              <QRCodeSVG value={qrPayload} size={72} includeMargin={false} fgColor={COLORS.navyDark} />
-            </div>
-          </div>
+          {/* Footer */}
+          <p className="mt-auto pb-4 text-center text-[7.5px] italic" style={{ color: '#94A3B8' }}>
+            Official verification pass — valid for the current academic year
+          </p>
         </div>
-
-        <p className="mt-3 text-center text-[8px] italic text-slate-300">
-          Official verification pass for the academic year
-        </p>
       </div>
     </div>
   )
@@ -114,81 +188,130 @@ function ExportCard({ qrPayload, fullName, position, yearText, officerId, profil
         position: 'relative',
         width: CARD_W,
         height: CARD_H,
-        borderRadius: 24,
+        borderRadius: 28,
         overflow: 'hidden',
-        background: `linear-gradient(145deg, ${COLORS.navyDark} 0%, ${COLORS.navyLight} 100%)`,
+        background: C.white,
         fontFamily: 'Arial, sans-serif',
-        boxShadow: '0 18px 40px rgba(2, 12, 24, 0.2)',
+        boxShadow: '0 24px 64px -12px rgba(11,24,48,0.45)',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.2,
-        }}
-      >
-        <div style={{ position: 'absolute', top: -24, right: -24, width: 120, height: 120, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.3)' }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: 140, height: 140, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }} />
+      {/* Navy diagonal block */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '44%' }}>
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(160deg, ${C.navy} 0%, ${C.navyLight} 40%, ${C.royal} 100%)`,
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(160deg, transparent 58%, ${C.accent}20 58%, ${C.accent}40 62%, transparent 62%)`,
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute', inset: 0, opacity: 0.04,
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)`,
+            backgroundSize: '28px 28px',
+            clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)`,
+          }}
+        />
+        <div style={{ position: 'absolute', top: -24, right: -24, width: 112, height: 112, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.2)', opacity: 0.2, clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 ${Math.round(CARD_H * 0.44)}px)` }} />
+        <div style={{ position: 'absolute', bottom: '15%', left: -16, width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.2)', opacity: 0.15 }} />
+        <div style={{ position: 'absolute', top: '18%', left: '42%', width: 40, height: 40, transform: 'rotate(12deg)', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.2)', opacity: 0.15 }} />
+
+        {/* Header panel */}
+        <div style={{ position: 'absolute', left: 20, right: 20, top: 18 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            borderRadius: 18, padding: '12px 14px',
+            background: 'rgba(255,255,255,0.09)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', flexShrink: 0 }}>
+              <img src="/icpep_logo.jpg" alt="ICpEP" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontSize: 11, fontWeight: 900, letterSpacing: '0.28em', textTransform: 'uppercase' }}>ICpEP.SE</div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7.5, fontWeight: 600, letterSpacing: '0.32em', textTransform: 'uppercase', marginTop: 2 }}>
+                Officer Identification
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div
-        style={{
-          position: 'relative',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '20px 18px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 46, height: 46, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' }}>
-            <img src="/icpep_logo.jpg" alt="ICpEP Logo" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+      {/* Profile photo — diamond rotated */}
+      <div style={{ position: 'absolute', zIndex: 10, left: '50%', top: '36%', transform: 'translate(-50%, -50%)' }}>
+        <div style={{
+          width: 84, height: 84, borderRadius: 22,
+          border: '3px solid #fff',
+          background: C.cardBg,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+          transform: 'rotate(45deg)',
+          boxShadow: '0 8px 28px -6px rgba(11,24,48,0.25)',
+        }}>
+          <div style={{ transform: 'rotate(-45deg)', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {profilePictureUrl
+              ? <img src={profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ fontSize: 24, fontWeight: 900, color: C.slate }}>{avatarInitial}</span>
+            }
           </div>
-          <div>
-            <div style={{ color: '#fff', fontSize: 11, fontWeight: 900, letterSpacing: '0.25em', textTransform: 'uppercase' }}>ICpEP.SE</div>
-            <div style={{ color: '#CFFAFE', fontSize: 8, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', marginTop: 2 }}>Officer ID Card</div>
+        </div>
+      </div>
+
+      {/* White content */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '44%', bottom: 0, display: 'flex', flexDirection: 'column', padding: '0 24px' }}>
+        <div style={{ textAlign: 'center', marginTop: 36 }}>
+          <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: C.accent }}>
+            Officer
+          </div>
+          <div style={{ marginTop: 6, fontSize: 18, fontWeight: 900, color: C.navy, lineHeight: 1.2, wordBreak: 'break-word' }}>
+            {fullName}
+          </div>
+          <div style={{ margin: '10px auto 0', width: 48, height: 1, borderRadius: '50%', background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+          <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.royal }}>
+            {position || '—'}
           </div>
         </div>
 
-        <div style={{ marginTop: 16, flex: 1, borderRadius: 20, background: 'rgba(255,255,255,0.95)', padding: 16, boxShadow: '0 10px 30px rgba(2,12,24,0.18)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 62, height: 62, borderRadius: '50%', overflow: 'hidden', border: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {profilePictureUrl
-                ? <img src={profilePictureUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontSize: 20, fontWeight: 900, color: '#334155' }}>{avatarInitial}</span>
-              }
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#64748B' }}>Officer</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A', lineHeight: 1.2, wordBreak: 'break-word' }}>{fullName}</div>
-            </div>
+        {/* Info cards */}
+        <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ borderRadius: 14, padding: '8px 12px', background: C.cardBg, border: `1px solid ${C.silver}` }}>
+            <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.slate }}>A.Y.</div>
+            <div style={{ marginTop: 2, fontSize: 11, fontWeight: 700, color: C.navy }}>{yearText || '—'}</div>
           </div>
-
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ borderRadius: 12, background: '#F8FAFC', padding: '8px 10px' }}>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#64748B' }}>Position</div>
-              <div style={{ marginTop: 2, fontSize: 11, fontWeight: 700, color: '#0F172A' }}>{position || '—'}</div>
-            </div>
-            <div style={{ borderRadius: 12, background: '#F8FAFC', padding: '8px 10px' }}>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#64748B' }}>A.Y.</div>
-              <div style={{ marginTop: 2, fontSize: 11, fontWeight: 700, color: '#0F172A' }}>{yearText || '—'}</div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#64748B' }}>ID</div>
-              <div style={{ marginTop: 2, fontSize: 10, fontWeight: 700, color: '#0F172A', wordBreak: 'break-all' }}>#{officerId || '—'}</div>
-            </div>
-            <div style={{ borderRadius: 14, background: '#fff', padding: 8, boxShadow: '0 8px 20px rgba(15,23,42,0.08)' }}>
-              <QRCodeSVG value={qrPayload} size={72} includeMargin={false} fgColor={COLORS.navyDark} />
-            </div>
+          <div style={{ borderRadius: 14, padding: '8px 12px', background: C.cardBg, border: `1px solid ${C.silver}` }}>
+            <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.slate }}>ID No.</div>
+            <div style={{ marginTop: 2, fontSize: 10, fontWeight: 700, color: C.navy, wordBreak: 'break-all' }}>{officerId || '—'}</div>
           </div>
         </div>
 
-        <div style={{ marginTop: 10, textAlign: 'center', fontSize: 8, fontStyle: 'italic', color: '#CFFAFE' }}>
-          Official verification pass for the academic year
+        {/* QR */}
+        <div style={{
+          marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          borderRadius: 18, padding: '10px 14px',
+          background: `linear-gradient(135deg, ${C.cardBg} 0%, #fff 100%)`,
+          border: `1px solid ${C.silver}`,
+        }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.slate }}>Verification</div>
+            <div style={{ marginTop: 2, fontSize: 9, fontWeight: 600, color: C.slate }}>
+              Scan QR to confirm
+            </div>
+          </div>
+          <div style={{ borderRadius: 12, background: '#fff', padding: 8, boxShadow: '0 4px 12px -4px rgba(11,24,48,0.12)' }}>
+            <QRCodeSVG value={qrPayload} size={64} includeMargin={false} fgColor={C.navy} />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 'auto', paddingBottom: 14, textAlign: 'center', fontSize: 7.5, fontStyle: 'italic', color: '#94A3B8' }}>
+          Official verification pass — valid for the current academic year
         </div>
       </div>
     </div>
@@ -263,7 +386,6 @@ export default function OfficerIdCard({ profile, user }) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center p-4">
-      {/* Display card */}
       <div className="w-full flex justify-center" style={{ maxWidth: CARD_W }}>
         <DisplayCard
           qrPayload={qrPayload}
@@ -294,7 +416,7 @@ export default function OfficerIdCard({ profile, user }) {
             width: CARD_W,
             height: CARD_H,
             position: 'relative',
-            borderRadius: 16,
+            borderRadius: 28,
             overflow: 'hidden',
             boxShadow: '0 0 0 1.5px #CBD5E1',
           }}>
