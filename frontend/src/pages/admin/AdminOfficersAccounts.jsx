@@ -51,7 +51,6 @@ const AdminOfficersAccounts = () => {
     confirmPassword: '',
     role: 'OFFICER',
     position: '',
-    is_delegated: false,
     is_active: true,
     profile_picture: null,
     year_level: '',
@@ -109,7 +108,6 @@ const AdminOfficersAccounts = () => {
       confirmPassword: '',
       role: 'OFFICER',
       position: '',
-      is_delegated: false,
       is_active: true,
       profile_picture: null,
       year_level: '',
@@ -139,7 +137,6 @@ const AdminOfficersAccounts = () => {
         confirmPassword: '',
         role: admin.role || 'OFFICER',
         position: admin.position || '',
-        is_delegated: admin.is_delegated || false,
         is_active: admin.is_active ?? true,
         profile_picture: null,
         year_level: admin.year_level || '',
@@ -190,7 +187,6 @@ const AdminOfficersAccounts = () => {
         username: form.username,
         role: form.role,
         position: form.position,
-        is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
       }
 
@@ -464,19 +460,6 @@ const AdminOfficersAccounts = () => {
                     placeholder="e.g., 2025-2026"
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
                   />
-                </label>
-              </div>
-
-              <div className="space-y-2 text-sm text-slate-700">
-                <span>Secretary delegation</span>
-                <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={form.is_delegated}
-                    onChange={(e) => handleFormChange('is_delegated', e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  <span>Enable delegation (only applies to Secretary positions)</span>
                 </label>
               </div>
 

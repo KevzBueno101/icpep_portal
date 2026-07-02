@@ -50,7 +50,6 @@ const AdminAdmins = ({ refreshTrigger }) => {
     confirmPassword: '',
     role: 'OFFICER',
     position: '',
-    is_delegated: false,
     is_active: true,
     profile_picture: null,
     year_level: '',
@@ -126,7 +125,6 @@ const AdminAdmins = ({ refreshTrigger }) => {
       confirmPassword: '',
       role: 'OFFICER',
       position: '',
-      is_delegated: false,
       is_active: true,
       profile_picture: null,
       year_level: '',
@@ -151,7 +149,6 @@ const AdminAdmins = ({ refreshTrigger }) => {
       confirmPassword: '',
       role: admin.role || 'OFFICER',
       position: admin.position || '',
-      is_delegated: admin.is_delegated || false,
       is_active: admin.is_active ?? true,
       profile_picture: null,
       year_level: admin.year_level || '',
@@ -198,7 +195,6 @@ const AdminAdmins = ({ refreshTrigger }) => {
         username: form.username,
         role: form.role,
         position: form.position,
-        is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
         access_level: form.access_level,
       }
@@ -691,27 +687,11 @@ const AdminAdmins = ({ refreshTrigger }) => {
                 </label>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 text-sm text-slate-700">
-                  <span>Secretary delegation</span>
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={form.is_delegated}
-                      onChange={(e) => handleFormChange('is_delegated', e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                    />
-                    <span>Enable delegation (only applies to Secretary positions)</span>
-                  </label>
+              <div className="space-y-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-400">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full border border-slate-400 text-[10px] font-bold leading-none text-slate-400 shrink-0">i</span>
+                  <span className="opacity-60">Access level determines what this admin can do. Full Control = everything, Membership = member management only, Restricted = view only.</span>
                 </div>
-
-                <label className="space-y-2 text-sm text-slate-700">
-                  <span></span>
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-400">
-                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full border border-slate-400 text-[10px] font-bold leading-none text-slate-400 shrink-0">i</span>
-                    <span className="opacity-60">Access level determines what this admin can do. Full Control = everything, Membership = member management only, Restricted = view only.</span>
-                  </div>
-                </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

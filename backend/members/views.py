@@ -46,6 +46,16 @@ class MemberListAPIView(generics.ListCreateAPIView):
         return MemberProfileSerializer
 
     def create(self, request, *args, **kwargs):
+        # RESTRICTED/MEMBERSHIP admins cannot create members via admin panel.
+        if _is_admin_or_president(request.user):
+            from users.models import User
+            pos_lower = (getattr(request.user, 'position', '') or '').lower()
+            if 'president' not in pos_lower and getattr(request.user, 'access_level', None) != User.AccessLevel.FULL_CONTROL:
+                return Response(
+                    {'detail': 'Only full-access accounts can create members.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
@@ -70,7 +80,15 @@ class MemberListAPIView(generics.ListCreateAPIView):
 class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MemberProfile.objects.all()
     serializer_class = MemberProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_permissions(self):
+        """
+        - GET: owner or any admin (including RESTRICTED) can view.
+        - PUT/PATCH/DELETE: only FULL_CONTROL admins / President can write.
+        """
+        if self.request.method in ('PUT', 'PATCH', 'DELETE'):
+            return [permissions.IsAuthenticated(), CanManageMembership()]
+        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
 
     def perform_update(self, serializer):
         profile = serializer.save()

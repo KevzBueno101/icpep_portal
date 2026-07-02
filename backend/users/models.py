@@ -57,12 +57,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Term tracking
     term_start = models.DateField(null=True, blank=True)
 
-    # Secretary delegation flag — set by President
-    is_delegated = models.BooleanField(
-        default=False,
-        help_text='If True and position=SECRETARY, can assign Treasurer/Secretary roles.'
-    )
-
     class RegistrationStatus(models.TextChoices):
         PENDING = 'PENDING', 'Pending Approval'
         APPROVED = 'APPROVED', 'Approved'
@@ -161,14 +155,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         True if this user is allowed to assign roles to others.
         President always has full control regardless of role or access_level.
         Full-control admins can manage accounts. Restricted admins cannot.
-        Secretary only if is_delegated=True.
         """
         position_lower = self.position.lower() if self.position else ''
         if 'president' in position_lower:
             return True
         if self.role == self.Role.ADMIN:
             return self.access_level == self.AccessLevel.FULL_CONTROL
-        return 'secretary' in position_lower and self.is_delegated
+        return False
 
     @property
     def can_add_announcements(self):

@@ -45,7 +45,6 @@ const AdminDashboard = () => {
     username: '',
     password: '',
     position: 'NONE',
-    is_delegated: false,
     department: '',
     academic_year: '',
   })
@@ -59,9 +58,6 @@ const AdminDashboard = () => {
     if (!user) return []
     if (user.position === 'PRESIDENT') {
       return ['PRESIDENT', 'TREASURER', 'SECRETARY', 'NONE']
-    }
-    if (user.position === 'SECRETARY' && user.is_delegated) {
-      return ['TREASURER', 'SECRETARY', 'NONE']
     }
     return []
   }, [user])
@@ -157,7 +153,6 @@ const AdminDashboard = () => {
     const payload = {
       role,
       position,
-      is_delegated: admin.position === 'SECRETARY' ? admin.is_delegated : false,
     }
 
     setSavingAdmins((prev) => [...prev, adminId])
@@ -180,24 +175,6 @@ const AdminDashboard = () => {
     } catch (err) {
       const errorText = err.response?.data?.detail || 'Unable to update admin account.'
       toast.error(errorText)
-    } finally {
-      setSavingAdmins((prev) => prev.filter((id) => id !== adminId))
-    }
-  }
-
-  const handleToggleDelegate = async (admin) => {
-    const adminId = admin.id
-    setSavingAdmins((prev) => [...prev, adminId])
-    try {
-      const res = await api.patch(`/users/admins/${adminId}/delegate/`, {
-        is_delegated: !admin.is_delegated,
-      })
-      setAdmins((prev) => (prev || []).map((item) => (item.id === adminId ? res.data.user : item)))
-      toast.success(`Secretary ${res.data.user.is_delegated ? 'delegated' : 'delegation removed'}.`)
-      // Refresh leadership board across all pages
-      window.dispatchEvent(new Event('officers-refresh'))
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Unable to toggle delegation.')
     } finally {
       setSavingAdmins((prev) => prev.filter((id) => id !== adminId))
     }
@@ -247,7 +224,6 @@ const AdminDashboard = () => {
         password: createForm.password,
         role: 'ADMIN',
         position: createForm.position,
-        is_delegated: createForm.position === 'SECRETARY' ? createForm.is_delegated : false,
         department: createForm.department,
         academic_year: createForm.academic_year,
       }
@@ -264,7 +240,6 @@ const AdminDashboard = () => {
         username: '',
         password: '',
         position: 'NONE',
-        is_delegated: false,
         department: '',
         academic_year: '',
       })

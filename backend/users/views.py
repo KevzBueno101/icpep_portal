@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from .serializers import (
     AdminAccountSerializer,
     AssignRoleSerializer,
-    DelegateSecretarySerializer,
     OfficerCreateSerializer,
     OfficerRosterSerializer,
     UserListSerializer,
@@ -185,7 +184,6 @@ def admin_accounts_list(request):
             'last_name': getattr(u, 'last_name', ''),
             'role': getattr(u, 'role', None),
             'position': getattr(u, 'position', None),
-            'is_delegated': getattr(u, 'is_delegated', False),
             'is_active': getattr(u, 'is_active', True),
             'year_level': getattr(u, 'year_level', None),
             'created_at': getattr(u, 'created_at', None),
@@ -442,7 +440,6 @@ def assign_role(request, pk):
 
     new_role     = serializer.validated_data['role']
     new_position = serializer.validated_data['position']
-    new_delegated = serializer.validated_data['is_delegated']
 
     if (
         _is_president(request.user) and
@@ -450,17 +447,15 @@ def assign_role(request, pk):
         target.pk != request.user.pk
     ):
         request.user.position     = 'NONE'
-        request.user.is_delegated = False
         request.user.term_start   = None
-        request.user.save(update_fields=['position', 'is_delegated', 'term_start'])
+        request.user.save(update_fields=['position', 'term_start'])
 
     old_role     = target.role
     old_position = target.position
     target.role         = new_role
     target.position     = new_position
-    target.is_delegated = new_delegated if new_position == 'SECRETARY' else False
     target.term_start   = timezone.now().date() if new_position != 'NONE' else None
-    target.save(update_fields=['role', 'position', 'is_delegated', 'term_start'])
+    target.save(update_fields=['role', 'position', 'term_start'])
 
     log_action(
         user=request.user,
@@ -474,7 +469,6 @@ def assign_role(request, pk):
             'new_role': new_role,
             'old_position': old_position,
             'new_position': new_position,
-            'is_delegated': new_delegated,
         },
         request=request
     )
@@ -503,70 +497,6 @@ def assign_role(request, pk):
     })
 
 
-# ── Delegate / un-delegate Secretary ────────────────────────────────────────
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def delegate_secretary(request, pk):
-    if not _is_president(request.user):
-        return Response(
-            {'detail': 'Only the President can delegate the Secretary.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    target = get_object_or_404(User, pk=pk)
-
-    if target.position != 'SECRETARY':
-        return Response(
-            {'detail': 'Target user must have Secretary position to be delegated.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    serializer = DelegateSecretarySerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    target.is_delegated = serializer.validated_data['is_delegated']
-    target.save(update_fields=['is_delegated'])
-
-    log_action(
-        user=request.user,
-        action_type=AuditLog.ActionType.ROLE_DELEGATED,
-        entity_type=AuditLog.EntityType.USER,
-        entity_id=target.id,
-        entity_name=target.email,
-        details={
-            'email': target.email,
-            'is_delegated': target.is_delegated,
-            'position': target.position,
-        },
-        request=request
-    )
-
-    # Broadcast roster update to all connected clients
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "officers",
-                {
-                    "type": "officers.roster.updated",
-                    "payload": {"updated_by": request.user.id},
-                },
-            )
-    except Exception:
-        pass
-
-    action = 'delegated' if target.is_delegated else 'delegation removed from'
-    return Response({
-        'message': f'Secretary {action} successfully.',
-        'user': UserListSerializer(target).data,
-    })
-
-
 # ── Year-end reset ───────────────────────────────────────────────────────────
 
 @api_view(['POST'])
@@ -590,7 +520,6 @@ def year_end_reset(request):
         position='PRESIDENT'
     ).update(
         position='NONE',
-        is_delegated=False,
         term_start=None,
     )
 
@@ -638,7 +567,6 @@ def create_officer_account(request):
         password=validated['password'],
         role=validated['role'],
         position=validated['position'],
-        is_delegated=(validated['position'] == 'SECRETARY' and validated['is_delegated']),
         term_start=(timezone.now().date() if validated['position'] != 'NONE' else None),
     )
 
@@ -653,7 +581,6 @@ def create_officer_account(request):
             'username': new_user.username,
             'role': new_user.role,
             'position': new_user.position,
-            'is_delegated': new_user.is_delegated,
         },
         request=request
     )

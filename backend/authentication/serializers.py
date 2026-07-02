@@ -140,7 +140,6 @@ class UserSerializer(serializers.ModelSerializer):
         model  = User
         fields = [
             'id', 'email', 'username', 'role', 'position',
-            'is_delegated', 'term_start',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
             'membership_status', 'admin_message', 'profile_picture',
             'registration_status', 'access_level', 'requested_position',
