@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, Shield, Briefcase, GraduationCap, Building2, BadgeCheck } from 'lucide-react'
+import { User, Mail, Shield, Briefcase, GraduationCap, Building2, BadgeCheck, KeyRound } from 'lucide-react'
 import useAdminProfile from '../../hooks/useAdminProfile'
 
 export default function AdminProfile() {
@@ -50,6 +50,15 @@ export default function AdminProfile() {
                 {positionDisplay}
               </span>
             )}
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              profile?.access_level === 'FULL_CONTROL' ? 'bg-purple-100 text-purple-700' :
+              profile?.access_level === 'MEMBERSHIP' ? 'bg-emerald-100 text-emerald-700' :
+              'bg-slate-100 text-slate-500'
+            }`}>
+              {profile?.access_level === 'FULL_CONTROL' ? 'Full Control' :
+               profile?.access_level === 'MEMBERSHIP' ? 'Membership' :
+               'Restricted'}
+            </span>
           </div>
         </div>
 
@@ -80,6 +89,7 @@ export default function AdminProfile() {
             { label: 'Officer ID', value: profile?.officer_id || '—', icon: <BadgeCheck className="h-4 w-4" /> },
             { label: 'Role', value: profile?.role, icon: <Shield className="h-4 w-4" /> },
             { label: 'Position', value: positionDisplay, icon: <Briefcase className="h-4 w-4" /> },
+            { label: 'Access Level', value: profile?.access_level === 'FULL_CONTROL' ? 'Full Control' : profile?.access_level === 'MEMBERSHIP' ? 'Membership Access' : profile?.access_level === 'RESTRICTED' ? 'Restricted' : profile?.access_level || '—', icon: <KeyRound className="h-4 w-4" /> },
             { label: 'Department', value: profile?.department || '—', icon: <Building2 className="h-4 w-4" /> },
             { label: 'Academic Year', value: profile?.academic_year ? `AY ${profile.academic_year}` : '—', icon: <GraduationCap className="h-4 w-4" /> },
           ].map(({ label, value, icon }) => (

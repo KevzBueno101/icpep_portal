@@ -6,6 +6,56 @@ from members.models import MemberProfile
 User = get_user_model()
 
 
+class AdminRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'email', 'username', 'password', 'confirm_password',
+            'first_name', 'last_name', 'position', 'department',
+            'academic_year', 'admin_note', 'profile_picture',
+        ]
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        if User.objects.filter(email__iexact=data['email']).exists():
+            raise serializers.ValidationError({'email': 'An account with this email already exists.'})
+        if User.objects.filter(username__iexact=data['username']).exists():
+            raise serializers.ValidationError({'username': 'An account with this username already exists.'})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        profile_picture = validated_data.pop('profile_picture', None)
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            password=password,
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role='ADMIN',
+            position='',
+            department=validated_data.get('department', ''),
+            academic_year=validated_data.get('academic_year', ''),
+            requested_position=validated_data.get('position', ''),
+            requested_department=validated_data.get('department', ''),
+            requested_academic_year=validated_data.get('academic_year', ''),
+            admin_note=validated_data.get('admin_note', ''),
+            registration_status='PENDING',
+            access_level='RESTRICTED',
+            is_active=False,
+        )
+        if profile_picture is not None:
+            user.profile_picture = profile_picture
+            user.save(update_fields=['profile_picture'])
+        return user
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password         = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True)
@@ -93,6 +143,8 @@ class UserSerializer(serializers.ModelSerializer):
             'is_delegated', 'term_start',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
             'membership_status', 'admin_message', 'profile_picture',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
             'created_at',
         ]
 
@@ -162,6 +214,20 @@ class AdminLoginSerializer(serializers.Serializer):
 
         if not user:
             raise serializers.ValidationError('Incorrect password.')
+
+        if hasattr(user, 'role'):
+            if user.role != 'ADMIN':
+                raise serializers.ValidationError(
+                    'Access denied. This portal is for administrators only.'
+                )
+            if getattr(user, 'registration_status', 'APPROVED') == 'PENDING':
+                raise serializers.ValidationError('Your admin request is still pending approval.')
+            if getattr(user, 'registration_status', 'APPROVED') == 'REJECTED':
+                raise serializers.ValidationError('Your admin request was rejected. Please contact the President.')
+            if user.position == 'NONE':
+                raise serializers.ValidationError(
+                    'Your term has ended. Contact the current President to be re-assigned.'
+                )
 
         if not user.is_active:
             raise serializers.ValidationError('This account is disabled.')

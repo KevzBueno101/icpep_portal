@@ -5,7 +5,7 @@ import { BadgeCheck, ShieldCheck } from 'lucide-react'
 
 export default function OfficerIdCardPage() {
   const { user } = useAuth()
-  const { profile, loading, error } = useAdminProfile()
+  const { profile, profilePictureUrl, loading, error } = useAdminProfile()
 
   if (loading) {
     return (
@@ -40,6 +40,7 @@ export default function OfficerIdCardPage() {
           <OfficerIdCard
             profile={profile}
             user={user}
+            profilePictureUrl={profilePictureUrl}
           />
         </div>
 

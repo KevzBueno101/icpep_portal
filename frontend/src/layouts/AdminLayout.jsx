@@ -59,7 +59,7 @@ const AdminLayout = ({
       return React.cloneElement(child, {
         onYearEndReset: handleYearEndReset,
         yearEndBusy,
-        isPresident: user?.position === 'PRESIDENT',
+        isPresident: String(user?.position || '').toLowerCase().includes('president'),
         refreshTrigger,
         triggerRefresh,
       })
@@ -103,7 +103,7 @@ const AdminLayout = ({
             logout={logout}
             onYearEndReset={handleYearEndReset}
             yearEndBusy={yearEndBusy}
-            isPresident={user?.position === 'PRESIDENT'}
+            isPresident={String(user?.position || '').toLowerCase().includes('president')}
           />
 
           <div className="min-w-0 flex-1 lg:ml-56">

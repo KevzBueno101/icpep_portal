@@ -23,6 +23,8 @@ try:
 except ImportError:
     AdminProfileSerializer = None
 
+from permissions import _is_admin_or_president
+
 
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -48,7 +50,7 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
             if not hasattr(user, 'role'):
                 raise PermissionDenied('User object missing role attribute.')
 
-            if user.role != 'ADMIN':
+            if not _is_admin_or_president(user):
                 raise PermissionDenied(f'Only admin users can edit their profile. Current role: {user.role}')
 
             return user
@@ -92,11 +94,11 @@ User = get_user_model()
 
 
 def _is_president(user):
-    return user.role == 'ADMIN' and user.position == 'PRESIDENT'
+    return 'president' in (user.position or '').lower()
 
 
 def _can_manage(user):
-    return user.is_admin and user.can_manage_roles
+    return user.can_manage_roles
 
 
 def _safe_profile_picture_url(user):
@@ -131,10 +133,9 @@ def _safe_profile_picture_url(user):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def admin_accounts_list(request):
-    if not _can_manage(request.user):
-        return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
-
     if request.method == 'POST':
+        if not _can_manage(request.user):
+            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         serializer = AdminAccountSerializer(
             data=request.data,
             context={'requester': request.user}
@@ -143,6 +144,13 @@ def admin_accounts_list(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         new_admin = serializer.save()
+
+        access_level = request.data.get('access_level')
+        if access_level and _can_manage(request.user):
+            valid_levels = [User.AccessLevel.FULL_CONTROL, User.AccessLevel.MEMBERSHIP, User.AccessLevel.RESTRICTED]
+            if access_level in valid_levels:
+                new_admin.access_level = access_level
+                new_admin.save(update_fields=['access_level'])
 
         log_action(
             user=request.user,
@@ -183,6 +191,10 @@ def admin_accounts_list(request):
             'created_at': getattr(u, 'created_at', None),
             'profile_picture': _safe_profile_picture_url(u),
             'officer_id': getattr(u, 'officer_id', None),
+            'department': getattr(u, 'department', ''),
+            'academic_year': getattr(u, 'academic_year', ''),
+            'registration_status': getattr(u, 'registration_status', 'APPROVED'),
+            'access_level': getattr(u, 'access_level', 'FULL_CONTROL'),
         }
 
     results = [serialize_user(u) for u in (page if page is not None else admins)]
@@ -198,24 +210,24 @@ def admin_accounts_list(request):
 @permission_classes([IsAuthenticated])
 def admin_account_detail(request, pk):
     if request.method in ['PATCH', 'DELETE']:
-        is_president = (
-            getattr(request.user, 'position', '') == 'PRESIDENT' and
-            getattr(request.user, 'role', '') == 'ADMIN'
-        )
+        is_president = _is_president(request.user)
         is_self = (pk == request.user.pk)
+        can_manage = _can_manage(request.user)
 
-        if request.method == 'DELETE' and not is_president:
+        if request.method == 'DELETE' and not (is_president or can_manage):
             return Response(
-                {'detail': 'Only the President can delete accounts.'},
+                {'detail': 'Only the President or Full Control admins can delete accounts.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        if request.method == 'PATCH' and not (is_president or is_self):
+        if request.method == 'PATCH' and not (is_president or can_manage or is_self):
             return Response(
-                {'detail': 'Only the President can edit other accounts; you can only edit your own account.'},
+                {'detail': 'You do not have permission to edit this account.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-    if not _can_manage(request.user):
+    if request.method in ['GET', 'PATCH'] and pk == request.user.pk:
+        pass
+    elif not _can_manage(request.user):
         return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
     target = get_object_or_404(User, pk=pk)
@@ -280,6 +292,14 @@ def admin_account_detail(request, pk):
 
     try:
         updated = serializer.save()
+
+        # Allow President to update access_level directly
+        access_level = request.data.get('access_level')
+        if access_level and _can_manage(request.user):
+            valid_levels = [User.AccessLevel.FULL_CONTROL, User.AccessLevel.MEMBERSHIP, User.AccessLevel.RESTRICTED]
+            if access_level in valid_levels:
+                updated.access_level = access_level
+                updated.save(update_fields=['access_level'])
     except Exception as e:
         # Return actionable error instead of generic 500 HTML.
         # Frontend currently logs only "Server Error (500)".
@@ -323,9 +343,85 @@ def admin_account_detail(request, pk):
 
 # ── Assign role / position to a user ────────────────────────────────────────
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def pending_admin_requests(request):
+    if not _can_manage(request.user):
+        return Response({'detail': 'Only authorized admins can review admin access requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+    pending_users = User.objects.filter(role='ADMIN', registration_status='PENDING').order_by('-created_at')
+    results = []
+    for user in pending_users:
+        results.append({
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'requested_position': user.requested_position,
+            'requested_department': user.requested_department,
+            'requested_academic_year': user.requested_academic_year,
+            'admin_note': user.admin_note,
+            'created_at': user.created_at,
+            'registration_status': user.registration_status,
+            'access_level': user.access_level,
+        })
+    return Response(results)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def approve_admin_request(request, pk):
+    if not _can_manage(request.user):
+        return Response({'detail': 'Only authorized admins can approve admin access requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+    target = get_object_or_404(User, pk=pk)
+    if target.registration_status != 'PENDING':
+        return Response({'detail': 'This request is no longer pending approval.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    access_level = request.data.get('access_level', 'RESTRICTED')
+    if access_level not in [User.AccessLevel.FULL_CONTROL, User.AccessLevel.MEMBERSHIP, User.AccessLevel.RESTRICTED]:
+        return Response({'detail': 'Invalid access level.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    target.registration_status = 'APPROVED'
+    target.access_level = access_level
+    target.position = target.requested_position or target.position
+    target.department = target.requested_department or target.department
+    target.academic_year = target.requested_academic_year or target.academic_year
+    target.is_active = True
+    target.approved_by = request.user
+    target.approved_at = timezone.now()
+    target.save(update_fields=['registration_status', 'access_level', 'position', 'department', 'academic_year', 'is_active', 'approved_by', 'approved_at'])
+
+    return Response({'message': 'Admin request approved successfully.', 'user': UserListSerializer(target).data})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_admin_request(request, pk):
+    if not _can_manage(request.user):
+        return Response({'detail': 'Only authorized admins can reject admin access requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+    target = get_object_or_404(User, pk=pk)
+    if target.registration_status != 'PENDING':
+        return Response({'detail': 'This request is no longer pending approval.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    target.registration_status = 'REJECTED'
+    target.is_active = False
+    target.position = ''
+    target.approved_by = request.user
+    target.approved_at = timezone.now()
+    target.save(update_fields=['registration_status', 'is_active', 'position', 'approved_by', 'approved_at'])
+
+    return Response({'message': 'Admin request rejected.', 'user': UserListSerializer(target).data})
+
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def assign_role(request, pk):
+    has_full_access = _is_president(request.user) or getattr(request.user, 'access_level', User.AccessLevel.FULL_CONTROL) == User.AccessLevel.FULL_CONTROL
+    if not has_full_access:
+        return Response({'detail': 'Only Full Control admins can manage other admin accounts.'}, status=status.HTTP_403_FORBIDDEN)
     if not _can_manage(request.user):
         return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -413,7 +509,6 @@ def assign_role(request, pk):
 @permission_classes([IsAuthenticated])
 def delegate_secretary(request, pk):
     if not _is_president(request.user):
-
         return Response(
             {'detail': 'Only the President can delegate the Secretary.'},
             status=status.HTTP_403_FORBIDDEN
@@ -525,6 +620,8 @@ def year_end_reset(request):
 @permission_classes([IsAuthenticated])
 def create_officer_account(request):
     """President-only creation of new ADMIN-role officer accounts."""
+    if not _is_president(request.user):
+        return Response({'detail': 'Only the President can create officer accounts.'}, status=status.HTTP_403_FORBIDDEN)
     serializer = OfficerCreateSerializer(
         data=request.data,
         context={'requester': request.user}

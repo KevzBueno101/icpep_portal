@@ -99,8 +99,10 @@ class UserListSerializer(serializers.ModelSerializer):
             'role', 'position', 'is_delegated', 'is_active',
             'year_level', 'created_at', 'profile_picture',
             'department', 'academic_year', 'officer_id',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
         ]
-        read_only_fields = ['id', 'created_at', 'officer_id']
+        read_only_fields = ['id', 'created_at', 'officer_id', 'registration_status', 'access_level']
 
 
 class AdminProfileSerializer(serializers.ModelSerializer):
@@ -127,8 +129,14 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'department',
             'academic_year',
             'officer_id',
+            'registration_status',
+            'access_level',
+            'requested_position',
+            'requested_department',
+            'requested_academic_year',
+            'admin_note',
         ]
-        read_only_fields = ['id', 'role', 'position', 'can_manage_roles', 'officer_id']
+        read_only_fields = ['id', 'role', 'position', 'can_manage_roles', 'officer_id', 'registration_status', 'access_level']
 
 
 class AdminAccountSerializer(serializers.ModelSerializer):
@@ -142,8 +150,10 @@ class AdminAccountSerializer(serializers.ModelSerializer):
             'role', 'position', 'is_delegated', 'is_active',
             'year_level', 'profile_picture', 'password',
             'department', 'academic_year', 'officer_id',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
         ]
-        read_only_fields = ['id', 'officer_id']
+        read_only_fields = ['id', 'officer_id', 'registration_status', 'access_level']
 
     def validate(self, attrs):
         if not self.instance and not attrs.get('password'):

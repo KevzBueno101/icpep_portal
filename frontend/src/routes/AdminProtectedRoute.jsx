@@ -18,7 +18,9 @@ const AdminProtectedRoute = ({ children, requirePosition = null }) => {
 
   // SAFETY GUARD: Regular members must never access admin routes.
   // Do not call logout() synchronously during render.
-  if (user.role !== 'ADMIN') {
+  const isAdminRole = user.role === 'ADMIN'
+  const isOfficerPresident = user.role === 'OFFICER' && String(user.position || '').toLowerCase().includes('president')
+  if (!isAdminRole && !isOfficerPresident) {
     return <Navigate to="/login" replace />
   }
 

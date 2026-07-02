@@ -151,7 +151,7 @@ const DisplayCard = React.forwardRef(function DisplayCard({ qrPayload, fullName,
 
 /* ─── Main Component ────────────────────────────────────────────────────── */
 
-export default function OfficerIdCard({ profile, user }) {
+export default function OfficerIdCard({ profile, user, profilePictureUrl: profilePictureUrlProp }) {
   const cardRef = useRef(null)
   const [saving, setSaving] = useState(false)
 
@@ -172,7 +172,7 @@ export default function OfficerIdCard({ profile, user }) {
 
   const avatarInitial = String(profile?.first_name || '?').slice(0, 1).toUpperCase()
 
-  const profilePictureUrl = profile?.profile_picture || null
+  const profilePictureUrl = profilePictureUrlProp || profile?.profile_picture || null
 
   const loadImg = (src) => new Promise((resolve) => {
     if (!src) { resolve(null); return }

@@ -81,18 +81,21 @@ const AdminOfficersAccounts = () => {
   }, [officers])
 
 
+  const loadRoster = async () => {
+    try {
+      const res = await publicApi.get('/users/officers/roster/')
+      setOfficers(res.data.results || [])
+    } catch (err) {
+      toast.error('Unable to load officer accounts.')
+      setOfficers([])
+    }
+  }
+
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      try {
-        const res = await publicApi.get('/users/officers/roster/')
-        setOfficers(res.data.results || [])
-      } catch (err) {
-        toast.error('Unable to load officer accounts.')
-        setOfficers([])
-      } finally {
-        setLoading(false)
-      }
+      await loadRoster()
+      setLoading(false)
     }
 
     if (user) load()
@@ -236,8 +239,7 @@ const AdminOfficersAccounts = () => {
     try {
       await api.delete(`/users/admins/${deleteOfficer.id}/`)
       refreshOfficers()
-      const resOfficers = await publicApi.get('/users/officers/roster/')
-      setOfficers(resOfficers.data.results || [])
+      await loadRoster()
       setDeleteOfficer(null)
       toast.success('Officer account deleted.')
     } catch (err) {
@@ -301,7 +303,7 @@ const AdminOfficersAccounts = () => {
               <p className="mt-2 text-2xl font-semibold text-slate-900">{officerRoster.length}</p>
             </div>
             <div className="text-sm text-slate-600">
-              {canEdit ? 'You can manage officer accounts.' : 'You can view officer accounts only.'}
+              {canEdit ? 'Only President can manage officers/admin accounts.' : 'You can view officer accounts only.'}
             </div>
           </div>
         </div>

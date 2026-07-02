@@ -8,7 +8,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from permissions import IsAdmin
+from permissions import CanManageContent, IsAdmin
 
 from .models import AuditLog
 from .serializers import AuditLogSerializer
@@ -152,7 +152,7 @@ class AuditLogStatsAPIView(APIView):
 
 class AuditLogCleanupAPIView(APIView):
     """Delete logs older than retention period"""
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageContent]
 
     def post(self, request):
         # Get retention days from settings or default to 90

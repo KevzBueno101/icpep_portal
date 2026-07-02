@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -62,6 +63,39 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text='If True and position=SECRETARY, can assign Treasurer/Secretary roles.'
     )
 
+    class RegistrationStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Approval'
+        APPROVED = 'APPROVED', 'Approved'
+        REJECTED = 'REJECTED', 'Rejected'
+
+    class AccessLevel(models.TextChoices):
+        FULL_CONTROL = 'FULL_CONTROL', 'Full Control'
+        MEMBERSHIP = 'MEMBERSHIP', 'Membership Access'
+        RESTRICTED = 'RESTRICTED', 'Restricted'
+
+    registration_status = models.CharField(
+        max_length=20,
+        choices=RegistrationStatus.choices,
+        default=RegistrationStatus.APPROVED,
+    )
+    access_level = models.CharField(
+        max_length=20,
+        choices=AccessLevel.choices,
+        default=AccessLevel.FULL_CONTROL,
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='approved_admin_requests',
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    requested_position = models.CharField(max_length=100, blank=True, default='')
+    requested_department = models.CharField(max_length=100, blank=True, default='')
+    requested_academic_year = models.CharField(max_length=20, blank=True, default='')
+    admin_note = models.TextField(blank=True, default='')
+
     is_active  = models.BooleanField(default=True)
     is_staff   = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -125,14 +159,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     def can_manage_roles(self):
         """
         True if this user is allowed to assign roles to others.
-        Admin always can. Officer with President position can.
+        President always has full control regardless of role or access_level.
+        Full-control admins can manage accounts. Restricted admins cannot.
         Secretary only if is_delegated=True.
         """
-        if self.role == self.Role.ADMIN:
-            return True
         position_lower = self.position.lower() if self.position else ''
-        if self.role == self.Role.OFFICER and 'president' in position_lower:
+        if 'president' in position_lower:
             return True
+        if self.role == self.Role.ADMIN:
+            return self.access_level == self.AccessLevel.FULL_CONTROL
         return 'secretary' in position_lower and self.is_delegated
 
     @property

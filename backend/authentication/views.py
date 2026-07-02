@@ -13,7 +13,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import AdminLoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import (
+    AdminLoginSerializer,
+    AdminRegistrationSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 from .utils import (
     build_password_reset_url,
     get_client_ip,
@@ -134,6 +139,20 @@ def register(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/m', block=True)
+def admin_register(request):
+    serializer = AdminRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response({
+            'message': 'Admin access request submitted successfully. Please wait for President approval.',
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='5/m', block=True)
@@ -160,12 +179,17 @@ def me(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=True)
+@ratelimit(key='ip', rate='5/15m', block=False)
 def admin_login(request):
     """
     Dedicated admin login endpoint.
     Rejects anyone who is not role=ADMIN with a position assigned.
     """
+    if getattr(request, 'limited', False):
+        return Response(
+            {'detail': 'Too many login attempts. Try again later or reset your password.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
     email = request.data.get('email', '')
     ip = get_client_ip(request)
 

@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import IsAdmin
+from permissions import CanManageMembership, IsAdmin, _is_admin_or_president
 
 from .models import MemberProfile, PaymentSettings
 from .serializers import (
@@ -19,7 +19,7 @@ from .serializers import (
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if getattr(request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(request.user):
             return True
         return obj.user == request.user
 
@@ -34,8 +34,8 @@ class MemberListAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Admins can see all members.
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        # Admins and President can see all members.
+        if _is_admin_or_president(self.request.user):
             return MemberProfile.objects.all().order_by('-created_at')
         # Members can only see their own profile.
         return MemberProfile.objects.filter(user=self.request.user).order_by('-created_at')
@@ -51,7 +51,7 @@ class MemberListAPIView(generics.ListCreateAPIView):
         profile = serializer.save()
 
         # Log member creation
-        if getattr(request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(request.user):
             log_action(
                 user=request.user,
                 action_type=AuditLog.ActionType.MEMBER_CREATED,
@@ -76,7 +76,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
         profile = serializer.save()
 
         # Log member update
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(self.request.user):
             log_action(
                 user=self.request.user,
                 action_type=AuditLog.ActionType.MEMBER_UPDATED,
@@ -93,7 +93,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
         super().perform_destroy(instance)
 
         # Log member deletion
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(self.request.user):
             log_action(
                 user=self.request.user,
                 action_type=AuditLog.ActionType.MEMBER_DELETED,
@@ -113,7 +113,13 @@ class PaymentSettingsAPIView(APIView):
         return Response(PaymentSettingsSerializer(settings_obj).data)
 
     def patch(self, request):
-        if not (request.user and request.user.is_authenticated and getattr(request.user, 'role', '').upper() == 'ADMIN' and getattr(request.user, 'position', '') in ['PRESIDENT', 'TREASURER']):
+        pos_lower = (getattr(request.user, 'position', '') or '').lower()
+        is_president = 'president' in pos_lower
+        is_treasurer = (
+            getattr(request.user, 'role', '').upper() == 'ADMIN'
+            and 'treasurer' in pos_lower
+        )
+        if not (request.user and request.user.is_authenticated and (is_president or is_treasurer)):
             return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         settings_obj, _ = PaymentSettings.objects.get_or_create(id=1)
         serializer = PaymentSettingsSerializer(settings_obj, data=request.data, partial=True)
@@ -135,7 +141,7 @@ class PaymentSettingsAPIView(APIView):
 
 
 class MemberApproveAPIView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageMembership]
 
     def post(self, request, pk):
         profile = get_object_or_404(MemberProfile, pk=pk)
@@ -177,7 +183,7 @@ class MemberRenewAllAPIView(APIView):
     proof of payment, and COE/ID document. After renewal submission, their status
     becomes PENDING and they wait for admin approval.
     """
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageMembership]
 
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)

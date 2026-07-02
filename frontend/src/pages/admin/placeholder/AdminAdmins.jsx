@@ -37,6 +37,12 @@ const AdminAdmins = ({ refreshTrigger }) => {
   const [saving, setSaving] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
 
+  const [brokenImages, setBrokenImages] = useState(new Set())
+  const [pendingRequests, setPendingRequests] = useState([])
+  const [pendingLoading, setPendingLoading] = useState(false)
+  const [approvalBusyId, setApprovalBusyId] = useState(null)
+  const [selectedAccessLevels, setSelectedAccessLevels] = useState({})
+
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -50,9 +56,44 @@ const AdminAdmins = ({ refreshTrigger }) => {
     year_level: '',
     department: '',
     academic_year: '',
+    access_level: 'RESTRICTED',
   })
 
   const canEdit = useMemo(() => user?.can_manage_roles, [user])
+  const canReviewApprovals = useMemo(() => user?.role === 'ADMIN' && String(user?.position).toLowerCase().includes('president'), [user])
+
+  const loadPendingRequests = async () => {
+    if (!canReviewApprovals) {
+      setPendingRequests([])
+      return
+    }
+    setPendingLoading(true)
+    try {
+      const res = await api.get('/users/admins/pending/')
+      setPendingRequests(res.data || [])
+    } catch (err) {
+      setPendingRequests([])
+    } finally {
+      setPendingLoading(false)
+    }
+  }
+
+  const handleApprovalAction = async (requestId, action) => {
+    if (!canReviewApprovals) return
+    setApprovalBusyId(requestId)
+    try {
+      const payload = action === 'approve' ? { access_level: selectedAccessLevels[requestId] || 'RESTRICTED' } : {}
+      await api.post(`/users/admins/${requestId}/${action}/`, payload)
+      await loadPendingRequests()
+      const res = await api.get('/users/admins/')
+      setAdmins(res.data.results || [])
+      toast.success(action === 'approve' ? 'Admin request approved.' : 'Admin request rejected.')
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Unable to process admin request.')
+    } finally {
+      setApprovalBusyId(null)
+    }
+  }
 
   useEffect(() => {
     const loadAdmins = async () => {
@@ -61,7 +102,11 @@ const AdminAdmins = ({ refreshTrigger }) => {
         const res = await api.get('/users/admins/')
         setAdmins(res.data.results || [])
       } catch (err) {
-        toast.error('Unable to load admin accounts.')
+        if (err.response?.status === 403) {
+          setAdmins([])
+        } else {
+          toast.error('Unable to load admin accounts.')
+        }
       } finally {
         setLoading(false)
       }
@@ -69,8 +114,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
 
     if (user) {
       loadAdmins()
+      loadPendingRequests()
     }
-  }, [user, refreshTrigger])
+  }, [user, refreshTrigger, canReviewApprovals])
 
   const resetForm = () => {
     setForm({
@@ -86,6 +132,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
       year_level: '',
       department: '',
       academic_year: '',
+      access_level: 'RESTRICTED',
     })
     setEditAdmin(null)
   }
@@ -110,6 +157,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
       year_level: admin.year_level || '',
       department: admin.department || '',
       academic_year: admin.academic_year || '',
+      access_level: admin.access_level || 'RESTRICTED',
     })
     setModalOpen(true)
   }
@@ -152,6 +200,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
         position: form.position,
         is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
+        access_level: form.access_level,
       }
 
 
@@ -264,6 +313,62 @@ const AdminAdmins = ({ refreshTrigger }) => {
         </div>
       </div>
 
+      {canReviewApprovals && (
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Pending admin requests</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{pendingRequests.length}</p>
+              </div>
+              <div className="text-sm text-slate-600">President review queue for new admin access.</div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {pendingLoading ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">Loading requests…</div>
+            ) : pendingRequests.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">No pending admin requests.</div>
+            ) : (
+              <div className="space-y-4">
+                {pendingRequests.map((request) => (
+                  <div key={request.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="font-semibold text-slate-900">{request.first_name} {request.last_name}</p>
+                        <p className="mt-1 text-sm text-slate-600">{request.email}</p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          Requested position: {request.requested_position || '—'} • Department: {request.requested_department || '—'}
+                        </p>
+                        {request.admin_note && <p className="mt-2 text-sm text-slate-600">{request.admin_note}</p>}
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <select
+                          value={selectedAccessLevels[request.id] || 'RESTRICTED'}
+                          onChange={(e) => setSelectedAccessLevels((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                        >
+                          <option value="RESTRICTED">Restricted</option>
+                          <option value="MEMBERSHIP">Membership Access</option>
+                          <option value="FULL_CONTROL">Full Control</option>
+                        </select>
+                        <button type="button" onClick={() => handleApprovalAction(request.id, 'approve')} disabled={approvalBusyId === request.id} className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50">
+                          {approvalBusyId === request.id ? 'Processing…' : 'Approve'}
+                        </button>
+                        <button type="button" onClick={() => handleApprovalAction(request.id, 'reject')} disabled={approvalBusyId === request.id} className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50">
+                          {approvalBusyId === request.id ? 'Processing…' : 'Reject'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -307,17 +412,20 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     className="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
-                      {admin.profile_picture ? (
-                        <img
-                          src={resolveProfilePictureUrl(admin.profile_picture)}
-                          alt={admin.username}
-                          className="h-16 w-16 flex-shrink-0 rounded-full object-cover border-2 border-white shadow-sm"
-                        />
-                      ) : (
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white shadow-sm">
-                          <User size={28} />
-                        </div>
-                      )}
+                      <div className="relative h-16 w-16 flex-shrink-0">
+                        {admin.profile_picture && !brokenImages.has(admin.id) ? (
+                          <img
+                            src={resolveProfilePictureUrl(admin.profile_picture)}
+                            alt={admin.username}
+                            className="h-full w-full rounded-full object-cover border-2 border-white shadow-sm"
+                            onError={() => setBrokenImages((prev) => new Set(prev).add(admin.id))}
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white shadow-sm">
+                            <User size={28} />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 truncate">{admin.username}</p>
                         <p className="text-sm text-slate-500 truncate">{admin.email}</p>
@@ -337,6 +445,18 @@ const AdminAdmins = ({ refreshTrigger }) => {
                           admin.position ? 'text-sky-700' : 'text-slate-500'
                         }`}>
                           {admin.position || 'No position'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="text-xs text-slate-600">Access</span>
+                        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                          admin.access_level === 'FULL_CONTROL' ? 'text-purple-700' :
+                          admin.access_level === 'MEMBERSHIP' ? 'text-emerald-700' :
+                          'text-slate-500'
+                        }`}>
+                          {admin.access_level === 'FULL_CONTROL' ? 'Full Control' :
+                           admin.access_level === 'MEMBERSHIP' ? 'Membership' :
+                           'Restricted'}
                         </span>
                       </div>
                       {admin.department && (
@@ -442,6 +562,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
                       src={resolveProfilePictureUrl(editAdmin.profile_picture)}
                       alt="Current profile"
                       className="h-20 w-20 rounded-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none' }}
                     />
                   )}
                   {form.profile_picture && (
@@ -555,6 +676,21 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   />
                 </label>
 
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span>Access Level</span>
+                  <select
+                    value={form.access_level}
+                    onChange={(e) => handleFormChange('access_level', e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                  >
+                    <option value="FULL_CONTROL">Full Control</option>
+                    <option value="MEMBERSHIP">Membership Access</option>
+                    <option value="RESTRICTED">Restricted</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 text-sm text-slate-700">
                   <span>Secretary delegation</span>
                   <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
@@ -567,6 +703,14 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     <span>Enable delegation (only applies to Secretary positions)</span>
                   </label>
                 </div>
+
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span></span>
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-400">
+                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full border border-slate-400 text-[10px] font-bold leading-none text-slate-400 shrink-0">i</span>
+                    <span className="opacity-60">Access level determines what this admin can do. Full Control = everything, Membership = member management only, Restricted = view only.</span>
+                  </div>
+                </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

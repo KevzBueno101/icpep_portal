@@ -67,7 +67,7 @@ const AdminDashboard = () => {
   }, [user])
 
   const canManageRoles = !!user?.can_manage_roles
-  const isPresident = user?.position === 'PRESIDENT'
+  const isPresident = String(user?.position || '').toLowerCase().includes('president')
   const canApproveMembers = user?.position === 'PRESIDENT' || user?.position === 'SECRETARY'
 
   useEffect(() => {

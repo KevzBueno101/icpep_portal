@@ -6,6 +6,7 @@ from .views import EmailTokenObtainPairView
 
 urlpatterns = [
     path('register/',         views.register,                  name='register'),
+    path('admin-register/',   views.admin_register,            name='admin-register'),
     path('availability/',     views.check_availability,        name='availability'),
     path('login/',            EmailTokenObtainPairView.as_view(), name='login'),
     path('admin-login/',      views.admin_login,               name='admin-login'),
