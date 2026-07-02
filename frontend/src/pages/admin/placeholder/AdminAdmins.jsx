@@ -681,7 +681,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <select
                     value={form.access_level}
                     onChange={(e) => handleFormChange('access_level', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     <option value="FULL_CONTROL">Full Control</option>
                     <option value="MEMBERSHIP">Membership Access</option>
