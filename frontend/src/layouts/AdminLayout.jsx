@@ -15,6 +15,7 @@ const AdminLayout = ({
   const [yearEndBusy, setYearEndBusy] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [newLogsBadge, setNewLogsBadge] = useState(0)
+  const isRestricted = user?.access_level === 'RESTRICTED'
 
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1)
@@ -77,6 +78,11 @@ const AdminLayout = ({
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
+      {isRestricted && (
+        <div className="fixed top-0 right-0 z-[60] bg-amber-500 text-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg rounded-bl-lg">
+          Restricted Account — Read Only
+        </div>
+      )}
       <button
         type="button"
         className="lg:hidden fixed left-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-1 ring-white/10"

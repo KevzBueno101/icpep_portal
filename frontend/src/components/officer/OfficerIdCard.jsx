@@ -156,7 +156,7 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
   const [saving, setSaving] = useState(false)
 
   const fullName = useMemo(() => {
-    return [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Authorized Officer'
+    return [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || '—'
   }, [profile])
 
   const officerId = profile?.officer_id || ''
@@ -164,7 +164,7 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
   const qrPayload = useMemo(() => {
     const uid = user?.id || profile?.id || ''
     const pos = profile?.position || '\u2014'
-    const nameValue = fullName || 'Authorized Officer'
+    const nameValue = fullName || '—'
     const positionValue = pos || '\u2014'
     const idValue = officerId || ''
     return `name=${encodeURIComponent(nameValue)}|position=${encodeURIComponent(positionValue)}|id=${encodeURIComponent(idValue)}|uid=${uid}`
