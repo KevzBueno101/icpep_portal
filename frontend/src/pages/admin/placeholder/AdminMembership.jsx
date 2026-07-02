@@ -669,7 +669,7 @@ const AdminMembership = () => {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-x-auto">
           <table className="w-full table-auto text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
               <tr>

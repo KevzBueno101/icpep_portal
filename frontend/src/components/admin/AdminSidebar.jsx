@@ -88,14 +88,14 @@ export default function AdminSidebar({
   }, [user?.username, userPosition])
 
   const sidebar = (
-    <aside className="bg-[#001F4D] text-white lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full overflow-hidden">
+    <aside className="bg-[#001F4D] text-white lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full overflow-y-auto">
       <div className="flex h-full flex-col border-r border-white/10">
-        <div className="px-4 py-4">
+        <div className="shrink-0 px-4 py-4">
           <p className="text-[11px] uppercase tracking-[0.2em] text-blue-100/70">Admin</p>
           <p className="mt-1 text-base font-bold">Navigation</p>
         </div>
 
-        <div className="px-2 pb-3">
+        <div className="shrink-0 px-2 pb-3">
           <div className="rounded-2xl bg-white/5 p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -169,7 +169,7 @@ export default function AdminSidebar({
           </div>
         </div>
 
-        <nav className="flex-1 min-h-0 overflow-y-auto px-2 pb-3">
+        <nav className="px-2 pb-3">
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const badge =

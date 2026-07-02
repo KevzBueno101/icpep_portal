@@ -106,7 +106,7 @@ const AdminLayout = ({
             isPresident={String(user?.position || '').toLowerCase().includes('president')}
           />
 
-          <div className="min-w-0 flex-1 lg:ml-56">
+          <div className="min-w-0 flex-1 lg:ml-56 pt-14 lg:pt-0">
             <div className="pb-8">
               {childrenWithProps}
             </div>
