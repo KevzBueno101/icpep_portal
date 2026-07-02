@@ -77,6 +77,7 @@ export default function AdminProfile() {
           {[
             { label: 'Email', value: profile?.email, icon: <Mail className="h-4 w-4" /> },
             { label: 'Username', value: profile?.username ? `@${profile.username}` : '—', icon: <User className="h-4 w-4" /> },
+            { label: 'Officer ID', value: profile?.officer_id || '—', icon: <BadgeCheck className="h-4 w-4" /> },
             { label: 'Role', value: profile?.role, icon: <Shield className="h-4 w-4" /> },
             { label: 'Position', value: positionDisplay, icon: <Briefcase className="h-4 w-4" /> },
             { label: 'Department', value: profile?.department || '—', icon: <Building2 className="h-4 w-4" /> },
