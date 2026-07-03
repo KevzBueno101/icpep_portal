@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
@@ -173,6 +173,22 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
   const avatarInitial = String(profile?.first_name || '?').slice(0, 1).toUpperCase()
 
   const profilePictureUrl = profilePictureUrlProp || profile?.profile_picture || null
+
+  const cardWrapperRef = useRef(null)
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    const el = cardWrapperRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width
+        setScale(Math.min(1, w / CARD_W))
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const loadImg = (src) => new Promise((resolve) => {
     if (!src) { resolve(null); return }
@@ -388,17 +404,19 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
 
   return (
     <div className="w-full flex flex-col items-center p-4">
-      <div className="w-full overflow-x-auto flex justify-center">
-        <DisplayCard
-          ref={cardRef}
-          qrPayload={qrPayload}
-          fullName={fullName}
-          position={profile?.position || ''}
-          yearText={''}
-          officerId={officerId}
-          profilePictureUrl={profilePictureUrl}
-          avatarInitial={avatarInitial}
-        />
+      <div ref={cardWrapperRef} className="w-full flex justify-center overflow-hidden" style={{ height: CARD_H * scale }}>
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top center', flexShrink: 0 }}>
+          <DisplayCard
+            ref={cardRef}
+            qrPayload={qrPayload}
+            fullName={fullName}
+            position={profile?.position || ''}
+            yearText={''}
+            officerId={officerId}
+            profilePictureUrl={profilePictureUrl}
+            avatarInitial={avatarInitial}
+          />
+        </div>
       </div>
 
       <div className="mt-8 w-full max-w-xs space-y-3">
