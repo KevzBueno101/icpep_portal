@@ -29,8 +29,8 @@ export default function AdminProfile() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex items-center gap-6">
-        <div className="h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+        <div className="h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center mx-auto sm:mx-0">
           {profilePictureUrl ? (
             <img src={profilePictureUrl} alt={fullName} className="h-full w-full object-cover" />
           ) : (
@@ -38,10 +38,10 @@ export default function AdminProfile() {
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-center sm:text-left">
           <h1 className="text-2xl font-bold text-slate-900 truncate">{fullName}</h1>
           <p className="text-sm text-slate-500 mt-1">@{profile?.username || '—'}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
             <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
               {profile?.role || 'ADMIN'}
             </span>
@@ -62,7 +62,7 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end flex-shrink-0">
           <button
             type="button"
             onClick={() => navigate('/admin/officer-id')}

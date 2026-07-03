@@ -36,7 +36,7 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
         <img
           src={avatarUrl}
           alt={fullName}
-          className="h-56 w-full bg-slate-200 object-cover"
+          className="h-56 w-full bg-slate-200 object-contain"
           onError={() => setImageError(true)}
           loading="lazy"
         />

@@ -58,7 +58,7 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
   const hasMultiple = images.length > 1
 
   return (
-      <div className="fixed inset-0 z-40 bg-black/90 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm">
         {/* Close button - on the overlay, always visible */}
         <button
           type="button"
