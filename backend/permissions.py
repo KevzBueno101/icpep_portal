@@ -27,14 +27,14 @@ class IsPresident(BasePermission):
 
 
 class CanManageMembership(BasePermission):
-    """Only FULL_CONTROL admins can manage members (approve/renew)."""
+    """Allows FULL_CONTROL and MEMBERSHIP to manage members. Blocks RESTRICTED."""
     def has_permission(self, request, view):
         from users.models import User
         return bool(
             request.user
             and request.user.is_authenticated
             and _is_admin_or_president(request.user)
-            and getattr(request.user, 'access_level', User.AccessLevel.FULL_CONTROL) == User.AccessLevel.FULL_CONTROL
+            and getattr(request.user, 'access_level', User.AccessLevel.FULL_CONTROL) != User.AccessLevel.RESTRICTED
         )
 
 

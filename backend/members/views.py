@@ -46,13 +46,11 @@ class MemberListAPIView(generics.ListCreateAPIView):
         return MemberProfileSerializer
 
     def create(self, request, *args, **kwargs):
-        # RESTRICTED/MEMBERSHIP admins cannot create members via admin panel.
+        # RESTRICTED admins cannot create members via admin panel.
         if _is_admin_or_president(request.user):
-            from users.models import User
-            pos_lower = (getattr(request.user, 'position', '') or '').lower()
-            if 'president' not in pos_lower and getattr(request.user, 'access_level', None) != User.AccessLevel.FULL_CONTROL:
+            if getattr(request.user, 'access_level', None) == 'RESTRICTED':
                 return Response(
-                    {'detail': 'Only full-access accounts can create members.'},
+                    {'detail': 'Restricted accounts cannot create members.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
