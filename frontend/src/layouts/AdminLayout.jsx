@@ -79,7 +79,7 @@ const AdminLayout = ({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       {isRestricted && (
-        <div className="fixed top-0 right-0 z-[60] text-slate-500 px-3 py-1 text-[10px] font-medium opacity-40">
+        <div className="fixed top-0 right-0 z-[60] text-slate-400 px-3 py-1 text-[10px] font-medium opacity-20">
           Restricted Account — Read Only
         </div>
       )}

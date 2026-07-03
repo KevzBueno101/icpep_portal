@@ -5,8 +5,10 @@ import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import { useAuth } from '../../../context/useAuth'
 
 const AdminMembership = () => {
+  const { user } = useAuth()
 
 
   const [members, setMembers] = useState([])
@@ -33,6 +35,8 @@ const AdminMembership = () => {
 
 
   const navigate = useNavigate()
+
+  const isRestricted = user?.access_level === 'RESTRICTED'
 
 
   // Add Member Modal State
@@ -481,7 +485,8 @@ const AdminMembership = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+                disabled={isRestricted}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <FileDown className="w-4 h-4" />
                 Export CSV
@@ -489,14 +494,16 @@ const AdminMembership = () => {
               <button
                 type="button"
                 onClick={() => setIsRenewConfirmOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition"
+                disabled={isRestricted}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <RefreshCw className="w-4 h-4" />
                 Renew All
               </button>
               <button
                 onClick={handleOpenAddModal}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                disabled={isRestricted}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 Add Member
