@@ -253,8 +253,8 @@ const MembershipPending = () => {
         </div>
 
         {showRenewModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8">
-            <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8 overflow-y-auto">
+            <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">Renew Your Membership</h2>
