@@ -32,10 +32,13 @@ export default function useAdminProfile() {
     return () => window.removeEventListener('profile-updated', handler)
   }, [fetchProfile])
 
-  // Use #cache=timestamp for browser cache-busting (fragment is NOT sent to server,
-  // so Cloudinary will never see it — safe from 404s).
+  // Use _cb=timestamp for browser cache-busting
   const profilePictureUrl = profile?.profile_picture
-    ? `${profile.profile_picture}#cache=${cacheKey}`
+    ? (() => {
+        const url = profile.profile_picture
+        const separator = url.includes('?') ? '&' : '?'
+        return `${url}${separator}_cb=${cacheKey}`
+      })()
     : null
 
   const refetch = fetchProfile

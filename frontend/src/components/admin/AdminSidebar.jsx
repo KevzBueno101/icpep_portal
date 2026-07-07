@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
@@ -78,6 +78,23 @@ export default function AdminSidebar({
   const onNavigate = () => setMobileOpen(false)
 
   const userPosition = user?.position || 'NONE'
+
+  // Cache-bust profile picture URL so it updates immediately after change
+  const prevPicRef = useRef(user?.profile_picture)
+  const [picVersion, setPicVersion] = useState(0)
+  useEffect(() => {
+    if (user?.profile_picture && user.profile_picture !== prevPicRef.current) {
+      setPicVersion(v => v + 1)
+      prevPicRef.current = user.profile_picture
+    }
+  }, [user?.profile_picture])
+
+  const profilePicSrc = useMemo(() => {
+    if (!user?.profile_picture) return null
+    const base = resolveProfilePictureUrl(user.profile_picture)
+    const sep = base.includes('?') ? '&' : '?'
+    return `${base}${sep}_cb=${picVersion}`
+  }, [user?.profile_picture, picVersion])
   const userCard = useMemo(() => {
     const username = user?.username ? `@${user.username}` : '@admin'
     return { username, userPosition }
@@ -97,7 +114,7 @@ export default function AdminSidebar({
               <div className="flex items-center gap-3 min-w-0">
                 {user?.profile_picture ? (
                   <img
-                    src={resolveProfilePictureUrl(user.profile_picture)}
+                    src={profilePicSrc}
                     alt={user.username}
                     className="h-10 w-10 flex-shrink-0 rounded-full object-cover border-2 border-white/20 overflow-hidden"
                   />
