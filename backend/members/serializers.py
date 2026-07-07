@@ -8,13 +8,13 @@ ALLOWED_IMAGE_TYPES = {
     'rgb', 'gif', 'pbm', 'pgm', 'ppm',
     'tiff', 'rast', 'xbm', 'jpeg', 'png', 'webp'
 }
-MAX_IMAGE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 def validate_image_file(value):
     if value is None:
         return value
     if value.size > MAX_IMAGE_SIZE:
-        raise serializers.ValidationError("Max image size is 50 MB.")
+        raise serializers.ValidationError("Max image size is 10 MB.")
     detected = imghdr.what(value)
     if detected not in ALLOWED_IMAGE_TYPES:
         raise serializers.ValidationError(

@@ -79,10 +79,10 @@ export default function EditAdminProfile({ triggerRefresh }) {
   const handleFileSelect = (file) => {
     if (!file) return
 
-    // Validate file size (max 50MB)
-    const maxBytes = 50 * 1024 * 1024
+    // Validate file size (max 10MB)
+    const maxBytes = 10 * 1024 * 1024
     if (file.size > maxBytes) {
-      toast.error('Profile picture must be less than 50MB.')
+      toast.error('Profile picture must be less than 10MB.')
       return
     }
 
@@ -440,7 +440,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
                     </label>
                   )}
                   {!previewUrl && (
-                    <p className="text-xs text-slate-500">Supported formats: JPG, PNG, JPEG (Max 50MB)</p>
+                    <p className="text-xs text-slate-500">Supported formats: JPG, PNG, JPEG (Max 10MB)</p>
                   )}
                 </div>
               </div>
