@@ -63,9 +63,6 @@ export default function AdminSidebar({
   badges = {},
   quickActions = { enabled: true },
   logout,
-  onYearEndReset,
-  yearEndBusy = false,
-  isPresident = false,
 }) {
   // Ensure optional props don’t trigger lint errors when not used in some builds.
   void logout
@@ -73,7 +70,6 @@ export default function AdminSidebar({
   const { user } = useAuth()
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)
-  const [confirmYearEndOpen, setConfirmYearEndOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const pendingBadge = badges?.pendingMembership
@@ -209,17 +205,6 @@ export default function AdminSidebar({
           >
             Sign Out
           </button>
-
-          {isPresident && (
-            <button
-              type="button"
-              disabled={yearEndBusy}
-              onClick={() => setConfirmYearEndOpen(true)}
-              className="mt-3 w-full rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-[#003C8F] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {yearEndBusy ? 'Resetting...' : 'Year-End Reset'}
-            </button>
-          )}
         </div>
       </div>
     </aside>
@@ -254,21 +239,6 @@ export default function AdminSidebar({
           if (typeof logout === 'function') logout()
         }}
         onCancel={() => setConfirmLogoutOpen(false)}
-      />
-
-      <ConfirmModal
-        isOpen={confirmYearEndOpen}
-        variant="info"
-        title="Year-End Reset"
-        description="This will perform the year-end reset across admin/members data."
-        confirmText="Proceed with reset"
-        cancelText="Cancel"
-        busy={yearEndBusy}
-        onConfirm={() => {
-          setConfirmYearEndOpen(false)
-          if (typeof onYearEndReset === 'function') onYearEndReset()
-        }}
-        onCancel={() => setConfirmYearEndOpen(false)}
       />
     </>
   )

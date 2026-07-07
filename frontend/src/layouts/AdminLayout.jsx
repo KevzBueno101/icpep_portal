@@ -3,7 +3,6 @@ import React from 'react'
 import { useAuth } from '../context/useAuth'
 import AdminSidebar from '../components/admin/AdminSidebar'
 import api from '../api/axios'
-import toast from 'react-hot-toast'
 
 const AdminLayout = ({
   children,
@@ -12,7 +11,6 @@ const AdminLayout = ({
 }) => {
   const { user, loading, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [yearEndBusy, setYearEndBusy] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [newLogsBadge, setNewLogsBadge] = useState(0)
   const isRestricted = user?.access_level === 'RESTRICTED'
@@ -40,27 +38,10 @@ const AdminLayout = ({
     fetchLogsStats()
   }, [user, refreshTrigger])
 
-  const handleYearEndReset = async () => {
-    setYearEndBusy(true)
-    try {
-      const res = await api.post('/users/admins/year-end-reset/')
-      toast.success(res.data.message || 'Year-end reset complete.')
-      // Reload the page to refresh all data
-      window.location.reload()
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Year-end reset failed.')
-    } finally {
-      setYearEndBusy(false)
-    }
-  }
-
-  // Clone children and pass Year-End reset props
+  // Clone children and pass refresh props
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       return React.cloneElement(child, {
-        onYearEndReset: handleYearEndReset,
-        yearEndBusy,
-        isPresident: String(user?.position || '').toLowerCase().includes('president'),
         refreshTrigger,
         triggerRefresh,
       })
@@ -107,9 +88,6 @@ const AdminLayout = ({
             }}
             quickActions={quickActions}
             logout={logout}
-            onYearEndReset={handleYearEndReset}
-            yearEndBusy={yearEndBusy}
-            isPresident={String(user?.position || '').toLowerCase().includes('president')}
           />
 
           <div className="min-w-0 flex-1 lg:ml-56 pt-14 lg:pt-0">
