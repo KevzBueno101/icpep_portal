@@ -91,9 +91,9 @@ export default function MemberProfile() {
   const onSelectProfilePicture = (file) => {
     if (!file) return
 
-    const maxBytes = 5 * 1024 * 1024
+    const maxBytes = 50 * 1024 * 1024
     if (file.size > maxBytes) {
-      toast.error('Profile picture must be less than 5MB.')
+      toast.error('Profile picture must be less than 50MB.')
       return
     }
 

@@ -89,8 +89,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_coe_id_image(self, value):
         if value:
-            if value.size > 5 * 1024 * 1024:
-                raise serializers.ValidationError('File size must not exceed 5MB.')
+            if value.size > 50 * 1024 * 1024:
+                raise serializers.ValidationError('File size must not exceed 50MB.')
             allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
             if value.content_type not in allowed_types:
                 raise serializers.ValidationError('Only JPG, PNG, and PDF files are allowed.')

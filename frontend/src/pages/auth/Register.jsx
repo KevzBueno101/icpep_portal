@@ -376,9 +376,9 @@ const Register = () => {
     const file = e.target.files?.[0] ?? null
     
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must not exceed 5MB')
+      // Validate file size (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error('File size must not exceed 50MB')
         return
       }
       
@@ -752,7 +752,7 @@ const Register = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 5MB)</p>
+                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 50MB)</p>
                   </div>
                   <input
                     type="file"

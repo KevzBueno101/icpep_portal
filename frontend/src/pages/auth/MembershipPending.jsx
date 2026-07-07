@@ -334,7 +334,7 @@ const MembershipPending = () => {
                         </div>
                         <div className="space-y-1">
                           <p className="text-base font-semibold text-[#111827]">Drag & drop or choose file to upload</p>
-                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG, PDF (Max 5MB)</p>
+                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG, PDF (Max 50MB)</p>
                         </div>
                       </>
                     )}
