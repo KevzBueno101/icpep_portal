@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Upload } from 'lucide-react'
+import { Upload, Info } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 
@@ -21,6 +21,8 @@ const MembershipPending = () => {
   const [coeIdPreview, setCoeIdPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [renewError, setRenewError] = useState(null)
+  const [gcashNumber, setGcashNumber] = useState('')
+  const [gcashName, setGcashName] = useState('')
   const intervalRef = useRef(null)
 
   // ✅ Auto-poll: silently check approval status every 8 seconds.
@@ -49,6 +51,19 @@ const MembershipPending = () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [user, refreshUser, navigate])
+
+  useEffect(() => {
+    const loadPaymentSettings = async () => {
+      try {
+        const res = await api.get('/members/payment-settings/')
+        setGcashNumber(res.data.gcash_number || '')
+        setGcashName(res.data.gcash_name || '')
+      } catch {
+        // non-critical
+      }
+    }
+    loadPaymentSettings()
+  }, [])
 
   // ─── Early returns (guards) ───────────────────────────────────────────────
 
@@ -334,7 +349,35 @@ const MembershipPending = () => {
                       </div>
                     </label>
                   </div>
-                </div>
+                  </div>
+
+                  {paymentMethod === 'GCASH' ? (
+                    <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+                      <p className="font-semibold text-slate-900">GCash payment details</p>
+                      {gcashNumber || gcashName ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-600">Name</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashName || 'GCash account'}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-600">GCash #</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashNumber || '—'}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-slate-600">
+                          The GCash details have not been set yet. Ask the admin for the current payment account before uploading proof.
+                        </p>
+                      )}
+                      <p className="mt-3 text-slate-600">Upload the screenshot of payment proof after sending.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                      <Info className="h-5 w-5 shrink-0 mt-0.5" />
+                      <p>Please take a picture with the designated officer as proof of on-hand payment.</p>
+                    </div>
+                  )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Payment Proof</label>
