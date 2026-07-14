@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2 } from 'lucide-react'
+import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText } from 'lucide-react'
 
 import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
@@ -30,6 +30,11 @@ const AdminMembership = () => {
   // Delete Member State
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // History Modal State
+  const [historyTarget, setHistoryTarget] = useState(null)
+  const [historyTransactions, setHistoryTransactions] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const itemsPerPage = 10
 
@@ -225,6 +230,22 @@ const AdminMembership = () => {
       toast.error(err.response?.data?.detail || 'Failed to delete member.')
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const fetchMemberHistory = async (member) => {
+    setHistoryTarget(member)
+    setHistoryTransactions([])
+    setHistoryLoading(true)
+    try {
+      const res = await api.get('/members/transactions/', {
+        params: { member: member.id }
+      })
+      setHistoryTransactions(res.data.results ?? res.data)
+    } catch {
+      toast.error('Failed to load transaction history.')
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -641,6 +662,17 @@ const AdminMembership = () => {
 
                           <button
                             type="button"
+                            onClick={() => fetchMemberHistory(member)}
+                            className="w-full rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-600 transition"
+                          >
+                            <span className="flex items-center justify-center gap-2">
+                              <ScrollText className="w-4 h-4" />
+                              History
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => handleOpenEditModal(member)}
                             className="w-full rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition"
                           >
@@ -748,6 +780,15 @@ const AdminMembership = () => {
                             title="Verify"
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => fetchMemberHistory(member)}
+                            className="rounded-full bg-indigo-50 p-1.5 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition"
+                            title="History"
+                          >
+                            <ScrollText className="w-3.5 h-3.5" />
                           </button>
 
                           <button
@@ -1322,6 +1363,111 @@ const AdminMembership = () => {
         onConfirm={handleDeleteMember}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {/* History Modal */}
+      {historyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setHistoryTarget(null)}>
+          <div
+            className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 rounded-t-3xl">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Transaction History</h3>
+                <p className="text-sm text-slate-500">
+                  {historyTarget.first_name} {historyTarget.last_name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoryTarget(null)}
+                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5">
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-sky-600" />
+                  <span className="ml-3 text-sm text-slate-500">Loading transactions…</span>
+                </div>
+              ) : historyTransactions.length === 0 ? (
+                <div className="py-12 text-center text-sm text-slate-400">
+                  No transactions found for this member.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <th className="pb-2 pr-3 whitespace-nowrap">Ref #</th>
+                        <th className="pb-2 pr-3 whitespace-nowrap">Date</th>
+                        <th className="pb-2 pr-3 whitespace-nowrap">Type</th>
+                        <th className="pb-2 pr-3 whitespace-nowrap">Method</th>
+                        <th className="pb-2 pr-3 whitespace-nowrap">Status</th>
+                        <th className="pb-2 whitespace-nowrap">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyTransactions.map((txn) => (
+                        <tr key={txn.id} className="border-b border-slate-50 last:border-0">
+                          <td className="py-3 pr-3 font-mono text-xs text-slate-700 whitespace-nowrap">
+                            {txn.reference_number}
+                          </td>
+                          <td className="py-3 pr-3 text-slate-700 whitespace-nowrap">
+                            {new Date(txn.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 pr-3 text-slate-700 whitespace-nowrap">
+                            {txn.transaction_type_display}
+                          </td>
+                          <td className="py-3 pr-3 text-slate-700 whitespace-nowrap">
+                            {txn.payment_method_display}
+                          </td>
+                          <td className="py-3 pr-3 whitespace-nowrap">
+                            <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                              {txn.status_display}
+                            </span>
+                          </td>
+                          <td className="py-3 whitespace-nowrap">
+                            <div className="flex gap-2">
+                              {txn.receipt_image ? (
+                                <a
+                                  href={txn.receipt_image}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                                >
+                                  Receipt
+                                </a>
+                              ) : (
+                                <span className="text-xs text-slate-400">—</span>
+                              )}
+                              {txn.payment_proof_image && (
+                                <a
+                                  href={txn.payment_proof_image}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition"
+                                >
+                                  Proof
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

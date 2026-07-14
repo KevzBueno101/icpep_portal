@@ -1,3 +1,7 @@
+import io
+from datetime import date
+
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -7,14 +11,37 @@ from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
 from permissions import CanManageMembership, IsAdmin, _is_admin_or_president
 
-from .models import MemberProfile, PaymentSettings
+from .models import MemberProfile, PaymentSettings, PaymentTransaction
+from .receipt_generator import generate_receipt_png
 from .serializers import (
     MemberApprovalSerializer,
     MemberCreateSerializer,
     MemberProfileSerializer,
     MemberRenewSerializer,
     PaymentSettingsSerializer,
+    PaymentTransactionSerializer,
 )
+
+
+def get_current_academic_year():
+    today = date.today()
+    if today.month >= 8:
+        return f"{today.year}-{today.year + 1}"
+    return f"{today.year - 1}-{today.year}"
+
+
+def generate_ref_number():
+    year = date.today().year
+    prefix = f"ICPEP-{year}-"
+    last_txn = PaymentTransaction.objects.filter(
+        reference_number__startswith=prefix
+    ).order_by('-reference_number').first()
+    if last_txn:
+        last_seq = int(last_txn.reference_number.split('-')[-1])
+        next_seq = last_seq + 1
+    else:
+        next_seq = 1
+    return f"{prefix}{next_seq:04d}"
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -167,6 +194,38 @@ class MemberApproveAPIView(APIView):
         serializer.save()
         new_status = profile.membership_status
 
+        # When approving, auto-create a PaymentTransaction + e-receipt
+        if new_status == 'APPROVED':
+            txn_data = {
+                'member': profile,
+                'transaction_type': 'RENEWAL' if old_status == 'EXPIRED' else 'REGISTRATION',
+                'payment_method': profile.payment_method or 'ON_HAND',
+                'status': 'VERIFIED',
+                'reference_number': generate_ref_number(),
+                'academic_year': get_current_academic_year(),
+                'approved_by_name': f"{request.user.first_name} {request.user.last_name}",
+            }
+            transaction = PaymentTransaction.objects.create(**txn_data)
+
+            # Copy payment proof image from member profile
+            if profile.payment_proof_image:
+                transaction.payment_proof_image = profile.payment_proof_image
+                transaction.save(update_fields=['payment_proof_image'])
+
+            try:
+                receipt_bytes = generate_receipt_png(transaction, profile)
+                transaction.receipt_image.save(
+                    f"receipt_{transaction.reference_number}.png",
+                    ContentFile(receipt_bytes),
+                    save=True,
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Failed to generate receipt for %s: %s",
+                    transaction.reference_number, e
+                )
+
         # Log member approval/rejection
         if new_status == 'APPROVED':
             action_type = AuditLog.ActionType.MEMBER_APPROVED
@@ -246,3 +305,23 @@ class MemberRenewAPIView(APIView):
             MemberProfileSerializer(profile).data,
             status=status.HTTP_200_OK
         )
+
+
+class MemberTransactionListAPIView(generics.ListAPIView):
+    """List all payment transactions for the authenticated member."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PaymentTransactionSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if _is_admin_or_president(user):
+            qs = PaymentTransaction.objects.all().order_by('-created_at')
+            member_id = self.request.query_params.get('member')
+            if member_id:
+                qs = qs.filter(member_id=member_id)
+            return qs
+        try:
+            profile = MemberProfile.objects.get(user=user)
+        except MemberProfile.DoesNotExist:
+            return PaymentTransaction.objects.none()
+        return PaymentTransaction.objects.filter(member=profile).order_by('-created_at')

@@ -14,6 +14,7 @@ const MembershipPending = () => {
   const [checking, setChecking] = useState(false)
   const [showRenewModal, setShowRenewModal] = useState(false)
   const [yearLevel, setYearLevel] = useState(user?.year_level || '1')
+  const [paymentMethod, setPaymentMethod] = useState('GCASH')
   const [paymentProofFile, setPaymentProofFile] = useState(null)
   const [coeIdFile, setCoeIdFile] = useState(null)
   const [paymentProofPreview, setPaymentProofPreview] = useState(null)
@@ -105,6 +106,7 @@ const MembershipPending = () => {
   const closeRenewModal = () => {
     setShowRenewModal(false)
     setRenewError(null)
+    setPaymentMethod('GCASH')
     setPaymentProofFile(null)
     setCoeIdFile(null)
     setPaymentProofPreview(null)
@@ -124,6 +126,7 @@ const MembershipPending = () => {
 
     const formData = new FormData()
     formData.append('year_level', yearLevel)
+    formData.append('payment_method', paymentMethod)
     formData.append('payment_proof_image', paymentProofFile)
     formData.append('coe_id_image', coeIdFile)
 
@@ -285,6 +288,52 @@ const MembershipPending = () => {
                     <option value="3">3rd Year</option>
                     <option value="4">4th Year</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Payment Method</label>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        paymentMethod === 'GCASH'
+                          ? 'border-sky-500 bg-sky-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="GCASH"
+                        checked={paymentMethod === 'GCASH'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 text-sky-600 accent-sky-600"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">GCash</p>
+                        <p className="text-xs text-slate-500">Pay via GCash mobile wallet</p>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        paymentMethod === 'ON_HAND'
+                          ? 'border-sky-500 bg-sky-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="ON_HAND"
+                        checked={paymentMethod === 'ON_HAND'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 text-sky-600 accent-sky-600"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">On-hand / Personal</p>
+                        <p className="text-xs text-slate-500">Pay in person to an officer</p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
                 <div>
