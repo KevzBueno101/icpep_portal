@@ -75,8 +75,8 @@ def send_password_reset_email(email, reset_url):
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
 <h2 style="margin-top:0;color:#111;font-size:20px;">Reset your password</h2>
 <p style="color:#555;line-height:1.6;font-size:15px;">
-We received a request to reset the password for your ICPEP.SE account.
-Click the button below to choose a new password.
+We received a request to reset the password for your ICPEP.SE portal account.
+Click the button below to redirect you to the reset link.
 </p>
 <a href="{reset_url}"
    style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;
