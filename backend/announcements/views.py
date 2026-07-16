@@ -12,16 +12,26 @@ from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
 
 
 class AnnouncementListAPIView(generics.ListAPIView):
-    queryset = Announcement.objects.filter(is_published=True).order_by('-created_at')
     serializer_class = AnnouncementSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        qs = Announcement.objects.filter(is_published=True).order_by('-created_at')
+        if not self.request.query_params.get('include_members_only'):
+            qs = qs.filter(members_only=False)
+        return qs
 
 
 class AnnouncementDetailAPIView(generics.RetrieveAPIView):
-    queryset = Announcement.objects.filter(is_published=True)
     serializer_class = AnnouncementSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'id'
+
+    def get_queryset(self):
+        qs = Announcement.objects.filter(is_published=True)
+        if not self.request.query_params.get('include_members_only'):
+            qs = qs.filter(members_only=False)
+        return qs
 
 
 class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):

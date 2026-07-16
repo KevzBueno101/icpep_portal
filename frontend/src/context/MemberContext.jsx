@@ -55,7 +55,7 @@ export const MemberProvider = ({ children }) => {
     if (!user?.id) return
     setAnnLoading(true)
     try {
-      const res = await api.get('/announcements/')
+      const res = await api.get('/announcements/?include_members_only=1')
       setAnnouncements(res.data?.results || [])
     } catch (err) {
       console.error(err)

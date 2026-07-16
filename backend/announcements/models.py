@@ -20,6 +20,7 @@ class Announcement(models.Model):
     author = models.CharField(max_length=150, blank=True, default='Admin')
     pinned = models.BooleanField(default=False)
     is_published = models.BooleanField(default=True)
+    members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

@@ -19,6 +19,7 @@ const emptyForm = {
   author: '',
   pinned: false,
   is_published: true,
+  members_only: false,
 }
 
 const AdminAnnouncement = () => {
@@ -403,6 +404,15 @@ const AdminAnnouncement = () => {
                   />
                   Published
                 </label>
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.members_only}
+                    onChange={(e) => setFormData({ ...formData, members_only: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Members Only
+                </label>
               </div>
             </div>
 
@@ -597,6 +607,15 @@ const AdminAnnouncement = () => {
                               className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                             />
                             Published
+                          </label>
+                          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={formData.members_only}
+                              onChange={(e) => setFormData({ ...formData, members_only: e.target.checked })}
+                              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            Members Only
                           </label>
                         </div>
                       </div>

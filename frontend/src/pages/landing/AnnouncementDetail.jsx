@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
+import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
@@ -58,7 +59,8 @@ export default function AnnouncementDetail() {
   const fetchAnnouncement = async () => {
     setLoading(true)
     try {
-      const res = await publicApi.get(`/announcements/${id}/`)
+      const client = user && user.role !== 'ADMIN' ? api : publicApi
+      const res = await client.get(`/announcements/${id}/${user ? '?include_members_only=1' : ''}`)
       setAnnouncement(res.data)
     } catch (err) {
       console.error('Failed to fetch announcement:', err)

@@ -25,6 +25,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             'author',
             'pinned',
             'is_published',
+            'members_only',
             'images',
             'first_image',
             'created_at',
