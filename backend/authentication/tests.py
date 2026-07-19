@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, SimpleTestCase, override_settings
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase
 
 from authentication.utils import build_password_reset_url
@@ -13,12 +15,13 @@ class PasswordResetLinkTests(SimpleTestCase):
     @override_settings(FRONTEND_URL='https://portal.example.com/')
     def test_build_password_reset_url_normalizes_trailing_slash(self):
         user = SimpleNamespace(pk=42)
+        expected_uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         reset_url = build_password_reset_url(user, 'test-token')
 
         self.assertEqual(
             reset_url,
-            'https://portal.example.com/reset-password/42/test-token',
+            f'https://portal.example.com/reset-password/{expected_uid}/test-token',
         )
         self.assertNotIn('//reset-password/', reset_url)
 
@@ -26,23 +29,25 @@ class PasswordResetLinkTests(SimpleTestCase):
     def test_build_password_reset_url_uses_request_origin_when_frontend_url_is_missing(self):
         request = RequestFactory().get('/api/auth/forgot-password/', HTTP_ORIGIN='https://portal.example.com')
         user = SimpleNamespace(pk=7)
+        expected_uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         reset_url = build_password_reset_url(user, 'fallback-token', request=request)
 
         self.assertEqual(
             reset_url,
-            'https://portal.example.com/reset-password/7/fallback-token',
+            f'https://portal.example.com/reset-password/{expected_uid}/fallback-token',
         )
 
     @override_settings(FRONTEND_URL='')
     def test_build_password_reset_url_uses_local_fallback_when_frontend_url_is_missing(self):
         user = SimpleNamespace(pk=7)
+        expected_uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         reset_url = build_password_reset_url(user, 'fallback-token')
 
         self.assertEqual(
             reset_url,
-            'http://localhost:5173/reset-password/7/fallback-token',
+            f'http://localhost:5173/reset-password/{expected_uid}/fallback-token',
         )
 
 
