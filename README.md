@@ -1,13 +1,13 @@
 # ICPEP Membership Portal
 
-A full-stack Django + React application for managing university member profiles, authentication, and administrative workflows.
+A full-stack Django + React application for managing ICPEP.SE — Catanduanes State University student chapter membership, officer management, announcements, payment tracking, and e-receipt generation.
 
 ## Tech Stack
 
 - **Backend**: Django 4.2, Django REST Framework, PostgreSQL, djangorestframework-simplejwt (JWT)
 - **Frontend**: React 18+, Vite, Tailwind CSS, Axios, React Router
-- **Database**: PostgreSQL 18
-- **Server**: Django development server (local), Gunicorn/Nginx (production)
+- **Image Storage**: Cloudinary (with local filesystem fallback)
+- **Hosting**: Render (backend), Vercel (frontend)
 
 ## Prerequisites
 
@@ -15,53 +15,6 @@ A full-stack Django + React application for managing university member profiles,
 - Node.js 16+ & npm
 - PostgreSQL 15+ (ensure service is running)
 - Git
-
-## Recent changes (developer notes)
-
-- Frontend: Implemented OfficersCarousel component with auto-scroll animation (30s duration), manual left/right arrow buttons (always visible), pause on hover, infinite looping by duplicating officer cards 3 times, responsive grid (1 card mobile, 2 tablet, 4 desktop).
-- Frontend: Updated OfficersRoster (landing page) to use OfficersCarousel instead of LeadershipBoard grid.
-- Frontend: Updated MemberAbout page to use OfficersCarousel for Leadership Board section.
-- Frontend: Fixed image display issue in OfficersCarousel by resolving avatar URLs - prepends backend URL (http://127.0.0.1:8000) to relative image paths for proper image loading.
-- Frontend: Removed Leadership Board side card from MemberDashboard to reduce clutter.
-- Frontend: OfficerCard image changed from object-cover to object-contain to display at natural dimensions.
-- Frontend: Added Department and Academic Year fields to AdminProfile display with icons (Building2, GraduationCap).
-- Frontend: Added Department and Academic Year fields to officer creation/edit forms in AdminDashboard and AdminAdmins placeholder.
-- Frontend: Updated Department placeholder text from "e.g., Computer Engineering" to "e.g., Executive Office".
-- Frontend: Removed profile picture upload circle from EditAdminProfile page.
-- Backend: Added `audit_logs` app with comprehensive audit trail system tracking all admin actions (member approvals, role changes, CRUD operations on members/milestones/announcements).
-- Backend: Audit log model includes timestamp, admin user, action type, entity type, entity details, and IP address.
-- Backend: Added logging hooks to `members/views.py`, `users/views.py`, `milestones/views.py`, and `announcements/views.py` for automatic action logging.
-- Backend: Added audit log API endpoints: list (with filtering), CSV export, stats (for badge), and cleanup (retention policy).
-- Backend: Added `AUDIT_LOG_RETENTION_DAYS` setting (default 90 days) for automatic log cleanup.
-- Frontend: Implemented full AdminLogs page with filtering (action type, entity type, date range, search), pagination, CSV export, and cleanup functionality.
-- Frontend: Added badge count for new logs in AdminLayout using localStorage for last visit tracking.
-- Frontend: Updated AdminDashboard to remove Member Approvals section and added more summary cards (Approved, Rejected, Expired members).
-- Frontend: Added icons to all dashboard summary cards using lucide-react.
-- Frontend: Added charts to dashboard: Membership Status Distribution (pie chart) and Member Growth Over Time (bar chart) using recharts.
-- Frontend: Installed recharts library for data visualization.
-- Backend: admin accounts endpoint (`GET /api/users/admins/`) now returns paginated responses using DRF's `PageNumberPagination` (shape: `{ results: [...], count, next, previous }`). Update frontend calls to use `res.data.results`.
-- Backend: if you encounter `ProgrammingError: column users_user.must_change_password does not exist`, the model includes `must_change_password` but the DB may be missing the column. See "Database migrations" below for a quick fix.
-- Frontend: desktop admin sidebar is fixed on large screens (does not scroll). Admin pages received defensive null-safety fixes to avoid runtime crashes when API responses vary.
-- Frontend: Create Account now requires agreeing to the Privacy Policy before continuing.
-- Frontend: Admin `Archives` page and navigation item were removed from the dashboard.
-- Frontend: Admin announcement form now supports multi-image upload, edit-mode image preview, and removal of existing announcement images.
-- Frontend: Announcement updates and image deletions now propagate to landing announcement views immediately via client-side refresh events.
-- Backend: Position field changed from dropdown (TextChoices) to dynamic text input - positions are now free-form text fields.
-- Backend: Role system updated - removed MEMBER role, added OFFICER role (default). Roles: ADMIN, OFFICER.
-- Backend: Permission system updated - Officers can add announcements, Admins can manage roles (assign positions).
-- Backend: Added `year_level` field to User model (1st-4th year).
-- Backend: Added `profile_picture` field to User model for officer profile photos.
-- Frontend: Officers section changed from table to responsive card grid layout with detailed officer info.
-- Frontend: Modal text updated from "admin account" to "officer account" throughout the system.
-- Frontend: Position dropdown changed to text input for dynamic position entry.
-- Frontend: Added year level dropdown in officer creation/edit modal.
-- Frontend: Added profile picture upload in officer creation/edit modal.
-- Frontend: Modal form is now scrollable on mobile devices.
-- Frontend: Updated the Officer ID card to surface the officer name, position, and ID in the QR payload for verification use cases.
-- Frontend: Fixed officer edit modal to fetch officer details directly by ID using `/users/admins/{id}/` endpoint instead of searching in the admin list. This resolves the issue where officers with role='OFFICER' were not found since `/users/admins/` only returns role='ADMIN' users.
-- Backend: Cloudinary integration is configured and ready for production. When CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables are set, the app automatically uses Cloudinary for image storage. Falls back to local filesystem when not configured.
-
-When pulling changes, run migrations as described in the "Database migrations" section.
 
 ## Project Structure
 
@@ -72,41 +25,32 @@ icpep-portal/
 │   │   ├── settings.py               # Django configuration
 │   │   ├── urls.py                   # Root URL routing
 │   │   ├── asgi.py
-│   │   ├── wsgi.py
-│   │   └── README_DB_SETUP.txt       # DB troubleshooting guide
+│   │   └── wsgi.py
+│   ├── announcements/                # Announcements (CRUD, images, categories)
+│   ├── audit_logs/                   # Admin audit trail (logging, CSV export, cleanup)
 │   ├── authentication/               # Auth endpoints (register, login, refresh)
-│   ├── users/                        # Custom user model
-│   ├── members/                      # Member profiles & approval workflow
-│   │   ├── models.py                 # MemberProfile model
-│   │   ├── serializers.py            # DRF serializers
-│   │   ├── views.py                  # API views (list, retrieve, approve)
-│   │   └── urls.py                   # Members API routes
+│   ├── members/                      # Member profiles, approval workflow, payment transactions, e-receipts
+│   ├── milestones/                   # Organization milestones
+│   ├── users/                        # Custom user model (ADMIN/OFFICER roles)
+│   ├── static/                       # Static assets (logo, etc.)
 │   ├── manage.py
 │   └── requirements.txt
 ├── frontend/                         # React + Vite app
 │   ├── src/
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx       # Global auth state (tokens, user info)
-│   │   ├── api/
-│   │   │   └── axios.js              # Axios client with JWT interceptor
+│   │   ├── components/               # Shared UI components
+│   │   ├── context/                  # AuthContext, MemberContext
+│   │   ├── api/axios.js              # Axios client with JWT interceptor
 │   │   ├── pages/
-│   │   │   ├── auth/
-│   │   │   │   ├── Login.jsx
-│   │   │   │   └── Register.jsx
-│   │   │   ├── admin/                # (To be implemented)
-│   │   │   └── member/               # (To be implemented)
-│   │   ├── routes/
-│   │   │   └── ProtectedRoute.jsx    # Client-side route protection
-│   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   │   ├── auth/                 # Login, Register, MembershipPending
+│   │   │   ├── admin/                # Admin dashboard & management pages
+│   │   │   ├── landing/              # Public landing page
+│   │   │   └── member/               # Member dashboard, profile, announcements
+│   │   └── App.jsx
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── postcss.config.js
+│   └── vite.config.js
 ├── .gitignore
-├── manage.py                         # Root management script (includes backend in sys.path)
-└── README.md                         # This file
+└── README.md
 ```
 
 ## Installation
@@ -120,7 +64,6 @@ cd C:\Users\<your-username>\icpep-portal
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
-
 
 #### 1b. Install Dependencies
 
@@ -138,9 +81,7 @@ cp backend\.env.template backend\.env
 # Then edit backend\.env with your actual DB values
 ```
 
-> Note: `backend/config/settings.py` loads env vars from `backend/.env` (it uses `load_dotenv(BASE_DIR / '.env')`).
-
-**First time setup**: Create the database and user in PostgreSQL. Replace `<db_name>`, `<username>`, and `<password>` with your actual values:
+**First time setup**: Create the database and user in PostgreSQL:
 
 ```powershell
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "CREATE DATABASE <db_name>;"
@@ -148,11 +89,9 @@ cp backend\.env.template backend\.env
 & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE <db_name> TO <username>;"
 ```
 
-
 #### 1d. Run Migrations
 
 ```powershell
-cd C:\Users\kevin\icpep-portal
 python manage.py migrate
 ```
 
@@ -160,13 +99,12 @@ python manage.py migrate
 
 ```powershell
 python manage.py createsuperuser
-# Follow prompts: email, password
 ```
 
 ### 2. Frontend Setup
 
 ```powershell
-cd C:\Users\kevin\icpep-portal\frontend
+cd frontend
 npm install
 ```
 
@@ -175,49 +113,15 @@ npm install
 ### Backend
 
 ```powershell
-cd C:\Users\kevin\icpep-portal
 python manage.py runserver
 ```
 
 Backend runs at `http://127.0.0.1:8000`
 
-**Endpoints**:
-- `GET /` — API health check
-- `GET /admin/` — Django admin
-
-**Auth**
-- `POST /api/auth/register/` — Create account
-- `POST /api/auth/login/` — Member login (returns JWT tokens)
-- `POST /api/auth/admin-login/` — Admin portal login (returns JWT tokens)
-- `POST /api/auth/refresh/` — Refresh access token
-- `GET /api/auth/me/` — Current user info
-- `GET /api/auth/availability/?email=...&username=...` — Check email/username availability
-
-**Members**
-- `GET /api/members/` — List all members (admin-only)
-- `POST /api/members/` — Create member profile (admin-only)
-- `GET /api/members/<id>/` — Retrieve member profile
-- `PATCH /api/members/<id>/` — Update member profile (owner or admin)
-- `POST /api/members/<id>/approve/` — Approve member (admin)
-- `GET /api/members/payment-settings/` — Retrieve payment settings
-- `PATCH /api/members/payment-settings/` — Update payment settings (Admin: President/Treasurer)
-
-**Admin accounts (officer management)**
-- `GET /api/users/admins/` — List all ADMIN accounts (President or delegated Secretary)
-- `POST /api/users/admins/` — Create an ADMIN account (President only)
-- `GET /api/users/admins/<id>/` — View an admin account
-- `PATCH /api/users/admins/<id>/` — Update an admin account
-- `DELETE /api/users/admins/<id>/` — Delete an admin account
-- `PATCH /api/users/admins/<id>/assign-role/` — Assign role/position to a user
-- `PATCH /api/users/admins/<id>/delegate/` — Toggle secretary delegation (President only)
-- `POST /api/users/admins/year-end-reset/` — Reset ALL admin positions to NONE (President only)
-- `POST /api/users/admins/create/` — Create officer accounts (President only)
-
-
 ### Frontend
 
 ```powershell
-cd C:\Users\kevin\icpep-portal\frontend
+cd frontend
 npm run dev
 ```
 
@@ -229,256 +133,136 @@ Frontend runs at `http://localhost:5173`
 npm run build
 ```
 
-## API Authentication
+## API Endpoints
 
-All endpoints (except `/api/auth/register/` and `/api/auth/login/`) require a JWT token.
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register/` | Create account |
+| POST | `/api/auth/register-admin/` | Create admin account |
+| POST | `/api/auth/login/` | Member login (JWT) |
+| POST | `/api/auth/admin-login/` | Admin portal login (JWT) |
+| POST | `/api/auth/refresh/` | Refresh access token |
+| GET | `/api/auth/me/` | Current user info |
+| GET | `/api/auth/availability/` | Check email/username availability |
 
-**Flow**:
+### Members
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/members/` | List/create members |
+| GET/PATCH/DELETE | `/api/members/<id>/` | Retrieve/update/delete member |
+| POST | `/api/members/<id>/approve/` | Approve/reject member (auto-generates e-receipt) |
+| POST | `/api/members/renew/` | Member renewal submission |
+| POST | `/api/members/renew-all/` | Year-end reset (expire all approved) |
+| GET | `/api/members/transactions/` | List payment transactions |
+| GET/PATCH | `/api/members/payment-settings/` | GCash payment settings |
 
-1. User registers or logs in → receives `access` and `refresh` tokens
-2. Include token in requests:
-   ```
-   Authorization: Bearer <access_token>
-   ```
-3. Token expires → use `refresh` token to get new `access` token
-4. On 401 error, frontend auto-refreshes; if refresh fails, user logs out
+### Announcements
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/announcements/` | List published announcements |
+| GET | `/api/announcements/<id>/` | Announcement detail |
+| GET/POST | `/api/announcements/admin/` | Admin list/create |
+| GET/PATCH/DELETE | `/api/announcements/admin/<id>/` | Admin retrieve/update/delete |
+| POST | `/api/announcements/admin/<id>/images/` | Upload announcement image |
+| DELETE | `/api/announcements/admin/images/<id>/` | Delete announcement image |
 
-Frontend automation is handled by `AuthContext` and Axios interceptor (see `frontend/src/api/axios.js`).
+### Admin / Officer Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/users/admins/` | List/create admin accounts |
+| GET/PATCH/DELETE | `/api/users/admins/<id>/` | Admin detail/update/delete |
+| PATCH | `/api/users/admins/<id>/assign-role/` | Assign position |
+| PATCH | `/api/users/admins/<id>/delegate/` | Toggle secretary delegation |
+| POST | `/api/users/admins/create/` | Create officer accounts |
 
-## Database Schema
+### Other
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST/DELETE | `/api/milestones/` | Organization milestones |
+| GET | `/api/logs/` | Audit log listing |
+| GET | `/api/logs/export-csv/` | Export audit logs as CSV |
+| GET | `/api/logs/stats/` | Audit log statistics |
+| DELETE | `/api/logs/cleanup/` | Cleanup old logs (retention policy) |
 
-### User Model (auth.User + custom fields)
-- `id` (primary key)
-- `email` (unique, used for login)
-- `username` (unique)
-- `role` (ADMIN or MEMBER, default MEMBER)
-- `is_active`, `is_staff`, `is_superuser`
-- `created_at`, `updated_at`
+## Authentication
 
-### MemberProfile
-- `id` (primary key)
-- `user_id` (OneToOne to User)
-- `first_name`, `middle_name`, `last_name`
-- `student_number` (unique)
-- `course`, `year_level` (1–4), `section`
-- `contact_number`, `address`, `birthdate`
-- `profile_picture` (ImageField, stored in `media/profiles/`)
-- `membership_status` (PENDING, APPROVED, REJECTED, EXPIRED)
-- `created_at`, `updated_at`
+All endpoints (except registration and login) require a JWT token:
 
-## Viewing Database Data
+1. Login → receives `access` and `refresh` tokens
+2. Include in requests: `Authorization: Bearer <access_token>`
+3. On 401, frontend auto-refreshes using the refresh token
 
-### Option 1: pgAdmin GUI
-1. Open pgAdmin (usually `http://localhost:5050`)
-2. Register PostgreSQL server:
-   - Host: `localhost`, Port: `5432`, Username: `postgres`
-3. Navigate: Servers → Databases → your database name → Schemas → public → Tables
-4. Right‑click table → **View/Edit Data** → All Rows
+## Role & Permission System
 
-### Option 2: psql (CLI)
-```powershell
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U <username> -d <database_name> -h localhost
+| Access Level | Members | Announcements | Achievements | Admins |
+|---|---|---|---|---|
+| **FULL_CONTROL** | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD |
+| **MEMBERSHIP** | ✅ CRUD | ✅ CRUD | ✅ CRUD | ❌ |
+| **RESTRICTED** | ❌ | ❌ | ❌ | ❌ |
 
-# In psql:
-\d                    # List tables
-\d members_memberprofile  # Describe table columns
-SELECT * FROM members_memberprofile LIMIT 10;  # View sample data
-```
-
-### Option 3: Django Shell
-```powershell
-python manage.py shell
->>> from members.models import MemberProfile
->>> MemberProfile.objects.all()[:10]
-```
-
-## Development
-
-### Linting & Formatting
-
-**Backend** (Python):
-- No automated formatter configured yet (consider `black`, `flake8`)
-
-**Frontend** (JavaScript):
-```powershell
-cd frontend
-npm run lint
-```
-
-### Testing
-
-**Backend**:
-```powershell
-python manage.py test
-```
-
-**Frontend**:
-```powershell
-cd frontend
-npm run test  # or `npm run test:watch`
-```
-
-### Adding New Dependencies
-
-**Backend**:
-```powershell
-cd backend
-pip install <package>
-pip freeze > requirements.txt
-```
-
-**Frontend**:
-```powershell
-cd frontend
-npm install <package>
-```
-
-## Troubleshooting
-
-### Database Connection Error
-**Error**: `FATAL: password authentication failed for user "<username>"`
-
-**Solution**:
-1. Verify credentials in `backend/.env` match PostgreSQL
-2. If password wrong, reset it:
-   ```powershell
-   & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U postgres -c "ALTER USER <username> WITH PASSWORD '<new_password>';"
-   ```
-3. Update `backend/.env` with the new password and retry
-
-### Django fails to load expected settings/env
-If `DB_NAME`, `DB_USER`, etc. don’t change after updating `backend/.env`, make sure you are running Django from the repo root so `backend/config/settings.py` can locate `.env` correctly.
-
-### Database Does Not Exist
-
-**Error**: `FATAL: database "<database_name>" does not exist`
-
-**Solution**: Create the database (see section 1c above)
-
-### Port 8000 Already in Use
-```powershell
-python manage.py runserver 8001
-```
-
-### Port 5173 Already in Use
-```powershell
-cd frontend
-npm run dev -- --port 3000
-```
-
-### ModuleNotFoundError: No module named 'config'
-**Solution**: Already fixed in root `manage.py`. Ensure you run from repo root:
-```powershell
-cd C:\Users\kevin\icpep-portal
-python manage.py ...
-```
+- **President**: Always has FULL_CONTROL regardless of role field
+- **Secretary**: Can be delegated to manage admin/officer accounts
 
 ## Environment Variables
 
-Copy `backend/.env.template` to `backend/.env` and fill in your actual values:
+Copy `backend/.env.template` to `backend/.env` and fill in:
 
 ```env
 DEBUG=True
-SECRET_KEY=<your-secret-key>  # Generate a strong key for production
+SECRET_KEY=<your-secret-key>
 
 DB_NAME=<your_database_name>
 DB_USER=<your_db_user>
 DB_PASSWORD=<your_db_password>
 DB_HOST=localhost
 DB_PORT=5432
+
+# Cloudinary (optional — fallback to local filesystem)
+CLOUDINARY_CLOUD_NAME=<cloud_name>
+CLOUDINARY_API_KEY=<api_key>
+CLOUDINARY_API_SECRET=<api_secret>
 ```
 
-⚠️ **Never commit `.env` to version control.** It's already in `.gitignore`.
+⚠️ **Never commit `.env` to version control.**
 
-### CORS / Frontend origin
+## Development
 
-CORS is currently permissive (`CORS_ALLOW_ALL_ORIGINS = True`). For production, restrict it to your frontend domain(s) in `backend/config/settings.py`.
-
-### API base URL
-
-Frontend API base URL is configured in `frontend/src/api/axios.js` to `http://127.0.0.1:8000/api` for local development.
-Update it for production deployments (or refactor to use a build-time env var).
-
-## Deployment Tips
-
-
-1. **Environment**: Use production-level `.env` values (strong SECRET_KEY, secure DB password, DEBUG=False).
-2. **CORS**: Adjust `CORS_ALLOW_ALL_ORIGINS` in `backend/config/settings.py` to specific domain(s).
-3. **Static & Media Files**: Cloudinary is configured and ready for production. Set these environment variables in your deployment:
-   - `CLOUDINARY_CLOUD_NAME`
-   - `CLOUDINARY_API_KEY`
-   - `CLOUDINARY_API_SECRET`
-   The app will automatically use Cloudinary for image storage when configured. Falls back to local filesystem when not configured.
-4. **Database**: Use managed PostgreSQL (AWS RDS, Azure Database, etc.).
-5. **Server**: Use Gunicorn + Nginx for production (not Django development server).
-6. **Secrets**: Use environment variables or a secrets manager (never hardcode credentials).
-
-## Next Steps
-
-- [ ] Implement admin dashboard pages (`frontend/src/pages/admin/`)
-- [ ] Add member profile update/upload endpoints
-- [ ] Implement email notifications for approval workflows
-- [ ] Add comprehensive unit tests
-- [ ] Set up CI/CD pipeline (GitHub Actions, GitLab CI)
-- [x] Configure Cloudinary for image storage (ready for production, set env vars to enable)
-- [ ] Add pagination and filtering to members list API
-
-## Database migrations (helpers)
-
-If `makemigrations` does not detect model changes (e.g., your models include a field but the DB column is missing), you can create an explicit migration and apply it:
-
-1. Create an empty migration for the `users` app:
+### Run tests
 
 ```powershell
-cd backend
-python manage.py makemigrations users --empty -n add_must_change_password
+python manage.py test                   # Backend
+cd frontend && npm run test             # Frontend
 ```
 
-2. Edit the generated migration file under `backend/users/migrations/` and add an `AddField` operation, for example:
-
-```python
-from django.db import migrations, models
-
-class Migration(migrations.Migration):
-   dependencies = [
-      ('users', '0003_term_delegation'),
-   ]
-
-   operations = [
-      migrations.AddField(
-         model_name='user',
-         name='must_change_password',
-         field=models.BooleanField(default=False),
-      ),
-   ]
-```
-
-3. Run migrations:
+### Add dependencies
 
 ```powershell
-python manage.py migrate
+cd backend && pip install <package> && pip freeze > requirements.txt
+cd frontend && npm install <package>
 ```
 
-Or, if you prefer a quick SQL fix on PostgreSQL (not recommended for long-term schema management), run:
+## Deployment
+
+- **Backend**: Deployed on Render (`gunicorn config.wsgi:application`)
+- **Frontend**: Deployed on Vercel (Vite build)
+- **Image storage**: Cloudinary (set env vars in production)
+- **Database**: Managed PostgreSQL (Render PostgreSQL or external)
+
+## Backfill Transactions
+
+For existing members approved before the PaymentTransaction system was deployed:
 
 ```powershell
-& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -U <db_admin> -d <db_name> -c "ALTER TABLE users_user ADD COLUMN must_change_password boolean DEFAULT false;"
+python manage.py backfill_transactions
 ```
 
-After applying the migration or the SQL change, re-run the Django shell or your failing command to confirm the `ProgrammingError` is resolved.
+Use `--dry-run` to preview without creating records:
 
-
-## Contributing
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Commit changes: `git commit -am 'Add feature'`
-3. Push: `git push origin feature/your-feature`
-4. Open a pull request
+```powershell
+python manage.py backfill_transactions --dry-run
+```
 
 ## License
 
-© 2026 ICPEP. All rights reserved.
-
----
-
-**Questions?** Check `backend/config/README_DB_SETUP.txt` for database-specific issues.
+© 2026 ICPEP.SE — Catanduanes State University. All rights reserved.
