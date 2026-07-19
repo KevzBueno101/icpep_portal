@@ -1,0 +1,53 @@
+---
+title: Overview
+description: What is the ICPEP Portal and how it works
+---
+
+# Overview
+
+The **ICPEP Portal** is a membership management system built for the **Institute of Computer Engineers of the Philippines (ICPEP)** chapter. It handles the full lifecycle of member registration, approval, renewal, payment tracking, and e-receipt generation.
+
+## Purpose
+
+Replace manual paper-based membership processing with a streamlined digital workflow:
+
+- **Members** register online, submit proof of payment, view digital ID cards, and access their payment history
+- **Officers** manage membership approvals, announcements, and chapter administration
+- **Admins** control the entire system with role-based access and audit trails
+
+## Key Features
+
+| Feature | Description |
+|---|---|
+| **Membership Management** | Register, approve, renew, and track members |
+| **E-Receipts** | Auto-generated PDF receipts on admin approval |
+| **Payment Tracking** | GCash or on-hand payments with proof upload |
+| **Announcements** | Create, pin, publish, and mark as members-only |
+| **Officer ID Cards** | Digital ID cards with QR codes and roles |
+| **Audit Logs** | Full activity trail with CSV export |
+| **Role-Based Access** | FULL_CONTROL, MEMBERSHIP, RESTRICTED access levels |
+
+## System Architecture
+
+```
+Frontend (React) ──HTTP──> Backend (Django REST) ──> PostgreSQL
+                                  │
+                                  └──> Cloudinary (Images & Receipts)
+```
+
+## Intended Users
+
+- **Chapter Members** — Students who register and maintain membership
+- **Chapter Officers** — Handle day-to-day membership operations
+- **System Administrators** — Full system management and configuration
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Tailwind CSS |
+| Backend | Django 5, Django REST Framework |
+| Database | PostgreSQL (Render) |
+| Storage | Cloudinary (images, receipts) |
+| Auth | JWT (access + refresh tokens) |
+| Deployment | Render (backend), Vercel (frontend) |
