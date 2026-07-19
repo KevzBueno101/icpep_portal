@@ -1,0 +1,75 @@
+{
+  "name": "ICPEP Portal",
+  "logo": {
+    "dark": "/logo/icpep_logo.jpg",
+    "light": "/logo/icpep_logo.jpg"
+  },
+  "colors": {
+    "primary": "#0B355C",
+    "light": "#E0F2FE",
+    "dark": "#001F4D"
+  },
+  "topbarLinks": [
+    {
+      "name": "Portal",
+      "url": "https://icpep-portal.vercel.app"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "/overview"
+  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "overview",
+        "setup",
+        "architecture"
+      ]
+    },
+    {
+      "group": "User Guide",
+      "pages": [
+        "user-guide/members",
+        "user-guide/officers",
+        "user-guide/announcements",
+        "user-guide/payments"
+      ]
+    },
+    {
+      "group": "Admin Guide",
+      "pages": [
+        "admin-guide/dashboard",
+        "admin-guide/membership",
+        "admin-guide/announcements",
+        "admin-guide/officers",
+        "admin-guide/audit-logs"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/auth",
+        "api-reference/members",
+        "api-reference/announcements",
+        "api-reference/admins",
+        "api-reference/transactions"
+      ]
+    },
+    {
+      "group": "Legal & Compliance",
+      "pages": [
+        "data-privacy"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/KevzBueno101/icpep_portal"
+  },
+  "backgroundImage": "/images/background.png",
+  "metadata": {
+    "title": "ICPEP Portal Documentation",
+    "description": "Documentation for the ICPEP Membership Management System"
+  }
+}
