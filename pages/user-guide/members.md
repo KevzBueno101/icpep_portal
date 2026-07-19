@@ -1,4 +1,4 @@
----
+﻿---
 title: Members
 description: Registration, profile, and renewal guide
 ---
@@ -12,24 +12,24 @@ description: Registration, profile, and renewal guide
 
    | Field | Required | Notes |
    |---|---|---|
-   | First Name | ✅ | |
-   | Last Name | ✅ | |
-   | Email | ✅ | Must be unique; used for login |
-   | Contact Number | ✅ | |
-   | Course & Year | ✅ | e.g., BSIT 3rd Year |
-   | School | ✅ | |
-   | Address | ✅ | |
-   | Profile Picture | ❌ | Will be used for ID card |
-   | Payment Proof | ✅ | Upload screenshot of GCash payment or note "On-hand" |
-   | Password | ✅ | Minimum 8 characters |
+   | First Name | âœ… | |
+   | Last Name | âœ… | |
+   | Email | âœ… | Must be unique; used for login |
+   | Contact Number | âœ… | |
+   | Course & Year | âœ… | e.g., BSIT 3rd Year |
+   | School | âœ… | |
+   | Address | âœ… | |
+   | Profile Picture | âŒ | Will be used for ID card |
+   | Payment Proof | âœ… | Upload screenshot of GCash payment or note "On-hand" |
+   | Password | âœ… | Minimum 8 characters |
 
 3. Select **Payment Method**:
-   - **GCash** — Shows GCash account details. Upload payment proof screenshot
-   - **On-hand** — Reminder to pay to a designated officer in person
+   - **GCash** â€” Shows GCash account details. Upload payment proof screenshot
+   - **On-hand** â€” Reminder to pay to a designated officer in person
 
 4. Click **Register**
 
-> ![Registration form screenshot](../images/registration-form.png)
+> ![Registration form screenshot](../images/registration-form.svg)
 
 ## After Registration
 
@@ -44,9 +44,9 @@ Your account enters **PENDING** status. An admin or officer must verify and appr
 | Status | Meaning |
 |---|---|
 | **PENDING** | Awaiting admin approval |
-| **APPROVED** | Active member — full access granted |
-| **REJECTED** | Application rejected — reason shown |
-| **EXPIRED** | Membership period ended — renewal needed |
+| **APPROVED** | Active member â€” full access granted |
+| **REJECTED** | Application rejected â€” reason shown |
+| **EXPIRED** | Membership period ended â€” renewal needed |
 
 ## Member Profile
 
@@ -56,9 +56,10 @@ Once logged in, your profile shows:
 - Profile picture
 - Membership status and academic year
 - Payment History section with e-receipts
+- [Digital ID Card](/user-guide/member-id-card) â€” tap to flip, download as PNG
 - Officer ID Card (if you hold an officer position)
 
-> ![Member profile screenshot](../images/member-profile.png)
+> ![Member profile screenshot](../images/member-profile.svg)
 
 ### Editing Your Profile
 
@@ -76,6 +77,6 @@ When your membership expires, click **Renew Membership** on your profile:
 
 1. Select payment method (GCash / On-hand)
 2. Upload payment proof
-3. Submit — status returns to PENDING until re-approved
+3. Submit â€” status returns to PENDING until re-approved
 
-> ![Renewal form screenshot](../images/renewal-form.png)
+> ![Renewal form screenshot](../images/renewal-form.svg)

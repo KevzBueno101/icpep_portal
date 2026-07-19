@@ -1,4 +1,4 @@
----
+﻿---
 title: Payments
 description: Payment methods, e-receipts, and payment history
 ---
@@ -18,11 +18,11 @@ Select **GCash** as your payment method to see the chapter's GCash account detai
 
 Upload a screenshot of your payment confirmation as **payment proof**.
 
-> ![GCash payment section screenshot](../images/gcash-payment.png)
+> ![GCash payment section screenshot](../images/gcash-payment.svg)
 
 ### On-Hand
 
-Select **On-hand** if you prefer to pay in person to a designated officer. No upload required — the system notes your intent, and the officer confirms receipt during verification.
+Select **On-hand** if you prefer to pay in person to a designated officer. No upload required â€” the system notes your intent, and the officer confirms receipt during verification.
 
 ## Payment Proof
 
@@ -37,7 +37,7 @@ Payment proof is an image uploaded during registration or renewal:
 
 When an admin approves your membership or renewal, an **e-receipt** is automatically generated:
 
-> ![E-receipt screenshot](../images/e-receipt.png)
+> ![E-receipt screenshot](../images/e-receipt.svg)
 
 ### Receipt Details
 
@@ -68,4 +68,4 @@ Your Payment History table shows all transactions:
 | **Receipt** | Link to view/download e-receipt |
 | **Proof** | Link to view payment proof |
 
-> ![Payment history screenshot](../images/payment-history.png)
+> ![Payment history screenshot](../images/payment-history.svg)

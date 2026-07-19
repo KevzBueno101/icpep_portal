@@ -1,4 +1,4 @@
----
+﻿---
 title: Announcements
 description: Viewing and interacting with announcements
 ---
@@ -9,14 +9,14 @@ description: Viewing and interacting with announcements
 
 The announcements page displays all chapter updates in a clean, readable feed.
 
-> ![Announcements feed screenshot](../images/announcements-feed.png)
+> ![Announcements feed screenshot](../images/announcements-feed.svg)
 
 ### Features
 
-- **Vertical Stack Layout** — announcements are stacked vertically for easy reading
-- **Category Filtering** — filter by category (Events, News, Reminders, etc.)
-- **Search** — search by title or content
-- **Pinned Announcements** — important posts are highlighted and stay at top
+- **Vertical Stack Layout** â€” announcements are stacked vertically for easy reading
+- **Category Filtering** â€” filter by category (Events, News, Reminders, etc.)
+- **Search** â€” search by title or content
+- **Pinned Announcements** â€” important posts are highlighted and stay at top
 
 ### Members-Only Announcements
 

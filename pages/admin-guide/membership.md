@@ -1,4 +1,4 @@
----
+﻿---
 title: Membership Management
 description: Managing members from the admin panel
 ---
@@ -9,7 +9,7 @@ description: Managing members from the admin panel
 
 The members page displays a paginated table of all registered members with search, filter, and sort capabilities.
 
-> ![Members list screenshot](../images/admin-members-list.png)
+> ![Members list screenshot](../images/admin-members-list.svg)
 
 ### Columns
 
@@ -23,10 +23,10 @@ The members page displays a paginated table of all registered members with searc
 
 ### Tools
 
-- **Search** — filter by name or email
-- **Status Filter** — dropdown to filter by status
-- **Year Filter** — filter by academic year
-- **Pagination** — 25 members per page
+- **Search** â€” filter by name or email
+- **Status Filter** â€” dropdown to filter by status
+- **Year Filter** â€” filter by academic year
+- **Pagination** â€” 25 members per page
 
 ## Verifying Members
 
@@ -34,11 +34,11 @@ Click the **Verify** button on a pending member to open the verification page:
 
 1. Review the member's submitted details and payment proof image
 2. Choose an action:
-   - **Approve** — sets status to APPROVED, generates e-receipt, sends notification
-   - **Reject** — sets status to REJECTED with an optional reason message
+   - **Approve** â€” sets status to APPROVED, generates e-receipt, sends notification
+   - **Reject** â€” sets status to REJECTED with an optional reason message
 3. Click confirm
 
-> ![Verify member screenshot](../images/admin-verify.png)
+> ![Verify member screenshot](../images/admin-verify.svg)
 
 ### Auto-Generated E-Receipt
 
@@ -47,7 +47,7 @@ When you approve a member, the system automatically:
 1. Creates a `PaymentTransaction` record
 2. Copies the `payment_proof_image` from the profile
 3. Generates a sequential reference number (`ICPEP-{YEAR}-{SEQUENTIAL:04d}`)
-4. Renders an e-receipt PNG with Pillow (800×700 canvas)
+4. Renders an e-receipt PNG with Pillow (800Ã—700 canvas)
 5. Uploads the receipt to Cloudinary
 6. Associates the receipt with the transaction
 
@@ -57,7 +57,7 @@ The authorized signatory on the receipt is your full name.
 
 Click **History** on any member to view their payment transactions:
 
-> ![Transaction history modal screenshot](../images/admin-history.png)
+> ![Transaction history modal screenshot](../images/admin-history.svg)
 
 Each transaction shows:
 

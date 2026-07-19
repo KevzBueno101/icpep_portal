@@ -1,4 +1,4 @@
----
+﻿---
 title: Announcements (Admin)
 description: Creating and managing announcements
 ---
@@ -7,7 +7,7 @@ description: Creating and managing announcements
 
 The admin announcements panel lets you create, edit, and manage all chapter announcements.
 
-> ![Admin announcements screenshot](../images/admin-announcements.png)
+> ![Admin announcements screenshot](../images/admin-announcements.svg)
 
 ## Creating an Announcement
 
@@ -15,21 +15,21 @@ Click **Create Announcement** to open the form:
 
 | Field | Required | Description |
 |---|---|---|
-| Title | ✅ | Announcement headline |
-| Content | ✅ | Full announcement text |
-| Category | ✅ | Events, News & Updates, Reminders, General |
-| Image | ❌ | Optional cover image (max 10 MB) |
-| Pinned | ❌ | Keeps post at top of feed |
-| Published | ❌ | Visible to users when checked |
-| Members Only | ❌ | Visible only to authenticated members |
+| Title | âœ… | Announcement headline |
+| Content | âœ… | Full announcement text |
+| Category | âœ… | Events, News & Updates, Reminders, General |
+| Image | âŒ | Optional cover image (max 10 MB) |
+| Pinned | âŒ | Keeps post at top of feed |
+| Published | âŒ | Visible to users when checked |
+| Members Only | âŒ | Visible only to authenticated members |
 
-> ![Create announcement form screenshot](../images/admin-announcement-form.png)
+> ![Create announcement form screenshot](../images/admin-announcement-form.svg)
 
 ### Options Explained
 
-- **Pinned** — Pinned posts appear at the top of the feed regardless of date
-- **Published** — Unpublished posts are saved as drafts (visible only to admins)
-- **Members Only** — Check this to hide the post from the public landing page. A purple **Members Only** badge appears on the post
+- **Pinned** â€” Pinned posts appear at the top of the feed regardless of date
+- **Published** â€” Unpublished posts are saved as drafts (visible only to admins)
+- **Members Only** â€” Check this to hide the post from the public landing page. A purple **Members Only** badge appears on the post
 
 ## Editing Announcements
 

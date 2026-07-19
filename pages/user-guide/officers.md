@@ -1,4 +1,4 @@
----
+﻿---
 title: Officers
 description: Officer ID cards, positions, and roles
 ---
@@ -7,31 +7,11 @@ description: Officer ID cards, positions, and roles
 
 Officers are members who hold a position in the chapter. They have additional privileges based on their role.
 
-## Officer ID Card
-
-Each officer gets a digital ID card with:
-
-- Profile photo
-- Full name
-- Position title (e.g., President, Secretary, Treasurer)
-- Member ID
-- QR code for verification
-
-The ID card auto-scales to fit your screen — rotate your phone to landscape for a larger view.
-
-> ![Officer ID card screenshot](../images/officer-card.png)
-
-### ID Card Features
-
-- **ResizeObserver-based scaling** — card fits perfectly on any screen size
-- **Cache-busting** — profile picture updates immediately (no stale cache)
-- **QR Code** — generated dynamically for verification purposes
-
 ## Positions & Privileges
 
 | Position | Access |
 |---|---|
-| **President** | Automatic FULL_CONTROL — can manage everything |
+| **President** | Automatic FULL_CONTROL â€” can manage everything |
 | **Vice President** | Administrative access |
 | **Secretary** | Can be delegated admin tasks |
 | **Treasurer** | Payment/membership management |
@@ -48,4 +28,4 @@ The President can delegate administrative authority to the Secretary, allowing t
 - Manage announcements
 - Access the admin dashboard
 
-This is configured from the **Admin → Officers** page.
+This is configured from the **Admin â†’ Officers** page.

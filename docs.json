@@ -35,6 +35,7 @@
         "group": "User Guide",
         "pages": [
           "user-guide/members",
+          "user-guide/member-id-card",
           "user-guide/officers",
           "user-guide/announcements",
           "user-guide/payments"

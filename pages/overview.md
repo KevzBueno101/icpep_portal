@@ -1,4 +1,4 @@
----
+﻿---
 title: Overview
 description: What is the ICPEP Portal and how it works
 ---
@@ -30,16 +30,16 @@ Replace manual paper-based membership processing with a streamlined digital work
 ## System Architecture
 
 ```
-Frontend (React) ──HTTP──> Backend (Django REST) ──> PostgreSQL
-                                  │
-                                  └──> Cloudinary (Images & Receipts)
+Frontend (React) â”€â”€HTTPâ”€â”€> Backend (Django REST) â”€â”€> PostgreSQL
+                                  â”‚
+                                  â””â”€â”€> Cloudinary (Images & Receipts)
 ```
 
 ## Intended Users
 
-- **Chapter Members** — Students who register and maintain membership
-- **Chapter Officers** — Handle day-to-day membership operations
-- **System Administrators** — Full system management and configuration
+- **Chapter Members** â€” Students who register and maintain membership
+- **Chapter Officers** â€” Handle day-to-day membership operations
+- **System Administrators** â€” Full system management and configuration
 
 ## Technology Stack
 

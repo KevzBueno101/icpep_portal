@@ -1,4 +1,4 @@
----
+﻿---
 title: Audit Logs
 description: System activity monitoring and CSV export
 ---
@@ -7,7 +7,7 @@ description: System activity monitoring and CSV export
 
 The audit log records all significant actions taken within the system for accountability and troubleshooting.
 
-> ![Audit logs screenshot](../images/admin-audit-logs.png)
+> ![Audit logs screenshot](../images/admin-audit-logs.svg)
 
 ## Logged Actions
 
@@ -38,10 +38,10 @@ Each log entry contains:
 
 Filters available:
 
-- **Action Type** — dropdown to select specific action types
-- **Entity Type** — filter by affected entity
-- **Date Range** — specify start and end dates
-- **Admin** — filter by specific admin
+- **Action Type** â€” dropdown to select specific action types
+- **Entity Type** â€” filter by affected entity
+- **Date Range** â€” specify start and end dates
+- **Admin** â€” filter by specific admin
 
 ## CSV Export
 

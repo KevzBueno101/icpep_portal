@@ -1,4 +1,4 @@
----
+﻿---
 title: Announcements API
 description: Announcement management endpoints
 ---
