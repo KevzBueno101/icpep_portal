@@ -1,10 +1,8 @@
 import imghdr
 
-from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
-from .receipt_generator import generate_receipt_png
 
 ALLOWED_IMAGE_TYPES = {
     'rgb', 'gif', 'pbm', 'pgm', 'ppm',

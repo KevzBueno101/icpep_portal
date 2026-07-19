@@ -22,14 +22,12 @@ try:
 except ImportError:
     AdminProfileSerializer = None
 
-from permissions import _is_admin_or_president
-
-
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from permissions import _is_admin_or_president
 
 User = get_user_model()
 
