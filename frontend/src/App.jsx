@@ -22,6 +22,7 @@ import AdminAchievements from './pages/admin/AdminAchievements'
 import AdminAnnouncement from './pages/admin/placeholder/AdminAnnouncement'
 import AdminProfile from './pages/admin/AdminProfile'
 import EditAdminProfile from './pages/admin/EditAdminProfile'
+import OfficerIdCardPage from './pages/admin/OfficerIdCardPage'
 import AdminOfficersAccounts from './pages/admin/AdminOfficersAccounts'
 
 
@@ -63,7 +64,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:pk/:token" element={<ResetPassword />} />
+          <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
 
           {/* Hidden admin login — no links point here */}
@@ -236,6 +237,17 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <EditAdminProfile />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/officer-id"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <OfficerIdCardPage />
                 </AdminLayout>
               </AdminProtectedRoute>
             }

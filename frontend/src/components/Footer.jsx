@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import PrivacyPolicyModal from './PrivacyPolicyModal'
+
 export default function Footer() {
+  const [showPrivacy, setShowPrivacy] = useState(false)
   const currentYear = new Date().getFullYear()
 
   return (
@@ -35,6 +39,15 @@ export default function Footer() {
                   Contact Us
                 </a>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setShowPrivacy(true)}
+                  className="text-sm transition hover:text-white"
+                >
+                  Privacy Policy
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -58,6 +71,8 @@ export default function Footer() {
           <p>&copy; {currentYear} ICPEP.SE Portal. All rights reserved.</p>
         </div>
       </div>
+
+      <PrivacyPolicyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
     </footer>
   )
 }

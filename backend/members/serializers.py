@@ -1,20 +1,22 @@
 import imghdr
 
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from .models import MemberProfile, PaymentSettings
+from .models import MemberProfile, PaymentSettings, PaymentTransaction
+from .receipt_generator import generate_receipt_png
 
 ALLOWED_IMAGE_TYPES = {
     'rgb', 'gif', 'pbm', 'pgm', 'ppm',
     'tiff', 'rast', 'xbm', 'jpeg', 'png', 'webp'
 }
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 def validate_image_file(value):
     if value is None:
         return value
     if value.size > MAX_IMAGE_SIZE:
-        raise serializers.ValidationError("Max image size is 5 MB.")
+        raise serializers.ValidationError("Max image size is 10 MB.")
     detected = imghdr.what(value)
     if detected not in ALLOWED_IMAGE_TYPES:
         raise serializers.ValidationError(
@@ -37,6 +39,29 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
 
+    def _resolve_cloudinary_url(self, url, field_instance):
+        if not url or 'res.cloudinary.com' in url:
+            return url
+        from django.conf import settings
+        cld = getattr(settings, 'CLOUDINARY_STORAGE', None)
+        if cld:
+            cloud_name = cld.get('CLOUD_NAME', '')
+            if cloud_name:
+                path = str(field_instance).lstrip('/')
+                if path.startswith('media/'):
+                    path = path[6:]
+                return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
+        return url
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        for field_name in ('profile_picture', 'payment_proof_image', 'coe_id_image'):
+            val = data.get(field_name)
+            if val:
+                f_instance = getattr(instance, field_name, None)
+                data[field_name] = self._resolve_cloudinary_url(val, f_instance)
+        return data
+
 
 class MemberApprovalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,7 +83,7 @@ class MemberRenewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MemberProfile
-        fields = ['year_level', 'payment_proof_image', 'coe_id_image']
+        fields = ['year_level', 'payment_method', 'payment_proof_image', 'coe_id_image']
 
 
 class PaymentSettingsSerializer(serializers.ModelSerializer):
@@ -123,3 +148,50 @@ class MemberCreateSerializer(serializers.ModelSerializer):
 
         profile = MemberProfile.objects.create(user=user, **validated_data)
         return profile
+
+
+class PaymentTransactionSerializer(serializers.ModelSerializer):
+    transaction_type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
+    payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    member_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentTransaction
+        fields = [
+            'id', 'member', 'transaction_type', 'transaction_type_display',
+            'payment_method', 'payment_method_display', 'payment_proof_image',
+            'receipt_image', 'status', 'status_display', 'reference_number',
+            'academic_year', 'approved_by_name', 'created_at', 'member_name',
+        ]
+        read_only_fields = [
+            'id', 'receipt_image', 'reference_number', 'created_at',
+        ]
+
+    def get_member_name(self, obj):
+        m = obj.member
+        parts = [m.first_name, m.middle_name, m.last_name]
+        return ' '.join(p for p in parts if p) or '—'
+
+    def _resolve_cloudinary_url(self, url, field_instance):
+        if not url or 'res.cloudinary.com' in url:
+            return url
+        from django.conf import settings
+        cld = getattr(settings, 'CLOUDINARY_STORAGE', None)
+        if cld:
+            cloud_name = cld.get('CLOUD_NAME', '')
+            if cloud_name:
+                path = str(field_instance).lstrip('/')
+                if path.startswith('media/'):
+                    path = path[6:]
+                return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
+        return url
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        for field_name in ('receipt_image', 'payment_proof_image'):
+            val = data.get(field_name)
+            if val:
+                f_instance = getattr(instance, field_name, None)
+                data[field_name] = self._resolve_cloudinary_url(val, f_instance)
+        return data

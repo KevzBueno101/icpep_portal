@@ -51,7 +51,6 @@ const AdminOfficersAccounts = () => {
     confirmPassword: '',
     role: 'OFFICER',
     position: '',
-    is_delegated: false,
     is_active: true,
     profile_picture: null,
     year_level: '',
@@ -81,18 +80,21 @@ const AdminOfficersAccounts = () => {
   }, [officers])
 
 
+  const loadRoster = async () => {
+    try {
+      const res = await publicApi.get('/users/officers/roster/')
+      setOfficers(res.data.results || [])
+    } catch (err) {
+      toast.error('Unable to load officer accounts.')
+      setOfficers([])
+    }
+  }
+
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      try {
-        const res = await publicApi.get('/users/officers/roster/')
-        setOfficers(res.data.results || [])
-      } catch (err) {
-        toast.error('Unable to load officer accounts.')
-        setOfficers([])
-      } finally {
-        setLoading(false)
-      }
+      await loadRoster()
+      setLoading(false)
     }
 
     if (user) load()
@@ -106,7 +108,6 @@ const AdminOfficersAccounts = () => {
       confirmPassword: '',
       role: 'OFFICER',
       position: '',
-      is_delegated: false,
       is_active: true,
       profile_picture: null,
       year_level: '',
@@ -136,7 +137,6 @@ const AdminOfficersAccounts = () => {
         confirmPassword: '',
         role: admin.role || 'OFFICER',
         position: admin.position || '',
-        is_delegated: admin.is_delegated || false,
         is_active: admin.is_active ?? true,
         profile_picture: null,
         year_level: admin.year_level || '',
@@ -187,7 +187,6 @@ const AdminOfficersAccounts = () => {
         username: form.username,
         role: form.role,
         position: form.position,
-        is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
       }
 
@@ -236,8 +235,7 @@ const AdminOfficersAccounts = () => {
     try {
       await api.delete(`/users/admins/${deleteOfficer.id}/`)
       refreshOfficers()
-      const resOfficers = await publicApi.get('/users/officers/roster/')
-      setOfficers(resOfficers.data.results || [])
+      await loadRoster()
       setDeleteOfficer(null)
       toast.success('Officer account deleted.')
     } catch (err) {
@@ -301,7 +299,7 @@ const AdminOfficersAccounts = () => {
               <p className="mt-2 text-2xl font-semibold text-slate-900">{officerRoster.length}</p>
             </div>
             <div className="text-sm text-slate-600">
-              {canEdit ? 'You can manage officer accounts.' : 'You can view officer accounts only.'}
+              {canEdit ? 'Only President can manage officers/admin accounts.' : 'You can view officer accounts only.'}
             </div>
           </div>
         </div>
@@ -388,7 +386,8 @@ const AdminOfficersAccounts = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFormChange('profile_picture', e.target.files?.[0] || null)}
-                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </div>
               </label>
@@ -400,7 +399,8 @@ const AdminOfficersAccounts = () => {
                     type="email"
                     value={form.email}
                     onChange={(e) => handleFormChange('email', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -409,7 +409,8 @@ const AdminOfficersAccounts = () => {
                     type="text"
                     value={form.username}
                     onChange={(e) => handleFormChange('username', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -422,7 +423,8 @@ const AdminOfficersAccounts = () => {
                     value={form.position}
                     onChange={(e) => handleFormChange('position', e.target.value)}
                     placeholder="e.g., President, Secretary, Treasurer"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -430,7 +432,8 @@ const AdminOfficersAccounts = () => {
                   <select
                     value={form.year_level}
                     onChange={(e) => handleFormChange('year_level', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     <option value="">Select year level</option>
                     {YEAR_LEVEL_OPTIONS.map((opt) => (
@@ -450,7 +453,8 @@ const AdminOfficersAccounts = () => {
                     value={form.department}
                     onChange={(e) => handleFormChange('department', e.target.value)}
                     placeholder="e.g., Executive Office"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -460,21 +464,9 @@ const AdminOfficersAccounts = () => {
                     value={form.academic_year}
                     onChange={(e) => handleFormChange('academic_year', e.target.value)}
                     placeholder="e.g., 2025-2026"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
-                </label>
-              </div>
-
-              <div className="space-y-2 text-sm text-slate-700">
-                <span>Secretary delegation</span>
-                <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={form.is_delegated}
-                    onChange={(e) => handleFormChange('is_delegated', e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  <span>Enable delegation (only applies to Secretary positions)</span>
                 </label>
               </div>
 
@@ -486,7 +478,8 @@ const AdminOfficersAccounts = () => {
                     value={form.password}
                     onChange={(e) => handleFormChange('password', e.target.value)}
                     placeholder={editAdmin ? 'Leave blank to keep the same password' : ''}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -495,7 +488,8 @@ const AdminOfficersAccounts = () => {
                     type="password"
                     value={form.confirmPassword}
                     onChange={(e) => handleFormChange('confirmPassword', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -503,9 +497,10 @@ const AdminOfficersAccounts = () => {
               <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                 <input
                   type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => handleFormChange('is_active', e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    checked={form.is_active}
+                    onChange={(e) => handleFormChange('is_active', e.target.checked)}
+                    disabled={!canEdit}
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <span>Active account</span>
               </label>
@@ -525,7 +520,7 @@ const AdminOfficersAccounts = () => {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={!canEdit || saving}
                 className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? 'Saving…' : editAdmin ? 'Save changes' : 'Create officer'}

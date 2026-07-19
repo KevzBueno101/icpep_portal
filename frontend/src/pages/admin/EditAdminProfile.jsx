@@ -79,10 +79,10 @@ export default function EditAdminProfile({ triggerRefresh }) {
   const handleFileSelect = (file) => {
     if (!file) return
 
-    // Validate file size (max 5MB)
-    const maxBytes = 5 * 1024 * 1024
+    // Validate file size (max 10MB)
+    const maxBytes = 10 * 1024 * 1024
     if (file.size > maxBytes) {
-      toast.error('Profile picture must be less than 5MB.')
+      toast.error('Profile picture must be less than 10MB.')
       return
     }
 
@@ -236,6 +236,8 @@ export default function EditAdminProfile({ triggerRefresh }) {
       }
       // Refresh leadership board across all pages
       window.dispatchEvent(new Event('officers-refresh'))
+      // Notify all profile consumers to refetch
+      window.dispatchEvent(new CustomEvent('profile-updated'))
       setTimeout(() => navigate('/admin/profile'), 350)
     } catch (err) {
       const detail = err?.response?.data?.detail
@@ -438,7 +440,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
                     </label>
                   )}
                   {!previewUrl && (
-                    <p className="text-xs text-slate-500">Supported formats: JPG, PNG, JPEG (Max 5MB)</p>
+                    <p className="text-xs text-slate-500">Supported formats: JPG, PNG, JPEG (Max 10MB)</p>
                   )}
                 </div>
               </div>

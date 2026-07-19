@@ -2,6 +2,8 @@ import contextlib
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
@@ -11,7 +13,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import AdminLoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import (
+    AdminLoginSerializer,
+    AdminRegistrationSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 from .utils import (
     build_password_reset_url,
     get_client_ip,
@@ -61,7 +68,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                     'Admin users must use the admin portal login at /admin-portal/login'
                 )
 
-        from django.contrib.auth import update_last_login
+        from django.utils import timezone
         from rest_framework_simplejwt.settings import api_settings
         refresh = self.get_token(user)
         data = {
@@ -69,7 +76,8 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
             'access': str(refresh.access_token),
         }
         if api_settings.UPDATE_LAST_LOGIN:
-            update_last_login(None, user)
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
         return data
 
     @classmethod
@@ -131,6 +139,20 @@ def register(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/m', block=True)
+def admin_register(request):
+    serializer = AdminRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response({
+            'message': 'Admin access request submitted successfully. Please wait for President approval.',
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='5/m', block=True)
@@ -157,12 +179,17 @@ def me(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=True)
+@ratelimit(key='ip', rate='5/15m', block=False)
 def admin_login(request):
     """
     Dedicated admin login endpoint.
     Rejects anyone who is not role=ADMIN with a position assigned.
     """
+    if getattr(request, 'limited', False):
+        return Response(
+            {'detail': 'Too many login attempts. Try again later or reset your password.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
     email = request.data.get('email', '')
     ip = get_client_ip(request)
 
@@ -238,15 +265,18 @@ def forgot_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    user = User.objects.filter(email__iexact=email).first()
-
     # Always return the same message to prevent user enumeration
     message = 'If an account with that email exists, a reset link has been sent.'
 
-    if user:
-        token = PasswordResetTokenGenerator().make_token(user)
-        reset_url = build_password_reset_url(user, token, request=request)
-        send_password_reset_email(email, reset_url)
+    try:
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            token = PasswordResetTokenGenerator().make_token(user)
+            reset_url = build_password_reset_url(user, token, request=request)
+            send_password_reset_email(email, reset_url)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Forgot-password error for %s", email)
 
     return Response({'message': message})
 
@@ -261,11 +291,11 @@ def reset_password(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    pk = request.data.get('pk', '').strip()
+    uidb64 = request.data.get('uidb64', '').strip()
     token = request.data.get('token', '').strip()
     password = request.data.get('password', '')
 
-    if not pk or not token or not password:
+    if not uidb64 or not token or not password:
         return Response(
             {'detail': 'User ID, token, and new password are required.'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -278,8 +308,9 @@ def reset_password(request):
         )
 
     try:
-        user = User.objects.get(pk=pk)
-    except User.DoesNotExist:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         return Response(
             {'detail': 'Invalid reset link.'},
             status=status.HTTP_400_BAD_REQUEST,

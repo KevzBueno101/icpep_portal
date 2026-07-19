@@ -3,7 +3,6 @@ import React from 'react'
 import { useAuth } from '../context/useAuth'
 import AdminSidebar from '../components/admin/AdminSidebar'
 import api from '../api/axios'
-import toast from 'react-hot-toast'
 
 const AdminLayout = ({
   children,
@@ -12,9 +11,9 @@ const AdminLayout = ({
 }) => {
   const { user, loading, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [yearEndBusy, setYearEndBusy] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [newLogsBadge, setNewLogsBadge] = useState(0)
+  const isRestricted = user?.access_level === 'RESTRICTED'
 
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1)
@@ -39,27 +38,10 @@ const AdminLayout = ({
     fetchLogsStats()
   }, [user, refreshTrigger])
 
-  const handleYearEndReset = async () => {
-    setYearEndBusy(true)
-    try {
-      const res = await api.post('/users/admins/year-end-reset/')
-      toast.success(res.data.message || 'Year-end reset complete.')
-      // Reload the page to refresh all data
-      window.location.reload()
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Year-end reset failed.')
-    } finally {
-      setYearEndBusy(false)
-    }
-  }
-
-  // Clone children and pass Year-End reset props
+  // Clone children and pass refresh props
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       return React.cloneElement(child, {
-        onYearEndReset: handleYearEndReset,
-        yearEndBusy,
-        isPresident: user?.position === 'PRESIDENT',
         refreshTrigger,
         triggerRefresh,
       })
@@ -77,6 +59,11 @@ const AdminLayout = ({
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
+      {isRestricted && (
+        <div className="fixed top-0 right-0 z-[60] text-slate-400 px-3 py-1 text-[10px] font-medium opacity-20">
+          Restricted Account — Read Only
+        </div>
+      )}
       <button
         type="button"
         className="lg:hidden fixed left-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-1 ring-white/10"
@@ -101,12 +88,9 @@ const AdminLayout = ({
             }}
             quickActions={quickActions}
             logout={logout}
-            onYearEndReset={handleYearEndReset}
-            yearEndBusy={yearEndBusy}
-            isPresident={user?.position === 'PRESIDENT'}
           />
 
-          <div className="min-w-0 flex-1 lg:ml-56">
+          <div className="min-w-0 flex-1 lg:ml-56 pt-14 lg:pt-0">
             <div className="pb-8">
               {childrenWithProps}
             </div>

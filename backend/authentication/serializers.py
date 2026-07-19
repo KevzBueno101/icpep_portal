@@ -6,6 +6,56 @@ from members.models import MemberProfile
 User = get_user_model()
 
 
+class AdminRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'email', 'username', 'password', 'confirm_password',
+            'first_name', 'last_name', 'position', 'department',
+            'academic_year', 'admin_note', 'profile_picture',
+        ]
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        if User.objects.filter(email__iexact=data['email']).exists():
+            raise serializers.ValidationError({'email': 'An account with this email already exists.'})
+        if User.objects.filter(username__iexact=data['username']).exists():
+            raise serializers.ValidationError({'username': 'An account with this username already exists.'})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        profile_picture = validated_data.pop('profile_picture', None)
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            password=password,
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role='ADMIN',
+            position='',
+            department=validated_data.get('department', ''),
+            academic_year=validated_data.get('academic_year', ''),
+            requested_position=validated_data.get('position', ''),
+            requested_department=validated_data.get('department', ''),
+            requested_academic_year=validated_data.get('academic_year', ''),
+            admin_note=validated_data.get('admin_note', ''),
+            registration_status='PENDING',
+            access_level='RESTRICTED',
+            is_active=False,
+        )
+        if profile_picture is not None:
+            user.profile_picture = profile_picture
+            user.save(update_fields=['profile_picture'])
+        return user
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password         = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True)
@@ -39,8 +89,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_coe_id_image(self, value):
         if value:
-            if value.size > 5 * 1024 * 1024:
-                raise serializers.ValidationError('File size must not exceed 5MB.')
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError('File size must not exceed 10MB.')
             allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
             if value.content_type not in allowed_types:
                 raise serializers.ValidationError('Only JPG, PNG, and PDF files are allowed.')
@@ -90,9 +140,10 @@ class UserSerializer(serializers.ModelSerializer):
         model  = User
         fields = [
             'id', 'email', 'username', 'role', 'position',
-            'is_delegated', 'term_start',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
             'membership_status', 'admin_message', 'profile_picture',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
             'created_at',
         ]
 
@@ -126,16 +177,21 @@ class UserSerializer(serializers.ModelSerializer):
         return getattr(profile, 'admin_message', None)
 
     def get_profile_picture(self, obj):
-        """
-        Return the Cloudinary URL as-is.
-        DO NOT append ?v=timestamp — Cloudinary 404s on unknown query params
-        when strict delivery settings are enabled, and the ?v= was literally
-        showing up in the failed resource URLs in the browser console.
-        """
         try:
             if hasattr(obj, 'profile_picture') and obj.profile_picture:
                 url = obj.profile_picture.url if hasattr(obj.profile_picture, 'url') else str(obj.profile_picture)
-                return url  # Cloudinary returns full https://res.cloudinary.com/... URL
+                if url and 'res.cloudinary.com' not in url:
+                    from django.conf import settings
+                    cld = getattr(settings, 'CLOUDINARY_STORAGE', None)
+                    if cld:
+                        cloud_name = cld.get('CLOUD_NAME', '')
+                        if cloud_name:
+                            path = str(obj.profile_picture).lstrip('/')
+                            # Strip old /media/ prefix if present
+                            if path.startswith('media/'):
+                                path = path[6:]
+                            return f'https://res.cloudinary.com/{cloud_name}/image/upload/v1/{path}'
+                return url
         except Exception:
             pass
         return None
@@ -157,6 +213,20 @@ class AdminLoginSerializer(serializers.Serializer):
 
         if not user:
             raise serializers.ValidationError('Incorrect password.')
+
+        if hasattr(user, 'role'):
+            if user.role != 'ADMIN':
+                raise serializers.ValidationError(
+                    'Access denied. This portal is for administrators only.'
+                )
+            if getattr(user, 'registration_status', 'APPROVED') == 'PENDING':
+                raise serializers.ValidationError('Your admin request is still pending approval.')
+            if getattr(user, 'registration_status', 'APPROVED') == 'REJECTED':
+                raise serializers.ValidationError('Your admin request was rejected. Please contact the President.')
+            if user.position == 'NONE':
+                raise serializers.ValidationError(
+                    'Your term has ended. Contact the current President to be re-assigned.'
+                )
 
         if not user.is_active:
             raise serializers.ValidationError('This account is disabled.')

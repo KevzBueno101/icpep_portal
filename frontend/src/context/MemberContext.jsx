@@ -9,6 +9,7 @@ export const MemberProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [profileCacheKey, setProfileCacheKey] = useState(0)
   const [paymentSettings, setPaymentSettings] = useState(null)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [announcements, setAnnouncements] = useState([])
@@ -26,6 +27,7 @@ export const MemberProvider = ({ children }) => {
         return pUser === meId || String(pUser) === String(meId)
       })
       setProfile(found || null)
+      setProfileCacheKey((k) => k + 1)
     } catch (err) {
       console.error(err)
       toast.error('Unable to fetch member profile.')
@@ -53,7 +55,7 @@ export const MemberProvider = ({ children }) => {
     if (!user?.id) return
     setAnnLoading(true)
     try {
-      const res = await api.get('/announcements/')
+      const res = await api.get('/announcements/?include_members_only=1')
       setAnnouncements(res.data?.results || [])
     } catch (err) {
       console.error(err)
@@ -80,6 +82,7 @@ export const MemberProvider = ({ children }) => {
 
   const value = {
     profile,
+    profileCacheKey,
     profileLoading,
     paymentSettings,
     paymentLoading,

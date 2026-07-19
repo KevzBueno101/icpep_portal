@@ -223,7 +223,7 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-5xl">
           <ValueCard
             title="Mission"
-            text="Empower students to innovate, build, and lead as future computer engineers through technical skills, professional integrity, and academic excellence."
+            text="The Institute of Computer Engineers of the Philippines. Student Edition – Catanduanes State University Chapter is committed in bridging the gap between industry and the academe by ensuring regional and national competitiveness of Catanduanes State University Computer Engineering Students."
             accent="#38bdf8"
           />
           <ValueCard
@@ -233,7 +233,7 @@ export default function HeroSection() {
           />
           <ValueCard
             title="Goals"
-            text="Develop skills through projects, events, and hands-on learning opportunities while fostering leadership, industry connections, and national competitiveness."
+            text="To promote the welfare, academic excellence, leadership, unity, discipline, and active participation of Computer Engineering students by fostering collaboration among members, the University, and other organizations, while supporting programs, policies, and initiatives that advance the objectives and mission of ICpEP.SE."
             accent="#a78bfa"
           />
         </div>

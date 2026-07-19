@@ -11,8 +11,25 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [failedCount, setFailedCount] = useState(0)
+  const [showRequestForm, setShowRequestForm] = useState(false)
+  const [requestForm, setRequestForm] = useState({
+    email: '',
+    username: '',
+    password: '',
+    confirm_password: '',
+    first_name: '',
+    last_name: '',
+    position: '',
+    department: '',
+    academic_year: '',
+    admin_note: '',
+  })
+  const [profilePic, setProfilePic] = useState(null)
+  const [profilePicPreview, setProfilePicPreview] = useState(null)
+  const [requestLoading, setRequestLoading] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleRequestChange = (e) => setRequestForm({ ...requestForm, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -46,6 +63,51 @@ const AdminLogin = () => {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setProfilePic(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setProfilePicPreview(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault()
+    setRequestLoading(true)
+    try {
+      const data = new FormData()
+      for (const [k, v] of Object.entries(requestForm)) {
+        if (v) data.append(k, v)
+      }
+      if (profilePic) data.append('profile_picture', profilePic)
+      await publicApi.post('/auth/admin-register/', data)
+      toast.success('Admin access request submitted. Please wait for President approval.')
+      setShowRequestForm(false)
+      setProfilePic(null)
+      setProfilePicPreview(null)
+      setRequestForm({
+        email: '',
+        username: '',
+        password: '',
+        confirm_password: '',
+        first_name: '',
+        last_name: '',
+        position: '',
+        department: '',
+        academic_year: '',
+        admin_note: '',
+      })
+    } catch (err) {
+      const data = err.response?.data
+      const msg = data?.detail || data?.email?.[0] || data?.username?.[0] || 'Unable to submit admin request.'
+      toast.error(msg)
+    } finally {
+      setRequestLoading(false)
     }
   }
 
@@ -182,6 +244,48 @@ const AdminLogin = () => {
               )}
             </button>
           </form>
+
+          <div className="mt-5 border-t border-gray-800/70 pt-4">
+            <button
+              type="button"
+              onClick={() => { setShowRequestForm((prev) => !prev); setProfilePic(null); setProfilePicPreview(null) }}
+              className="w-full rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/20"
+            >
+              {showRequestForm ? 'Cancel Request' : 'Request Admin Access'}
+            </button>
+
+            {showRequestForm && (
+              <form onSubmit={handleRequestSubmit} className="mt-4 space-y-3 rounded-xl border border-gray-800 bg-[#0a0a0f] p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input name="first_name" value={requestForm.first_name} onChange={handleRequestChange} required placeholder="First name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  <input name="last_name" value={requestForm.last_name} onChange={handleRequestChange} required placeholder="Last name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                </div>
+                <input name="email" type="email" value={requestForm.email} onChange={handleRequestChange} required placeholder="Email" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <input name="username" value={requestForm.username} onChange={handleRequestChange} required placeholder="Username" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input name="password" type="password" value={requestForm.password} onChange={handleRequestChange} required placeholder="Password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  <input name="confirm_password" type="password" value={requestForm.confirm_password} onChange={handleRequestChange} required placeholder="Confirm password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input name="position" value={requestForm.position} onChange={handleRequestChange} placeholder="Requested position" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  <input name="department" value={requestForm.department} onChange={handleRequestChange} placeholder="Department" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                </div>
+                <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
+                  {profilePicPreview ? (
+                    <img src={profilePicPreview} alt="Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-gray-500">Upload profile picture</span>
+                  )}
+                  <input type="file" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
+                </label>
+                <textarea name="admin_note" value={requestForm.admin_note} onChange={handleRequestChange} placeholder="Tell the President why you need admin access" rows="3" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <button type="submit" disabled={requestLoading} className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50">
+                  {requestLoading ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
 
         {/* Bottom disclaimer */}

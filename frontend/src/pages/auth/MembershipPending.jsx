@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Upload } from 'lucide-react'
+import { Upload, Info } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 
@@ -14,12 +14,15 @@ const MembershipPending = () => {
   const [checking, setChecking] = useState(false)
   const [showRenewModal, setShowRenewModal] = useState(false)
   const [yearLevel, setYearLevel] = useState(user?.year_level || '1')
+  const [paymentMethod, setPaymentMethod] = useState('GCASH')
   const [paymentProofFile, setPaymentProofFile] = useState(null)
   const [coeIdFile, setCoeIdFile] = useState(null)
   const [paymentProofPreview, setPaymentProofPreview] = useState(null)
   const [coeIdPreview, setCoeIdPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [renewError, setRenewError] = useState(null)
+  const [gcashNumber, setGcashNumber] = useState('')
+  const [gcashName, setGcashName] = useState('')
   const intervalRef = useRef(null)
 
   // ✅ Auto-poll: silently check approval status every 8 seconds.
@@ -48,6 +51,19 @@ const MembershipPending = () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [user, refreshUser, navigate])
+
+  useEffect(() => {
+    const loadPaymentSettings = async () => {
+      try {
+        const res = await api.get('/members/payment-settings/')
+        setGcashNumber(res.data.gcash_number || '')
+        setGcashName(res.data.gcash_name || '')
+      } catch {
+        // non-critical
+      }
+    }
+    loadPaymentSettings()
+  }, [])
 
   // ─── Early returns (guards) ───────────────────────────────────────────────
 
@@ -105,6 +121,7 @@ const MembershipPending = () => {
   const closeRenewModal = () => {
     setShowRenewModal(false)
     setRenewError(null)
+    setPaymentMethod('GCASH')
     setPaymentProofFile(null)
     setCoeIdFile(null)
     setPaymentProofPreview(null)
@@ -124,6 +141,7 @@ const MembershipPending = () => {
 
     const formData = new FormData()
     formData.append('year_level', yearLevel)
+    formData.append('payment_method', paymentMethod)
     formData.append('payment_proof_image', paymentProofFile)
     formData.append('coe_id_image', coeIdFile)
 
@@ -253,8 +271,8 @@ const MembershipPending = () => {
         </div>
 
         {showRenewModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8">
-            <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8 overflow-y-auto">
+            <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">Renew Your Membership</h2>
@@ -286,6 +304,80 @@ const MembershipPending = () => {
                     <option value="4">4th Year</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Payment Method</label>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        paymentMethod === 'GCASH'
+                          ? 'border-sky-500 bg-sky-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="GCASH"
+                        checked={paymentMethod === 'GCASH'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 text-sky-600 accent-sky-600"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">GCash</p>
+                        <p className="text-xs text-slate-500">Pay via GCash mobile wallet</p>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        paymentMethod === 'ON_HAND'
+                          ? 'border-sky-500 bg-sky-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="ON_HAND"
+                        checked={paymentMethod === 'ON_HAND'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 text-sky-600 accent-sky-600"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">On-hand / Personal</p>
+                        <p className="text-xs text-slate-500">Pay in person to an officer</p>
+                      </div>
+                    </label>
+                  </div>
+                  </div>
+
+                  {paymentMethod === 'GCASH' ? (
+                    <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+                      <p className="font-semibold text-slate-900">GCash payment details</p>
+                      {gcashNumber || gcashName ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-600">Name</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashName || 'GCash account'}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-600">GCash #</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashNumber || '—'}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-slate-600">
+                          The GCash details have not been set yet. Ask the admin for the current payment account before uploading proof.
+                        </p>
+                      )}
+                      <p className="mt-3 text-slate-600">Upload the screenshot of payment proof after sending.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                      <Info className="h-5 w-5 shrink-0 mt-0.5" />
+                      <p>Please take a picture with the designated officer as proof of on-hand payment.</p>
+                    </div>
+                  )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Payment Proof</label>
@@ -334,7 +426,7 @@ const MembershipPending = () => {
                         </div>
                         <div className="space-y-1">
                           <p className="text-base font-semibold text-[#111827]">Drag & drop or choose file to upload</p>
-                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG, PDF (Max 5MB)</p>
+                          <p className="text-sm text-[#6B7280]">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
                         </div>
                       </>
                     )}

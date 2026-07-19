@@ -96,11 +96,13 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
-            'role', 'position', 'is_delegated', 'is_active',
+            'role', 'position', 'is_active',
             'year_level', 'created_at', 'profile_picture',
-            'department', 'academic_year',
+            'department', 'academic_year', 'officer_id',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id', 'created_at', 'officer_id', 'registration_status', 'access_level']
 
 
 class AdminProfileSerializer(serializers.ModelSerializer):
@@ -120,14 +122,20 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'last_name',
             'role',
             'position',
-            'is_delegated',
             'is_active',
             'profile_picture',
             'can_manage_roles',
             'department',
             'academic_year',
+            'officer_id',
+            'registration_status',
+            'access_level',
+            'requested_position',
+            'requested_department',
+            'requested_academic_year',
+            'admin_note',
         ]
-        read_only_fields = ['id', 'role', 'position', 'can_manage_roles']
+        read_only_fields = ['id', 'role', 'position', 'can_manage_roles', 'officer_id', 'registration_status', 'access_level']
 
 
 class AdminAccountSerializer(serializers.ModelSerializer):
@@ -138,11 +146,13 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
-            'role', 'position', 'is_delegated', 'is_active',
+            'role', 'position', 'is_active',
             'year_level', 'profile_picture', 'password',
-            'department', 'academic_year',
+            'department', 'academic_year', 'officer_id',
+            'registration_status', 'access_level', 'requested_position',
+            'requested_department', 'requested_academic_year', 'admin_note',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'officer_id', 'registration_status', 'access_level']
 
     def validate(self, attrs):
         if not self.instance and not attrs.get('password'):
@@ -189,17 +199,12 @@ class AssignRoleSerializer(serializers.Serializer):
     # NOTE: positions are dynamic (free text) — there is no User.Position
     # choices class on the model, so this must be a CharField, not ChoiceField.
     position = serializers.CharField(max_length=100, allow_blank=True, required=False)
-    is_delegated = serializers.BooleanField(default=False)
 
     def validate(self, attrs):
         if attrs.get('position', '').lower() == 'president':
             # Add extra validation if needed, handled in views mostly
             pass
         return attrs
-
-
-class DelegateSecretarySerializer(serializers.Serializer):
-    is_delegated = serializers.BooleanField()
 
 
 class OfficerCreateSerializer(serializers.Serializer):

@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import IsAdmin
+from permissions import CanManageContent, IsAdmin
 
 from .models import Milestone, MilestoneImage
 from .serializers import (
@@ -34,7 +34,11 @@ class MilestoneDetailAPIView(generics.RetrieveAPIView):
 class MilestoneAdminListCreateAPIView(generics.ListCreateAPIView):
     """Admin endpoint for listing and creating milestones"""
     queryset = Milestone.objects.all()
-    permission_classes = [IsAdmin]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        return [CanManageContent()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -64,8 +68,12 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Admin endpoint for updating and deleting milestones"""
     queryset = Milestone.objects.all()
     serializer_class = MilestoneCreateUpdateSerializer
-    permission_classes = [IsAdmin]
     lookup_field = 'id'
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        return [CanManageContent()]
 
     def perform_update(self, serializer):
         milestone = serializer.save()
@@ -104,7 +112,7 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class MilestoneImageUploadAPIView(APIView):
     """Admin endpoint for uploading images to a milestone"""
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageContent]
 
     def post(self, request, milestone_id):
         milestone = get_object_or_404(Milestone, id=milestone_id)

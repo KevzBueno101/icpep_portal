@@ -5,29 +5,43 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import IsAdmin
+from permissions import CanManageContent, IsAdmin
 
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
 
 
 class AnnouncementListAPIView(generics.ListAPIView):
-    queryset = Announcement.objects.filter(is_published=True).order_by('-created_at')
     serializer_class = AnnouncementSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        qs = Announcement.objects.filter(is_published=True).order_by('-created_at')
+        if not self.request.query_params.get('include_members_only'):
+            qs = qs.filter(members_only=False)
+        return qs
 
 
 class AnnouncementDetailAPIView(generics.RetrieveAPIView):
-    queryset = Announcement.objects.filter(is_published=True)
     serializer_class = AnnouncementSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'id'
+
+    def get_queryset(self):
+        qs = Announcement.objects.filter(is_published=True)
+        if not self.request.query_params.get('include_members_only'):
+            qs = qs.filter(members_only=False)
+        return qs
 
 
 class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
     queryset = Announcement.objects.all().order_by('-created_at')
     serializer_class = AnnouncementSerializer
-    permission_classes = [IsAdmin]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        return [CanManageContent()]
 
     def perform_create(self, serializer):
         author = serializer.validated_data.get('author')
@@ -56,8 +70,12 @@ class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
 class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Announcement.objects.all()
     serializer_class = AnnouncementSerializer
-    permission_classes = [IsAdmin]
     lookup_field = 'id'
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdmin()]
+        return [CanManageContent()]
 
     def perform_update(self, serializer):
         announcement = serializer.save()
@@ -95,7 +113,7 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AnnouncementImageUploadAPIView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageContent]
 
     def post(self, request, announcement_id):
         announcement = get_object_or_404(Announcement, id=announcement_id)

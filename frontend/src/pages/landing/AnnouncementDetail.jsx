@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
+import api from '../../api/axios'
+import ImageModal from '../../components/ImageModal'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
 
@@ -51,11 +53,14 @@ export default function AnnouncementDetail() {
 
   const [announcement, setAnnouncement] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [modalImages, setModalImages] = useState(null)
+  const [modalInitialIndex, setModalInitialIndex] = useState(0)
 
   const fetchAnnouncement = async () => {
     setLoading(true)
     try {
-      const res = await publicApi.get(`/announcements/${id}/`)
+      const client = user && user.role !== 'ADMIN' ? api : publicApi
+      const res = await client.get(`/announcements/${id}/${user ? '?include_members_only=1' : ''}`)
       setAnnouncement(res.data)
     } catch (err) {
       console.error('Failed to fetch announcement:', err)
@@ -96,6 +101,17 @@ export default function AnnouncementDetail() {
   }, [announcement])
 
   const images = announcement?.images || []
+
+  const handleImageClick = (index) => {
+    const urls = images.map(img => img.image)
+    setModalImages(urls)
+    setModalInitialIndex(index)
+  }
+
+  const handleCloseModal = () => {
+    setModalImages(null)
+    setModalInitialIndex(0)
+  }
 
   const handleBackToAnnouncements = () => {
     if (user && user.role !== 'ADMIN') {
@@ -144,6 +160,9 @@ export default function AnnouncementDetail() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
+      {modalImages && (
+        <ImageModal images={modalImages} initialIndex={modalInitialIndex} onClose={handleCloseModal} />
+      )}
       {/* Subtle grid bg */}
       <div
         className="pointer-events-none fixed inset-0 opacity-[0.04]"
@@ -213,16 +232,21 @@ export default function AnnouncementDetail() {
           {/* Images */}
           {images.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-6">Gallery</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Gallery ({images.length} photo{images.length > 1 ? 's' : ''})</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {images.map((img) => (
-                  <div key={img.id} className="rounded-xl overflow-hidden">
+                {images.map((img, idx) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => handleImageClick(idx)}
+                    className="rounded-xl overflow-hidden group cursor-pointer text-left"
+                  >
                     <img
                       src={img.image}
                       alt={announcement.title}
-                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

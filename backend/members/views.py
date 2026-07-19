@@ -1,3 +1,7 @@
+import io
+from datetime import date
+
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -5,21 +9,44 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import IsAdmin
+from permissions import CanManageMembership, IsAdmin, _is_admin_or_president
 
-from .models import MemberProfile, PaymentSettings
+from .models import MemberProfile, PaymentSettings, PaymentTransaction
+from .receipt_generator import generate_receipt_png
 from .serializers import (
     MemberApprovalSerializer,
     MemberCreateSerializer,
     MemberProfileSerializer,
     MemberRenewSerializer,
     PaymentSettingsSerializer,
+    PaymentTransactionSerializer,
 )
+
+
+def get_current_academic_year():
+    today = date.today()
+    if today.month >= 8:
+        return f"{today.year}-{today.year + 1}"
+    return f"{today.year - 1}-{today.year}"
+
+
+def generate_ref_number():
+    year = date.today().year
+    prefix = f"ICPEP-{year}-"
+    last_txn = PaymentTransaction.objects.filter(
+        reference_number__startswith=prefix
+    ).order_by('-reference_number').first()
+    if last_txn:
+        last_seq = int(last_txn.reference_number.split('-')[-1])
+        next_seq = last_seq + 1
+    else:
+        next_seq = 1
+    return f"{prefix}{next_seq:04d}"
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if getattr(request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(request.user):
             return True
         return obj.user == request.user
 
@@ -34,8 +61,8 @@ class MemberListAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Admins can see all members.
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        # Admins and President can see all members.
+        if _is_admin_or_president(self.request.user):
             return MemberProfile.objects.all().order_by('-created_at')
         # Members can only see their own profile.
         return MemberProfile.objects.filter(user=self.request.user).order_by('-created_at')
@@ -46,12 +73,20 @@ class MemberListAPIView(generics.ListCreateAPIView):
         return MemberProfileSerializer
 
     def create(self, request, *args, **kwargs):
+        # RESTRICTED admins cannot create members via admin panel.
+        if _is_admin_or_president(request.user):
+            if getattr(request.user, 'access_level', None) == 'RESTRICTED':
+                return Response(
+                    {'detail': 'Restricted accounts cannot create members.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
 
         # Log member creation
-        if getattr(request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(request.user):
             log_action(
                 user=request.user,
                 action_type=AuditLog.ActionType.MEMBER_CREATED,
@@ -70,13 +105,21 @@ class MemberListAPIView(generics.ListCreateAPIView):
 class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MemberProfile.objects.all()
     serializer_class = MemberProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_permissions(self):
+        """
+        - GET: owner or any admin (including RESTRICTED) can view.
+        - PUT/PATCH/DELETE: only FULL_CONTROL admins / President can write.
+        """
+        if self.request.method in ('PUT', 'PATCH', 'DELETE'):
+            return [permissions.IsAuthenticated(), CanManageMembership()]
+        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
 
     def perform_update(self, serializer):
         profile = serializer.save()
 
         # Log member update
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(self.request.user):
             log_action(
                 user=self.request.user,
                 action_type=AuditLog.ActionType.MEMBER_UPDATED,
@@ -93,7 +136,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
         super().perform_destroy(instance)
 
         # Log member deletion
-        if getattr(self.request.user, 'role', '').upper() == 'ADMIN':
+        if _is_admin_or_president(self.request.user):
             log_action(
                 user=self.request.user,
                 action_type=AuditLog.ActionType.MEMBER_DELETED,
@@ -113,7 +156,13 @@ class PaymentSettingsAPIView(APIView):
         return Response(PaymentSettingsSerializer(settings_obj).data)
 
     def patch(self, request):
-        if not (request.user and request.user.is_authenticated and getattr(request.user, 'role', '').upper() == 'ADMIN' and getattr(request.user, 'position', '') in ['PRESIDENT', 'TREASURER']):
+        pos_lower = (getattr(request.user, 'position', '') or '').lower()
+        is_president = 'president' in pos_lower
+        is_treasurer = (
+            getattr(request.user, 'role', '').upper() == 'ADMIN'
+            and 'treasurer' in pos_lower
+        )
+        if not (request.user and request.user.is_authenticated and (is_president or is_treasurer)):
             return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         settings_obj, _ = PaymentSettings.objects.get_or_create(id=1)
         serializer = PaymentSettingsSerializer(settings_obj, data=request.data, partial=True)
@@ -135,7 +184,7 @@ class PaymentSettingsAPIView(APIView):
 
 
 class MemberApproveAPIView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageMembership]
 
     def post(self, request, pk):
         profile = get_object_or_404(MemberProfile, pk=pk)
@@ -144,6 +193,38 @@ class MemberApproveAPIView(APIView):
         old_status = profile.membership_status
         serializer.save()
         new_status = profile.membership_status
+
+        # When approving, auto-create a PaymentTransaction + e-receipt
+        if new_status == 'APPROVED':
+            txn_data = {
+                'member': profile,
+                'transaction_type': 'RENEWAL' if old_status == 'EXPIRED' else 'REGISTRATION',
+                'payment_method': profile.payment_method or 'ON_HAND',
+                'status': 'VERIFIED',
+                'reference_number': generate_ref_number(),
+                'academic_year': get_current_academic_year(),
+                'approved_by_name': f"{request.user.first_name} {request.user.last_name}",
+            }
+            transaction = PaymentTransaction.objects.create(**txn_data)
+
+            # Copy payment proof image from member profile
+            if profile.payment_proof_image:
+                transaction.payment_proof_image = profile.payment_proof_image
+                transaction.save(update_fields=['payment_proof_image'])
+
+            try:
+                receipt_bytes = generate_receipt_png(transaction, profile)
+                transaction.receipt_image.save(
+                    f"receipt_{transaction.reference_number}.png",
+                    ContentFile(receipt_bytes),
+                    save=True,
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Failed to generate receipt for %s: %s",
+                    transaction.reference_number, e
+                )
 
         # Log member approval/rejection
         if new_status == 'APPROVED':
@@ -177,7 +258,7 @@ class MemberRenewAllAPIView(APIView):
     proof of payment, and COE/ID document. After renewal submission, their status
     becomes PENDING and they wait for admin approval.
     """
-    permission_classes = [IsAdmin]
+    permission_classes = [CanManageMembership]
 
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
@@ -224,3 +305,23 @@ class MemberRenewAPIView(APIView):
             MemberProfileSerializer(profile).data,
             status=status.HTTP_200_OK
         )
+
+
+class MemberTransactionListAPIView(generics.ListAPIView):
+    """List all payment transactions for the authenticated member."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PaymentTransactionSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if _is_admin_or_president(user):
+            qs = PaymentTransaction.objects.all().order_by('-created_at')
+            member_id = self.request.query_params.get('member')
+            if member_id:
+                qs = qs.filter(member_id=member_id)
+            return qs
+        try:
+            profile = MemberProfile.objects.get(user=user)
+        except MemberProfile.DoesNotExist:
+            return PaymentTransaction.objects.none()
+        return PaymentTransaction.objects.filter(member=profile).order_by('-created_at')

@@ -37,6 +37,12 @@ const AdminAdmins = ({ refreshTrigger }) => {
   const [saving, setSaving] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
 
+  const [brokenImages, setBrokenImages] = useState(new Set())
+  const [pendingRequests, setPendingRequests] = useState([])
+  const [pendingLoading, setPendingLoading] = useState(false)
+  const [approvalBusyId, setApprovalBusyId] = useState(null)
+  const [selectedAccessLevels, setSelectedAccessLevels] = useState({})
+
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -44,15 +50,49 @@ const AdminAdmins = ({ refreshTrigger }) => {
     confirmPassword: '',
     role: 'OFFICER',
     position: '',
-    is_delegated: false,
     is_active: true,
     profile_picture: null,
     year_level: '',
     department: '',
     academic_year: '',
+    access_level: 'RESTRICTED',
   })
 
   const canEdit = useMemo(() => user?.can_manage_roles, [user])
+  const canReviewApprovals = useMemo(() => user?.role === 'ADMIN' && String(user?.position).toLowerCase().includes('president'), [user])
+
+  const loadPendingRequests = async () => {
+    if (!canReviewApprovals) {
+      setPendingRequests([])
+      return
+    }
+    setPendingLoading(true)
+    try {
+      const res = await api.get('/users/admins/pending/')
+      setPendingRequests(res.data || [])
+    } catch (err) {
+      setPendingRequests([])
+    } finally {
+      setPendingLoading(false)
+    }
+  }
+
+  const handleApprovalAction = async (requestId, action) => {
+    if (!canReviewApprovals) return
+    setApprovalBusyId(requestId)
+    try {
+      const payload = action === 'approve' ? { access_level: selectedAccessLevels[requestId] || 'RESTRICTED' } : {}
+      await api.post(`/users/admins/${requestId}/${action}/`, payload)
+      await loadPendingRequests()
+      const res = await api.get('/users/admins/')
+      setAdmins(res.data.results || [])
+      toast.success(action === 'approve' ? 'Admin request approved.' : 'Admin request rejected.')
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Unable to process admin request.')
+    } finally {
+      setApprovalBusyId(null)
+    }
+  }
 
   useEffect(() => {
     const loadAdmins = async () => {
@@ -61,7 +101,11 @@ const AdminAdmins = ({ refreshTrigger }) => {
         const res = await api.get('/users/admins/')
         setAdmins(res.data.results || [])
       } catch (err) {
-        toast.error('Unable to load admin accounts.')
+        if (err.response?.status === 403) {
+          setAdmins([])
+        } else {
+          toast.error('Unable to load admin accounts.')
+        }
       } finally {
         setLoading(false)
       }
@@ -69,8 +113,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
 
     if (user) {
       loadAdmins()
+      loadPendingRequests()
     }
-  }, [user, refreshTrigger])
+  }, [user, refreshTrigger, canReviewApprovals])
 
   const resetForm = () => {
     setForm({
@@ -80,12 +125,12 @@ const AdminAdmins = ({ refreshTrigger }) => {
       confirmPassword: '',
       role: 'OFFICER',
       position: '',
-      is_delegated: false,
       is_active: true,
       profile_picture: null,
       year_level: '',
       department: '',
       academic_year: '',
+      access_level: 'RESTRICTED',
     })
     setEditAdmin(null)
   }
@@ -104,12 +149,12 @@ const AdminAdmins = ({ refreshTrigger }) => {
       confirmPassword: '',
       role: admin.role || 'OFFICER',
       position: admin.position || '',
-      is_delegated: admin.is_delegated || false,
       is_active: admin.is_active ?? true,
       profile_picture: null,
       year_level: admin.year_level || '',
       department: admin.department || '',
       academic_year: admin.academic_year || '',
+      access_level: admin.access_level || 'RESTRICTED',
     })
     setModalOpen(true)
   }
@@ -150,8 +195,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
         username: form.username,
         role: form.role,
         position: form.position,
-        is_delegated: Boolean(form.is_delegated),
         is_active: Boolean(form.is_active),
+        access_level: form.access_level,
       }
 
 
@@ -264,6 +309,62 @@ const AdminAdmins = ({ refreshTrigger }) => {
         </div>
       </div>
 
+      {canReviewApprovals && (
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Pending admin requests</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{pendingRequests.length}</p>
+              </div>
+              <div className="text-sm text-slate-600">President review queue for new admin access.</div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {pendingLoading ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">Loading requests…</div>
+            ) : pendingRequests.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">No pending admin requests.</div>
+            ) : (
+              <div className="space-y-4">
+                {pendingRequests.map((request) => (
+                  <div key={request.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="font-semibold text-slate-900">{request.first_name} {request.last_name}</p>
+                        <p className="mt-1 text-sm text-slate-600">{request.email}</p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          Requested position: {request.requested_position || '—'} • Department: {request.requested_department || '—'}
+                        </p>
+                        {request.admin_note && <p className="mt-2 text-sm text-slate-600">{request.admin_note}</p>}
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <select
+                          value={selectedAccessLevels[request.id] || 'RESTRICTED'}
+                          onChange={(e) => setSelectedAccessLevels((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                        >
+                          <option value="RESTRICTED">Restricted</option>
+                          <option value="MEMBERSHIP">Membership Access</option>
+                          <option value="FULL_CONTROL">Full Control</option>
+                        </select>
+                        <button type="button" onClick={() => handleApprovalAction(request.id, 'approve')} disabled={approvalBusyId === request.id} className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50">
+                          {approvalBusyId === request.id ? 'Processing…' : 'Approve'}
+                        </button>
+                        <button type="button" onClick={() => handleApprovalAction(request.id, 'reject')} disabled={approvalBusyId === request.id} className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50">
+                          {approvalBusyId === request.id ? 'Processing…' : 'Reject'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -307,17 +408,20 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     className="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
-                      {admin.profile_picture ? (
-                        <img
-                          src={resolveProfilePictureUrl(admin.profile_picture)}
-                          alt={admin.username}
-                          className="h-16 w-16 flex-shrink-0 rounded-full object-cover border-2 border-white shadow-sm"
-                        />
-                      ) : (
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white shadow-sm">
-                          <User size={28} />
-                        </div>
-                      )}
+                      <div className="relative h-16 w-16 flex-shrink-0">
+                        {admin.profile_picture && !brokenImages.has(admin.id) ? (
+                          <img
+                            src={resolveProfilePictureUrl(admin.profile_picture)}
+                            alt={admin.username}
+                            className="h-full w-full rounded-full object-cover border-2 border-white shadow-sm"
+                            onError={() => setBrokenImages((prev) => new Set(prev).add(admin.id))}
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white shadow-sm">
+                            <User size={28} />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 truncate">{admin.username}</p>
                         <p className="text-sm text-slate-500 truncate">{admin.email}</p>
@@ -337,6 +441,18 @@ const AdminAdmins = ({ refreshTrigger }) => {
                           admin.position ? 'text-sky-700' : 'text-slate-500'
                         }`}>
                           {admin.position || 'No position'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="text-xs text-slate-600">Access</span>
+                        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                          admin.access_level === 'FULL_CONTROL' ? 'text-purple-700' :
+                          admin.access_level === 'MEMBERSHIP' ? 'text-emerald-700' :
+                          'text-slate-500'
+                        }`}>
+                          {admin.access_level === 'FULL_CONTROL' ? 'Full Control' :
+                           admin.access_level === 'MEMBERSHIP' ? 'Membership' :
+                           'Restricted'}
                         </span>
                       </div>
                       {admin.department && (
@@ -442,6 +558,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
                       src={resolveProfilePictureUrl(editAdmin.profile_picture)}
                       alt="Current profile"
                       className="h-20 w-20 rounded-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none' }}
                     />
                   )}
                   {form.profile_picture && (
@@ -460,7 +577,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFormChange('profile_picture', e.target.files[0])}
-                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
+                    disabled={!canEdit}
+                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
                   />
                 </div>
               </label>
@@ -472,7 +590,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="email"
                     value={form.email}
                     onChange={(e) => handleFormChange('email', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
@@ -481,7 +600,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="text"
                     value={form.username}
                     onChange={(e) => handleFormChange('username', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -492,7 +612,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <select
                     value={form.role}
                     onChange={(e) => handleFormChange('role', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     {ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -509,7 +630,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.position}
                     onChange={(e) => handleFormChange('position', e.target.value)}
                     placeholder="e.g., President, Secretary, Treasurer, etc."
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -520,7 +642,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <select
                     value={form.year_level}
                     onChange={(e) => handleFormChange('year_level', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 max-h-32 overflow-y-auto disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
                     <option value="">Select year level</option>
                     {YEAR_LEVEL_OPTIONS.map((option) => (
@@ -538,7 +661,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.department}
                     onChange={(e) => handleFormChange('department', e.target.value)}
                     placeholder="e.g., Executive Office"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -551,21 +675,30 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.academic_year}
                     onChange={(e) => handleFormChange('academic_year', e.target.value)}
                     placeholder="e.g., 2025-2026"
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
 
-                <div className="space-y-2 text-sm text-slate-700">
-                  <span>Secretary delegation</span>
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={form.is_delegated}
-                      onChange={(e) => handleFormChange('is_delegated', e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                    />
-                    <span>Enable delegation (only applies to Secretary positions)</span>
-                  </label>
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span>Access Level</span>
+                  <select
+                    value={form.access_level}
+                    onChange={(e) => handleFormChange('access_level', e.target.value)}
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                  >
+                    <option value="FULL_CONTROL">Full Control</option>
+                    <option value="MEMBERSHIP">Membership Access</option>
+                    <option value="RESTRICTED">Restricted</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="space-y-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-400">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full border border-slate-400 text-[10px] font-bold leading-none text-slate-400 shrink-0">i</span>
+                  <span className="opacity-60">Access level determines what this admin can do. Full Control = everything, Membership = member management only, Restricted = view only.</span>
                 </div>
               </div>
 
@@ -577,7 +710,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     value={form.password}
                     onChange={(e) => handleFormChange('password', e.target.value)}
                     placeholder={editAdmin ? 'Leave blank to keep the same password' : ''}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
 
@@ -587,7 +721,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="password"
                     value={form.confirmPassword}
                     onChange={(e) => handleFormChange('confirmPassword', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
                 </label>
               </div>
@@ -598,7 +733,8 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     type="checkbox"
                     checked={form.is_active}
                     onChange={(e) => handleFormChange('is_active', e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    disabled={!canEdit}
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <span>Active account</span>
                 </label>
@@ -619,7 +755,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={!canEdit || saving}
                 className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? 'Saving…' : editAdmin ? 'Save changes' : 'Create admin'}

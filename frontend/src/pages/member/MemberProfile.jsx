@@ -29,7 +29,7 @@ const safeDetailFromError = (err) => {
 
 export default function MemberProfile() {
   const { user, refreshUser } = useAuth()
-  const { profile, refreshProfile } = useMember()
+  const { profile, refreshProfile, profileCacheKey } = useMember()
 
   const [editMode, setEditMode] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
@@ -49,10 +49,29 @@ export default function MemberProfile() {
   const previewUrlRef = useRef(null)
   const fileInputRef = useRef(null)
 
+  const [transactions, setTransactions] = useState([])
+  const [txnLoading, setTxnLoading] = useState(true)
+
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchTransactions = async () => {
+      try {
+        const res = await api.get('/members/transactions/')
+        if (!cancelled) setTransactions(res.data.results ?? res.data)
+      } catch {
+        // non-critical
+      } finally {
+        if (!cancelled) setTxnLoading(false)
+      }
+    }
+    fetchTransactions()
+    return () => { cancelled = true }
   }, [])
 
   const enterEditMode = () => {
@@ -91,9 +110,9 @@ export default function MemberProfile() {
   const onSelectProfilePicture = (file) => {
     if (!file) return
 
-    const maxBytes = 5 * 1024 * 1024
+    const maxBytes = 10 * 1024 * 1024
     if (file.size > maxBytes) {
-      toast.error('Profile picture must be less than 5MB.')
+      toast.error('Profile picture must be less than 10MB.')
       return
     }
 
@@ -149,6 +168,8 @@ export default function MemberProfile() {
       await refreshUser()
       await refreshProfile()
 
+      window.dispatchEvent(new CustomEvent('profile-updated'))
+
       toast.success('Profile updated successfully!')
       setEditMode(false)
       setSelectedFile(null)
@@ -162,7 +183,7 @@ export default function MemberProfile() {
   }
 
   const avatarInitial = getInitials(profile?.first_name || user?.first_name)
-  const displayAvatar = previewUrl || profile?.profile_picture
+  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}#cache=${profileCacheKey}` : null)
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -333,6 +354,81 @@ export default function MemberProfile() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Payment History */}
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <svg className="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+            </svg>
+            Payment History
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          {txnLoading ? (
+            <div className="text-sm text-slate-400 text-center py-6">Loading transactions…</div>
+          ) : transactions.length === 0 ? (
+            <div className="text-sm text-slate-400 text-center py-6">No payment transactions yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="pb-2 pr-3 whitespace-nowrap">Ref #</th>
+                    <th className="pb-2 pr-3 whitespace-nowrap">Date</th>
+                    <th className="pb-2 pr-3 whitespace-nowrap hidden sm:table-cell">Type</th>
+                    <th className="pb-2 pr-3 whitespace-nowrap hidden md:table-cell">Method</th>
+                    <th className="pb-2 pr-3 whitespace-nowrap">Status</th>
+                    <th className="pb-2 whitespace-nowrap">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((txn) => (
+                    <tr key={txn.id} className="border-b border-slate-50 last:border-0">
+                      <td className="py-3 pr-3 font-mono text-xs text-slate-700 whitespace-nowrap">
+                        {txn.reference_number}
+                      </td>
+                      <td className="py-3 pr-3 text-slate-700 whitespace-nowrap">
+                        {new Date(txn.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 pr-3 text-slate-700 whitespace-nowrap hidden sm:table-cell">
+                        {txn.transaction_type_display}
+                      </td>
+                      <td className="py-3 pr-3 text-slate-700 whitespace-nowrap hidden md:table-cell">
+                        {txn.payment_method_display}
+                      </td>
+                      <td className="py-3 pr-3 whitespace-nowrap">
+                        <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                          {txn.status_display}
+                        </span>
+                      </td>
+                      <td className="py-3 whitespace-nowrap">
+                        {txn.receipt_image ? (
+                          <a
+                            href={txn.receipt_image}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

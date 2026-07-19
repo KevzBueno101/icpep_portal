@@ -15,6 +15,39 @@ class PaymentSettings(models.Model):
         return f"{self.gcash_name or 'No name'} - {self.gcash_number or 'No number'}"
 
 
+class PaymentTransaction(models.Model):
+    class Type(models.TextChoices):
+        REGISTRATION = 'REGISTRATION', 'Registration'
+        RENEWAL = 'RENEWAL', 'Renewal'
+
+    class PaymentMethod(models.TextChoices):
+        ON_HAND = 'ON_HAND', 'On-hand / Personal'
+        GCASH = 'GCASH', 'GCash'
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        VERIFIED = 'VERIFIED', 'Verified'
+
+    member = models.ForeignKey(
+        'MemberProfile', on_delete=models.CASCADE, related_name='transactions'
+    )
+    transaction_type = models.CharField(max_length=20, choices=Type.choices)
+    payment_method = models.CharField(max_length=10, choices=PaymentMethod.choices)
+    payment_proof_image = models.ImageField(upload_to='payment_proofs/', null=True, blank=True)
+    receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True, max_length=500)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    reference_number = models.CharField(max_length=30, unique=True)
+    academic_year = models.CharField(max_length=20, blank=True)
+    approved_by_name = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.reference_number} — {self.member}"
+
+
 class MemberProfile(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'

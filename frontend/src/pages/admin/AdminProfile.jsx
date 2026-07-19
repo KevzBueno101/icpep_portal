@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { User, Mail, Shield, Briefcase, GraduationCap, Building2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User, Mail, Shield, Briefcase, GraduationCap, Building2, BadgeCheck, KeyRound } from 'lucide-react'
 import useAdminProfile from '../../hooks/useAdminProfile'
 
 export default function AdminProfile() {
+  const navigate = useNavigate()
   const { profile, loading, error, profilePictureUrl } = useAdminProfile()
 
   if (loading) {
@@ -28,8 +29,8 @@ export default function AdminProfile() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex items-center gap-6">
-        <div className="h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+        <div className="h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center mx-auto sm:mx-0">
           {profilePictureUrl ? (
             <img src={profilePictureUrl} alt={fullName} className="h-full w-full object-cover" />
           ) : (
@@ -37,10 +38,10 @@ export default function AdminProfile() {
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-center sm:text-left">
           <h1 className="text-2xl font-bold text-slate-900 truncate">{fullName}</h1>
           <p className="text-sm text-slate-500 mt-1">@{profile?.username || '—'}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
             <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
               {profile?.role || 'ADMIN'}
             </span>
@@ -49,15 +50,34 @@ export default function AdminProfile() {
                 {positionDisplay}
               </span>
             )}
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              profile?.access_level === 'FULL_CONTROL' ? 'bg-purple-100 text-purple-700' :
+              profile?.access_level === 'MEMBERSHIP' ? 'bg-emerald-100 text-emerald-700' :
+              'bg-slate-100 text-slate-500'
+            }`}>
+              {profile?.access_level === 'FULL_CONTROL' ? 'Full Control' :
+               profile?.access_level === 'MEMBERSHIP' ? 'Membership' :
+               'Restricted'}
+            </span>
           </div>
         </div>
 
-        <Link
-          to="/admin/edit-profile"
-          className="flex-shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition"
-        >
-          Edit Profile
-        </Link>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/officer-id')}
+            className="flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+          >
+            <BadgeCheck className="h-4 w-4" />
+            Officer ID
+          </button>
+          <Link
+            to="/admin/edit-profile"
+            className="flex-shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          >
+            Edit Profile
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -66,8 +86,10 @@ export default function AdminProfile() {
           {[
             { label: 'Email', value: profile?.email, icon: <Mail className="h-4 w-4" /> },
             { label: 'Username', value: profile?.username ? `@${profile.username}` : '—', icon: <User className="h-4 w-4" /> },
+            { label: 'Officer ID', value: profile?.officer_id || '—', icon: <BadgeCheck className="h-4 w-4" /> },
             { label: 'Role', value: profile?.role, icon: <Shield className="h-4 w-4" /> },
             { label: 'Position', value: positionDisplay, icon: <Briefcase className="h-4 w-4" /> },
+            { label: 'Access Level', value: profile?.access_level === 'FULL_CONTROL' ? 'Full Control' : profile?.access_level === 'MEMBERSHIP' ? 'Membership Access' : profile?.access_level === 'RESTRICTED' ? 'Restricted' : profile?.access_level || '—', icon: <KeyRound className="h-4 w-4" /> },
             { label: 'Department', value: profile?.department || '—', icon: <Building2 className="h-4 w-4" /> },
             { label: 'Academic Year', value: profile?.academic_year ? `AY ${profile.academic_year}` : '—', icon: <GraduationCap className="h-4 w-4" /> },
           ].map(({ label, value, icon }) => (

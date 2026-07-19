@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
@@ -63,9 +63,6 @@ export default function AdminSidebar({
   badges = {},
   quickActions = { enabled: true },
   logout,
-  onYearEndReset,
-  yearEndBusy = false,
-  isPresident = false,
 }) {
   // Ensure optional props don’t trigger lint errors when not used in some builds.
   void logout
@@ -73,7 +70,6 @@ export default function AdminSidebar({
   const { user } = useAuth()
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)
-  const [confirmYearEndOpen, setConfirmYearEndOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const pendingBadge = badges?.pendingMembership
@@ -82,26 +78,43 @@ export default function AdminSidebar({
   const onNavigate = () => setMobileOpen(false)
 
   const userPosition = user?.position || 'NONE'
+
+  // Cache-bust profile picture URL so it updates immediately after change
+  const prevPicRef = useRef(user?.profile_picture)
+  const [picVersion, setPicVersion] = useState(0)
+  useEffect(() => {
+    if (user?.profile_picture && user.profile_picture !== prevPicRef.current) {
+      setPicVersion(v => v + 1)
+      prevPicRef.current = user.profile_picture
+    }
+  }, [user?.profile_picture])
+
+  const profilePicSrc = useMemo(() => {
+    if (!user?.profile_picture) return null
+    const base = resolveProfilePictureUrl(user.profile_picture)
+    const sep = base.includes('?') ? '&' : '?'
+    return `${base}${sep}_cb=${picVersion}`
+  }, [user?.profile_picture, picVersion])
   const userCard = useMemo(() => {
     const username = user?.username ? `@${user.username}` : '@admin'
     return { username, userPosition }
   }, [user?.username, userPosition])
 
   const sidebar = (
-    <aside className="bg-[#001F4D] text-white lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full overflow-hidden">
+    <aside className="bg-[#001F4D] text-white lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full overflow-y-auto">
       <div className="flex h-full flex-col border-r border-white/10">
-        <div className="px-4 py-4">
+        <div className="shrink-0 px-4 py-4">
           <p className="text-[11px] uppercase tracking-[0.2em] text-blue-100/70">Admin</p>
           <p className="mt-1 text-base font-bold">Navigation</p>
         </div>
 
-        <div className="px-2 pb-3">
+        <div className="shrink-0 px-2 pb-3">
           <div className="rounded-2xl bg-white/5 p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 {user?.profile_picture ? (
                   <img
-                    src={resolveProfilePictureUrl(user.profile_picture)}
+                    src={profilePicSrc}
                     alt={user.username}
                     className="h-10 w-10 flex-shrink-0 rounded-full object-cover border-2 border-white/20 overflow-hidden"
                   />
@@ -169,7 +182,7 @@ export default function AdminSidebar({
           </div>
         </div>
 
-        <nav className="flex-1 min-h-0 overflow-y-auto px-2 pb-3">
+        <nav className="px-2 pb-3">
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const badge =
@@ -209,17 +222,6 @@ export default function AdminSidebar({
           >
             Sign Out
           </button>
-
-          {isPresident && (
-            <button
-              type="button"
-              disabled={yearEndBusy}
-              onClick={() => setConfirmYearEndOpen(true)}
-              className="mt-3 w-full rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-[#003C8F] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {yearEndBusy ? 'Resetting...' : 'Year-End Reset'}
-            </button>
-          )}
         </div>
       </div>
     </aside>
@@ -254,21 +256,6 @@ export default function AdminSidebar({
           if (typeof logout === 'function') logout()
         }}
         onCancel={() => setConfirmLogoutOpen(false)}
-      />
-
-      <ConfirmModal
-        isOpen={confirmYearEndOpen}
-        variant="info"
-        title="Year-End Reset"
-        description="This will perform the year-end reset across admin/members data."
-        confirmText="Proceed with reset"
-        cancelText="Cancel"
-        busy={yearEndBusy}
-        onConfirm={() => {
-          setConfirmYearEndOpen(false)
-          if (typeof onYearEndReset === 'function') onYearEndReset()
-        }}
-        onCancel={() => setConfirmYearEndOpen(false)}
       />
     </>
   )

@@ -46,7 +46,7 @@ export default function ForgotPassword() {
           <div className="space-y-5">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
               <p className="text-sm text-emerald-800">
-                Please check your email, a password reset link has been sent.
+                Please check your email or in spam folder, a password reset link has been sent.
               </p>
             </div>
             <Link

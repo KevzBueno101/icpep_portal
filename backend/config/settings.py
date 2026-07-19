@@ -170,45 +170,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Static files collected by `collectstatic` for production (whitenoise serves these)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Whitenoise middleware must come right after SecurityMiddleware
-# (already handled by middleware order in MIDDLEWARE list above)
-
-# Cross-Origin Resource Sharing (CORS)
-CORS_ALLOW_ALL_ORIGINS = False
-
-# Support multiple origins via comma-separated env var (for production Vercel URL)
-_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
-if _cors_origins_env:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
-else:
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^http://localhost:\d+$",
-        r"^http://127\.0\.0\.1:\d+$",
-    ]
-
-
-# Frontend uses Authorization: Bearer <token> (no cookies),
-# so we don't need credentialed CORS.
-CORS_ALLOW_CREDENTIALS = False
-
-# Make sure preflight responses include needed headers
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-# Debug prints removed
 
 # Media files — use Cloudinary in production, local filesystem in dev
 _cloudinary_configured = all([
@@ -226,17 +187,54 @@ if _cloudinary_configured:
         secure=True,
     )
     INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    MEDIA_URL = '/media/'
-    # ← DO NOT set MEDIA_URL here; cloudinary-storage generates its own full URLs
+    _media_backend = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    _media_backend = 'django.core.files.storage.FileSystemStorage'
+
+# Django 5.1+ requires STORAGES dict instead of DEFAULT_FILE_STORAGE / STATICFILES_STORAGE
+STORAGES = {
+    'default': {
+        'BACKEND': _media_backend,
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+# cloudinary_storage's PREFIX defaults to MEDIA_URL (/media/), which gets
+# baked into every Cloudinary public_id. Override to empty so new uploads
+# use a clean path (e.g. profiles/xxx.png not media/profiles/xxx.png).
+if _cloudinary_configured:
+    CLOUDINARY_STORAGE['PREFIX'] = ''
+    MEDIA_URL = ''
+    MEDIA_ROOT = ''
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cross-Origin Resource Sharing (CORS)
+CORS_ALLOW_ALL_ORIGINS = False
+
+_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+if _cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://localhost:\d+$",
+        r"^http://127\.0\.0\.1:\d+$",
+    ]
+
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_HEADERS = [
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
+]
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # REST framework defaults
 AUTH_USER_MODEL = 'users.User'
@@ -283,8 +281,8 @@ SECURE_BROWSER_XSS_FILTER     = True
 SECURE_CONTENT_TYPE_NOSNIFF    = True
 X_FRAME_OPTIONS                = 'DENY'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE    = 5 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024
 
 # HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
 if not DEBUG:
@@ -335,7 +333,9 @@ CONTENT_SECURITY_POLICY = {
     }
 }
 
-# Email configuration (Gmail SMTP)
+# Email configuration — SendGrid preferred (HTTP API, works on Render free tier)
+# Falls back to Gmail SMTP for local dev
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -343,7 +343,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://icpep-portal-test.vercel.app')
 
 # Password reset token expiry (seconds) — Django default is 3 days (259200)
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours

@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
+from django.views.static import serve as serve_static
 
 
 def home(request):
@@ -19,4 +20,9 @@ urlpatterns = [
     path('api/announcements/', include('announcements.urls')),
     path('api/audit-logs/', include('audit_logs.urls')),
     # duplicate include removed
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve locally stored media files even in production.
+# Cloudinary-stored files ignore this and return full https:// URLs.
+if settings.MEDIA_ROOT:
+    urlpatterns += [path(f'{settings.MEDIA_URL.strip("/")}/<path:path>', serve_static, {'document_root': settings.MEDIA_ROOT})]

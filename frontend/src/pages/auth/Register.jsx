@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
+import { Info } from 'lucide-react'
 
 const YEAR_LEVELS = [
   { value: '1', label: '1st Year' },
@@ -376,9 +377,9 @@ const Register = () => {
     const file = e.target.files?.[0] ?? null
     
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must not exceed 5MB')
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must not exceed 10MB')
         return
       }
       
@@ -752,7 +753,7 @@ const Register = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 5MB)</p>
+                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
                   </div>
                   <input
                     type="file"
@@ -775,45 +776,78 @@ const Register = () => {
             <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-xs text-slate-500 uppercase tracking-widest">Payment Details</p>
-                <div className="space-y-4">
+                  <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-slate-600 mb-1">Payment Method</label>
-                    <select
-                      name="payment_method"
-                      value={form.payment_method}
-                      onChange={handleChange}
-                      className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
-                    >
-                      <option value="ON_HAND">On-hand / Personal</option>
-                      <option value="GCASH">GCash</option>
-                    </select>
-                  </div>
-                  <div className="rounded-3xl border border-sky-200 bg-sky-50 p-5 text-sm text-slate-700">
-                    <p className="font-semibold text-slate-900">GCash payment details</p>
-
-                    {gcashNumber || gcashName ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-start justify-between gap-4">
-                          <span className="text-slate-600">Name</span>
-                          <span className="font-semibold text-slate-900 text-right">
-                            {gcashName || 'GCash account'}
-                          </span>
+                    <label className="block text-sm text-slate-600 mb-2">Payment Method</label>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.payment_method === 'GCASH'
+                            ? 'border-sky-500 bg-sky-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment_method"
+                          value="GCASH"
+                          checked={form.payment_method === 'GCASH'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-sky-600 accent-sky-600"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">GCash</p>
+                          <p className="text-xs text-slate-500">Pay via GCash mobile wallet</p>
                         </div>
-                        <div className="flex items-start justify-between gap-4">
-                          <span className="text-slate-600">GCash #</span>
-                          <span className="font-semibold text-slate-900 text-right">
-                            {gcashNumber || '—'}
-                          </span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.payment_method === 'ON_HAND'
+                            ? 'border-sky-500 bg-sky-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment_method"
+                          value="ON_HAND"
+                          checked={form.payment_method === 'ON_HAND'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-sky-600 accent-sky-600"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">On-hand / Personal</p>
+                          <p className="text-xs text-slate-500">Pay in person to an officer</p>
                         </div>
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-slate-600">
-                        The GCash details have not been set yet. Ask the admin for the current payment account before uploading proof.
-                      </p>
-                    )}
-
-                    <p className="mt-3 text-slate-600">Upload the screenshot of payment proof after sending.</p>
+                      </label>
+                    </div>
                   </div>
+
+                  {form.payment_method === 'GCASH' ? (
+                    <div className="rounded-3xl border border-sky-200 bg-sky-50 p-5 text-sm text-slate-700">
+                      <p className="font-semibold text-slate-900">GCash payment details</p>
+                      {gcashNumber || gcashName ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-start justify-between gap-4">
+                            <span className="text-slate-600">Name</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashName || 'GCash account'}</span>
+                          </div>
+                          <div className="flex items-start justify-between gap-4">
+                            <span className="text-slate-600">GCash #</span>
+                            <span className="font-semibold text-slate-900 text-right">{gcashNumber || '—'}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-slate-600">The GCash details have not been set yet. Ask the admin for the current payment account before uploading proof.</p>
+                      )}
+                      <p className="mt-3 text-slate-600">Upload the screenshot of payment proof after sending.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+                      <Info className="h-5 w-5 shrink-0 mt-0.5" />
+                      <p>Please take a picture with the designated officer as proof of on-hand payment.</p>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Proof of Payment</label>
