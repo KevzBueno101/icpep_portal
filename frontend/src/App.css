@@ -182,3 +182,35 @@
     border-right-color: var(--border);
   }
 }
+
+/* ============================
+   Navbar theme — blue palette
+   ============================ */
+:root {
+  --nav-bg: #0a0a0a;
+  --nav-banner-bg: #0a0a0a;
+  --nav-accent-1: #1d4ed8;
+  --nav-accent-2: #3b82f6;
+  --nav-accent-3: #0ea5e9;
+  --nav-pattern-color: #3b82f6;
+  --nav-text: #f1f5f9;
+  --nav-text-muted: #94a3b8;
+  --nav-border: #1e293b;
+}
+
+/* Dot-grid banner pattern — fades left-to-right */
+.navbar-banner-pattern {
+  position: relative;
+  background-color: var(--nav-banner-bg);
+}
+
+.navbar-banner-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--nav-pattern-color) 1px, transparent 1px);
+  background-size: 8px 8px;
+  mask-image: linear-gradient(to right, black 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 30%, transparent 100%);
+  pointer-events: none;
+}

@@ -58,7 +58,7 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section className="relative isolate min-h-screen pt-16 text-white flex flex-col">
+    <section className="relative isolate min-h-screen pt-24 text-white flex flex-col">
 
       {/* ── Background Parallax Wrapper ── */}
       <div className="fixed inset-0 -z-10 h-screen w-full overflow-hidden">
