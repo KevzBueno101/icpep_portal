@@ -20,51 +20,54 @@
     "name": "Get Started",
     "url": "/overview"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "overview",
-        "setup",
-        "architecture"
-      ]
-    },
-    {
-      "group": "User Guide",
-      "pages": [
-        "user-guide/members",
-        "user-guide/officers",
-        "user-guide/announcements",
-        "user-guide/payments"
-      ]
-    },
-    {
-      "group": "Admin Guide",
-      "pages": [
-        "admin-guide/dashboard",
-        "admin-guide/membership",
-        "admin-guide/announcements",
-        "admin-guide/officers",
-        "admin-guide/audit-logs"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/auth",
-        "api-reference/members",
-        "api-reference/announcements",
-        "api-reference/admins",
-        "api-reference/transactions"
-      ]
-    },
-    {
-      "group": "Legal & Compliance",
-      "pages": [
-        "data-privacy"
-      ]
-    }
-  ],
+  "favicon": "/logo/icpep_logo.jpg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "overview",
+          "setup",
+          "architecture"
+        ]
+      },
+      {
+        "group": "User Guide",
+        "pages": [
+          "user-guide/members",
+          "user-guide/officers",
+          "user-guide/announcements",
+          "user-guide/payments"
+        ]
+      },
+      {
+        "group": "Admin Guide",
+        "pages": [
+          "admin-guide/dashboard",
+          "admin-guide/membership",
+          "admin-guide/announcements",
+          "admin-guide/officers",
+          "admin-guide/audit-logs"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/auth",
+          "api-reference/members",
+          "api-reference/announcements",
+          "api-reference/admins",
+          "api-reference/transactions"
+        ]
+      },
+      {
+        "group": "Legal & Compliance",
+        "pages": [
+          "data-privacy"
+        ]
+      }
+    ]
+  },
   "footerSocials": {
     "github": "https://github.com/KevzBueno101/icpep_portal"
   },
