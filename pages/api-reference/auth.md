@@ -1,4 +1,4 @@
----
+﻿---
 title: Auth API
 description: Authentication and user management endpoints
 ---

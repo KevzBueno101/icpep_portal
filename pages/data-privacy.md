@@ -1,4 +1,4 @@
----
+﻿---
 title: Data Privacy
 description: Privacy policy and data protection
 ---
@@ -23,21 +23,21 @@ The ICPEP Portal collects and processes the following personal data:
 
 Your data is processed for:
 
-1. **Membership Management** — registration, verification, renewal
-2. **Communication** — announcements and chapter updates
-3. **Financial Tracking** — payment verification and receipt generation
-4. **Compliance** — maintaining chapter records
-5. **Security** — audit trails and access control
+1. **Membership Management** â€” registration, verification, renewal
+2. **Communication** â€” announcements and chapter updates
+3. **Financial Tracking** â€” payment verification and receipt generation
+4. **Compliance** â€” maintaining chapter records
+5. **Security** â€” audit trails and access control
 
 ## Data Subject Rights
 
 Under the Data Privacy Act, you have the right to:
 
-- **Access** — request a copy of your personal data
-- **Correction** — update inaccurate information
-- **Deletion** — request account deletion (subject to retention requirements)
-- **Object** — object to processing of your data
-- **Portability** — receive your data in a portable format
+- **Access** â€” request a copy of your personal data
+- **Correction** â€” update inaccurate information
+- **Deletion** â€” request account deletion (subject to retention requirements)
+- **Object** â€” object to processing of your data
+- **Portability** â€” receive your data in a portable format
 
 To exercise any of these rights, contact the chapter's Data Protection Officer.
 
@@ -74,7 +74,7 @@ To exercise any of these rights, contact the chapter's Data Protection Officer.
 
 For privacy-related concerns, contact:
 
-**Data Protection Officer** — ICPEP Chapter
+**Data Protection Officer** â€” ICPEP Chapter
 Email: icpep.chapter@example.com
 
 ## NPC Compliance

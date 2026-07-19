@@ -1,4 +1,4 @@
----
+﻿---
 title: Officers (Admin)
 description: Managing officer positions and roles
 ---
@@ -7,7 +7,7 @@ description: Managing officer positions and roles
 
 The officers management page lets you assign and manage chapter officer positions.
 
-> ![Admin officers screenshot](../images/admin-officers.png)
+> ![Admin officers screenshot](../images/admin-officers.svg)
 
 ## Officers Table
 

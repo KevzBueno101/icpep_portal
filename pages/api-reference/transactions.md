@@ -1,4 +1,4 @@
----
+﻿---
 title: Transactions API
 description: Payment transaction and e-receipt endpoints
 ---

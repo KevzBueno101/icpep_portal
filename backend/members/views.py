@@ -1,4 +1,3 @@
-import io
 from datetime import date
 
 from django.core.files.base import ContentFile
@@ -9,7 +8,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import CanManageMembership, IsAdmin, _is_admin_or_president
+from permissions import CanManageMembership, _is_admin_or_president
 
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
 from .receipt_generator import generate_receipt_png
@@ -74,12 +73,11 @@ class MemberListAPIView(generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         # RESTRICTED admins cannot create members via admin panel.
-        if _is_admin_or_president(request.user):
-            if getattr(request.user, 'access_level', None) == 'RESTRICTED':
-                return Response(
-                    {'detail': 'Restricted accounts cannot create members.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+        if _is_admin_or_president(request.user) and getattr(request.user, 'access_level', None) == 'RESTRICTED':
+            return Response(
+                {'detail': 'Restricted accounts cannot create members.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

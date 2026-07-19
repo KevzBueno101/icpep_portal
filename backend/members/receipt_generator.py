@@ -1,7 +1,6 @@
 import io
 import os
 import urllib.request
-from datetime import datetime
 
 from django.conf import settings
 from PIL import Image, ImageDraw, ImageFont
@@ -26,7 +25,7 @@ def _get_font(size, bold=False):
         for p in paths:
             if os.path.exists(p):
                 return ImageFont.truetype(p, size)
-    except (IOError, OSError):
+    except OSError:
         pass
     return ImageFont.load_default()
 
@@ -81,7 +80,6 @@ def generate_receipt_png(transaction, member):
 
     font_sm = _get_font(13)
     font_md = _get_font(16)
-    font_lg = _get_font(20, bold=True)
     font_xl = _get_font(26, bold=True)
 
     # ── Border ──
@@ -103,7 +101,7 @@ def generate_receipt_png(transaction, member):
     draw.line([60, 178, W - 60, 178], fill=accent_color, width=1)
 
     # Title
-    draw.text((400, 200), 'MEMBERSHIP RECEIPT', fill=accent_color, font=font_xl, anchor='mt')
+    draw.text((400, 200), 'ACKNOWLEDGEMENT RECEIPT', fill=accent_color, font=font_xl, anchor='mt')
 
     # ── Body fields ──
     fields = [

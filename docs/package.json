@@ -2,7 +2,7 @@
   "name": "icpep-portal-docs",
   "version": "1.0.0",
   "scripts": {
-    "dev": "mintlify dev",
-    "dev:port": "mintlify dev --port 3333"
+    "dev": "cd .. && npx mintlify dev",
+    "dev:port": "cd .. && npx mintlify dev --port 3333"
   }
 }

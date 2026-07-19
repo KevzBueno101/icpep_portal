@@ -212,7 +212,20 @@ class AdminLoginSerializer(serializers.Serializer):
         user = authenticate(email=email, password=password)
 
         if not user:
-            raise serializers.ValidationError('Incorrect password.')
+            # authenticate() returns None for inactive users even if password is correct
+            try:
+                inactive_user = User.objects.get(email__iexact=email)
+                if inactive_user.check_password(password):
+                    status = getattr(inactive_user, 'registration_status', 'APPROVED')
+                    if status == 'PENDING':
+                        raise serializers.ValidationError('Your admin request is still pending approval.')
+                    if status == 'REJECTED':
+                        raise serializers.ValidationError('Your admin request was rejected. Please contact the President.')
+                    if not inactive_user.is_active:
+                        raise serializers.ValidationError('This account is disabled.')
+                raise serializers.ValidationError('Incorrect password.')
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Incorrect password.') from None
 
         if hasattr(user, 'role'):
             if user.role != 'ADMIN':

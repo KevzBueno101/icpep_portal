@@ -1,4 +1,4 @@
----
+﻿---
 title: Dashboard
 description: Admin dashboard overview and navigation
 ---
@@ -7,7 +7,7 @@ description: Admin dashboard overview and navigation
 
 The admin dashboard provides a high-level overview of the chapter's membership data.
 
-> ![Admin dashboard screenshot](../images/admin-dashboard.png)
+> ![Admin dashboard screenshot](../images/admin-dashboard.svg)
 
 ## Stats Cards
 
@@ -34,9 +34,9 @@ Shows the number of new registrations per month for the current year.
 
 The admin sidebar provides links to:
 
-- **Dashboard** — current page
-- **Members** — member management (verify, edit, delete, history)
-- **Announcements** — create and manage announcements
-- **Officers** — manage officer positions and roles
-- **Admins** — manage admin accounts and access levels
-- **Audit Log** — view system activity logs
+- **Dashboard** â€” current page
+- **Members** â€” member management (verify, edit, delete, history)
+- **Announcements** â€” create and manage announcements
+- **Officers** â€” manage officer positions and roles
+- **Admins** â€” manage admin accounts and access levels
+- **Audit Log** â€” view system activity logs
