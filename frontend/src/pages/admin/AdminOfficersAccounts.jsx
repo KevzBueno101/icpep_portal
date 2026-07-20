@@ -245,24 +245,22 @@ const AdminOfficersAccounts = () => {
     }
   }
 
-  const skeletons = [...Array(8)].map((_, i) => (
-    <div
-      key={i}
-      className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
-    >
-      <div className="h-56 w-full bg-slate-200" />
-      <div className="p-6">
-        <div className="h-5 bg-slate-200 rounded w-3/4" />
-        <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
-        <div className="mt-2 h-3 bg-slate-200 rounded w-2/3" />
-      </div>
-    </div>
-  ))
-
   if (loading) {
     return (
-      <div className="min-h-[260px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
+          >
+            <div className="h-56 w-full bg-slate-200" />
+            <div className="p-6">
+              <div className="h-5 bg-slate-200 rounded w-3/4" />
+              <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
+              <div className="mt-2 h-3 bg-slate-200 rounded w-2/3" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }

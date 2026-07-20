@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { EVENTS } from '../../utils/events'
+import Skeleton from '../../components/Skeleton'
 
 const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
@@ -93,8 +94,27 @@ const MemberMembershipVerify = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[240px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col items-center space-y-3">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="mt-5 space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-4/6" />
+            </div>
+          </div>
+        </div>
+        <div className="lg:col-span-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <Skeleton className="h-5 w-40 mb-4" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+          </div>
+        </div>
       </div>
     )
   }

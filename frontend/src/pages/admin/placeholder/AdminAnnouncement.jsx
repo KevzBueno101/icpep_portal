@@ -4,6 +4,7 @@ import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
+import CardSkeleton from '../../../components/skeletons/CardSkeleton'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -260,11 +261,7 @@ const AdminAnnouncement = () => {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-t-2 border-sky-600" />
-      </div>
-    )
+    return <CardSkeleton count={4} />
   }
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import Skeleton from '../../../components/Skeleton'
 
 const ACTION_TYPE_OPTIONS = [
   { value: '', label: 'All Actions' },
@@ -150,8 +151,29 @@ const AdminLogs = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-7 w-56" />
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-28" />
+            <Skeleton className="h-10 w-28" />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 flex-1" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

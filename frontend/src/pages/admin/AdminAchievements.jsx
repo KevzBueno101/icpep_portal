@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../components/common/ConfirmModal'
+import Skeleton from '../../components/Skeleton'
 
 const CATEGORY_OPTIONS = [
   { value: 'founding', label: 'Founding' },
@@ -205,8 +206,19 @@ const AdminAchievements = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-5 w-56 mb-2" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <Skeleton className="h-32 w-full mb-4" />
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-3" />
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

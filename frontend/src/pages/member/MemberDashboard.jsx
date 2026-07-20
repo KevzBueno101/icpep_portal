@@ -108,7 +108,7 @@ export default function MemberDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-900">Payment Status</h2>
               {paymentLoading && (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-sky-600" />
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
               )}
             </div>
 
@@ -176,9 +176,35 @@ export default function MemberDashboard() {
               </div>
 
               {annLoading && (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600 mb-2" />
-                  <p className="text-sm">Fetching announcements...</p>
+                <div className="space-y-4 py-4">
+                  <div className="rounded-2xl border border-slate-200 p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="h-5 w-16 animate-pulse rounded-full bg-slate-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+                        <div className="h-3 w-1/4 animate-pulse rounded bg-slate-200" />
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                      <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
+                    </div>
+                    <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="h-5 w-20 animate-pulse rounded-full bg-slate-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
+                        <div className="h-3 w-1/3 animate-pulse rounded bg-slate-200" />
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                      <div className="h-3 w-4/6 animate-pulse rounded bg-slate-200" />
+                    </div>
+                    <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
+                  </div>
                 </div>
               )}
 

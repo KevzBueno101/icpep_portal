@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../../utils/events'
+import Skeleton from '../../components/Skeleton'
 import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
@@ -260,8 +261,21 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="space-y-6 p-6">
+        <div className="grid gap-3 lg:grid-cols-4 sm:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <Skeleton className="h-4 w-24 mb-3" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <Skeleton className="h-5 w-48 mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-5/6 mb-2" />
+          <Skeleton className="h-4 w-4/6" />
+        </div>
       </div>
     )
   }
