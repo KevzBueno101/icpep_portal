@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { EVENTS } from '../../utils/events'
 import { User, Camera, Save, X, Edit2 } from 'lucide-react'
 
 const YEAR_LABEL_BY_VALUE = {
@@ -168,7 +169,7 @@ export default function MemberProfile() {
       await refreshUser()
       await refreshProfile()
 
-      window.dispatchEvent(new CustomEvent('profile-updated'))
+      window.dispatchEvent(new CustomEvent(EVENTS.PROFILE_UPDATED))
 
       toast.success('Profile updated successfully!')
       setEditMode(false)

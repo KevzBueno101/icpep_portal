@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
+import { EVENTS } from '../../utils/events'
 
 const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
@@ -57,6 +58,8 @@ const MemberMembershipVerify = () => {
         admin_message: adminMessage,
       })
       setMember(res.data)
+
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
 
       toast.success(
         decision === 'APPROVED'

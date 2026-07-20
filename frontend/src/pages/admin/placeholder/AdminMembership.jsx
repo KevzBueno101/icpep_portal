@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { useAuth } from '../../../context/useAuth'
+import { EVENTS } from '../../../utils/events'
 
 const AdminMembership = () => {
   const { user } = useAuth()
@@ -161,6 +162,7 @@ const AdminMembership = () => {
       const response = await api.post(`/members/${id}/approve/`, {
         membership_status: newStatus
       })
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success(`Member status updated to ${newStatus}`)
       // Update local state
       setMembers((prev) =>
@@ -198,6 +200,7 @@ const AdminMembership = () => {
     setIsEditSubmitting(true)
     try {
       const response = await api.patch(`/members/${editTarget.id}/`, editForm)
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? response.data : m)))
       toast.success('Member updated successfully.')
       setEditTarget(null)
@@ -221,6 +224,7 @@ const AdminMembership = () => {
     setIsDeleting(true)
     try {
       await api.delete(`/members/${deleteTarget.id}/`)
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id))
       toast.success(
         `${deleteTarget.first_name} ${deleteTarget.last_name}'s membership has been deleted.`
@@ -306,6 +310,7 @@ const AdminMembership = () => {
       
       // Prepend newly added member into local records dynamically
       setMembers((prev) => [response.data, ...prev])
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success('Member created successfully!')
       setIsAddModalOpen(false)
     } catch (err) {
@@ -1152,6 +1157,7 @@ const AdminMembership = () => {
           setIsRenewing(true)
           try {
             await api.post('/members/renew-all/')
+            window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success('All approved memberships set to Pending.')
             await fetchMembers()
             setIsRenewConfirmOpen(false)

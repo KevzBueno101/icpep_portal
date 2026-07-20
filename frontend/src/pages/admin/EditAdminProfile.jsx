@@ -4,6 +4,7 @@ import { ArrowLeft, AlertTriangle, Camera, X } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import { EVENTS } from '../../utils/events'
 
 
 export default function EditAdminProfile({ triggerRefresh }) {
@@ -237,7 +238,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
       // Refresh leadership board across all pages
       window.dispatchEvent(new Event('officers-refresh'))
       // Notify all profile consumers to refetch
-      window.dispatchEvent(new CustomEvent('profile-updated'))
+      window.dispatchEvent(new CustomEvent(EVENTS.PROFILE_UPDATED))
       setTimeout(() => navigate('/admin/profile'), 350)
     } catch (err) {
       const detail = err?.response?.data?.detail

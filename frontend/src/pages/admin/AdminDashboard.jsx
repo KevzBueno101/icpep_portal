@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/useAuth'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { EVENTS } from '../../utils/events'
 import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
@@ -188,6 +189,7 @@ const AdminDashboard = () => {
         membership_status: decision,
       })
       setMembers((prev) => (prev || []).map((item) => (item.id === memberId ? res.data : item)))
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success(`Member ${decision.toLowerCase()} successfully.`)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to update member status.')
@@ -203,6 +205,7 @@ const AdminDashboard = () => {
       const res = await api.patch('/members/payment-settings/', payload)
       setGcashNumber(res.data.gcash_number || '')
       setGcashName(res.data.gcash_name || '')
+      window.dispatchEvent(new CustomEvent(EVENTS.PAYMENT_SETTINGS_UPDATED))
       toast.success('GCash settings updated.')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Unable to save GCash settings.')

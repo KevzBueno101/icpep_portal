@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
+import { EVENTS } from '../../../utils/events'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -135,6 +136,7 @@ const AdminAnnouncement = () => {
         // Upload images for newly created announcement
         await uploadImages(created.id, selectedImages)
         notifyAnnouncementUpdated(created.id)
+        window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
         setShowForm(false)
         setEditingAnnouncement(null)
         setFormData(emptyForm)
@@ -146,6 +148,7 @@ const AdminAnnouncement = () => {
       // If edit mode, upload images after updating
       await uploadImages(editingAnnouncement.id, selectedImages)
       notifyAnnouncementUpdated(editingAnnouncement.id)
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
 
       setShowForm(false)
       setExpandedAnnouncementId(null)
@@ -167,6 +170,7 @@ const AdminAnnouncement = () => {
       await api.delete(`/announcements/admin/${deletingAnnouncement.id}/`)
       toast.success('Announcement deleted.')
       notifyAnnouncementDeleted(deletingAnnouncement.id)
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
       setDeletingAnnouncement(null)
       fetchAnnouncements()
     } catch (err) {
@@ -179,6 +183,7 @@ const AdminAnnouncement = () => {
       await api.patch(`/announcements/admin/${announcement.id}/`, {
         pinned: !announcement.pinned,
       })
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
       fetchAnnouncements()
     } catch (err) {
       toast.error('Failed to update pinned status.')
