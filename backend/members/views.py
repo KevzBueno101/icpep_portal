@@ -8,7 +8,11 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
-from permissions import CanManageMembership, _is_admin_or_president
+from permissions import (
+    CanManageMembership,
+    IsOwnerOrCanManageMembership,
+    _is_admin_or_president,
+)
 
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
 from .receipt_generator import generate_receipt_png
@@ -106,11 +110,14 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         """
-        - GET: owner or any admin (including RESTRICTED) can view.
-        - PUT/PATCH/DELETE: only FULL_CONTROL admins / President can write.
+        - GET: owner or any admin can view.
+        - PUT/PATCH: owner OR admin with membership access can edit.
+        - DELETE: only admin with membership access can delete.
         """
-        if self.request.method in ('PUT', 'PATCH', 'DELETE'):
+        if self.request.method == 'DELETE':
             return [permissions.IsAuthenticated(), CanManageMembership()]
+        if self.request.method in ('PUT', 'PATCH'):
+            return [permissions.IsAuthenticated(), IsOwnerOrCanManageMembership()]
         return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
 
     def perform_update(self, serializer):

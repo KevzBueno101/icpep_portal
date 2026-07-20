@@ -65,3 +65,14 @@ class IsOwnerOrAdmin(BasePermission):
         if _is_admin_or_president(request.user):
             return True
         return obj.user == request.user
+
+
+class IsOwnerOrCanManageMembership(BasePermission):
+    """Object-level: profile owner OR admin with membership access can edit."""
+    def has_object_permission(self, request, view, obj):
+        if obj.user == request.user:
+            return True
+        return bool(
+            _is_admin_or_president(request.user)
+            and getattr(request.user, 'access_level', None) != 'RESTRICTED'
+        )
