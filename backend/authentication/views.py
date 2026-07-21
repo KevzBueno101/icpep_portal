@@ -11,8 +11,6 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
-logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -31,6 +29,8 @@ from .utils import (
     record_failed_attempt,
     send_password_reset_email,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
