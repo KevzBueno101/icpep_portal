@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
 import { useMember } from '../context/MemberContext'
-import { OfficersProvider } from '../context/OfficersContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
 import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
@@ -43,8 +42,7 @@ export default function MemberLayout({ children }) {
   }
 
   return (
-    <OfficersProvider>
-      <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
         {/* Desktop Header */}
         <DesktopMemberNavbar
           user={user}
@@ -208,6 +206,5 @@ export default function MemberLayout({ children }) {
         </div>
       )}
       </div>
-    </OfficersProvider>
   )
 }
