@@ -278,10 +278,18 @@ def forgot_password(request):
     try:
         user = User.objects.filter(email__iexact=email).first()
         if user:
-            # Clean up any expired tokens for this user
+            pw_pref = user.password[:30] if user.password else 'NONE'
+            logger.info(
+                "Forgot-password: user=%s pw=%s last_login=%s email=%s",
+                user.pk, pw_pref, user.last_login, user.email,
+            )
             PasswordResetToken.objects.filter(user=user).delete()
             raw_token = secrets.token_urlsafe(48)
             PasswordResetToken.objects.create(user=user, token=raw_token)
+            logger.info(
+                "Forgot-password: token_created user=%s token_len=%d",
+                user.pk, len(raw_token),
+            )
             reset_url = build_password_reset_url(user, raw_token, request=request)
             send_password_reset_email(email, reset_url)
     except Exception:
@@ -335,6 +343,11 @@ def reset_password(request):
         reset_token = PasswordResetToken.objects.get(user=user, token=token, is_used=False)
 
     if reset_token is None:
+        pw_pref = user.password[:30] if user.password else 'NONE'
+        logger.info(
+            "Reset-password: fallback user=%s pw=%s last_login=%s email=%s token_len=%d",
+            user.pk, pw_pref, user.last_login, user.email, len(token),
+        )
         if not PasswordResetTokenGenerator().check_token(user, token):
             logger.warning(
                 "Reset-password: token check failed for user %s (uidb64=%s)",
