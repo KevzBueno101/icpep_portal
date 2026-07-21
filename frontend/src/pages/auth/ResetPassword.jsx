@@ -33,11 +33,15 @@ export default function ResetPassword() {
       toast.success('Password reset successful!')
       setTimeout(() => navigate('/login', { replace: true }), 2000)
     } catch (err) {
-      const status = err.response?.status
-      const detail = err.response?.data?.detail
-      const msg = detail || 'This reset link is invalid or has expired.'
-      toast.error(msg)
-      setError(status === 429 ? '__RATE_LIMITED__' : msg)
+      if (!err.response) {
+        setError('__NETWORK__')
+      } else {
+        const status = err.response?.status
+        const detail = err.response?.data?.detail
+        const msg = detail || 'This reset link is invalid or has expired.'
+        toast.error(msg)
+        setError(status === 429 ? '__RATE_LIMITED__' : msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -126,7 +130,21 @@ export default function ResetPassword() {
               />
             </div>
 
-            {error === '__RATE_LIMITED__' ? (
+            {error === '__NETWORK__' ? (
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">
+                <p className="font-semibold mb-1">Server is starting up</p>
+                <p className="text-sky-700">
+                  The server is waking up from idle. Please wait a moment and{' '}
+                  <button
+                    type="submit"
+                    className="text-sky-900 underline hover:text-sky-950 font-semibold inline"
+                  >
+                    try again
+                  </button>
+                  .
+                </p>
+              </div>
+            ) : error === '__RATE_LIMITED__' ? (
               <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
                 <p className="font-semibold mb-1">Too many attempts</p>
                 <p className="text-orange-700">
