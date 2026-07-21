@@ -73,7 +73,7 @@ function CardFront({ onFlip }) {
 
 /* ─── Card Back (Display) ─────────────────────────────────────────────────── */
 
-function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip }) {
+function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0 }) {
   return (
     <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
       {/* Background columns */}
@@ -227,7 +227,7 @@ function ExportCardFront() {
 
 /* ─── Export Card Back (fully inline styled, no Tailwind) ─────────────────── */
 
-function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial }) {
+function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0 }) {
   // Match display card exactly:
   // Left navy block: 58% = ~223px, right white block: 42% = ~161px
   // Diagonal: top at x=215, bottom at x=250 (35px shift over 224px height)
@@ -440,6 +440,7 @@ export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
               profile={profile}
               avatarInitial={avatarInitial}
               onFlip={() => setFlipped(false)}
+              cacheKey={cacheKey}
             />
           </div>
         </div>
@@ -469,6 +470,7 @@ export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
               yearText={yearText}
               profile={profile}
               avatarInitial={avatarInitial}
+              cacheKey={cacheKey}
             />
           </div>
         </div>
