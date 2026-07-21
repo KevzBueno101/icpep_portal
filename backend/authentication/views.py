@@ -255,11 +255,11 @@ def failed_attempts(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='3/15m', block=False)
+@ratelimit(key='ip', rate='5/m', block=False)
 def forgot_password(request):
     if getattr(request, 'limited', False):
         return Response(
-            {'detail': 'Too many password reset requests. Try again in 15 minutes.'},
+            {'detail': 'Too many password reset requests. Try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
@@ -288,11 +288,11 @@ def forgot_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=False)
+@ratelimit(key='ip', rate='5/m', block=False)
 def reset_password(request):
     if getattr(request, 'limited', False):
         return Response(
-            {'detail': 'Too many password reset attempts. Try again in 15 minutes.'},
+            {'detail': 'Too many attempts. Try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 

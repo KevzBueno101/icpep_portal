@@ -33,11 +33,11 @@ export default function ResetPassword() {
       toast.success('Password reset successful!')
       setTimeout(() => navigate('/login', { replace: true }), 2000)
     } catch (err) {
-      const msg =
-        err.response?.data?.detail ||
-        'This reset link is invalid or has expired.'
+      const status = err.response?.status
+      const detail = err.response?.data?.detail
+      const msg = detail || 'This reset link is invalid or has expired.'
       toast.error(msg)
-      setError(msg)
+      setError(status === 429 ? '__RATE_LIMITED__' : msg)
     } finally {
       setLoading(false)
     }
@@ -126,7 +126,14 @@ export default function ResetPassword() {
               />
             </div>
 
-            {error && TOKEN_ERRORS.some((kw) => error.toLowerCase().includes(kw)) && (
+            {error === '__RATE_LIMITED__' ? (
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+                <p className="font-semibold mb-1">Too many attempts</p>
+                <p className="text-orange-700">
+                  Please wait a minute before trying again.
+                </p>
+              </div>
+            ) : error && TOKEN_ERRORS.some((kw) => error.toLowerCase().includes(kw)) ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 <p className="font-semibold mb-1">Link expired or invalid</p>
                 <p className="text-amber-700">
@@ -139,7 +146,7 @@ export default function ResetPassword() {
                   </Link>
                 </p>
               </div>
-            )}
+            ) : null}
 
             <button
               type="submit"
