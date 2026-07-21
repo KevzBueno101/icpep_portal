@@ -5,7 +5,7 @@ import { CreditCard, ShieldCheck } from 'lucide-react'
 
 export default function MemberIdCard() {
   const { user } = useAuth()
-  const { profile } = useMember()
+  const { profile, profileCacheKey } = useMember()
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
@@ -27,6 +27,7 @@ export default function MemberIdCard() {
             profile={profile}
             userId={user?.id}
             paymentMethod={profile?.payment_method}
+            cacheKey={profileCacheKey}
           />
         </div>
 

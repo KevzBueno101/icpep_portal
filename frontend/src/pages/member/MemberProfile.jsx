@@ -184,7 +184,7 @@ export default function MemberProfile() {
   }
 
   const avatarInitial = getInitials(profile?.first_name || user?.first_name)
-  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}#cache=${profileCacheKey}` : null)
+  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${profileCacheKey}` : null)
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">

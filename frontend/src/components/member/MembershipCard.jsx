@@ -118,7 +118,7 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
             <div className="relative flex-shrink-0">
               <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/5 flex items-center justify-center">
                 {profile?.profile_picture ? (
-                  <img src={profile.profile_picture} alt="Member" className="h-full w-full object-cover" />
+                  <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-[10px] font-black text-white">{avatarInitial}</span>
                 )}
@@ -299,7 +299,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial 
               flexShrink: 0,
             }}>
               {profile?.profile_picture
-                ? <img src={profile.profile_picture} alt="Member" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{avatarInitial}</span>
               }
             </div>
@@ -360,7 +360,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial 
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
-export default function MembershipCard({ profile, userId }) {
+export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
