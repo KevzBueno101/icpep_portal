@@ -360,3 +360,61 @@ def reset_password(request):
         pass
 
     return Response({'message': 'Password reset successful.'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@ratelimit(key='ip', rate='5/m', block=True)
+def change_password(request):
+    user = request.user
+    current_password = request.data.get('current_password', '')
+    new_password = request.data.get('new_password', '')
+    confirm_password = request.data.get('confirm_password', '')
+
+    if not current_password or not new_password or not confirm_password:
+        return Response(
+            {'detail': 'Current password, new password, and confirmation are required.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not user.check_password(current_password):
+        return Response(
+            {'detail': 'Current password is incorrect.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if new_password != confirm_password:
+        return Response(
+            {'detail': 'New password and confirmation do not match.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if len(new_password) < 8:
+        return Response(
+            {'detail': 'New password must be at least 8 characters.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as e:
+        return Response(
+            {'detail': ' '.join(e.messages)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user.set_password(new_password)
+    user.save()
+
+    # Blacklist all existing refresh tokens
+    try:
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
+        for token_obj in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token_obj)
+    except Exception:
+        pass
+
+    return Response({'message': 'Password changed successfully.'})
