@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef } from 'react'
+import { useContext, useState, useEffect, useRef, useCallback } from 'react'
 import AuthContext from './authState'
 import api, { publicApi } from '../api/axios'
 import {
@@ -86,12 +86,15 @@ export const AuthProvider = ({ children }) => {
     return me.data
   }
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const me = await api.get('/auth/me/')
     setUser(me.data)
     return me.data
-  }
-  refreshUserRef.current = refreshUser
+  }, [])
+
+  useEffect(() => {
+    refreshUserRef.current = refreshUser
+  }, [refreshUser])
 
   const adminLogin = async (email, password) => {
     // Clear any existing member tokens first to avoid collision
