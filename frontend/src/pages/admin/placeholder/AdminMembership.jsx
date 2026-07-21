@@ -199,9 +199,22 @@ const AdminMembership = () => {
     if (!editTarget) return
     setIsEditSubmitting(true)
     try {
-      const response = await api.patch(`/members/${editTarget.id}/`, editForm)
-      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
-      setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? response.data : m)))
+      // membership_status is read-only on the PATCH endpoint; send profile fields only
+      const { membership_status, ...profileFields } = editForm
+      await api.patch(`/members/${editTarget.id}/`, profileFields)
+
+      // If status changed, use the approve endpoint which handles it properly
+      if (membership_status !== editTarget.membership_status) {
+        const approveRes = await api.post(`/members/${editTarget.id}/approve/`, {
+          membership_status,
+        })
+        window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
+        setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? approveRes.data : m)))
+      } else {
+        window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
+        setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? { ...m, ...profileFields } : m)))
+      }
+
       toast.success('Member updated successfully.')
       setEditTarget(null)
     } catch (err) {
