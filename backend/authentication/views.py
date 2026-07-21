@@ -4,6 +4,7 @@ import secrets
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -327,19 +328,23 @@ def reset_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    try:
+    # Try DB-backed token first, fallback to stateless PasswordResetTokenGenerator
+    # to support links generated before the DB-backed deploy.
+    reset_token = None
+    with contextlib.suppress(PasswordResetToken.DoesNotExist):
         reset_token = PasswordResetToken.objects.get(user=user, token=token, is_used=False)
-    except PasswordResetToken.DoesNotExist:
-        logger.warning(
-            "Reset-password: token not found for user %s (uidb64=%s)",
-            user.pk, uidb64[:10],
-        )
-        return Response(
-            {'detail': 'This reset link is invalid or has expired.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
-    if reset_token.is_expired():
+    if reset_token is None:
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            logger.warning(
+                "Reset-password: token check failed for user %s (uidb64=%s)",
+                user.pk, uidb64[:10],
+            )
+            return Response(
+                {'detail': 'This reset link is invalid or has expired.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    elif reset_token.is_expired():
         logger.warning(
             "Reset-password: expired token for user %s (uidb64=%s)",
             user.pk, uidb64[:10],
@@ -364,8 +369,9 @@ def reset_password(request):
     user.set_password(password)
     user.save()
 
-    reset_token.is_used = True
-    reset_token.save(update_fields=['is_used'])
+    if reset_token is not None:
+        reset_token.is_used = True
+        reset_token.save(update_fields=['is_used'])
 
     # Blacklist all existing refresh tokens (non-critical)
     try:
