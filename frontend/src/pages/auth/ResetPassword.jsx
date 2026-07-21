@@ -3,6 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
+const TOKEN_ERRORS = ['invalid or has expired', 'Invalid reset link']
+
 export default function ResetPassword() {
   const { uidb64, token } = useParams()
   const navigate = useNavigate()
@@ -11,9 +13,11 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [showPass, setShowPass] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     if (password !== confirm) {
       toast.error('Passwords do not match.')
       return
@@ -33,6 +37,7 @@ export default function ResetPassword() {
         err.response?.data?.detail ||
         'This reset link is invalid or has expired.'
       toast.error(msg)
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -43,8 +48,8 @@ export default function ResetPassword() {
       <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg text-center">
           <p className="text-slate-600">Invalid reset link.</p>
-          <Link to="/login" className="mt-4 inline-block text-sm text-sky-600 hover:underline">
-            Back to Login
+          <Link to="/forgot-password" className="mt-4 inline-block text-sm text-sky-600 hover:underline font-semibold">
+            Request a new reset link
           </Link>
         </div>
       </div>
@@ -120,6 +125,21 @@ export default function ResetPassword() {
                 placeholder="••••••••"
               />
             </div>
+
+            {error && TOKEN_ERRORS.some((kw) => error.toLowerCase().includes(kw)) && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <p className="font-semibold mb-1">Link expired or invalid</p>
+                <p className="text-amber-700">
+                  Password reset links expire after 24 hours or when used once.{' '}
+                  <Link
+                    to="/forgot-password"
+                    className="text-amber-900 underline hover:text-amber-950 font-semibold"
+                  >
+                    Request a new link
+                  </Link>
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"

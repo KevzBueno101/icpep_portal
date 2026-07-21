@@ -1,13 +1,18 @@
 import contextlib
+import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+
+logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -302,6 +307,7 @@ def reset_password(request):
         )
 
     if len(password) < 8:
+        logger.warning("Reset-password: password too short (uidb64=%s)", uidb64[:10])
         return Response(
             {'detail': 'Password must be at least 8 characters.'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -311,14 +317,31 @@ def reset_password(request):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        logger.warning("Reset-password: invalid uidb64 (uidb64=%s)", uidb64[:10])
         return Response(
             {'detail': 'Invalid reset link.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     if not PasswordResetTokenGenerator().check_token(user, token):
+        logger.warning(
+            "Reset-password: token check failed for user %s (uidb64=%s)",
+            user.pk, uidb64[:10],
+        )
         return Response(
             {'detail': 'This reset link is invalid or has expired.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        validate_password(password, user=user)
+    except ValidationError as e:
+        logger.warning(
+            "Reset-password: password validation failed for user %s: %s",
+            user.pk, e.messages,
+        )
+        return Response(
+            {'detail': ' '.join(e.messages)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
