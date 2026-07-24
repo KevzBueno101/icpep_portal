@@ -666,7 +666,7 @@ def officers_roster(request):
         roster.append(u)
 
     order_index = {p: i for i, p in enumerate(leadership_positions)}
-    roster.sort(key=lambda u: (order_index.get(getattr(u, 'position', ''), 999), getattr(u, 'display_order', 0)))
+    roster.sort(key=lambda u: (getattr(u, 'display_order', 0), order_index.get(getattr(u, 'position', ''), 999)))
 
     # Serialize and filter out invalid records
     results = []

@@ -17,7 +17,7 @@ class AnnouncementListAPIView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        qs = Announcement.objects.filter(is_published=True).order_by('-created_at')
+        qs = Announcement.objects.filter(is_published=True).order_by('display_order', '-created_at')
         if not self.request.query_params.get('include_members_only'):
             qs = qs.filter(members_only=False)
         return qs
@@ -36,7 +36,7 @@ class AnnouncementDetailAPIView(generics.RetrieveAPIView):
 
 
 class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Announcement.objects.all().order_by('-created_at')
+    queryset = Announcement.objects.all().order_by('display_order', '-created_at')
     serializer_class = AnnouncementSerializer
 
     def get_permissions(self):
