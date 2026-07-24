@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff',      True)
         extra_fields.setdefault('is_superuser',  True)
         extra_fields.setdefault('role',          'ADMIN')
-        extra_fields.setdefault('position',      'PRESIDENT')
+        extra_fields.setdefault('position',      'NONE')
         extra_fields.setdefault('term_start',    timezone.now().date())
         return self.create_user(email, password, **extra_fields)
 

@@ -92,7 +92,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         # Embed role + position in the JWT payload
         token['role']     = getattr(user, 'role', 'ADMIN' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'MEMBER')
-        token['position'] = getattr(user, 'position', 'PRESIDENT' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'NONE')
+        token['position'] = getattr(user, 'position', 'NONE')
         return token
 
 
@@ -219,7 +219,7 @@ def admin_login(request):
         # Embed extra claims
         access_token          = refresh.access_token
         access_token['role']     = getattr(user, 'role', 'ADMIN' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'MEMBER')
-        access_token['position'] = getattr(user, 'position', 'PRESIDENT' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'NONE')
+        access_token['position'] = getattr(user, 'position', 'NONE')
         position = access_token['position']
 
         return Response({

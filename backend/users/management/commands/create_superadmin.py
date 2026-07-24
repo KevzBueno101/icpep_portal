@@ -17,8 +17,14 @@ class Command(BaseCommand):
             self.stdout.write('No superadmin env vars found, skipping.')
             return
 
-        if User.objects.filter(email=email).exists():
-            self.stdout.write('Superadmin already exists, skipping.')
+        existing = User.objects.filter(email=email).first()
+        if existing:
+            if existing.position == 'PRESIDENT':
+                existing.position = 'NONE'
+                existing.save(update_fields=['position'])
+                self.stdout.write(self.style.SUCCESS(f'Superadmin position reset to NONE: {email}'))
+            else:
+                self.stdout.write('Superadmin already exists, skipping.')
             return
 
         user = User.objects.create_superuser(
@@ -27,7 +33,7 @@ class Command(BaseCommand):
             password=password
         )
         user.role = 'ADMIN'
-        user.position = 'PRESIDENT'
+        user.position = 'NONE'
         user.is_staff = True
         user.is_superuser = True
         user.save()
