@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useAuth } from '../../context/useAuth'
 import { useOfficers } from '../../context/OfficersContext'
 
@@ -11,7 +11,7 @@ import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 import ConfirmModal from '../../components/common/ConfirmModal'
 
-import { User, Plus } from 'lucide-react'
+import { User, Plus, CheckCircle2 } from 'lucide-react'
 
 const YEAR_LEVEL_OPTIONS = [
   { value: '1', label: '1st Year' },
@@ -80,6 +80,22 @@ const AdminOfficersAccounts = () => {
     }))
   }, [officers])
 
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
+
+  useEffect(() => {
+    if (officerRoster.length > 0) {
+      setLocalOrderIds(officerRoster.map((o) => o.id))
+    }
+  }, [officers])
+
+  const orderedOfficers = useMemo(() => {
+    if (localOrderIds.length === 0) return officerRoster
+    const map = new Map(officerRoster.map((o) => [o.id, o]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [officerRoster, localOrderIds])
+
 
   const loadRoster = async () => {
     try {
@@ -92,15 +108,18 @@ const AdminOfficersAccounts = () => {
   }
 
   const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
     try {
       await api.post('/users/officers/reorder/', { ordered_ids: orderedIds })
-      toast.success('Order updated.')
       refreshOfficers()
-      await loadRoster()
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
     } catch {
-      toast.error('Failed to update order.')
+      toast.error('Failed to save order.')
+      setLocalOrderIds(officerRoster.map((o) => o.id))
     }
-  }, [refreshOfficers])
+  }, [refreshOfficers, officerRoster])
 
   useEffect(() => {
     const load = async () => {
@@ -283,7 +302,12 @@ const AdminOfficersAccounts = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Admin</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Officers Roster (Accounts)</h1>
+            <div className="mt-2 flex items-center gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">Officers Roster (Accounts)</h1>
+              <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+                <CheckCircle2 className="h-4 w-4" /> Saved
+              </span>
+            </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
               Officers are displayed here. Only admins can create/update/delete accounts.
             </p>
@@ -321,7 +345,7 @@ const AdminOfficersAccounts = () => {
             </div>
           ) : canEdit ? (
             <SortableList
-              items={officerRoster}
+              items={orderedOfficers}
               onReorder={handleReorder}
               disabled={!canEdit}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"

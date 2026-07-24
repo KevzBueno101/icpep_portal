@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
@@ -6,6 +6,7 @@ import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
+import { CheckCircle2 } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -30,6 +31,10 @@ const AdminAnnouncement = () => {
   const [loading, setLoading] = useState(true)
 
   const [saving, setSaving] = useState(false)
+
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
 
   // Collapsible form
   const [showForm, setShowForm] = useState(false)
@@ -70,15 +75,24 @@ const AdminAnnouncement = () => {
     }
   }
 
+  useEffect(() => {
+    if (announcements.length > 0) {
+      setLocalOrderIds(announcements.map((a) => a.id))
+    }
+  }, [announcements])
+
   const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
     try {
       await api.post('/announcements/admin/reorder/', { ordered_ids: orderedIds })
-      toast.success('Order updated.')
-      fetchAnnouncements()
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
     } catch {
-      toast.error('Failed to update order.')
+      toast.error('Failed to save order.')
+      setLocalOrderIds(announcements.map((a) => a.id))
     }
-  }, [])
+  }, [announcements])
 
   const handleCreate = () => {
     setEditingAnnouncement(null)
@@ -251,6 +265,12 @@ const AdminAnnouncement = () => {
   const endIndex = startIndex + itemsPerPage
   const displayedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex)
 
+  const orderedDisplayedAnnouncements = useMemo(() => {
+    if (localOrderIds.length === 0) return displayedAnnouncements
+    const map = new Map(displayedAnnouncements.map((a) => [a.id, a]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [displayedAnnouncements, localOrderIds])
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -280,7 +300,12 @@ const AdminAnnouncement = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Announcements</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-slate-900">Announcements</h2>
+            <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              <CheckCircle2 className="h-4 w-4" /> Saved
+            </span>
+          </div>
         </div>
         <button
           type="button"
@@ -531,7 +556,7 @@ const AdminAnnouncement = () => {
           </div>
         ) : (
           <SortableList
-            items={displayedAnnouncements}
+            items={orderedDisplayedAnnouncements}
             onReorder={handleReorder}
             className="space-y-4"
             renderItem={(announcement) => {

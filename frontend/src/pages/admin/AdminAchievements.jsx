@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import SortableList from '../../components/admin/SortableList'
 import Skeleton from '../../components/Skeleton'
+import { CheckCircle2 } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'founding', label: 'Founding' },
@@ -39,6 +40,10 @@ const AdminAchievements = () => {
   const [imageFiles, setImageFiles] = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
 
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
+
   useEffect(() => {
     fetchMilestones()
   }, [])
@@ -56,15 +61,24 @@ const AdminAchievements = () => {
     }
   }
 
+  useEffect(() => {
+    if (milestones.length > 0) {
+      setLocalOrderIds(milestones.map((m) => m.id))
+    }
+  }, [milestones])
+
   const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
     try {
       await api.post('/milestones/admin/reorder/', { ordered_ids: orderedIds })
-      toast.success('Order updated.')
-      fetchMilestones()
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
     } catch {
-      toast.error('Failed to update order.')
+      toast.error('Failed to save order.')
+      setLocalOrderIds(milestones.map((m) => m.id))
     }
-  }, [])
+  }, [milestones])
 
   const handleCreate = () => {
     setEditingMilestone(null)
@@ -200,6 +214,12 @@ const AdminAchievements = () => {
   const endIndex = startIndex + itemsPerPage
   const displayedMilestones = filteredMilestones.slice(startIndex, endIndex)
 
+  const orderedDisplayedMilestones = useMemo(() => {
+    if (localOrderIds.length === 0) return displayedMilestones
+    const map = new Map(displayedMilestones.map((m) => [m.id, m]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [displayedMilestones, localOrderIds])
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -239,7 +259,12 @@ const AdminAchievements = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Achievements & Milestones</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-slate-900">Achievements & Milestones</h2>
+            <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              <CheckCircle2 className="h-4 w-4" /> Saved
+            </span>
+          </div>
         </div>
         <button
           type="button"
@@ -399,7 +424,7 @@ const AdminAchievements = () => {
           </div>
         ) : (
           <SortableList
-            items={displayedMilestones}
+            items={orderedDisplayedMilestones}
             onReorder={handleReorder}
             className="space-y-4"
             renderItem={(milestone) => {
