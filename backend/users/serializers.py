@@ -36,6 +36,7 @@ class OfficerRosterSerializer(serializers.Serializer):
     position = serializers.CharField()
     office = serializers.CharField(allow_blank=True, required=False)
     academicYear = serializers.CharField(allow_blank=True, required=False)
+    email = serializers.CharField()
     username = serializers.CharField()
     avatarUrl = serializers.CharField(allow_null=True, required=False)
     isActive = serializers.BooleanField()
@@ -49,6 +50,7 @@ class OfficerRosterSerializer(serializers.Serializer):
         position = getattr(user, 'position', '') or ''
         department = getattr(user, 'department', '') or ''
         academic_year = getattr(user, 'academic_year', '') or ''
+        email = getattr(user, 'email', '') or ''
         username = getattr(user, 'username', '') or ''
         is_active = getattr(user, 'is_active', True)
 
@@ -79,6 +81,7 @@ class OfficerRosterSerializer(serializers.Serializer):
             'position': position,
             'office': department,
             'academicYear': academic_year,
+            'email': email,
             'username': username,
             'avatarUrl': avatar_url,
             'isActive': is_active,
