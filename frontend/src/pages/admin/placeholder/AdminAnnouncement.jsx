@@ -533,6 +533,7 @@ const AdminAnnouncement = () => {
           <SortableList
             items={displayedAnnouncements}
             onReorder={handleReorder}
+            className="space-y-4"
             renderItem={(announcement) => {
               const isCardEditing = announcement.id === expandedAnnouncementId
               return (

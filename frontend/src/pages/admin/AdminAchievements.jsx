@@ -401,6 +401,7 @@ const AdminAchievements = () => {
           <SortableList
             items={displayedMilestones}
             onReorder={handleReorder}
+            className="space-y-4"
             renderItem={(milestone) => {
               const isCardEditing = milestone.id === expandedMilestoneId
               return (

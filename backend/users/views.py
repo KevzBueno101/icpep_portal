@@ -686,9 +686,8 @@ class OfficerReorderAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        from permissions import IsPresident
-        if not IsPresident().has_permission(request, self):
-            return Response({'detail': 'Only the President can reorder officers.'}, status=status.HTTP_403_FORBIDDEN)
+        if not getattr(request.user, 'can_manage_roles', False):
+            return Response({'detail': 'You do not have permission to reorder officers.'}, status=status.HTTP_403_FORBIDDEN)
 
         ordered_ids = request.data.get('ordered_ids')
         if not isinstance(ordered_ids, list) or not ordered_ids:

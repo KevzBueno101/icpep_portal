@@ -29,16 +29,16 @@ function SortableItem({ id, children, disabled }) {
 
   return (
     <div ref={setNodeRef} style={style} className={isDragging ? 'relative' : ''}>
-      <div className="flex items-start gap-2">
+      <div className="relative">
         <button
           type="button"
-          className={`mt-3 shrink-0 cursor-grab rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 ${disabled ? 'hidden' : ''}`}
+          className={`absolute top-2 left-2 z-10 cursor-grab rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 ${disabled ? 'hidden' : ''}`}
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <div className="min-w-0 flex-1">{children}</div>
+        {children}
       </div>
       {isDragging && (
         <div className="absolute inset-0 rounded-2xl border-2 border-sky-400 bg-sky-50/30 pointer-events-none" />
@@ -47,7 +47,7 @@ function SortableItem({ id, children, disabled }) {
   )
 }
 
-export default function SortableList({ items, onReorder, renderItem, disabled = false }) {
+export default function SortableList({ items, onReorder, renderItem, disabled = false, className = '' }) {
   const [activeId, setActiveId] = useState(null)
 
   const sensors = useSensors(
@@ -79,7 +79,7 @@ export default function SortableList({ items, onReorder, renderItem, disabled = 
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
-        <div className="space-y-3">
+        <div className={className}>
           {items.map((item) => (
             <SortableItem key={item.id} id={item.id} disabled={disabled}>
               {renderItem(item)}

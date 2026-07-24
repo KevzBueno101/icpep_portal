@@ -324,6 +324,7 @@ const AdminOfficersAccounts = () => {
               items={officerRoster}
               onReorder={handleReorder}
               disabled={!canEdit}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               renderItem={(o) => (
                 <OfficerCard
                   officer={o}
