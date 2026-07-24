@@ -244,7 +244,7 @@ export default function MemberDashboard() {
 
             <div className="border-t border-slate-100 pt-4 mt-6">
               <p className="text-xs text-slate-500 text-center">
-                Need help? Contact an administrator at <span className="font-semibold">support@icpep.se</span>
+                Need help? Contact an administrator at <span className="font-semibold">icpep.se.catsuchapter@gmail.com</span>
               </p>
             </div>
           </div>
