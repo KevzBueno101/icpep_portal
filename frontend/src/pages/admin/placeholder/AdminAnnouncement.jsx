@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
@@ -68,6 +69,16 @@ const AdminAnnouncement = () => {
       setLoading(false)
     }
   }
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    try {
+      await api.post('/announcements/admin/reorder/', { ordered_ids: orderedIds })
+      toast.success('Order updated.')
+      fetchAnnouncements()
+    } catch {
+      toast.error('Failed to update order.')
+    }
+  }, [])
 
   const handleCreate = () => {
     setEditingAnnouncement(null)
@@ -519,11 +530,14 @@ const AdminAnnouncement = () => {
             {announcements.length === 0 ? 'No announcements yet.' : 'No announcements match your search or filter.'}
           </div>
         ) : (
-          displayedAnnouncements.map((announcement) => {
-            const isCardEditing = announcement.id === expandedAnnouncementId
-            return (
-              <div key={announcement.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                {isCardEditing ? (
+          <SortableList
+            items={displayedAnnouncements}
+            onReorder={handleReorder}
+            renderItem={(announcement) => {
+              const isCardEditing = announcement.id === expandedAnnouncementId
+              return (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  {isCardEditing ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -773,7 +787,8 @@ const AdminAnnouncement = () => {
                 )}
               </div>
             )
-          })
+            }}
+          />
         )}
       </div>
 

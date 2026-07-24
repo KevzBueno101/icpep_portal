@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useAuth } from '../../context/useAuth'
 import { useOfficers } from '../../context/OfficersContext'
 
@@ -6,6 +6,7 @@ import api, { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 import OfficerCard from '../../components/OfficerCard'
+import SortableList from '../../components/admin/SortableList'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 import ConfirmModal from '../../components/common/ConfirmModal'
@@ -89,6 +90,17 @@ const AdminOfficersAccounts = () => {
       setOfficers([])
     }
   }
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    try {
+      await api.post('/users/officers/reorder/', { ordered_ids: orderedIds })
+      toast.success('Order updated.')
+      refreshOfficers()
+      await loadRoster()
+    } catch {
+      toast.error('Failed to update order.')
+    }
+  }, [refreshOfficers])
 
   useEffect(() => {
     const load = async () => {
@@ -307,6 +319,20 @@ const AdminOfficersAccounts = () => {
             <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-slate-500">
               No officer accounts found.
             </div>
+          ) : canEdit ? (
+            <SortableList
+              items={officerRoster}
+              onReorder={handleReorder}
+              disabled={!canEdit}
+              renderItem={(o) => (
+                <OfficerCard
+                  officer={o}
+                  canEdit={canEdit}
+                  onEdit={() => openEditModal(o)}
+                  onDelete={() => setDeleteOfficer(o)}
+                />
+              )}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {officerRoster.map((o) => (

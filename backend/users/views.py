@@ -24,6 +24,7 @@ except ImportError:
 
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
@@ -665,7 +666,7 @@ def officers_roster(request):
         roster.append(u)
 
     order_index = {p: i for i, p in enumerate(leadership_positions)}
-    roster.sort(key=lambda u: order_index.get(getattr(u, 'position', ''), 999))
+    roster.sort(key=lambda u: (order_index.get(getattr(u, 'position', ''), 999), getattr(u, 'display_order', 0)))
 
     # Serialize and filter out invalid records
     results = []
@@ -677,3 +678,34 @@ def officers_roster(request):
             results.append(officer_data)
 
     return Response({'results': results}, status=status.HTTP_200_OK)
+
+
+# ── Officers reorder ─────────────────────────────────────────────────────────
+
+class OfficerReorderAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from permissions import IsPresident
+        if not IsPresident().has_permission(request, self):
+            return Response({'detail': 'Only the President can reorder officers.'}, status=status.HTTP_403_FORBIDDEN)
+
+        ordered_ids = request.data.get('ordered_ids')
+        if not isinstance(ordered_ids, list) or not ordered_ids:
+            return Response({'detail': 'ordered_ids must be a non-empty list.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        id_set = set(ordered_ids)
+        if len(id_set) != len(ordered_ids):
+            return Response({'detail': 'ordered_ids contains duplicates.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qs = User.objects.filter(pk__in=ordered_ids)
+        if qs.count() != len(ordered_ids):
+            return Response({'detail': 'One or more IDs are invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        updates = [
+            User(pk=pk, display_order=idx)
+            for idx, pk in enumerate(ordered_ids)
+        ]
+        User.objects.bulk_update(updates, ['display_order'])
+
+        return Response({'detail': 'Order updated.'}, status=status.HTTP_200_OK)

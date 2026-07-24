@@ -77,6 +77,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=AccessLevel.choices,
         default=AccessLevel.FULL_CONTROL,
     )
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

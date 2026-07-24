@@ -19,6 +19,7 @@ class Announcement(models.Model):
     )
     author = models.CharField(max_length=150, blank=True, default='Admin')
     pinned = models.BooleanField(default=False)
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
     is_published = models.BooleanField(default=True)
     members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
     created_by = models.ForeignKey(
@@ -32,7 +33,7 @@ class Announcement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['display_order', '-created_at']
         verbose_name = 'Announcement'
         verbose_name_plural = 'Announcements'
 

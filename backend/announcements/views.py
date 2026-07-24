@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 
 from .models import Announcement, AnnouncementImage
@@ -160,3 +161,8 @@ class AnnouncementImageUploadAPIView(APIView):
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AnnouncementReorderAPIView(ReorderAPIView):
+    model = Announcement
+    permission_classes = [CanManageContent]

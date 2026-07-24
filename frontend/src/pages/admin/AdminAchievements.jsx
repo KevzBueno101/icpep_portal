@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../components/common/ConfirmModal'
+import SortableList from '../../components/admin/SortableList'
 import Skeleton from '../../components/Skeleton'
 
 const CATEGORY_OPTIONS = [
@@ -54,6 +55,16 @@ const AdminAchievements = () => {
       setLoading(false)
     }
   }
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    try {
+      await api.post('/milestones/admin/reorder/', { ordered_ids: orderedIds })
+      toast.success('Order updated.')
+      fetchMilestones()
+    } catch {
+      toast.error('Failed to update order.')
+    }
+  }, [])
 
   const handleCreate = () => {
     setEditingMilestone(null)
@@ -387,13 +398,15 @@ const AdminAchievements = () => {
             {milestones.length === 0 ? 'No milestones yet. Create your first achievement!' : 'No achievements match your search or filter.'}
           </div>
         ) : (
-          displayedMilestones.map((milestone) => {
-            const isCardEditing = milestone.id === expandedMilestoneId
-            return (
-              <div
-                key={milestone.id}
-                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
+          <SortableList
+            items={displayedMilestones}
+            onReorder={handleReorder}
+            renderItem={(milestone) => {
+              const isCardEditing = milestone.id === expandedMilestoneId
+              return (
+                <div
+                  className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
                 {isCardEditing ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-4">
@@ -576,9 +589,10 @@ const AdminAchievements = () => {
                     </div>
                   </>
                 )}
-              </div>
-            )
-          })
+                </div>
+              )
+            }}
+          />
         )}
       </div>
 
