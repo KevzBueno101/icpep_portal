@@ -4,7 +4,6 @@ import secrets
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -278,23 +277,17 @@ def forgot_password(request):
     try:
         user = User.objects.filter(email__iexact=email).first()
         if user:
-            pw_pref = user.password[:30] if user.password else 'NONE'
-            logger.info(
-                "Forgot-password: user=%s pw=%s last_login=%s email=%s",
-                user.pk, pw_pref, user.last_login, user.email,
-            )
             PasswordResetToken.objects.filter(user=user).delete()
             raw_token = secrets.token_urlsafe(48)
             PasswordResetToken.objects.create(user=user, token=raw_token)
             logger.info(
-                "Forgot-password: token_created user=%s token_len=%d",
-                user.pk, len(raw_token),
+                "Forgot-password: token_created user=%s token_prefix=%s",
+                user.pk, raw_token[:8],
             )
             reset_url = build_password_reset_url(user, raw_token, request=request)
             send_password_reset_email(email, reset_url)
     except Exception:
-        import logging
-        logging.getLogger(__name__).exception("Forgot-password error for %s", email)
+        logger.exception("Forgot-password error for %s", email)
 
     return Response({'message': message})
 
@@ -320,7 +313,6 @@ def reset_password(request):
         )
 
     if len(password) < 8:
-        logger.warning("Reset-password: password too short (uidb64=%s)", uidb64[:10])
         return Response(
             {'detail': 'Password must be at least 8 characters.'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -336,34 +328,38 @@ def reset_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Try DB-backed token first, fallback to stateless PasswordResetTokenGenerator
-    # to support links generated before the DB-backed deploy.
     reset_token = None
-    with contextlib.suppress(PasswordResetToken.DoesNotExist):
-        reset_token = PasswordResetToken.objects.get(user=user, token=token, is_used=False)
+    try:
+        reset_token = PasswordResetToken.objects.get(
+            user=user, token=token, is_used=False,
+        )
+    except PasswordResetToken.DoesNotExist:
+        existing_count = PasswordResetToken.objects.filter(user=user).count()
+        logger.warning(
+            "Reset-password: token_not_found user=%s token_prefix=%s "
+            "token_len=%d existing_tokens_for_user=%d",
+            user.pk, token[:8], len(token), existing_count,
+        )
+    except Exception:
+        logger.exception("Reset-password: db_error user=%s", user.pk)
+        return Response(
+            {'detail': 'A server error occurred. Please try again.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     if reset_token is None:
-        pw_pref = user.password[:30] if user.password else 'NONE'
-        logger.info(
-            "Reset-password: fallback user=%s pw=%s last_login=%s email=%s token_len=%d",
-            user.pk, pw_pref, user.last_login, user.email, len(token),
+        return Response(
+            {'detail': 'This reset link is invalid or has expired. Please request a new one.'},
+            status=status.HTTP_400_BAD_REQUEST,
         )
-        if not PasswordResetTokenGenerator().check_token(user, token):
-            logger.warning(
-                "Reset-password: token check failed for user %s (uidb64=%s)",
-                user.pk, uidb64[:10],
-            )
-            return Response(
-                {'detail': 'This reset link is invalid or has expired.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-    elif reset_token.is_expired():
+
+    if reset_token.is_expired():
         logger.warning(
-            "Reset-password: expired token for user %s (uidb64=%s)",
-            user.pk, uidb64[:10],
+            "Reset-password: expired_token user=%s token_prefix=%s",
+            user.pk, token[:8],
         )
         return Response(
-            {'detail': 'This reset link is invalid or has expired.'},
+            {'detail': 'This reset link has expired. Please request a new one.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -371,7 +367,7 @@ def reset_password(request):
         validate_password(password, user=user)
     except ValidationError as e:
         logger.warning(
-            "Reset-password: password validation failed for user %s: %s",
+            "Reset-password: password_validation_failed user=%s: %s",
             user.pk, e.messages,
         )
         return Response(
@@ -382,11 +378,9 @@ def reset_password(request):
     user.set_password(password)
     user.save()
 
-    if reset_token is not None:
-        reset_token.is_used = True
-        reset_token.save(update_fields=['is_used'])
+    reset_token.is_used = True
+    reset_token.save(update_fields=['is_used'])
 
-    # Blacklist all existing refresh tokens (non-critical)
     try:
         from rest_framework_simplejwt.token_blacklist.models import (
             BlacklistedToken,
@@ -397,6 +391,7 @@ def reset_password(request):
     except Exception:
         pass
 
+    logger.info("Reset-password: success user=%s", user.pk)
     return Response({'message': 'Password reset successful.'})
 
 

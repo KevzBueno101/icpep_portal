@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
-const TOKEN_ERRORS = ['invalid or has expired', 'Invalid reset link']
+const TOKEN_ERRORS = ['invalid or has expired', 'Invalid reset link', 'has expired']
 
 export default function ResetPassword() {
   const { uidb64, token } = useParams()
