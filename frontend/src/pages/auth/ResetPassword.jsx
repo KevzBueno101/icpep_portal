@@ -31,7 +31,12 @@ export default function ResetPassword() {
     try {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
-          await publicApi.post('/auth/reset-password/', { uidb64, token, password })
+          const res = await publicApi.post('/auth/reset-password/', { uidb64, token, password })
+          if (res.data?.already_used) {
+            toast.success('Password was already reset. Redirecting to login...')
+            setTimeout(() => navigate('/login', { replace: true }), 1500)
+            return
+          }
           setDone(true)
           toast.success('Password reset successful!')
           setTimeout(() => navigate('/login', { replace: true }), 2000)

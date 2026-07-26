@@ -330,15 +330,11 @@ def reset_password(request):
 
     reset_token = None
     try:
-        reset_token = PasswordResetToken.objects.get(
-            user=user, token=token, is_used=False,
-        )
+        reset_token = PasswordResetToken.objects.get(user=user, token=token)
     except PasswordResetToken.DoesNotExist:
-        existing_count = PasswordResetToken.objects.filter(user=user).count()
         logger.warning(
-            "Reset-password: token_not_found user=%s token_prefix=%s "
-            "token_len=%d existing_tokens_for_user=%d",
-            user.pk, token[:8], len(token), existing_count,
+            "Reset-password: token_not_found user=%s token_prefix=%s",
+            user.pk, token[:8],
         )
     except Exception:
         logger.exception("Reset-password: db_error user=%s", user.pk)
@@ -351,6 +347,12 @@ def reset_password(request):
         return Response(
             {'detail': 'This reset link is invalid or has expired. Please request a new one.'},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if reset_token.is_used:
+        return Response(
+            {'detail': 'Password already reset.', 'already_used': True},
+            status=status.HTTP_200_OK,
         )
 
     if reset_token.is_expired():
