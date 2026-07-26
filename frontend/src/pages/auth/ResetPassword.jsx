@@ -4,6 +4,8 @@ import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 const TOKEN_ERRORS = ['invalid or has expired', 'Invalid reset link', 'has expired']
+const MAX_RETRIES = 2
+const RETRY_DELAY = 5000
 
 export default function ResetPassword() {
   const { uidb64, token } = useParams()
@@ -11,6 +13,7 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
+  const [retrying, setRetrying] = useState(false)
   const [done, setDone] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
@@ -28,11 +31,26 @@ export default function ResetPassword() {
     }
     setLoading(true)
     try {
-      await publicApi.post('/auth/reset-password/', { uidb64, token, password })
-      setDone(true)
-      toast.success('Password reset successful!')
-      setTimeout(() => navigate('/login', { replace: true }), 2000)
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          await publicApi.post('/auth/reset-password/', { uidb64, token, password })
+          setDone(true)
+          toast.success('Password reset successful!')
+          setTimeout(() => navigate('/login', { replace: true }), 2000)
+          return
+        } catch (err) {
+          const isNetwork = !err.response
+          const isServerError = err.response?.status >= 500
+          if ((isNetwork || isServerError) && attempt < MAX_RETRIES) {
+            setRetrying(true)
+            await new Promise((r) => setTimeout(r, RETRY_DELAY))
+            continue
+          }
+          throw err
+        }
+      }
     } catch (err) {
+      setRetrying(false)
       if (!err.response) {
         setError('__NETWORK__')
       } else {
@@ -44,6 +62,7 @@ export default function ResetPassword() {
       }
     } finally {
       setLoading(false)
+      setRetrying(false)
     }
   }
 
@@ -171,7 +190,7 @@ export default function ResetPassword() {
               disabled={loading}
               className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
             >
-              {loading ? 'Resetting...' : 'Reset Password'}
+              {loading ? (retrying ? 'Waking up server...' : 'Resetting...') : 'Reset Password'}
             </button>
 
             <div className="text-center">
