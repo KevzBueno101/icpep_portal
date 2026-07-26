@@ -16,11 +16,9 @@ export default function ResetPassword() {
   const [retrying, setRetrying] = useState(false)
   const [done, setDone] = useState(false)
   const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
     if (password !== confirm) {
       toast.error('Passwords do not match.')
       return
@@ -46,20 +44,22 @@ export default function ResetPassword() {
             await new Promise((r) => setTimeout(r, RETRY_DELAY))
             continue
           }
-          throw err
+          const status = err.response?.status
+          const detail = err.response?.data?.detail
+          const msg = detail || 'This reset link is invalid or has expired.'
+          if (status === 429) {
+            toast.error('Too many attempts. Please wait a minute.')
+          } else if (!err.response || TOKEN_ERRORS.some((kw) => msg.toLowerCase().includes(kw))) {
+            toast.error('This link has expired. Redirecting...')
+            setTimeout(() => navigate('/forgot-password', { replace: true }), 1500)
+          } else {
+            toast.error(msg)
+          }
+          return
         }
       }
-    } catch (err) {
-      setRetrying(false)
-      if (!err.response) {
-        setError('__NETWORK__')
-      } else {
-        const status = err.response?.status
-        const detail = err.response?.data?.detail
-        const msg = detail || 'This reset link is invalid or has expired.'
-        toast.error(msg)
-        setError(status === 429 ? '__RATE_LIMITED__' : msg)
-      }
+    } catch {
+      toast.error('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
       setRetrying(false)
@@ -148,42 +148,6 @@ export default function ResetPassword() {
                 placeholder="••••••••"
               />
             </div>
-
-            {error === '__NETWORK__' ? (
-              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">
-                <p className="font-semibold mb-1">Server is starting up</p>
-                <p className="text-sky-700">
-                  The server is waking up from idle. Please wait a moment and{' '}
-                  <button
-                    type="submit"
-                    className="text-sky-900 underline hover:text-sky-950 font-semibold inline"
-                  >
-                    try again
-                  </button>
-                  .
-                </p>
-              </div>
-            ) : error === '__RATE_LIMITED__' ? (
-              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
-                <p className="font-semibold mb-1">Too many attempts</p>
-                <p className="text-orange-700">
-                  Please wait a minute before trying again.
-                </p>
-              </div>
-            ) : error && TOKEN_ERRORS.some((kw) => error.toLowerCase().includes(kw)) ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                <p className="font-semibold mb-1">Link expired or invalid</p>
-                <p className="text-amber-700">
-                  Password reset links expire after 24 hours or when used once.{' '}
-                  <Link
-                    to="/forgot-password"
-                    className="text-amber-900 underline hover:text-amber-950 font-semibold"
-                  >
-                    Request a new link
-                  </Link>
-                </p>
-              </div>
-            ) : null}
 
             <button
               type="submit"
