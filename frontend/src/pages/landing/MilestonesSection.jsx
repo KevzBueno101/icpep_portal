@@ -17,7 +17,7 @@ function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
   const month = d.toLocaleDateString('en-US', { month: 'long' })
   const day = d.getDate().toString().padStart(2, '0')
-  const year = d.getFullYear().toString().slice(-2)
+  const year = d.getFullYear().toString()
   return `${month} ${day} ${year}`
 }
 
