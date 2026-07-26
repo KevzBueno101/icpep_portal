@@ -124,7 +124,7 @@ export default function ResetPassword() {
               <button
                 type="button"
                 onClick={() => setShowPass((prev) => !prev)}
-                className="absolute inset-y-0 right-3 flex h-full items-center px-2 text-slate-500 hover:text-slate-900"
+                className="absolute inset-y-0 right-3 flex h-full items-center justify-center px-2 text-slate-500 hover:text-slate-900"
               >
                 {showPass ? (
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -141,7 +141,7 @@ export default function ResetPassword() {
               </button>
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm text-slate-600 mb-1">Confirm Password</label>
               <input
                 type={showPass ? 'text' : 'password'}
@@ -149,9 +149,27 @@ export default function ResetPassword() {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 minLength={8}
-                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 pr-14 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPass((prev) => !prev)}
+                className="absolute inset-y-0 right-3 flex h-full items-center justify-center px-2 text-slate-500 hover:text-slate-900"
+              >
+                {showPass ? (
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19.5c-5.52 0-10-4.48-10-10 0-1.44.32-2.8.88-4.02" />
+                    <path d="M1 1l22 22" />
+                    <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
             </div>
 
             <button
