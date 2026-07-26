@@ -1,4 +1,4 @@
-import { Info, Shield, Users, Mail, Globe, MapPin } from 'lucide-react'
+import { Info, Shield, Users, Mail, MapPin } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import { OfficersProvider } from '../../context/OfficersContext'
 
@@ -100,14 +100,10 @@ export default function MemberAbout() {
             <h2 className="text-xl font-bold">Connect with the Chapter</h2>
             <p className="text-slate-400 text-sm mt-1">We are always eager to assist with inquiries, partnerships, and tech support.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-slate-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-300">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-sky-400 shrink-0" />
               <a href="mailto:icpep.se.catsuchapter@gmail.com" className="hover:underline">icpep.se.catsuchapter@gmail.com</a>
-            </div>
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-sky-400 shrink-0" />
-              <span>www.icpep.se</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-sky-400 shrink-0" />
