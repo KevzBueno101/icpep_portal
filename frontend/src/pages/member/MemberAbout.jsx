@@ -103,7 +103,7 @@ export default function MemberAbout() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-slate-300">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-sky-400 shrink-0" />
-              <span>org@icpep.se</span>
+              <a href="mailto:icpep.se.catsuchapter@gmail.com" className="hover:underline">icpep.se.catsuchapter@gmail.com</a>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-sky-400 shrink-0" />
@@ -111,7 +111,7 @@ export default function MemberAbout() {
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-sky-400 shrink-0" />
-              <span>Computer Lab, Bldg 2</span>
+              <span>Virac, Catanduanes</span>
             </div>
           </div>
         </div>
