@@ -72,65 +72,21 @@ function App() {
     
           {/* Member protected routes */}
           <Route
-            path="/member/dashboard"
+            path="/member/*"
             element={
               <ProtectedRoute>
                 <MemberProvider>
                   <OfficersProvider>
                     <MemberLayout>
-                      <MemberDashboard />
+                      <Routes>
+                        <Route path="dashboard" element={<MemberDashboard />} />
+                        <Route path="announcements" element={<MemberAnnouncements />} />
+                        <Route path="id" element={<MemberIdCard />} />
+                        <Route path="about" element={<MemberAbout />} />
+                        <Route path="profile" element={<MemberProfile />} />
+                      </Routes>
                     </MemberLayout>
                   </OfficersProvider>
-                </MemberProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/member/announcements"
-            element={
-              <ProtectedRoute>
-                <MemberProvider>
-                  <MemberLayout>
-                    <MemberAnnouncements />
-                  </MemberLayout>
-                </MemberProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/member/id"
-            element={
-              <ProtectedRoute>
-                <MemberProvider>
-                  <MemberLayout>
-                    <MemberIdCard />
-                  </MemberLayout>
-                </MemberProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/member/about"
-            element={
-              <ProtectedRoute>
-                <MemberProvider>
-                  <OfficersProvider>          {/* ← dagdag lang ito */}
-                    <MemberLayout>
-                      <MemberAbout />
-                    </MemberLayout>
-                  </OfficersProvider>
-                </MemberProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/member/profile"
-            element={
-              <ProtectedRoute>
-                <MemberProvider>
-                  <MemberLayout>
-                    <MemberProfile />
-                  </MemberLayout>
                 </MemberProvider>
               </ProtectedRoute>
             }
@@ -138,8 +94,6 @@ function App() {
 
           {/* Backward-compat: legacy member dashboard */}
           <Route path="/dashboard" element={<Navigate to="/member/dashboard" replace />} />
-
-
 
           {/* Admin protected routes */}
           <Route

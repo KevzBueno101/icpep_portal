@@ -73,7 +73,7 @@ function CardFront({ onFlip }) {
 
 /* ─── Card Back (Display) ─────────────────────────────────────────────────── */
 
-function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip }) {
+function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0 }) {
   return (
     <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
       {/* Background columns */}
@@ -118,7 +118,7 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
             <div className="relative flex-shrink-0">
               <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/5 flex items-center justify-center">
                 {profile?.profile_picture ? (
-                  <img src={profile.profile_picture} alt="Member" className="h-full w-full object-cover" />
+                  <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-[10px] font-black text-white">{avatarInitial}</span>
                 )}
@@ -227,7 +227,7 @@ function ExportCardFront() {
 
 /* ─── Export Card Back (fully inline styled, no Tailwind) ─────────────────── */
 
-function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial }) {
+function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0 }) {
   // Match display card exactly:
   // Left navy block: 58% = ~223px, right white block: 42% = ~161px
   // Diagonal: top at x=215, bottom at x=250 (35px shift over 224px height)
@@ -299,7 +299,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial 
               flexShrink: 0,
             }}>
               {profile?.profile_picture
-                ? <img src={profile.profile_picture} alt="Member" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{avatarInitial}</span>
               }
             </div>
@@ -360,7 +360,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial 
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
-export default function MembershipCard({ profile, userId }) {
+export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -440,6 +440,7 @@ export default function MembershipCard({ profile, userId }) {
               profile={profile}
               avatarInitial={avatarInitial}
               onFlip={() => setFlipped(false)}
+              cacheKey={cacheKey}
             />
           </div>
         </div>
@@ -469,6 +470,7 @@ export default function MembershipCard({ profile, userId }) {
               yearText={yearText}
               profile={profile}
               avatarInitial={avatarInitial}
+              cacheKey={cacheKey}
             />
           </div>
         </div>

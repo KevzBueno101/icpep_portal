@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../components/common/ConfirmModal'
+import SortableList from '../../components/admin/SortableList'
+import Skeleton from '../../components/Skeleton'
+import { CheckCircle2 } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'founding', label: 'Founding' },
@@ -37,6 +40,10 @@ const AdminAchievements = () => {
   const [imageFiles, setImageFiles] = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
 
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
+
   useEffect(() => {
     fetchMilestones()
   }, [])
@@ -53,6 +60,25 @@ const AdminAchievements = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (milestones.length > 0) {
+      setLocalOrderIds(milestones.map((m) => m.id))
+    }
+  }, [milestones])
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    try {
+      await api.post('/milestones/admin/reorder/', { ordered_ids: orderedIds })
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
+    } catch {
+      toast.error('Failed to save order.')
+      setLocalOrderIds(milestones.map((m) => m.id))
+    }
+  }, [milestones])
 
   const handleCreate = () => {
     setEditingMilestone(null)
@@ -188,6 +214,12 @@ const AdminAchievements = () => {
   const endIndex = startIndex + itemsPerPage
   const displayedMilestones = filteredMilestones.slice(startIndex, endIndex)
 
+  const orderedDisplayedMilestones = useMemo(() => {
+    if (localOrderIds.length === 0) return displayedMilestones
+    const map = new Map(displayedMilestones.map((m) => [m.id, m]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [displayedMilestones, localOrderIds])
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -205,8 +237,19 @@ const AdminAchievements = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-5 w-56 mb-2" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <Skeleton className="h-32 w-full mb-4" />
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-3" />
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -216,7 +259,12 @@ const AdminAchievements = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Achievements & Milestones</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-slate-900">Achievements & Milestones</h2>
+            <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              <CheckCircle2 className="h-4 w-4" /> Saved
+            </span>
+          </div>
         </div>
         <button
           type="button"
@@ -375,13 +423,16 @@ const AdminAchievements = () => {
             {milestones.length === 0 ? 'No milestones yet. Create your first achievement!' : 'No achievements match your search or filter.'}
           </div>
         ) : (
-          displayedMilestones.map((milestone) => {
-            const isCardEditing = milestone.id === expandedMilestoneId
-            return (
-              <div
-                key={milestone.id}
-                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
+          <SortableList
+            items={orderedDisplayedMilestones}
+            onReorder={handleReorder}
+            className="space-y-4"
+            renderItem={(milestone) => {
+              const isCardEditing = milestone.id === expandedMilestoneId
+              return (
+                <div
+                  className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
                 {isCardEditing ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-4">
@@ -564,9 +615,10 @@ const AdminAchievements = () => {
                     </div>
                   </>
                 )}
-              </div>
-            )
-          })
+                </div>
+              )
+            }}
+          />
         )}
       </div>
 

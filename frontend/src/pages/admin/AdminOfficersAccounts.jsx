@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useAuth } from '../../context/useAuth'
 import { useOfficers } from '../../context/OfficersContext'
 
@@ -6,11 +6,12 @@ import api, { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 
 import OfficerCard from '../../components/OfficerCard'
+import SortableList from '../../components/admin/SortableList'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
 import ConfirmModal from '../../components/common/ConfirmModal'
 
-import { User, Plus } from 'lucide-react'
+import { User, Plus, CheckCircle2 } from 'lucide-react'
 
 const YEAR_LEVEL_OPTIONS = [
   { value: '1', label: '1st Year' },
@@ -79,6 +80,22 @@ const AdminOfficersAccounts = () => {
     }))
   }, [officers])
 
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
+
+  useEffect(() => {
+    if (officerRoster.length > 0) {
+      setLocalOrderIds(officerRoster.map((o) => o.id))
+    }
+  }, [officers])
+
+  const orderedOfficers = useMemo(() => {
+    if (localOrderIds.length === 0) return officerRoster
+    const map = new Map(officerRoster.map((o) => [o.id, o]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [officerRoster, localOrderIds])
+
 
   const loadRoster = async () => {
     try {
@@ -89,6 +106,20 @@ const AdminOfficersAccounts = () => {
       setOfficers([])
     }
   }
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    try {
+      await api.post('/users/officers/reorder/', { ordered_ids: orderedIds })
+      refreshOfficers()
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
+    } catch {
+      toast.error('Failed to save order.')
+      setLocalOrderIds(officerRoster.map((o) => o.id))
+    }
+  }, [refreshOfficers, officerRoster])
 
   useEffect(() => {
     const load = async () => {
@@ -245,24 +276,22 @@ const AdminOfficersAccounts = () => {
     }
   }
 
-  const skeletons = [...Array(8)].map((_, i) => (
-    <div
-      key={i}
-      className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
-    >
-      <div className="h-56 w-full bg-slate-200" />
-      <div className="p-6">
-        <div className="h-5 bg-slate-200 rounded w-3/4" />
-        <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
-        <div className="mt-2 h-3 bg-slate-200 rounded w-2/3" />
-      </div>
-    </div>
-  ))
-
   if (loading) {
     return (
-      <div className="min-h-[260px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
+          >
+            <div className="h-56 w-full bg-slate-200" />
+            <div className="p-6">
+              <div className="h-5 bg-slate-200 rounded w-3/4" />
+              <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
+              <div className="mt-2 h-3 bg-slate-200 rounded w-2/3" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
@@ -273,7 +302,12 @@ const AdminOfficersAccounts = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Admin</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Officers Roster (Accounts)</h1>
+            <div className="mt-2 flex items-center gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">Officers Roster (Accounts)</h1>
+              <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+                <CheckCircle2 className="h-4 w-4" /> Saved
+              </span>
+            </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
               Officers are displayed here. Only admins can create/update/delete accounts.
             </p>
@@ -309,6 +343,21 @@ const AdminOfficersAccounts = () => {
             <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-slate-500">
               No officer accounts found.
             </div>
+          ) : canEdit ? (
+            <SortableList
+              items={orderedOfficers}
+              onReorder={handleReorder}
+              disabled={!canEdit}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              renderItem={(o) => (
+                <OfficerCard
+                  officer={o}
+                  canEdit={canEdit}
+                  onEdit={() => openEditModal(o)}
+                  onDelete={() => setDeleteOfficer(o)}
+                />
+              )}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {officerRoster.map((o) => (

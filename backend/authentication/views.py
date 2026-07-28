@@ -1,7 +1,10 @@
 import contextlib
+import logging
+import secrets
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
@@ -13,6 +16,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .models import PasswordResetToken
 from .serializers import (
     AdminLoginSerializer,
     AdminRegistrationSerializer,
@@ -26,6 +30,8 @@ from .utils import (
     record_failed_attempt,
     send_password_reset_email,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -85,7 +91,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         # Embed role + position in the JWT payload
         token['role']     = getattr(user, 'role', 'ADMIN' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'MEMBER')
-        token['position'] = getattr(user, 'position', 'PRESIDENT' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'NONE')
+        token['position'] = getattr(user, 'position', 'NONE')
         return token
 
 
@@ -212,7 +218,7 @@ def admin_login(request):
         # Embed extra claims
         access_token          = refresh.access_token
         access_token['role']     = getattr(user, 'role', 'ADMIN' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'MEMBER')
-        access_token['position'] = getattr(user, 'position', 'PRESIDENT' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'NONE')
+        access_token['position'] = getattr(user, 'position', 'NONE')
         position = access_token['position']
 
         return Response({
@@ -250,11 +256,11 @@ def failed_attempts(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='3/15m', block=False)
+@ratelimit(key='ip', rate='5/m', block=False)
 def forgot_password(request):
     if getattr(request, 'limited', False):
         return Response(
-            {'detail': 'Too many password reset requests. Try again in 15 minutes.'},
+            {'detail': 'Too many password reset requests. Try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
@@ -271,23 +277,28 @@ def forgot_password(request):
     try:
         user = User.objects.filter(email__iexact=email).first()
         if user:
-            token = PasswordResetTokenGenerator().make_token(user)
-            reset_url = build_password_reset_url(user, token, request=request)
+            PasswordResetToken.objects.filter(user=user).delete()
+            raw_token = secrets.token_urlsafe(48)
+            PasswordResetToken.objects.create(user=user, token=raw_token)
+            logger.info(
+                "Forgot-password: token_created user=%s token_prefix=%s",
+                user.pk, raw_token[:8],
+            )
+            reset_url = build_password_reset_url(user, raw_token, request=request)
             send_password_reset_email(email, reset_url)
     except Exception:
-        import logging
-        logging.getLogger(__name__).exception("Forgot-password error for %s", email)
+        logger.exception("Forgot-password error for %s", email)
 
     return Response({'message': message})
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=False)
+@ratelimit(key='ip', rate='5/m', block=False)
 def reset_password(request):
     if getattr(request, 'limited', False):
         return Response(
-            {'detail': 'Too many password reset attempts. Try again in 15 minutes.'},
+            {'detail': 'Too many attempts. Try again later.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
@@ -311,21 +322,67 @@ def reset_password(request):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        logger.warning("Reset-password: invalid uidb64 (uidb64=%s)", uidb64[:10])
         return Response(
             {'detail': 'Invalid reset link.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not PasswordResetTokenGenerator().check_token(user, token):
+    reset_token = None
+    try:
+        reset_token = PasswordResetToken.objects.get(user=user, token=token)
+    except PasswordResetToken.DoesNotExist:
+        logger.warning(
+            "Reset-password: token_not_found user=%s token_prefix=%s",
+            user.pk, token[:8],
+        )
+    except Exception:
+        logger.exception("Reset-password: db_error user=%s", user.pk)
         return Response(
-            {'detail': 'This reset link is invalid or has expired.'},
+            {'detail': 'A server error occurred. Please try again.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    if reset_token is None:
+        return Response(
+            {'detail': 'This reset link is invalid or has expired. Please request a new one.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if reset_token.is_used:
+        return Response(
+            {'detail': 'Password already reset.', 'already_used': True},
+            status=status.HTTP_200_OK,
+        )
+
+    if reset_token.is_expired():
+        logger.warning(
+            "Reset-password: expired_token user=%s token_prefix=%s",
+            user.pk, token[:8],
+        )
+        return Response(
+            {'detail': 'This reset link has expired. Please request a new one.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        validate_password(password, user=user)
+    except ValidationError as e:
+        logger.warning(
+            "Reset-password: password_validation_failed user=%s: %s",
+            user.pk, e.messages,
+        )
+        return Response(
+            {'detail': ' '.join(e.messages)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     user.set_password(password)
     user.save()
 
-    # Blacklist all existing refresh tokens (non-critical)
+    reset_token.is_used = True
+    reset_token.save(update_fields=['is_used'])
+
     try:
         from rest_framework_simplejwt.token_blacklist.models import (
             BlacklistedToken,
@@ -336,4 +393,63 @@ def reset_password(request):
     except Exception:
         pass
 
+    logger.info("Reset-password: success user=%s", user.pk)
     return Response({'message': 'Password reset successful.'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@ratelimit(key='ip', rate='5/m', block=True)
+def change_password(request):
+    user = request.user
+    current_password = request.data.get('current_password', '')
+    new_password = request.data.get('new_password', '')
+    confirm_password = request.data.get('confirm_password', '')
+
+    if not current_password or not new_password or not confirm_password:
+        return Response(
+            {'detail': 'Current password, new password, and confirmation are required.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not user.check_password(current_password):
+        return Response(
+            {'detail': 'Current password is incorrect.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if new_password != confirm_password:
+        return Response(
+            {'detail': 'New password and confirmation do not match.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if len(new_password) < 8:
+        return Response(
+            {'detail': 'New password must be at least 8 characters.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as e:
+        return Response(
+            {'detail': ' '.join(e.messages)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user.set_password(new_password)
+    user.save()
+
+    # Blacklist all existing refresh tokens
+    try:
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
+        for token_obj in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token_obj)
+    except Exception:
+        pass
+
+    return Response({'message': 'Password changed successfully.'})

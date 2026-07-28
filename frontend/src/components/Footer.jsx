@@ -1,4 +1,22 @@
 import { useState } from 'react'
+import { Mail } from 'lucide-react'
+
+function FacebookIcon({ className }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  )
+}
 import PrivacyPolicyModal from './PrivacyPolicyModal'
 
 export default function Footer() {
@@ -12,7 +30,7 @@ export default function Footer() {
           <div>
             <h3 className="mb-3 text-lg font-bold">About ICPEP.SE</h3>
             <p className="text-sm text-slate-400">
-              Integration of Computer Professionals and Educators Portal dedicated to fostering community and professional growth in technology and education.
+              It is a non-stock, non-profit professional organization for computer engineers, educators, students, and industry practitioners in the Philippines
             </p>
           </div>
 
@@ -53,15 +71,24 @@ export default function Footer() {
 
           <div>
             <h3 className="mb-3 text-lg font-bold">Contact</h3>
-            <p className="mb-2 text-sm text-slate-400">
-              Email:{' '}
-              <a href="mailto:info@icpep.se" className="transition hover:text-white">
-                info@icpep.se
+            <div className="space-y-3 text-sm text-slate-400">
+              <a
+                href="mailto:icpep.se.catsuchapter@gmail.com"
+                className="inline-flex items-center gap-2 transition hover:text-white"
+              >
+                <Mail className="h-4 w-4" />
+                <span>icpep.se.catsuchapter@gmail.com</span>
               </a>
-            </p>
-            <p className="text-sm text-slate-400">
-              Follow us on social media for updates and events.
-            </p>
+              <a
+                href='https://www.facebook.com/Icpep.seCatSu'
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 transition hover:text-white"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                <span>Follow us on Facebook</span>
+              </a>
+            </div>
           </div>
         </div>
 

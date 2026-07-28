@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { useAuth } from '../../../context/useAuth'
+import { EVENTS } from '../../../utils/events'
 
 const AdminMembership = () => {
   const { user } = useAuth()
@@ -161,6 +162,7 @@ const AdminMembership = () => {
       const response = await api.post(`/members/${id}/approve/`, {
         membership_status: newStatus
       })
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success(`Member status updated to ${newStatus}`)
       // Update local state
       setMembers((prev) =>
@@ -197,8 +199,22 @@ const AdminMembership = () => {
     if (!editTarget) return
     setIsEditSubmitting(true)
     try {
-      const response = await api.patch(`/members/${editTarget.id}/`, editForm)
-      setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? response.data : m)))
+      // membership_status is read-only on the PATCH endpoint; send profile fields only
+      const { membership_status, ...profileFields } = editForm
+      await api.patch(`/members/${editTarget.id}/`, profileFields)
+
+      // If status changed, use the approve endpoint which handles it properly
+      if (membership_status !== editTarget.membership_status) {
+        const approveRes = await api.post(`/members/${editTarget.id}/approve/`, {
+          membership_status,
+        })
+        window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
+        setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? approveRes.data : m)))
+      } else {
+        window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
+        setMembers((prev) => prev.map((m) => (m.id === editTarget.id ? { ...m, ...profileFields } : m)))
+      }
+
       toast.success('Member updated successfully.')
       setEditTarget(null)
     } catch (err) {
@@ -221,6 +237,7 @@ const AdminMembership = () => {
     setIsDeleting(true)
     try {
       await api.delete(`/members/${deleteTarget.id}/`)
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id))
       toast.success(
         `${deleteTarget.first_name} ${deleteTarget.last_name}'s membership has been deleted.`
@@ -306,6 +323,7 @@ const AdminMembership = () => {
       
       // Prepend newly added member into local records dynamically
       setMembers((prev) => [response.data, ...prev])
+      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success('Member created successfully!')
       setIsAddModalOpen(false)
     } catch (err) {
@@ -379,9 +397,28 @@ const AdminMembership = () => {
 
   if (loading && members.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-600 border-r-2" />
-        <p className="text-sm text-slate-500 font-medium animate-pulse">Loading members database...</p>
+      <div className="space-y-6">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="h-4 w-24 animate-pulse rounded bg-slate-200 mb-3" />
+              <div className="h-8 w-16 animate-pulse rounded bg-slate-200" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="grid grid-cols-5 gap-4">
+                <div className="h-5 animate-pulse rounded bg-slate-200" />
+                <div className="h-5 animate-pulse rounded bg-slate-200" />
+                <div className="h-5 animate-pulse rounded bg-slate-200" />
+                <div className="h-5 animate-pulse rounded bg-slate-200" />
+                <div className="h-5 animate-pulse rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -1152,6 +1189,7 @@ const AdminMembership = () => {
           setIsRenewing(true)
           try {
             await api.post('/members/renew-all/')
+            window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success('All approved memberships set to Pending.')
             await fetchMembers()
             setIsRenewConfirmOpen(false)
@@ -1391,9 +1429,16 @@ const AdminMembership = () => {
             {/* Body */}
             <div className="px-6 py-5">
               {historyLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-sky-600" />
-                  <span className="ml-3 text-sm text-slate-500">Loading transactions…</span>
+                <div className="space-y-4 py-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="grid grid-cols-5 gap-4">
+                      <div className="h-5 animate-pulse rounded bg-slate-200" />
+                      <div className="h-5 animate-pulse rounded bg-slate-200" />
+                      <div className="h-5 animate-pulse rounded bg-slate-200" />
+                      <div className="h-5 animate-pulse rounded bg-slate-200" />
+                      <div className="h-5 animate-pulse rounded bg-slate-200" />
+                    </div>
+                  ))}
                 </div>
               ) : historyTransactions.length === 0 ? (
                 <div className="py-12 text-center text-sm text-slate-400">

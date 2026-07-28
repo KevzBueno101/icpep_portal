@@ -91,9 +91,23 @@ export default function MemberAnnouncements() {
 
       {/* Feed List */}
       {annLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200 rounded-3xl shadow-sm">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-600 mb-4" />
-          <p className="text-slate-600 font-medium">Loading announcements...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200" />
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+              </div>
+              <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-200" />
+              <div className="mt-3 space-y-2">
+                <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
+                <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200" />
+              </div>
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredAnnouncements.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-200 rounded-3xl text-center px-4">

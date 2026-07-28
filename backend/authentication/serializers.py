@@ -151,7 +151,7 @@ class UserSerializer(serializers.ModelSerializer):
         return getattr(obj, 'role', 'ADMIN' if getattr(obj, 'is_staff', False) or getattr(obj, 'is_superuser', False) else 'MEMBER')
 
     def get_position(self, obj):
-        return getattr(obj, 'position', 'PRESIDENT' if getattr(obj, 'is_staff', False) or getattr(obj, 'is_superuser', False) else 'NONE')
+        return getattr(obj, 'position', 'NONE')
 
     def get_is_term_expired(self, obj):
         if hasattr(obj, 'is_term_expired'):

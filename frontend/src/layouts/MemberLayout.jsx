@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
 import { useMember } from '../context/MemberContext'
-import { OfficersProvider } from '../context/OfficersContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
 import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
+import PageSkeleton from '../components/skeletons/PageSkeleton'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, DollarSign } from 'lucide-react'
 
 export default function MemberLayout({ children }) {
@@ -15,11 +15,7 @@ export default function MemberLayout({ children }) {
   const isLoading = authLoading || profileLoading
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-600" />
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   if (!profile) {
@@ -46,8 +42,7 @@ export default function MemberLayout({ children }) {
   }
 
   return (
-    <OfficersProvider>
-      <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pt-14 md:pt-16 pb-28 md:pb-8 transition-colors duration-200">
         {/* Desktop Header */}
         <DesktopMemberNavbar
           user={user}
@@ -211,6 +206,5 @@ export default function MemberLayout({ children }) {
         </div>
       )}
       </div>
-    </OfficersProvider>
   )
 }

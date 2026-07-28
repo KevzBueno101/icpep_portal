@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'milestones',
     'announcements',
     'audit_logs',
+    'common',
 ]
 
 # Channels

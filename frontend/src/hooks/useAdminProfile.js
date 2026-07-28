@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
+import { EVENTS } from '../utils/events'
 
 export default function useAdminProfile() {
   const [profile, setProfile] = useState(null)
@@ -28,8 +29,16 @@ export default function useAdminProfile() {
 
   useEffect(() => {
     const handler = () => fetchProfile()
-    window.addEventListener('profile-updated', handler)
-    return () => window.removeEventListener('profile-updated', handler)
+    window.addEventListener(EVENTS.PROFILE_UPDATED, handler)
+    return () => window.removeEventListener(EVENTS.PROFILE_UPDATED, handler)
+  }, [fetchProfile])
+
+  useEffect(() => {
+    const onFocus = () => {
+      document.visibilityState === 'visible' && fetchProfile()
+    }
+    document.addEventListener('visibilitychange', onFocus)
+    return () => document.removeEventListener('visibilitychange', onFocus)
   }, [fetchProfile])
 
   // Use _cb=timestamp for browser cache-busting

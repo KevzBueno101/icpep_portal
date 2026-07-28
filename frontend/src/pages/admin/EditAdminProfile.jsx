@@ -4,6 +4,8 @@ import { ArrowLeft, AlertTriangle, Camera, X } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import { EVENTS } from '../../utils/events'
+import Skeleton from '../../components/Skeleton'
 
 
 export default function EditAdminProfile({ triggerRefresh }) {
@@ -237,7 +239,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
       // Refresh leadership board across all pages
       window.dispatchEvent(new Event('officers-refresh'))
       // Notify all profile consumers to refetch
-      window.dispatchEvent(new CustomEvent('profile-updated'))
+      window.dispatchEvent(new CustomEvent(EVENTS.PROFILE_UPDATED))
       setTimeout(() => navigate('/admin/profile'), 350)
     } catch (err) {
       const detail = err?.response?.data?.detail
@@ -251,8 +253,41 @@ export default function EditAdminProfile({ triggerRefresh }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+      <div className="mx-auto max-w-3xl space-y-6 py-10">
+        <Skeleton className="h-4 w-24" />
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="h-32 w-full bg-gradient-to-r from-slate-100 to-slate-200 animate-pulse" />
+          <div className="px-6 pb-6 -mt-12">
+            <div className="flex items-end gap-4">
+              <Skeleton className="h-24 w-24 rounded-full ring-4 ring-white" />
+              <div className="space-y-2 pb-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <Skeleton className="mt-6 h-10 w-32" />
+        </div>
       </div>
     )
   }

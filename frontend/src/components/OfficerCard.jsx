@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { MoreVertical } from 'lucide-react'
 
 export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
-  const { fullName, position, office, academicYear, username, avatarUrl } = officer || {}
+  const { fullName, position, office, academicYear, email, username, avatarUrl } = officer || {}
   const [imageError, setImageError] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -106,8 +106,13 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
           )}
         </div>
 
-        {username ? (
-          <p className="mt-2 text-xs text-slate-400 line-clamp-1">@{username}</p>
+        {email || username ? (
+          <a
+            href={email ? `mailto:${email}` : undefined}
+            className="mt-2 inline-block text-xs text-slate-400 line-clamp-1 transition hover:text-slate-600"
+          >
+            {email || username}
+          </a>
         ) : null}
       </div>
     </article>

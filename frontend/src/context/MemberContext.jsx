@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import api from '../api/axios'
 import { useAuth } from './useAuth'
 import toast from 'react-hot-toast'
+import { EVENTS } from '../utils/events'
 
 const MemberContext = createContext(null)
 
@@ -79,6 +80,40 @@ export const MemberProvider = ({ children }) => {
     fetchPaymentSettings()
     fetchAnnouncements()
   }, [user, authLoading, fetchProfile, fetchPaymentSettings, fetchAnnouncements])
+
+  useEffect(() => {
+    const onProfileUpdated = () => {
+      fetchProfile()
+      fetchPaymentSettings()
+    }
+    const onAnnouncementsUpdated = () => fetchAnnouncements()
+    const onPaymentSettingsUpdated = () => fetchPaymentSettings()
+    const onMemberListUpdated = () => fetchProfile()
+
+    window.addEventListener(EVENTS.PROFILE_UPDATED, onProfileUpdated)
+    window.addEventListener(EVENTS.ANNOUNCEMENTS_UPDATED, onAnnouncementsUpdated)
+    window.addEventListener(EVENTS.PAYMENT_SETTINGS_UPDATED, onPaymentSettingsUpdated)
+    window.addEventListener(EVENTS.MEMBER_LIST_UPDATED, onMemberListUpdated)
+    window.addEventListener('announcementUpdated', onAnnouncementsUpdated)
+    window.addEventListener('announcementDeleted', onAnnouncementsUpdated)
+
+    return () => {
+      window.removeEventListener(EVENTS.PROFILE_UPDATED, onProfileUpdated)
+      window.removeEventListener(EVENTS.ANNOUNCEMENTS_UPDATED, onAnnouncementsUpdated)
+      window.removeEventListener(EVENTS.PAYMENT_SETTINGS_UPDATED, onPaymentSettingsUpdated)
+      window.removeEventListener(EVENTS.MEMBER_LIST_UPDATED, onMemberListUpdated)
+      window.removeEventListener('announcementUpdated', onAnnouncementsUpdated)
+      window.removeEventListener('announcementDeleted', onAnnouncementsUpdated)
+    }
+  }, [fetchProfile, fetchPaymentSettings, fetchAnnouncements])
+
+  useEffect(() => {
+    const onFocus = () => {
+      document.visibilityState === 'visible' && fetchProfile()
+    }
+    document.addEventListener('visibilitychange', onFocus)
+    return () => document.removeEventListener('visibilitychange', onFocus)
+  }, [fetchProfile])
 
   const value = {
     profile,

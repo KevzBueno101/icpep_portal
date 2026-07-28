@@ -128,10 +128,21 @@ export default function AnnouncementDetail() {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-screen flex items-start justify-center p-6"
         style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
       >
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-600" />
+        <div className="mt-20 w-full max-w-3xl space-y-6">
+          <div className="h-4 w-20 animate-pulse rounded bg-slate-700" />
+          <div className="h-8 w-3/4 animate-pulse rounded bg-slate-700" />
+          <div className="h-5 w-32 animate-pulse rounded-full bg-slate-700" />
+          <div className="space-y-3 pt-4">
+            <div className="h-4 w-full animate-pulse rounded bg-slate-700" />
+            <div className="h-4 w-5/6 animate-pulse rounded bg-slate-700" />
+            <div className="h-4 w-4/6 animate-pulse rounded bg-slate-700" />
+            <div className="h-4 w-full animate-pulse rounded bg-slate-700" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700" />
+          </div>
+        </div>
       </div>
     )
   }

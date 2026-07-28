@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { EVENTS } from '../../utils/events'
 import { User, Camera, Save, X, Edit2 } from 'lucide-react'
 
 const YEAR_LABEL_BY_VALUE = {
@@ -43,6 +44,13 @@ export default function MemberProfile() {
     address: '',
     birthdate: '',
   })
+
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
+  })
+  const resetPasswordForm = () => setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -165,12 +173,34 @@ export default function MemberProfile() {
         await api.patch(`/members/${profile.id}/`, patchBase)
       }
 
+      // Change password if requested
+      if (passwordForm.new_password) {
+        if (!passwordForm.current_password) {
+          toast.error('Current password is required to change password.')
+          return
+        }
+        if (passwordForm.new_password !== passwordForm.confirm_password) {
+          toast.error('New password and confirmation do not match.')
+          return
+        }
+        if (passwordForm.new_password.length < 8) {
+          toast.error('New password must be at least 8 characters.')
+          return
+        }
+        await api.post('/auth/change-password/', {
+          current_password: passwordForm.current_password,
+          new_password: passwordForm.new_password,
+          confirm_password: passwordForm.confirm_password,
+        })
+      }
+
       await refreshUser()
       await refreshProfile()
 
-      window.dispatchEvent(new CustomEvent('profile-updated'))
+      window.dispatchEvent(new CustomEvent(EVENTS.PROFILE_UPDATED))
 
       toast.success('Profile updated successfully!')
+      resetPasswordForm()
       setEditMode(false)
       setSelectedFile(null)
       setPreviewUrl(null)
@@ -183,7 +213,7 @@ export default function MemberProfile() {
   }
 
   const avatarInitial = getInitials(profile?.first_name || user?.first_name)
-  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}#cache=${profileCacheKey}` : null)
+  const displayAvatar = previewUrl || (profile?.profile_picture ? `${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${profileCacheKey}` : null)
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -356,6 +386,54 @@ export default function MemberProfile() {
           </div>
         </div>
       </div>
+
+      {editMode && (
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <svg className="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Change Password
+            </h2>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <p className="text-sm text-slate-500">Leave blank to keep your current password.</p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm((s) => ({ ...s, current_password: e.target.value }))}
+                  placeholder="Required to change"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm((s) => ({ ...s, new_password: e.target.value }))}
+                  placeholder="Min 8 characters"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) => setPasswordForm((s) => ({ ...s, confirm_password: e.target.value }))}
+                  placeholder="Re-enter new password"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment History */}
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">

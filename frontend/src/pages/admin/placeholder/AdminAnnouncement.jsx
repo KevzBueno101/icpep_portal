@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../../api/axios'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
+import { EVENTS } from '../../../utils/events'
+import CardSkeleton from '../../../components/skeletons/CardSkeleton'
+import { CheckCircle2 } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -27,6 +31,10 @@ const AdminAnnouncement = () => {
   const [loading, setLoading] = useState(true)
 
   const [saving, setSaving] = useState(false)
+
+  const [localOrderIds, setLocalOrderIds] = useState([])
+  const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
 
   // Collapsible form
   const [showForm, setShowForm] = useState(false)
@@ -66,6 +74,25 @@ const AdminAnnouncement = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (announcements.length > 0) {
+      setLocalOrderIds(announcements.map((a) => a.id))
+    }
+  }, [announcements])
+
+  const handleReorder = useCallback(async (orderedIds) => {
+    setLocalOrderIds(orderedIds)
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    try {
+      await api.post('/announcements/admin/reorder/', { ordered_ids: orderedIds })
+      setSaved(true)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
+    } catch {
+      toast.error('Failed to save order.')
+      setLocalOrderIds(announcements.map((a) => a.id))
+    }
+  }, [announcements])
 
   const handleCreate = () => {
     setEditingAnnouncement(null)
@@ -135,6 +162,7 @@ const AdminAnnouncement = () => {
         // Upload images for newly created announcement
         await uploadImages(created.id, selectedImages)
         notifyAnnouncementUpdated(created.id)
+        window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
         setShowForm(false)
         setEditingAnnouncement(null)
         setFormData(emptyForm)
@@ -146,6 +174,7 @@ const AdminAnnouncement = () => {
       // If edit mode, upload images after updating
       await uploadImages(editingAnnouncement.id, selectedImages)
       notifyAnnouncementUpdated(editingAnnouncement.id)
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
 
       setShowForm(false)
       setExpandedAnnouncementId(null)
@@ -167,6 +196,7 @@ const AdminAnnouncement = () => {
       await api.delete(`/announcements/admin/${deletingAnnouncement.id}/`)
       toast.success('Announcement deleted.')
       notifyAnnouncementDeleted(deletingAnnouncement.id)
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
       setDeletingAnnouncement(null)
       fetchAnnouncements()
     } catch (err) {
@@ -179,6 +209,7 @@ const AdminAnnouncement = () => {
       await api.patch(`/announcements/admin/${announcement.id}/`, {
         pinned: !announcement.pinned,
       })
+      window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
       fetchAnnouncements()
     } catch (err) {
       toast.error('Failed to update pinned status.')
@@ -234,6 +265,12 @@ const AdminAnnouncement = () => {
   const endIndex = startIndex + itemsPerPage
   const displayedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex)
 
+  const orderedDisplayedAnnouncements = useMemo(() => {
+    if (localOrderIds.length === 0) return displayedAnnouncements
+    const map = new Map(displayedAnnouncements.map((a) => [a.id, a]))
+    return localOrderIds.map((id) => map.get(id)).filter(Boolean)
+  }, [displayedAnnouncements, localOrderIds])
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -255,11 +292,7 @@ const AdminAnnouncement = () => {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-t-2 border-sky-600" />
-      </div>
-    )
+    return <CardSkeleton count={4} />
   }
 
   return (
@@ -267,7 +300,12 @@ const AdminAnnouncement = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Announcements</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-slate-900">Announcements</h2>
+            <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
+              <CheckCircle2 className="h-4 w-4" /> Saved
+            </span>
+          </div>
         </div>
         <button
           type="button"
@@ -517,11 +555,15 @@ const AdminAnnouncement = () => {
             {announcements.length === 0 ? 'No announcements yet.' : 'No announcements match your search or filter.'}
           </div>
         ) : (
-          displayedAnnouncements.map((announcement) => {
-            const isCardEditing = announcement.id === expandedAnnouncementId
-            return (
-              <div key={announcement.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                {isCardEditing ? (
+          <SortableList
+            items={orderedDisplayedAnnouncements}
+            onReorder={handleReorder}
+            className="space-y-4"
+            renderItem={(announcement) => {
+              const isCardEditing = announcement.id === expandedAnnouncementId
+              return (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  {isCardEditing ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -771,7 +813,8 @@ const AdminAnnouncement = () => {
                 )}
               </div>
             )
-          })
+            }}
+          />
         )}
       </div>
 

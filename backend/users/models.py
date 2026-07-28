@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff',      True)
         extra_fields.setdefault('is_superuser',  True)
         extra_fields.setdefault('role',          'ADMIN')
-        extra_fields.setdefault('position',      'PRESIDENT')
+        extra_fields.setdefault('position',      'NONE')
         extra_fields.setdefault('term_start',    timezone.now().date())
         return self.create_user(email, password, **extra_fields)
 
@@ -77,6 +77,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=AccessLevel.choices,
         default=AccessLevel.FULL_CONTROL,
     )
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

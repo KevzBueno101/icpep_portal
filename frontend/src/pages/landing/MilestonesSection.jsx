@@ -12,6 +12,14 @@ const CATEGORIES = {
 }
 
 
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T00:00:00')
+  const month = d.toLocaleDateString('en-US', { month: 'long' })
+  const day = d.getDate().toString().padStart(2, '0')
+  const year = d.getFullYear().toString()
+  return `${month} ${day} ${year}`
+}
 
 function SkeletonCard() {
   return (
@@ -351,7 +359,7 @@ export default function MilestonesSection() {
                             className="text-sm font-mono font-semibold tracking-wider"
                             style={{ color: cat.accent }}
                           >
-                            {milestone.date}
+                            {formatDate(milestone.date)}
                           </span>
                         </div>
                       )}
@@ -388,7 +396,7 @@ export default function MilestonesSection() {
                             className="text-sm font-mono font-semibold tracking-wider"
                             style={{ color: cat.accent }}
                           >
-                            {milestone.date}
+                            {formatDate(milestone.date)}
                           </span>
                         </div>
                       )}

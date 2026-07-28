@@ -9,6 +9,7 @@ urlpatterns = [
 
     # Admin endpoints
     path('admin/', views.MilestoneAdminListCreateAPIView.as_view(), name='milestone-admin-list'),
+    path('admin/reorder/', views.MilestoneReorderAPIView.as_view(), name='milestone-reorder'),
     path('admin/<int:id>/', views.MilestoneAdminDetailView.as_view(), name='milestone-admin-detail'),
     path('admin/<int:milestone_id>/images/', views.MilestoneImageUploadAPIView.as_view(), name='milestone-image-upload'),
     path('admin/images/<int:image_id>/', views.MilestoneImageUploadAPIView.as_view(), name='milestone-image-delete'),

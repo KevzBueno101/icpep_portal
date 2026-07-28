@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { Upload, Info } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
+import PageSkeleton from '../../components/skeletons/PageSkeleton'
 
 // How often to silently poll for approval status (in milliseconds)
 const POLL_INTERVAL_MS = 8000 // every 8 seconds
@@ -68,11 +69,7 @@ const MembershipPending = () => {
   // ─── Early returns (guards) ───────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-t-2 border-sky-600" />
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   if (!user) {

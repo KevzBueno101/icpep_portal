@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useRef, useCallback } from 'react'
 import AuthContext from './authState'
 import api, { publicApi } from '../api/axios'
 import {
@@ -7,10 +7,12 @@ import {
   ADMIN_ACCESS_KEY,
   ADMIN_REFRESH_KEY,
 } from '../api/axios'
+import { EVENTS } from '../utils/events'
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const refreshUserRef = useRef(null)
 
   useEffect(() => {
     // One-time migration: clear old single-key tokens from previous implementation
@@ -62,6 +64,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
+  useEffect(() => {
+    const onProfileUpdated = () => refreshUserRef.current?.()
+    window.addEventListener(EVENTS.PROFILE_UPDATED, onProfileUpdated)
+    return () => window.removeEventListener(EVENTS.PROFILE_UPDATED, onProfileUpdated)
+  }, [])
+
   const login = async (email, password) => {
     // Clear any existing admin tokens first to avoid collision
     localStorage.removeItem(ADMIN_ACCESS_KEY)
@@ -78,11 +86,15 @@ export const AuthProvider = ({ children }) => {
     return me.data
   }
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const me = await api.get('/auth/me/')
     setUser(me.data)
     return me.data
-  }
+  }, [])
+
+  useEffect(() => {
+    refreshUserRef.current = refreshUser
+  }, [refreshUser])
 
   const adminLogin = async (email, password) => {
     // Clear any existing member tokens first to avoid collision

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 
 from .models import Milestone, MilestoneImage
@@ -159,3 +160,8 @@ class MilestoneImageUploadAPIView(APIView):
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MilestoneReorderAPIView(ReorderAPIView):
+    model = Milestone
+    permission_classes = [CanManageContent]

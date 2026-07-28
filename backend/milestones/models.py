@@ -20,11 +20,12 @@ class Milestone(models.Model):
         choices=Category.choices,
         default=Category.ACHIEVEMENT
     )
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-date', '-created_at']
+        ordering = ['display_order', '-date']
         verbose_name = 'Milestone'
         verbose_name_plural = 'Milestones'
 
