@@ -9,6 +9,7 @@ import MilestonesSection from './MilestonesSection'
 import MovingLogoText from './MovingLogoText'
 import { OfficersProvider } from '../../context/OfficersContext'
 import OfficersRoster from './OfficersRoster'
+import SponsorshipSection from './SponsorshipSection'
 
 
 export default function Landing() {
@@ -41,6 +42,7 @@ export default function Landing() {
           <FeatureSection />
           <MilestonesSection />
           <OfficersRoster />
+          <SponsorshipSection />
           <MovingLogoText />
         </main>
 
