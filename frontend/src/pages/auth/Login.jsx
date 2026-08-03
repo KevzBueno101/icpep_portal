@@ -56,7 +56,9 @@ const Login = () => {
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg">
         <div className="mb-8 flex flex-col items-center gap-3">
-        <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
+          <Link to="/" aria-label="Back to Home">
+            <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto transition hover:opacity-80" />
+          </Link>
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-900">ICpEP.se Portal</h1>
           <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
