@@ -52,6 +52,65 @@
         ]
       },
       {
+        "group": "Technical Reference",
+        "pages": [
+          "technology-stack",
+          "data-model",
+          "data-flow-diagram",
+          "security",
+          "deployment",
+          "environment-variables"
+        ]
+      },
+      {
+        "group": "Flows",
+        "pages": [
+          "flows/member-registration",
+          "flows/member-approval-receipt",
+          "flows/member-renewal",
+          "flows/admin-access-request",
+          "flows/announcements-push",
+          "flows/payments-receipts",
+          "flows/auth-session",
+          "flows/password-reset",
+          "flows/year-end-reset",
+          "flows/audit-logging",
+          "flows/realtime-websockets"
+        ]
+      },
+      {
+        "group": "App Screens",
+        "pages": [
+          "screens/landing",
+          "screens/register",
+          "screens/login",
+          "screens/membership-pending",
+          "screens/member-dashboard",
+          "screens/member-announcements",
+          "screens/member-id-card",
+          "screens/member-profile",
+          "screens/member-about",
+          "screens/admin-login",
+          "screens/admin-dashboard",
+          "screens/admin-membership",
+          "screens/admin-membership-verify",
+          "screens/admin-announcement",
+          "screens/admin-admins",
+          "screens/admin-officers-accounts",
+          "screens/admin-officer-id",
+          "screens/admin-achievements",
+          "screens/admin-logs"
+        ]
+      },
+      {
+        "group": "Appendices",
+        "pages": [
+          "glossary",
+          "troubleshooting",
+          "maintenance-handover"
+        ]
+      },
+      {
         "group": "API Reference",
         "pages": [
           "api-reference/auth",
