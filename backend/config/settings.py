@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'announcements',
     'audit_logs',
     'common',
+    'push',
 ]
 
 # Channels
@@ -351,3 +352,8 @@ PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
 # Audit log retention policy (days)
 AUDIT_LOG_RETENTION_DAYS = 90
+
+# Web Push (VAPID) — generated once; the public key is served to the frontend
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIMS_EMAIL = os.getenv('VAPID_CLAIMS_EMAIL', 'icpep.se.catsuchapter@gmail.com')

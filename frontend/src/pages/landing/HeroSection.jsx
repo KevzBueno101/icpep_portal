@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startHeroParticles } from './_heroParticles'
 import { publicApi } from '../../api/axios'
+import { registerLogoTap } from '../../utils/logoSecretTaps'
 
 // ── Value Card (Mission / Vision / Goals) ─────────────────────────────────────
 function ValueCard({ title, text, accent }) {
@@ -38,6 +39,12 @@ export default function HeroSection() {
     const stop = startHeroParticles(canvas, { accent: '#06B6D4' })
     return () => stop && stop()
   }, [])
+
+  const handleLogoTap = () => {
+    if (registerLogoTap()) {
+      navigate('/admin-portal/login')
+    }
+  }
 
   useEffect(() => {
     const fetchPinnedAnnouncements = async () => {
@@ -144,10 +151,13 @@ export default function HeroSection() {
           ].map((logo) => (
             <div
               key={logo.alt}
+              onClick={logo.large ? handleLogoTap : undefined}
+              role={logo.large ? 'button' : undefined}
+              aria-label={logo.large ? 'ICpEP.SE Logo' : undefined}
               className={`
                 ${
                   logo.large
-                    ? "h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 scale-110 z-10"
+                    ? "h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 scale-110 z-10 cursor-pointer"
                     : "h-14 w-14 sm:h-18 sm:w-18 md:h-24 md:w-24"
                 }
                 rounded-full

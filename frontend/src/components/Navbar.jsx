@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   subscribeInstallPrompt,
   getInstallPrompt,
@@ -9,7 +9,6 @@ import {
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [installPrompt, setInstallPrompt] = useState(getInstallPrompt())
-  const navigate = useNavigate()
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((isOpen) => !isOpen)
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
@@ -17,35 +16,6 @@ export default function Navbar() {
   useEffect(() => {
     return subscribeInstallPrompt(setInstallPrompt)
   }, [])
-
-  const TAP_WINDOW = 2500
-  const TAP_COUNT = 5
-  const TAPS_KEY = 'icpep-logo-taps'
-
-  const readTapTimes = () => {
-    try {
-      const stored = sessionStorage.getItem(TAPS_KEY)
-      const parsed = stored ? JSON.parse(stored) : []
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  }
-
-  const handleLogoTap = (e) => {
-    const now = Date.now()
-    const recentTaps = readTapTimes().filter((t) => now - t < TAP_WINDOW)
-    recentTaps.push(now)
-
-    if (recentTaps.length >= TAP_COUNT) {
-      sessionStorage.removeItem(TAPS_KEY)
-      e.preventDefault()
-      navigate('/admin-portal/login')
-      return
-    }
-
-    sessionStorage.setItem(TAPS_KEY, JSON.stringify(recentTaps))
-  }
 
   const isIOS = () => /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
   const isStandalone = () =>
@@ -79,7 +49,7 @@ export default function Navbar() {
               <div className="w-px h-5 bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
               <div className="w-1 h-1 rounded-full bg-cyan-400/60 animate-pulse shadow-[0_0_4px_rgba(34,211,238,0.6)]" />
             </div>
-            <Link to="/" className="flex items-center gap-3 text-white" onClick={(e) => { closeMobileMenu(); handleLogoTap(e) }}>
+            <Link to="/" className="flex items-center gap-3 text-white" onClick={closeMobileMenu}>
               <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-9 w-auto" />
               <span className="text-lg font-bold text-slate-900">ICpEP.SE</span>
             </Link>
