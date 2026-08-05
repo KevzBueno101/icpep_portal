@@ -1,4 +1,4 @@
-import { publicApi } from '../api/axios'
+import api, { publicApi } from '../api/axios'
 
 const SUBSCRIBE_URL = '/push/subscribe/'
 const UNSUBSCRIBE_URL = '/push/unsubscribe/'
@@ -62,7 +62,7 @@ export async function enableNotifications() {
     applicationServerKey: urlBase64ToUint8Array(vapidKey),
   })
 
-  const { data } = await publicApi.post(SUBSCRIBE_URL, subscription.toJSON())
+  const { data } = await api.post(SUBSCRIBE_URL, subscription.toJSON())
   return data
 }
 
@@ -78,7 +78,7 @@ export async function disableNotifications() {
     const endpoint = subscription.endpoint
     await subscription.unsubscribe()
     try {
-      await publicApi.post(UNSUBSCRIBE_URL, { endpoint })
+      await api.post(UNSUBSCRIBE_URL, { endpoint })
     } catch {
       // Server may be unreachable; the local unsubscribe still takes effect.
     }

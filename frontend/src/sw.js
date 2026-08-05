@@ -73,8 +73,6 @@ const NOTIFICATION_DEFAULTS = {
 }
 
 self.addEventListener('push', (event) => {
-  if (!(self.Notification && self.Notification.permission === 'granted')) return
-
   let payload = {}
   try {
     payload = event.data ? event.data.json() : {}
@@ -85,12 +83,14 @@ self.addEventListener('push', (event) => {
   const notification = { ...NOTIFICATION_DEFAULTS, ...payload }
 
   event.waitUntil(
-    self.registration.showNotification(notification.title, {
-      body: notification.body,
-      icon: notification.icon,
-      badge: notification.badge,
-      data: { url: notification.url },
-    })
+    self.registration
+      .showNotification(notification.title, {
+        body: notification.body,
+        icon: notification.icon,
+        badge: notification.badge,
+        data: { url: notification.url },
+      })
+      .catch(() => {})
   )
 })
 

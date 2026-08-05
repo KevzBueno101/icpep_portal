@@ -34,6 +34,7 @@ def send_push(subscription, payload):
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims=_vapid_claims(),
             ttl=86400,
+            content_encoding='aes128gcm',
         )
         return True
     except WebPushException as exc:
