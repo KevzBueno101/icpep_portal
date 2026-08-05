@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   subscribeInstallPrompt,
   getInstallPrompt,
@@ -9,6 +9,8 @@ import {
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [installPrompt, setInstallPrompt] = useState(getInstallPrompt())
+  const tapTimesRef = useRef([])
+  const navigate = useNavigate()
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((isOpen) => !isOpen)
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
@@ -16,6 +18,18 @@ export default function Navbar() {
   useEffect(() => {
     return subscribeInstallPrompt(setInstallPrompt)
   }, [])
+
+  const handleLogoTap = (e) => {
+    const now = Date.now()
+    tapTimesRef.current = tapTimesRef.current.filter((t) => now - t < 2500)
+    tapTimesRef.current.push(now)
+
+    if (tapTimesRef.current.length >= 5) {
+      tapTimesRef.current = []
+      e.preventDefault()
+      navigate('/admin-portal/login')
+    }
+  }
 
   const isIOS = () => /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
   const isStandalone = () =>
@@ -49,7 +63,7 @@ export default function Navbar() {
               <div className="w-px h-5 bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
               <div className="w-1 h-1 rounded-full bg-cyan-400/60 animate-pulse shadow-[0_0_4px_rgba(34,211,238,0.6)]" />
             </div>
-            <Link to="/" className="flex items-center gap-3 text-white" onClick={closeMobileMenu}>
+            <Link to="/" className="flex items-center gap-3 text-white" onClick={(e) => { closeMobileMenu(); handleLogoTap(e) }}>
               <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-9 w-auto" />
               <span className="text-lg font-bold text-slate-900">ICpEP.SE</span>
             </Link>
