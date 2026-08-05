@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   subscribeInstallPrompt,
@@ -9,7 +9,6 @@ import {
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [installPrompt, setInstallPrompt] = useState(getInstallPrompt())
-  const tapTimesRef = useRef([])
   const navigate = useNavigate()
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((isOpen) => !isOpen)
@@ -19,16 +18,33 @@ export default function Navbar() {
     return subscribeInstallPrompt(setInstallPrompt)
   }, [])
 
+  const TAP_WINDOW = 2500
+  const TAP_COUNT = 5
+  const TAPS_KEY = 'icpep-logo-taps'
+
+  const readTapTimes = () => {
+    try {
+      const stored = sessionStorage.getItem(TAPS_KEY)
+      const parsed = stored ? JSON.parse(stored) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
   const handleLogoTap = (e) => {
     const now = Date.now()
-    tapTimesRef.current = tapTimesRef.current.filter((t) => now - t < 2500)
-    tapTimesRef.current.push(now)
+    const recentTaps = readTapTimes().filter((t) => now - t < TAP_WINDOW)
+    recentTaps.push(now)
 
-    if (tapTimesRef.current.length >= 5) {
-      tapTimesRef.current = []
+    if (recentTaps.length >= TAP_COUNT) {
+      sessionStorage.removeItem(TAPS_KEY)
       e.preventDefault()
       navigate('/admin-portal/login')
+      return
     }
+
+    sessionStorage.setItem(TAPS_KEY, JSON.stringify(recentTaps))
   }
 
   const isIOS = () => /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
