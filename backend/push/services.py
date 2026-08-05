@@ -1,6 +1,7 @@
 import json
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from django.conf import settings
 from pywebpush import WebPushException, webpush
@@ -66,10 +67,12 @@ def send_announcement_push(announcement):
             'badge': '/pwa-192x192.png',
         }
 
-        for subscription in subs:
-            try:
-                send_push(subscription, payload)
-            except Exception:
-                logger.exception('Unexpected error sending push to %s', subscription.endpoint)
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            futures = [pool.submit(send_push, sub, payload) for sub in subs]
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception:
+                    logger.exception('Unexpected error sending push')
 
     threading.Thread(target=_run, daemon=True).start()
