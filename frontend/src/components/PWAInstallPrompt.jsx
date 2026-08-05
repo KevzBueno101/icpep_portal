@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { setInstallPrompt, clearInstallPrompt, getInstallPrompt } from '../utils/installPrompt'
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
@@ -6,11 +7,8 @@ export default function PWAInstallPrompt() {
   const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
-    // Check if already dismissed or installed
     const dismissed = localStorage.getItem('pwa-prompt-dismissed')
-    if (dismissed) return
 
-    // Detect iOS
     const ios = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
     
@@ -18,29 +16,55 @@ export default function PWAInstallPrompt() {
 
     if (ios) {
       setIsIOS(true)
-      setTimeout(() => setShowModal(true), 3000)
+      if (!dismissed) setTimeout(() => setShowModal(true), 3000)
       return
     }
 
-    // Android / Desktop Chrome
+    // Android / Desktop Chrome — always capture so the navbar button can re-trigger install
     const handler = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      setTimeout(() => setShowModal(true), 3000)
+      setInstallPrompt(e)
+      if (!dismissed) setTimeout(() => setShowModal(true), 3000)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
+  useEffect(() => {
+    const handleInstalled = () => {
+      localStorage.setItem('pwa-prompt-dismissed', 'true')
+      setDeferredPrompt(null)
+      clearInstallPrompt()
+      setShowModal(false)
+    }
+
+    window.addEventListener('appinstalled', handleInstalled)
+    return () => window.removeEventListener('appinstalled', handleInstalled)
+  }, [])
+
+  useEffect(() => {
+    const handleOpen = () => {
+      const ios = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
+      setIsIOS(ios)
+      setShowModal(true)
+    }
+
+    window.addEventListener('icpep-open-install-prompt', handleOpen)
+    return () => window.removeEventListener('icpep-open-install-prompt', handleOpen)
+  }, [])
+
   const handleInstall = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
+    const prompt = deferredPrompt || getInstallPrompt()
+    if (!prompt) return
+    prompt.prompt()
+    const { outcome } = await prompt.userChoice
     if (outcome === 'accepted') {
       localStorage.setItem('pwa-prompt-dismissed', 'true')
     }
     setDeferredPrompt(null)
+    clearInstallPrompt()
     setShowModal(false)
   }
 

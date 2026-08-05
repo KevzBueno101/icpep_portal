@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AnnouncementCard from '../../components/AnnouncementCard'
+import NotificationToggle from '../../components/NotificationToggle'
 import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 
@@ -57,16 +58,19 @@ export default function AnnouncementFeed() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-sky-600">
-            Community Highlights
-          </p>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Latest Announcements
-          </h2>
-          <p className="mt-4 max-w-2xl text-lg text-slate-600">
-            Stay updated with the latest news, events, and opportunities from our community.
-          </p>
+        <div className="mb-12 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-sky-600">
+              Community Highlights
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
+              Latest Announcements
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg text-slate-600">
+              Stay updated with the latest news, events, and opportunities from our community.
+            </p>
+          </div>
+          <NotificationToggle className="mt-2" />
         </div>
 
         {loading ? (

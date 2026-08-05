@@ -1,11 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  subscribeInstallPrompt,
+  getInstallPrompt,
+  clearInstallPrompt,
+} from '../utils/installPrompt'
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState(getInstallPrompt())
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((isOpen) => !isOpen)
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
+
+  useEffect(() => {
+    return subscribeInstallPrompt(setInstallPrompt)
+  }, [])
+
+  const isIOS = () => /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
+  const isStandalone = () =>
+    window.matchMedia?.('(display-mode: standalone)').matches
+
+  const handleInstall = () => {
+    if (installPrompt) {
+      installPrompt.prompt()
+      installPrompt.userChoice?.then?.(({ outcome }) => {
+        if (outcome === 'accepted') {
+          localStorage.setItem('pwa-prompt-dismissed', 'true')
+        }
+      })
+      setInstallPrompt(null)
+      clearInstallPrompt()
+      return
+    }
+
+    window.dispatchEvent(new Event('icpep-open-install-prompt'))
+  }
+
+  const showInstallButton = installPrompt || (isIOS() && !isStandalone())
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/60 bg-white/60 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.55),0_10px_30px_rgba(2,132,199,0.12)]">
@@ -50,6 +82,29 @@ export default function Navbar() {
               >
                 Officers
               </a>
+              {showInstallButton && (
+                <button
+                  type="button"
+                  onClick={handleInstall}
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span>Install App</span>
+                </button>
+              )}
               <Link
                 to="/login"
                 className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
@@ -124,6 +179,32 @@ export default function Navbar() {
             >
               Officers
             </a>
+            {showInstallButton && (
+              <button
+                type="button"
+                onClick={() => {
+                  closeMobileMenu()
+                  handleInstall()
+                }}
+                className="inline-flex w-full items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Install App</span>
+              </button>
+            )}
             <Link
               to="/login"
               onClick={closeMobileMenu}

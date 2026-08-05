@@ -7,6 +7,7 @@ from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
 from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
+from push.services import send_announcement_push
 
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
@@ -66,6 +67,10 @@ class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
             },
             request=self.request
         )
+
+        # Push notification to subscribed devices
+        if announcement.is_published:
+            send_announcement_push(announcement)
 
 
 class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

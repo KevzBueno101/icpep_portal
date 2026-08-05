@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit
 
-python manage.py migrate
+echo "[start.sh] Running migrations..."
+python manage.py migrate --noinput
+
+echo "[start.sh] Ensuring superadmin..."
 python manage.py create_superadmin
 
-exec daphne -b 0.0.0.0 -p $PORT config.asgi:application
+echo "[start.sh] Starting daphne on 0.0.0.0:${PORT:-8000}"
+exec daphne -b 0.0.0.0 -p "${PORT:-8000}" config.asgi:application

@@ -20,7 +20,7 @@ Replace manual paper-based membership processing with a streamlined digital work
 | Feature | Description |
 |---|---|
 | **Membership Management** | Register, approve, renew, and track members |
-| **E-Receipts** | Auto-generated PDF receipts on admin approval |
+| **E-Receipts** | Auto-generated PNG receipts on admin approval |
 | **Payment Tracking** | GCash or on-hand payments with proof upload |
 | **Announcements** | Create, pin, publish, and mark as members-only |
 | **Officer ID Cards** | Digital ID cards with QR codes and roles |
@@ -29,25 +29,35 @@ Replace manual paper-based membership processing with a streamlined digital work
 
 ## System Architecture
 
+```mermaid
+flowchart LR
+    F["Frontend (React SPA — Vercel)"]
+    B["Backend (Django REST — Render)"]
+    DB[("PostgreSQL")]
+    CL[("Cloudinary — Images & Receipts")]
+    F -- "HTTP / JWT" --> B
+    B -- "SQL" --> DB
+    B -- "Uploads" --> CL
 ```
-Frontend (React) â”€â”€HTTPâ”€â”€> Backend (Django REST) â”€â”€> PostgreSQL
-                                  â”‚
-                                  â””â”€â”€> Cloudinary (Images & Receipts)
-```
+
+> See [System Architecture](/architecture) and [Technology Stack](/technology-stack) for the full diagram and detailed stack.
 
 ## Intended Users
 
-- **Chapter Members** â€” Students who register and maintain membership
-- **Chapter Officers** â€” Handle day-to-day membership operations
-- **System Administrators** â€” Full system management and configuration
+- **Chapter Members** — Students who register and maintain membership
+- **Chapter Officers** — Handle day-to-day membership operations
+- **System Administrators** — Full system management and configuration
 
 ## Technology Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Tailwind CSS |
-| Backend | Django 5, Django REST Framework |
+| Frontend | React 19, Vite, Tailwind CSS |
+| Backend | Django 5.2, Django REST Framework, Channels |
 | Database | PostgreSQL (Render) |
 | Storage | Cloudinary (images, receipts) |
-| Auth | JWT (access + refresh tokens) |
+| Auth | JWT (access 15m + refresh 7d, rotation + blacklist) |
+| Push | pywebpush (VAPID, aes128gcm) |
 | Deployment | Render (backend), Vercel (frontend) |
+
+> Full version details and rationale: [Technology Stack](/technology-stack).
