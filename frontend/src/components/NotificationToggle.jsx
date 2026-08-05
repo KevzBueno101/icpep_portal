@@ -69,6 +69,14 @@ export default function NotificationToggle({ className = '' }) {
         }
       }
     } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) return
+      if (status === 404 || status === 503) {
+        toast.error(
+          'Push notifications are not available on the server right now. Please try again later.'
+        )
+        return
+      }
       toast.error(err?.message || 'Failed to update notification settings.')
     } finally {
       setBusy(false)

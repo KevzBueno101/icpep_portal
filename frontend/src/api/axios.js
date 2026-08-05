@@ -35,8 +35,11 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
+    const status = error.response?.status
+
     if (
-      error.response?.status === 401 &&
+      status === 401 &&
+      original &&
       !original._retry &&
       !original.url?.includes('/auth/me/')
     ) {
@@ -65,20 +68,23 @@ api.interceptors.response.use(
             localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
           }
 
-
           original.headers.Authorization = `Bearer ${res.data.access}`
           return api(original)
         } catch {
-          localStorage.removeItem(MEMBER_ACCESS_KEY)
-          localStorage.removeItem(MEMBER_REFRESH_KEY)
-          localStorage.removeItem(ADMIN_ACCESS_KEY)
-          localStorage.removeItem(ADMIN_REFRESH_KEY)
-
-          const isAdminPath = window.location.pathname.startsWith('/admin')
-          window.location.href = isAdminPath
-            ? '/admin-portal/login'
-            : '/login'
+          // Refresh failed; fall through and clear the stale session below.
         }
+      }
+
+      localStorage.removeItem(MEMBER_ACCESS_KEY)
+      localStorage.removeItem(MEMBER_REFRESH_KEY)
+      localStorage.removeItem(ADMIN_ACCESS_KEY)
+      localStorage.removeItem(ADMIN_REFRESH_KEY)
+
+      if (!window.location.pathname.includes('/login')) {
+        const isAdminPath = window.location.pathname.startsWith('/admin')
+        window.location.href = isAdminPath
+          ? '/admin-portal/login'
+          : '/login'
       }
     }
 
