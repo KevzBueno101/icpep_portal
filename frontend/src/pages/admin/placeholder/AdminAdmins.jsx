@@ -59,7 +59,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
   })
 
   const canEdit = useMemo(() => user?.can_manage_roles, [user])
-  const canReviewApprovals = useMemo(() => user?.role === 'ADMIN' && String(user?.position).toLowerCase().includes('president'), [user])
+  const canReviewApprovals = useMemo(() => user?.can_manage_roles, [user])
 
   const loadPendingRequests = async () => {
     if (!canReviewApprovals) {

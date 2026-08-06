@@ -35,7 +35,7 @@ const Login = () => {
 
       // Show rate limit warning if server says 5+
       if (err.response?.status === 429) {
-        toast.error('Too many attempts. Reset your password or try again later.', { duration: 5000 })
+        toast.error('Too many attempts. Please wait 15 minutes and try again.', { duration: 5000 })
       }
 
       // Fetch server-side count to update failedCount non-intrusively

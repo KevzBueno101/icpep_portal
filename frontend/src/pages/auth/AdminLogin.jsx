@@ -50,7 +50,7 @@ const AdminLogin = () => {
       toast.error(msg)
 
       if (err.response?.status === 429) {
-        toast.error('Too many attempts. Reset your password or try again later.', { duration: 5000 })
+        toast.error('Too many attempts. Please wait 15 minutes and try again.', { duration: 5000 })
       }
 
       try {

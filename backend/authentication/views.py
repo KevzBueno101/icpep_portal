@@ -24,9 +24,13 @@ from .serializers import (
     UserSerializer,
 )
 from .utils import (
+    LOGIN_FAILURE_LIMIT,
     build_password_reset_url,
+    clear_failures,
+    clear_ip_failures,
     get_client_ip,
     recent_failures,
+    recent_ip_failures,
     record_failed_attempt,
     send_password_reset_email,
 )
@@ -104,21 +108,28 @@ class EmailTokenObtainPairView(TokenObtainPairView):
 
         # Block if too many recent failures for this email (non-critical)
         try:
-            blocked = email and recent_failures(email, minutes=15) >= 5
+            blocked = email and recent_failures(email, minutes=15) > LOGIN_FAILURE_LIMIT
         except Exception:
             blocked = False
         if blocked:
             return Response(
-                {'detail': 'Too many login attempts. Try again later or reset your password.'},
+                {'detail': 'Too many login attempts. Please wait 15 minutes and try again.'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        response = super().post(request, *args, **kwargs)
+        try:
+            response = super().post(request, *args, **kwargs)
+        except Exception:
+            # Login failed (DRF raises on invalid credentials) — record the attempt.
+            # Non-critical — must not break login.
+            if email:
+                with contextlib.suppress(Exception):
+                    record_failed_attempt(email, ip)
+            raise
 
-        # Record failed attempts (non-critical — must not break login)
-        if response.status_code >= 400 and email:
-            with contextlib.suppress(Exception):
-                record_failed_attempt(email, ip)
+        # Successful login — reset the per-email failure counter
+        with contextlib.suppress(Exception):
+            clear_failures(email)
 
         return response
 
@@ -161,7 +172,7 @@ def admin_register(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/m', block=True)
+@ratelimit(key='ip', rate='20/m', block=True)
 def check_availability(request):
     email = request.query_params.get('email', '').strip()
     username = request.query_params.get('username', '').strip()
@@ -178,35 +189,30 @@ def check_availability(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-@ratelimit(key='ip', rate='5/m', block=True)
+@ratelimit(key='ip', rate='30/m', block=True)
 def me(request):
     return Response(UserSerializer(request.user).data)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='5/15m', block=False)
 def admin_login(request):
     """
     Dedicated admin login endpoint.
     Rejects anyone who is not role=ADMIN with a position assigned.
     """
-    if getattr(request, 'limited', False):
-        return Response(
-            {'detail': 'Too many login attempts. Try again later or reset your password.'},
-            status=status.HTTP_429_TOO_MANY_REQUESTS,
-        )
     email = request.data.get('email', '')
     ip = get_client_ip(request)
 
-    # Block if too many recent failures for this email (non-critical)
+    # Block if too many recent failures for this email OR this IP (non-critical).
+    # Only failed attempts count — successful logins never consume the budget.
     try:
-        blocked = email and recent_failures(email, minutes=15) >= 5
+        blocked = (email and recent_failures(email, minutes=15) > LOGIN_FAILURE_LIMIT) or recent_ip_failures(ip, minutes=15) > LOGIN_FAILURE_LIMIT
     except Exception:
         blocked = False
     if blocked:
         return Response(
-            {'detail': 'Too many login attempts. Try again later or reset your password.'},
+            {'detail': 'Too many login attempts. Please wait 15 minutes and try again.'},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
@@ -220,6 +226,12 @@ def admin_login(request):
         access_token['role']     = getattr(user, 'role', 'ADMIN' if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False) else 'MEMBER')
         access_token['position'] = getattr(user, 'position', 'NONE')
         position = access_token['position']
+
+        # Successful login — reset failure counters for this email + IP
+        with contextlib.suppress(Exception):
+            clear_failures(email)
+        with contextlib.suppress(Exception):
+            clear_ip_failures(ip)
 
         return Response({
             'message':  f'Welcome, {position.capitalize()}!',
