@@ -34,10 +34,9 @@ const COLORS = {
 const AdminDashboard = () => {
   const { user } = useAuth()
   const [admins, setAdmins] = useState([])
-  const [members, setMembers] = useState([])
+  const [memberStats, setMemberStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [savingAdmins, setSavingAdmins] = useState([])
-  const [processingMemberId, setProcessingMemberId] = useState(null)
   const [selectedRole, setSelectedRole] = useState({})
   const [selectedPosition, setSelectedPosition] = useState({})
 
@@ -65,8 +64,6 @@ const AdminDashboard = () => {
   }, [user])
 
   const canManageRoles = !!user?.can_manage_roles
-  const isPresident = String(user?.position || '').toLowerCase().includes('president')
-  const canApproveMembers = user?.position === 'PRESIDENT' || user?.position === 'SECRETARY'
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,12 +80,8 @@ const AdminDashboard = () => {
           setAdmins([])
         }
 
-        if (canApproveMembers) {
-          const membersRes = await api.get('/members/')
-          setMembers(membersRes.data.results || [])
-        } else {
-          setMembers([])
-        }
+        const statsRes = await api.get('/members/stats/')
+        setMemberStats(statsRes.data || null)
       } catch (err) {
         toast.error('Unable to load admin dashboard data.')
         setGcashNumber('')
@@ -101,44 +94,28 @@ const AdminDashboard = () => {
     if (user) {
       loadData()
     }
-  }, [canApproveMembers, canManageRoles, user])
+  }, [canManageRoles, user])
 
-  const pendingMembers = (members || []).filter((member) => member.membership_status === 'PENDING')
-  const approvedMembers = (members || []).filter((member) => member.membership_status === 'APPROVED')
-  const rejectedMembers = (members || []).filter((member) => member.membership_status === 'REJECTED')
-  const expiredMembers = (members || []).filter((member) => member.membership_status === 'EXPIRED')
-
-
+  const statusCounts = memberStats?.status_counts || {}
   const totalAdmins = (admins || []).length
-  const totalPending = (pendingMembers || []).length
-  const totalApproved = (approvedMembers || []).length
-  const totalRejected = (rejectedMembers || []).length
-  const totalExpired = (expiredMembers || []).length
+  const totalPending = statusCounts.PENDING ?? 0
+  const totalApproved = statusCounts.APPROVED ?? 0
+  const totalRejected = statusCounts.REJECTED ?? 0
+  const totalExpired = statusCounts.EXPIRED ?? 0
+  const totalMembers = memberStats?.total ?? 0
 
-  // Prepare data for charts
-  // Membership Status Distribution has been replaced with a count-based
-  // view of how many Members and Officers have been visited/registered.
-  const membersVsOfficersDistribution = [
-    { name: 'Members', value: (members || []).length, color: '#22c55e' },
-    { name: 'Officers', value: (admins || []).length, color: '#3b82f6' },
-  ].filter(item => item.value > 0)
+  const formatMonthLabel = (monthKey) => {
+    const [year, month] = String(monthKey || '').split('-').map(Number)
+    if (!year || !month) return monthKey
+    const d = new Date(year, month - 1, 1)
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+  }
 
-
-  // Group members by month for growth chart
-  const memberGrowth = useMemo(() => {
-    const monthGroups = {}
-    ;(members || []).forEach(member => {
-      const date = new Date(member.created_at || member.updated_at)
-      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
-      if (!monthGroups[monthKey]) {
-        monthGroups[monthKey] = { month: monthKey, approved: 0, pending: 0, rejected: 0 }
-      }
-      if (member.membership_status === 'APPROVED') monthGroups[monthKey].approved++
-      else if (member.membership_status === 'PENDING') monthGroups[monthKey].pending++
-      else if (member.membership_status === 'REJECTED') monthGroups[monthKey].rejected++
-    })
-    return Object.values(monthGroups).sort((a, b) => new Date(a.month) - new Date(b.month))
-  }, [members])
+  // Monthly growth is computed server-side, chronologically sorted and zero-filled.
+  const memberGrowth = (memberStats?.monthly_growth || []).map((row) => ({
+    ...row,
+    label: formatMonthLabel(row.month),
+  }))
 
   const handleRoleChange = (id, value) => {
     setSelectedRole((prev) => ({ ...prev, [id]: value }))
@@ -182,22 +159,6 @@ const AdminDashboard = () => {
     }
   }
 
-
-  const handleMemberDecision = async (memberId, decision) => {
-    setProcessingMemberId(memberId)
-    try {
-      const res = await api.post(`/members/${memberId}/approve/`, {
-        membership_status: decision,
-      })
-      setMembers((prev) => (prev || []).map((item) => (item.id === memberId ? res.data : item)))
-      window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
-      toast.success(`Member ${decision.toLowerCase()} successfully.`)
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Unable to update member status.')
-    } finally {
-      setProcessingMemberId(null)
-    }
-  }
 
   const handleSaveGcashSettings = async () => {
     setGcashSaving(true)
@@ -326,7 +287,7 @@ const AdminDashboard = () => {
             </div>
             <p className="text-xs text-slate-500 uppercase">Total Members</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{(members || []).length}</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalMembers}</p>
           <p className="mt-1 text-xs text-slate-500">All registered members in the system.</p>
         </div>
 
@@ -374,20 +335,19 @@ const AdminDashboard = () => {
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={memberGrowth} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" />
-                <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12 }}
                   labelStyle={{ color: '#0f172a' }}
-                  formatter={(value) => [value, 'Members']}
+                  formatter={(value) => [value, 'New Members']}
                 />
                 <Legend />
 
-                {/* Total growth line (approved+pending+rejected) */}
                 <Line
                   type="monotone"
-                  dataKey={(row) => (row.approved ?? 0) + (row.pending ?? 0) + (row.rejected ?? 0)}
-                  name="Total Members"
+                  dataKey="count"
+                  name="New Members"
                   stroke="#0284c7"
                   strokeWidth={3}
                   dot={false}
@@ -397,7 +357,7 @@ const AdminDashboard = () => {
           </div>
 
           <p className="mt-3 text-xs text-slate-500">
-            Shows overall membership growth per month (derived from status counts).
+            New member registrations per month (by sign-up date).
           </p>
         </div>
 
@@ -405,14 +365,22 @@ const AdminDashboard = () => {
           <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Status Distribution</h3>
 
           {(() => {
-            const total = (approvedMembers?.length || 0) + (pendingMembers?.length || 0) + (rejectedMembers?.length || 0)
             const data = [
-              { key: 'APPROVED', label: 'Approved', value: approvedMembers?.length || 0, color: '#22c55e' },
-              { key: 'PENDING', label: 'Pending', value: pendingMembers?.length || 0, color: '#f59e0b' },
-              { key: 'REJECTED', label: 'Rejected', value: rejectedMembers?.length || 0, color: '#ef4444' },
+              { key: 'APPROVED', label: 'Approved', value: totalApproved, color: COLORS.APPROVED },
+              { key: 'PENDING', label: 'Pending', value: totalPending, color: COLORS.PENDING },
+              { key: 'REJECTED', label: 'Rejected', value: totalRejected, color: COLORS.REJECTED },
+              { key: 'EXPIRED', label: 'Expired', value: totalExpired, color: COLORS.EXPIRED },
             ]
-
+            const total = data.reduce((sum, d) => sum + d.value, 0)
             const safeTotal = total === 0 ? 1 : total
+
+            if (total === 0) {
+              return (
+                <div className="flex h-[220px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+                  <p className="text-sm text-slate-400">No membership data yet.</p>
+                </div>
+              )
+            }
 
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">

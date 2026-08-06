@@ -240,7 +240,7 @@ const AdminLogin = () => {
                   Verifying...
                 </span>
               ) : (
-                'Sign In'
+                'Login'
               )}
             </button>
           </form>

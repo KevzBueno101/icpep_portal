@@ -1,6 +1,8 @@
 from datetime import date
 
 from django.core.files.base import ContentFile
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -102,6 +104,60 @@ class MemberListAPIView(generics.ListCreateAPIView):
         # Return full profile in GET format
         response_serializer = MemberProfileSerializer(profile)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MemberStatsAPIView(APIView):
+    """Aggregate membership stats for the admin dashboard.
+
+    - ``status_counts``: number of members per ``membership_status``.
+    - ``monthly_growth``: new members per month (by ``created_at``),
+      zero-filled from the earliest member month through the current month.
+    """
+    permission_classes = [CanManageMembership]
+
+    def get(self, request):
+        profiles = MemberProfile.objects.all()
+
+        status_counts = {
+            status_value: 0
+            for status_value, _label in MemberProfile.Status.choices
+        }
+        for row in profiles.values('membership_status').annotate(count=Count('id')):
+            status = row.get('membership_status')
+            if status in status_counts:
+                status_counts[status] = row['count']
+
+        month_counts = {}
+        rows = (
+            profiles
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+        for row in rows:
+            month = row.get('month')
+            if month is not None:
+                month_counts[month.date()] = row['count']
+
+        monthly_growth = []
+        if month_counts:
+            cursor = min(month_counts)
+            today = date.today().replace(day=1)
+            while cursor <= today:
+                monthly_growth.append({
+                    'month': cursor.strftime('%Y-%m'),
+                    'count': month_counts.get(cursor, 0),
+                })
+                next_year = cursor.year + 1 if cursor.month == 12 else cursor.year
+                next_month = 1 if cursor.month == 12 else cursor.month + 1
+                cursor = date(next_year, next_month, 1)
+
+        return Response({
+            'total': profiles.count(),
+            'status_counts': status_counts,
+            'monthly_growth': monthly_growth,
+        })
 
 
 class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
