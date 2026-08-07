@@ -4,7 +4,8 @@ import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../../utils/events'
-import { User, Camera, Save, X, Edit2 } from 'lucide-react'
+import { downloadFile } from '../../utils/download'
+import { User, Camera, Save, X, Edit2, Download } from 'lucide-react'
 
 const YEAR_LABEL_BY_VALUE = {
   '1': '1st Year',
@@ -485,18 +486,28 @@ export default function MemberProfile() {
                       </td>
                       <td className="py-3 whitespace-nowrap">
                         {txn.receipt_image ? (
-                          <a
-                            href={txn.receipt_image}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
-                          >
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            View
-                          </a>
+                          <div className="flex gap-2">
+                            <a
+                              href={txn.receipt_image}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                            >
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              View
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => downloadFile(txn.receipt_image, `ICPEP_Receipt_${txn.reference_number}.png`)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Download
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-xs text-slate-400">—</span>
                         )}

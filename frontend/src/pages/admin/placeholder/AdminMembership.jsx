@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText } from 'lucide-react'
+import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download } from 'lucide-react'
 
 import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { useAuth } from '../../../context/useAuth'
 import { EVENTS } from '../../../utils/events'
+import { downloadFile } from '../../../utils/download'
 
 const AdminMembership = () => {
   const { user } = useAuth()
@@ -1490,6 +1491,16 @@ const AdminMembership = () => {
                                 </a>
                               ) : (
                                 <span className="text-xs text-slate-400">—</span>
+                              )}
+                              {txn.receipt_image && (
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(txn.receipt_image, `ICPEP_Receipt_${txn.reference_number}.png`)}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                  Download
+                                </button>
                               )}
                               {txn.payment_proof_image && (
                                 <a
