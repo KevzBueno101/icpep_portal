@@ -39,7 +39,7 @@ def _load_logo():
     return None
 
 
-def _load_image_from_url(url, max_size=(150, 150)):
+def _load_image_from_url(url, max_size=(260, 260)):
     """Download an image from URL and return a Pillow Image thumbnail, or None."""
     if not url:
         return None
@@ -60,7 +60,8 @@ def generate_receipt_png(transaction, member):
     ----------
     transaction : PaymentTransaction
         The transaction record (must have reference_number, created_at,
-        transaction_type, payment_method, status, approved_by_name).
+        transaction_type, payment_method, status, approved_by_name,
+        approved_by_position).
     member : MemberProfile
         The member profile (for full name and payment_proof_image).
 
@@ -131,8 +132,8 @@ def generate_receipt_png(transaction, member):
         proof_url = transaction.payment_proof_image.url if transaction.payment_proof_image else None
     proof_img = _load_image_from_url(proof_url)
     if proof_img:
-        proof_x = 560
-        proof_y = 250
+        proof_x = 515
+        proof_y = 245
         draw.rectangle([proof_x - 5, proof_y - 5, proof_x + proof_img.width + 5, proof_y + proof_img.height + 30],
                        outline=accent_color, width=1)
         img.paste(proof_img, (proof_x, proof_y), proof_img)
@@ -140,10 +141,14 @@ def generate_receipt_png(transaction, member):
                   'Payment Proof', fill=subtle_color, font=font_sm, anchor='mt')
 
     # ── Signature ──
-    sig_y = 530
+    sig_y = 560
     draw.line([220, sig_y, 580, sig_y], fill=text_color, width=1)
-    if transaction.approved_by_name:
-        draw.text((400, sig_y - 5), transaction.approved_by_name, fill=text_color, font=font_md, anchor='mb')
+    signatory = transaction.approved_by_name or ''
+    position = (transaction.approved_by_position or '').strip()
+    if position and position.upper() != 'NONE':
+        signatory = f"{signatory} — {position}"
+    if signatory:
+        draw.text((400, sig_y - 5), signatory, fill=text_color, font=font_md, anchor='mb')
     draw.text((400, sig_y + 8), 'Authorized Signatory', fill=subtle_color, font=font_sm, anchor='mt')
 
     # ── Footer ──

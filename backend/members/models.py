@@ -39,6 +39,7 @@ class PaymentTransaction(models.Model):
     reference_number = models.CharField(max_length=30, unique=True)
     academic_year = models.CharField(max_length=20, blank=True)
     approved_by_name = models.CharField(max_length=255, blank=True)
+    approved_by_position = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

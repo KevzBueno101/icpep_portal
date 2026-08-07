@@ -160,7 +160,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
             'id', 'member', 'transaction_type', 'transaction_type_display',
             'payment_method', 'payment_method_display', 'payment_proof_image',
             'receipt_image', 'status', 'status_display', 'reference_number',
-            'academic_year', 'approved_by_name', 'created_at', 'member_name',
+            'academic_year', 'approved_by_name', 'approved_by_position', 'created_at', 'member_name',
         ]
         read_only_fields = [
             'id', 'receipt_image', 'reference_number', 'created_at',

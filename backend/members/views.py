@@ -265,6 +265,7 @@ class MemberApproveAPIView(APIView):
                 'reference_number': generate_ref_number(),
                 'academic_year': get_current_academic_year(),
                 'approved_by_name': f"{request.user.first_name} {request.user.last_name}",
+                'approved_by_position': request.user.position or '',
             }
             transaction = PaymentTransaction.objects.create(**txn_data)
 
