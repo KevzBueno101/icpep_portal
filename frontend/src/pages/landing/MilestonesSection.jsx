@@ -143,24 +143,27 @@ function TimelineTrack({ progress, align }) {
   return (
     <>
       <div
-        className={`absolute ${align} top-2 bottom-2 w-px`}
+        className={`pointer-events-none absolute ${align} top-2 bottom-2 w-px`}
         style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.3) 90%, transparent)' }}
-      />
-      <div
-        className={`absolute ${align} top-2 w-px`}
-        style={{
-          height: `${progress * 100}%`,
-          background: 'linear-gradient(180deg, rgba(56,189,248,0.15), #38bdf8)',
-          boxShadow: '0 0 8px rgba(56,189,248,0.7)',
-        }}
-      />
-      <div
-        className={`absolute ${align} z-20 -translate-y-1/2`}
-        style={{ top: `${progress * 100}%` }}
       >
-        <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-          <path d="M9 12 L0 0 H18 Z" fill="#38bdf8" />
-        </svg>
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{
+            height: `${progress * 100}%`,
+            background: 'linear-gradient(180deg, rgba(56,189,248,0.15), #38bdf8)',
+            boxShadow: '0 0 8px rgba(56,189,248,0.7)',
+          }}
+        />
+      </div>
+      <div className={`pointer-events-none absolute ${align} top-2 bottom-2 z-20`}>
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ top: `${progress * 100}%`, left: '50%' }}
+        >
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+            <path d="M9 12 L0 0 H18 Z" fill="#38bdf8" />
+          </svg>
+        </div>
       </div>
     </>
   )
@@ -238,8 +241,8 @@ export default function MilestonesSection() {
     })
     setCirclePositions(positions)
 
-    const total = rect.height - window.innerHeight
-    setScrollProgress(total <= 0 ? 1 : clamp01(-rect.top / total))
+    const total = rect.height + window.innerHeight
+    setScrollProgress(clamp01((window.innerHeight - rect.top) / total))
   }, [])
 
   useEffect(() => {
