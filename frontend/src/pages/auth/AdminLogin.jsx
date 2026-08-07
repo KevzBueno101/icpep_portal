@@ -128,6 +128,19 @@ const AdminLogin = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600 rounded-full opacity-10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-700 rounded-full opacity-10 blur-3xl pointer-events-none" />
 
+      {/* Home button */}
+      <Link
+        to="/landing"
+        className="absolute top-5 left-5 z-20 flex items-center gap-2 rounded-lg border border-gray-800 bg-[#0f0f18]/80 px-3 py-2 text-xs font-semibold text-gray-400 transition hover:border-blue-500/40 hover:text-blue-400"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"
+          />
+        </svg>
+        Home
+      </Link>
+
       <div className="relative w-full max-w-sm">
 
         {/* Top label */}
