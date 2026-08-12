@@ -179,7 +179,6 @@ export default function MilestonesSection() {
   const rowRefs = useRef({})
   const timelineRef = useRef(null)
   const mobileTimelineRef = useRef(null)
-  const circleElsRef = useRef({})
   const rafIdRef = useRef(null)
 
   const displayedMilestones = showAllMilestones ? milestones : milestones.slice(0, 3)
@@ -234,10 +233,9 @@ export default function MilestonesSection() {
     const trackHeight = Math.max(1, rect.height - 16)
 
     const positions = {}
-    Object.entries(circleElsRef.current).forEach(([id, el]) => {
-      if (!el || !wrapper.contains(el)) return
+    wrapper.querySelectorAll('[data-circle-id]').forEach((el) => {
       const r = el.getBoundingClientRect()
-      positions[id] = clamp01((r.top + r.height / 2 - trackTop) / trackHeight)
+      positions[Number(el.dataset.circleId)] = clamp01((r.top + r.height / 2 - trackTop) / trackHeight)
     })
     setCirclePositions(positions)
 
@@ -359,7 +357,7 @@ export default function MilestonesSection() {
                   >
                     <div className="relative shrink-0 mt-1 z-10">
                       <div
-                        ref={(el) => { circleElsRef.current[milestone.id] = el }}
+                        data-circle-id={milestone.id}
                         className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110"
                         style={{
                           background: isActive ? cat.dimAccent : 'rgba(255,255,255,0.05)',
@@ -457,7 +455,7 @@ export default function MilestonesSection() {
                       className="absolute left-1/2 -translate-x-1/2 z-10"
                     >
                       <div
-                        ref={(el) => { circleElsRef.current[milestone.id] = el }}
+                        data-circle-id={milestone.id}
                         className="h-12 w-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110"
                         style={{
                           background: isActive ? cat.dimAccent : 'rgba(255,255,255,0.04)',
