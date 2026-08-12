@@ -261,6 +261,7 @@ class MemberApproveAPIView(APIView):
                 'member': profile,
                 'transaction_type': 'RENEWAL' if old_status == 'EXPIRED' else 'REGISTRATION',
                 'payment_method': profile.payment_method or 'ON_HAND',
+                'fee_amount': profile.fee_amount,
                 'status': 'VERIFIED',
                 'reference_number': generate_ref_number(),
                 'academic_year': get_current_academic_year(),
@@ -319,11 +320,19 @@ class MemberRenewAllAPIView(APIView):
     This sends members to the renewal page so they can submit a new year level,
     proof of payment, and COE/ID document. After renewal submission, their status
     becomes PENDING and they wait for admin approval.
+
+    Accepts an optional body: ``{"fee": "SEMESTER" | "ANNUAL" | "ALL"}`` to renew
+    only members of a specific membership fee plan (defaults to ``ALL``).
     """
     permission_classes = [CanManageMembership]
 
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
+
+        fee = str(request.data.get('fee') or 'ALL').upper()
+        if fee in (MemberProfile.MembershipFee.SEMESTER, MemberProfile.MembershipFee.ANNUAL):
+            approved_qs = approved_qs.filter(membership_fee=fee)
+
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.EXPIRED)
 
         # Log year-end reset (members expired)
@@ -331,8 +340,8 @@ class MemberRenewAllAPIView(APIView):
             user=request.user,
             action_type=AuditLog.ActionType.YEAR_END_RESET,
             entity_type=AuditLog.EntityType.MEMBER,
-            entity_name='All Approved Members',
-            details={'expired_count': renewed_count, 'type': 'members_expired'},
+            entity_name=f'Approved Members ({fee})',
+            details={'expired_count': renewed_count, 'type': 'members_expired', 'fee': fee},
             request=request
         )
 

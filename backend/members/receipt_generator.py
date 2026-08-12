@@ -112,6 +112,7 @@ def generate_receipt_png(transaction, member):
         ('Transaction',     transaction.get_transaction_type_display()),
         ('Payment Method',  transaction.get_payment_method_display()),
         ('Status',          'Verified' if transaction.status == 'VERIFIED' else 'Pending'),
+        ('Membership Fee',  f"PHP {transaction.fee_amount}" if getattr(transaction, 'fee_amount', None) else '—'),
         ('Academic Year',   transaction.academic_year or '—'),
     ]
 

@@ -16,6 +16,7 @@ const MembershipPending = () => {
   const [showRenewModal, setShowRenewModal] = useState(false)
   const [yearLevel, setYearLevel] = useState(user?.year_level || '1')
   const [paymentMethod, setPaymentMethod] = useState('GCASH')
+  const [membershipFee, setMembershipFee] = useState(user?.membership_fee || 'SEMESTER')
   const [paymentProofFile, setPaymentProofFile] = useState(null)
   const [coeIdFile, setCoeIdFile] = useState(null)
   const [paymentProofPreview, setPaymentProofPreview] = useState(null)
@@ -119,6 +120,7 @@ const MembershipPending = () => {
     setShowRenewModal(false)
     setRenewError(null)
     setPaymentMethod('GCASH')
+    setMembershipFee(user?.membership_fee || 'SEMESTER')
     setPaymentProofFile(null)
     setCoeIdFile(null)
     setPaymentProofPreview(null)
@@ -139,6 +141,7 @@ const MembershipPending = () => {
     const formData = new FormData()
     formData.append('year_level', yearLevel)
     formData.append('payment_method', paymentMethod)
+    formData.append('membership_fee', membershipFee)
     formData.append('payment_proof_image', paymentProofFile)
     formData.append('coe_id_image', coeIdFile)
 
@@ -300,6 +303,24 @@ const MembershipPending = () => {
                     <option value="3">3rd Year</option>
                     <option value="4">4th Year</option>
                   </select>
+                </div>
+
+                <div>
+                  <label htmlFor="membership_fee" className="block text-sm font-semibold text-slate-700">
+                    Membership Fee
+                  </label>
+                  <select
+                    id="membership_fee"
+                    value={membershipFee}
+                    onChange={(e) => setMembershipFee(e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                  >
+                    <option value="SEMESTER">₱25 — 1 Semester</option>
+                    <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                  </select>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    ₱25 covers one semester; ₱50 covers the full academic year.
+                  </p>
                 </div>
 
                 <div>

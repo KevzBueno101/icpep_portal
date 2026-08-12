@@ -153,6 +153,7 @@ const Register = () => {
     student_number: '', course: 'BSCpE', year_level: '', section: '', contact_number: '',
     profile_picture: null,
     payment_method: 'ON_HAND',
+    membership_fee: 'SEMESTER',
     payment_proof_image: null,
     coe_id_image: null,
   })
@@ -203,6 +204,7 @@ const Register = () => {
   const hasValue = (value) => String(value ?? '').trim().length > 0
   const isFile = (value) => value instanceof File
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  const isValidStudentNumber = (value) => (String(value ?? '').replace(/\D/g, '')).length >= 5
 
   const formatRegistrationErrors = (data) => {
     if (!data) {
@@ -270,7 +272,7 @@ const Register = () => {
 
     if (stepNumber === 3) {
       return (
-        /^\d{4}-\d{1,5}$/.test(form.student_number) &&
+        isValidStudentNumber(form.student_number) &&
         /^09\d{9}$/.test(form.contact_number) &&
         hasValue(form.year_level) &&
         hasValue(form.section)
@@ -312,8 +314,8 @@ const Register = () => {
     } else if (stepNumber === 2) {
       toast.error('Please complete your first name and last name.')
     } else if (stepNumber === 3) {
-      if (!/^\d{4}-\d{1,5}$/.test(form.student_number)) {
-        toast.error('Student number format must be XXXX-XXXXX (e.g., 2024-73359)')
+      if (!isValidStudentNumber(form.student_number)) {
+        toast.error('Student number must have at least 5 digits.')
       } else if (!/^09\d{9}$/.test(form.contact_number)) {
         toast.error('Contact number must be 11 digits starting with 09')
       } else {
@@ -329,18 +331,18 @@ const Register = () => {
   }
 
   const handleStudentNumberChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 9) // Keep only the 9 student number digits
-    // Auto-format: XXXX-XXXXX
+    let value = e.target.value.replace(/\D/g, '') // Keep only the student number digits
+    // Auto-format: XXXX-XXXXX... (any length after the dash)
     if (value.length > 4) {
-      value = value.slice(0, 4) + '-' + value.slice(4, 9)
+      value = value.slice(0, 4) + '-' + value.slice(4)
     }
     setForm({ ...form, student_number: value })
     
     // Validate in real-time
-    const isValid = /^\d{4}-\d{1,5}$/.test(value)
+    const isValid = (value.replace(/\D/g, '')).length >= 5
     setErrors({
       ...errors,
-      student_number: isValid ? '' : 'Format must be XXXX-XXXXX (e.g., 2024-73359)'
+      student_number: isValid ? '' : 'Student number must have at least 5 digits'
     })
   }
 
@@ -721,7 +723,6 @@ const Register = () => {
                   onChange={handleStudentNumberChange}
                   onKeyDown={handleStudentNumberKeyDown}
                   inputMode="numeric"
-                  maxLength={10}
                   error={errors.student_number}
                 />
                 <Field label="Contact Number" name="contact_number" placeholder="09123456789" value={form.contact_number} onChange={handleContactNumberChange} error={errors.contact_number} />
@@ -803,18 +804,33 @@ const Register = () => {
               
               <div className="space-y-3">
                 <label className="block text-sm text-slate-600 mb-1">Profile Picture</label>
-                <label className="group block cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-sky-400 hover:bg-slate-100">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <path d="M12 15V3" />
-                    </svg>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
-                  </div>
+                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
+                  previewUrl
+                    ? 'border-sky-300 bg-sky-50'
+                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
+                }`}>
+                  {previewUrl ? (
+                    <>
+                      <img src={previewUrl} alt="Profile picture preview" className="h-52 w-full object-contain bg-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
+                        <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change photo</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="px-6 py-10 text-center">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <path d="M12 15V3" />
+                        </svg>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
+                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
+                      </div>
+                    </div>
+                  )}
                   <input
                     type="file"
                     name="profile_picture"
@@ -823,27 +839,52 @@ const Register = () => {
                     className="hidden"
                   />
                 </label>
-                {previewUrl && (
-                  <div className="mt-4 rounded-2xl border border-slate-200 overflow-hidden">
-                    <img src={previewUrl} alt="Profile picture preview" className="h-40 w-full object-cover" />
-                  </div>
-                )}
               </div>
 
               <div className="space-y-3">
                 <label className="block text-sm text-slate-600 mb-1">Certificate of Enrollment / School ID</label>
-                <label className="group block cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-sky-400 hover:bg-slate-100">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <path d="M12 15V3" />
-                    </svg>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                    <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
-                  </div>
+                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
+                  coeIdPreviewUrl
+                    ? 'border-sky-300 bg-sky-50'
+                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
+                }`}>
+                  {coeIdPreviewUrl ? (
+                    <>
+                      {form.coe_id_image?.type === 'application/pdf' ? (
+                        <div className="px-6 py-10 text-center">
+                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-900 break-all">{form.coe_id_image.name}</p>
+                          <p className="text-xs text-slate-500 mt-1">PDF attached — click to change</p>
+                        </div>
+                      ) : (
+                        <>
+                          <img src={coeIdPreviewUrl} alt="COE/ID preview" className="h-52 w-full object-contain bg-white" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
+                            <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change file</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="px-6 py-10 text-center">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <path d="M12 15V3" />
+                        </svg>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
+                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
+                      </div>
+                    </div>
+                  )}
                   <input
                     type="file"
                     name="coe_id_image"
@@ -852,11 +893,6 @@ const Register = () => {
                     className="hidden"
                   />
                 </label>
-                {coeIdPreviewUrl && (
-                  <div className="mt-4 rounded-2xl border border-slate-200 overflow-hidden">
-                    <img src={coeIdPreviewUrl} alt="COE/ID preview" className="h-40 w-full object-cover" />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -910,6 +946,22 @@ const Register = () => {
                         </div>
                       </label>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-2">Membership Fee</label>
+                    <select
+                      name="membership_fee"
+                      value={form.membership_fee}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+                    >
+                      <option value="SEMESTER">₱25 — 1 Semester</option>
+                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                    </select>
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      Choose your coverage: ₱25 for one semester or ₱50 for the full academic year.
+                    </p>
                   </div>
 
                   {form.payment_method === 'GCASH' ? (
@@ -966,18 +1018,33 @@ const Register = () => {
 
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Proof of Payment</label>
-                    <label className="group block cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center transition hover:border-sky-400 hover:bg-slate-100">
-                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <path d="M12 15V3" />
-                        </svg>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
-                      </div>
+                    <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
+                      paymentProofPreviewUrl
+                        ? 'border-sky-300 bg-sky-50'
+                        : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
+                    }`}>
+                      {paymentProofPreviewUrl ? (
+                        <>
+                          <img src={paymentProofPreviewUrl} alt="Payment proof preview" className="h-52 w-full object-contain bg-white" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
+                            <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change photo</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="px-6 py-10 text-center">
+                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <path d="M12 15V3" />
+                            </svg>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
+                            <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
+                          </div>
+                        </div>
+                      )}
                       <input
                         type="file"
                         name="payment_proof_image"
@@ -986,11 +1053,6 @@ const Register = () => {
                         className="hidden"
                       />
                     </label>
-                    {paymentProofPreviewUrl && (
-                      <div className="mt-4 rounded-2xl border border-slate-200 overflow-hidden">
-                        <img src={paymentProofPreviewUrl} alt="Payment proof preview" className="h-40 w-full object-cover" />
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">

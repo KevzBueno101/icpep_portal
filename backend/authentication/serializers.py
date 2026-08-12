@@ -69,6 +69,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     section            = serializers.CharField()
     contact_number     = serializers.CharField()
     payment_method     = serializers.ChoiceField(choices=[('ON_HAND', 'On-hand / Personal'), ('GCASH', 'GCash')], default='ON_HAND')
+    membership_fee     = serializers.ChoiceField(choices=[('SEMESTER', '₱25 — 1 Semester'), ('ANNUAL', '₱50 — 1 Academic Year')], default='SEMESTER')
     profile_picture     = serializers.ImageField(required=False, allow_null=True)
     payment_proof_image = serializers.ImageField(required=False, allow_null=True)
     coe_id_image = serializers.FileField(required=False, allow_null=True)
@@ -79,7 +80,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'email', 'username', 'password', 'confirm_password',
             'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
-            'payment_method', 'profile_picture', 'payment_proof_image', 'coe_id_image',
+            'payment_method', 'membership_fee', 'profile_picture', 'payment_proof_image', 'coe_id_image',
         ]
 
     def validate(self, data):
@@ -107,6 +108,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'section':             validated_data.pop('section'),
             'contact_number':      validated_data.pop('contact_number'),
             'payment_method':      validated_data.pop('payment_method', 'ON_HAND'),
+            'membership_fee':      validated_data.pop('membership_fee', 'SEMESTER'),
             'profile_picture':     validated_data.pop('profile_picture', None),
             'payment_proof_image': validated_data.pop('payment_proof_image', None),
             'coe_id_image':        validated_data.pop('coe_id_image', None),
