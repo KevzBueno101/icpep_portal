@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useMember } from '../context/MemberContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
@@ -7,10 +8,46 @@ import PageSkeleton from '../components/skeletons/PageSkeleton'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, DollarSign } from 'lucide-react'
 
 export default function MemberLayout({ children }) {
-  const { user, logout, loading: authLoading } = useAuth()
+  const { user, logout, refreshUser, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
   const { announcements, profileLoading, profile } = useMember()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
+
+  // Live membership-status guard: bounce the member to the pending page the
+  // moment their status is no longer APPROVED (e.g. admin triggers Renew-All),
+  // even while they are sitting on an open dashboard tab.
+  const userId = user?.id
+  useEffect(() => {
+    if (!userId) return
+
+    let cancelled = false
+    const check = async () => {
+      try {
+        const freshUser = await refreshUser()
+        if (!cancelled && freshUser?.membership_status && freshUser.membership_status !== 'APPROVED') {
+          navigate('/membership-pending', { replace: true })
+        }
+      } catch {
+        // Silent — background check, don't spam errors
+      }
+    }
+
+    check()
+
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    document.addEventListener('visibilitychange', onFocus)
+
+    const intervalId = setInterval(check, 30000)
+
+    return () => {
+      cancelled = true
+      document.removeEventListener('visibilitychange', onFocus)
+      clearInterval(intervalId)
+    }
+  }, [userId, refreshUser, navigate])
 
   const isLoading = authLoading || profileLoading
 
