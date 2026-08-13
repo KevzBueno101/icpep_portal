@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import UTC, date, datetime, time
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -37,7 +37,7 @@ class MemberStatsTests(APITestCase):
             contact_number='09170000000',
             membership_status=status,
         )
-        aware = timezone.make_aware(datetime.combine(created_on, time.min), timezone.utc)
+        aware = timezone.make_aware(datetime.combine(created_on, time.min), UTC)
         MemberProfile.objects.filter(pk=profile.pk).update(created_at=aware)
         profile.refresh_from_db()
         return profile
