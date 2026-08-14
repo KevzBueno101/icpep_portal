@@ -37,8 +37,10 @@ class PaymentTransaction(models.Model):
     receipt_image = models.ImageField(upload_to='receipts/', null=True, blank=True, max_length=500)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     reference_number = models.CharField(max_length=30, unique=True)
+    fee_amount = models.IntegerField(null=True, blank=True)
     academic_year = models.CharField(max_length=20, blank=True)
     approved_by_name = models.CharField(max_length=255, blank=True)
+    approved_by_position = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -61,15 +63,24 @@ class MemberProfile(models.Model):
         THIRD = '3', '3rd Year'
         FOURTH = '4', '4th Year'
 
+    class MembershipFee(models.TextChoices):
+        SEMESTER = 'SEMESTER', '₱25 — 1 Semester'
+        ANNUAL = 'ANNUAL', '₱50 — 1 Academic Year'
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100)
-    student_number = models.CharField(max_length=20, unique=True)
+    student_number = models.CharField(max_length=30, unique=True)
     course = models.CharField(max_length=100)
     year_level = models.CharField(max_length=1, choices=YearLevel.choices)
     section = models.CharField(max_length=10)
     contact_number = models.CharField(max_length=20)
+    membership_fee = models.CharField(
+        max_length=10,
+        choices=MembershipFee.choices,
+        default=MembershipFee.SEMESTER,
+    )
     payment_method = models.CharField(
         max_length=10,
         choices=[('ON_HAND', 'On-hand / Personal'), ('GCASH', 'GCash')],
@@ -87,3 +98,7 @@ class MemberProfile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} — {self.user.email}"
+
+    @property
+    def fee_amount(self):
+        return 50 if self.membership_fee == MemberProfile.MembershipFee.ANNUAL else 25

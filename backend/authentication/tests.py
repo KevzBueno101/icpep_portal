@@ -6,6 +6,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase
 
+from authentication.models import FailedLoginAttempt
 from authentication.utils import build_password_reset_url
 
 User = get_user_model()
@@ -90,3 +91,144 @@ class AdminRegistrationTests(APITestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertIn('pending approval', str(response.data).lower())
+
+
+class LoginRateLimitTests(APITestCase):
+    def _make_admin(self, **kwargs):
+        fields = {
+            'email': 'president@example.com',
+            'username': 'president',
+            'password': 'Password123',
+            'role': 'ADMIN',
+            'position': 'President',
+            'registration_status': 'APPROVED',
+            'is_active': True,
+        }
+        fields.update(kwargs)
+        return User.objects.create_user(**fields)
+
+    def _make_member(self, **kwargs):
+        fields = {
+            'email': 'member@example.com',
+            'username': 'member',
+            'password': 'Password123',
+            'role': 'OFFICER',
+            'registration_status': 'APPROVED',
+            'is_active': True,
+        }
+        fields.update(kwargs)
+        return User.objects.create_user(**fields)
+
+    def test_failed_admin_login_records_attempt(self):
+        self._make_admin()
+        for _ in range(3):
+            self.client.post('/api/auth/admin-login/', {
+                'email': 'president@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='president@example.com').count(),
+            3,
+        )
+
+    def test_successful_admin_login_clears_failure_counter(self):
+        self._make_admin()
+        for _ in range(3):
+            self.client.post('/api/auth/admin-login/', {
+                'email': 'president@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='president@example.com').count(),
+            3,
+        )
+
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='president@example.com').count(),
+            0,
+        )
+
+    def test_successful_logins_do_not_consume_the_ip_budget(self):
+        self._make_admin()
+        for _ in range(6):
+            response = self.client.post('/api/auth/admin-login/', {
+                'email': 'president@example.com',
+                'password': 'Password123',
+            }, format='json')
+            self.assertEqual(response.status_code, 200)
+
+    def test_ten_failed_admin_logins_do_not_block_the_eleventh(self):
+        self._make_admin()
+        for _ in range(10):
+            self.client.post('/api/auth/admin-login/', {
+                'email': 'president@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_eleven_failed_admin_logins_block_the_twelfth_even_with_right_password(self):
+        self._make_admin()
+        for _ in range(11):
+            self.client.post('/api/auth/admin-login/', {
+                'email': 'president@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 429)
+        self.assertIn('15 minutes', str(response.data.get('detail', '')))
+
+    def test_ten_failed_member_logins_do_not_block_the_eleventh(self):
+        self._make_member()
+        for _ in range(10):
+            self.client.post('/api/auth/login/', {
+                'email': 'member@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_failed_member_login_records_and_successful_login_clears(self):
+        self._make_member()
+        for _ in range(2):
+            self.client.post('/api/auth/login/', {
+                'email': 'member@example.com',
+                'password': 'WrongPass123',
+            }, format='json')
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='member@example.com').count(),
+            2,
+        )
+
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='member@example.com').count(),
+            0,
+        )

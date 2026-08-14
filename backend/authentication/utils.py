@@ -11,6 +11,10 @@ from sendgrid.helpers.mail import Mail
 
 from .models import FailedLoginAttempt
 
+# Number of failed logins (per email/IP, within the 15-minute window) that
+# trigger the "Too many login attempts" block. Blocks on the 11th failure.
+LOGIN_FAILURE_LIMIT = 10
+
 
 def build_password_reset_url(user, token, frontend_url=None, request=None):
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
@@ -52,10 +56,27 @@ def record_failed_attempt(email, ip):
     FailedLoginAttempt.objects.create(email=email, ip_address=ip)
 
 
+def clear_failures(email):
+    if email:
+        FailedLoginAttempt.objects.filter(email__iexact=email).delete()
+
+
+def clear_ip_failures(ip):
+    if ip:
+        FailedLoginAttempt.objects.filter(ip_address=ip).delete()
+
+
 def recent_failures(email, minutes=15):
     cutoff = timezone.now() - timedelta(minutes=minutes)
     return FailedLoginAttempt.objects.filter(
         email__iexact=email, created_at__gte=cutoff
+    ).count()
+
+
+def recent_ip_failures(ip, minutes=15):
+    cutoff = timezone.now() - timedelta(minutes=minutes)
+    return FailedLoginAttempt.objects.filter(
+        ip_address=ip, created_at__gte=cutoff
     ).count()
 
 

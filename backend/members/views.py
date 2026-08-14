@@ -1,6 +1,8 @@
 from datetime import date
 
 from django.core.files.base import ContentFile
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -104,6 +106,60 @@ class MemberListAPIView(generics.ListCreateAPIView):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
+class MemberStatsAPIView(APIView):
+    """Aggregate membership stats for the admin dashboard.
+
+    - ``status_counts``: number of members per ``membership_status``.
+    - ``monthly_growth``: new members per month (by ``created_at``),
+      zero-filled from the earliest member month through the current month.
+    """
+    permission_classes = [CanManageMembership]
+
+    def get(self, request):
+        profiles = MemberProfile.objects.all()
+
+        status_counts = {
+            status_value: 0
+            for status_value, _label in MemberProfile.Status.choices
+        }
+        for row in profiles.values('membership_status').annotate(count=Count('id')):
+            status = row.get('membership_status')
+            if status in status_counts:
+                status_counts[status] = row['count']
+
+        month_counts = {}
+        rows = (
+            profiles
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+        for row in rows:
+            month = row.get('month')
+            if month is not None:
+                month_counts[month.date()] = row['count']
+
+        monthly_growth = []
+        if month_counts:
+            cursor = min(month_counts)
+            today = date.today().replace(day=1)
+            while cursor <= today:
+                monthly_growth.append({
+                    'month': cursor.strftime('%Y-%m'),
+                    'count': month_counts.get(cursor, 0),
+                })
+                next_year = cursor.year + 1 if cursor.month == 12 else cursor.year
+                next_month = 1 if cursor.month == 12 else cursor.month + 1
+                cursor = date(next_year, next_month, 1)
+
+        return Response({
+            'total': profiles.count(),
+            'status_counts': status_counts,
+            'monthly_growth': monthly_growth,
+        })
+
+
 class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MemberProfile.objects.all()
     serializer_class = MemberProfileSerializer
@@ -205,10 +261,12 @@ class MemberApproveAPIView(APIView):
                 'member': profile,
                 'transaction_type': 'RENEWAL' if old_status == 'EXPIRED' else 'REGISTRATION',
                 'payment_method': profile.payment_method or 'ON_HAND',
+                'fee_amount': profile.fee_amount,
                 'status': 'VERIFIED',
                 'reference_number': generate_ref_number(),
                 'academic_year': get_current_academic_year(),
                 'approved_by_name': f"{request.user.first_name} {request.user.last_name}",
+                'approved_by_position': request.user.position or '',
             }
             transaction = PaymentTransaction.objects.create(**txn_data)
 
@@ -262,11 +320,19 @@ class MemberRenewAllAPIView(APIView):
     This sends members to the renewal page so they can submit a new year level,
     proof of payment, and COE/ID document. After renewal submission, their status
     becomes PENDING and they wait for admin approval.
+
+    Accepts an optional body: ``{"fee": "SEMESTER" | "ANNUAL" | "ALL"}`` to renew
+    only members of a specific membership fee plan (defaults to ``ALL``).
     """
     permission_classes = [CanManageMembership]
 
     def post(self, request):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
+
+        fee = str(request.data.get('fee') or 'ALL').upper()
+        if fee in (MemberProfile.MembershipFee.SEMESTER, MemberProfile.MembershipFee.ANNUAL):
+            approved_qs = approved_qs.filter(membership_fee=fee)
+
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.EXPIRED)
 
         # Log year-end reset (members expired)
@@ -274,8 +340,8 @@ class MemberRenewAllAPIView(APIView):
             user=request.user,
             action_type=AuditLog.ActionType.YEAR_END_RESET,
             entity_type=AuditLog.EntityType.MEMBER,
-            entity_name='All Approved Members',
-            details={'expired_count': renewed_count, 'type': 'members_expired'},
+            entity_name=f'Approved Members ({fee})',
+            details={'expired_count': renewed_count, 'type': 'members_expired', 'fee': fee},
             request=request
         )
 

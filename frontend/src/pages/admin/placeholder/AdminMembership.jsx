@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText } from 'lucide-react'
+import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download } from 'lucide-react'
 
 import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { useAuth } from '../../../context/useAuth'
 import { EVENTS } from '../../../utils/events'
+import { downloadFile } from '../../../utils/download'
 
 const AdminMembership = () => {
   const { user } = useAuth()
@@ -20,6 +21,7 @@ const AdminMembership = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [yearFilter, setYearFilter] = useState('ALL')
+  const [feeFilter, setFeeFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedMemberId, setExpandedMemberId] = useState(null)
 
@@ -62,6 +64,7 @@ const AdminMembership = () => {
     membership_status: 'PENDING',
   })
   const [isRenewConfirmOpen, setIsRenewConfirmOpen] = useState(false)
+  const [renewFee, setRenewFee] = useState('ALL')
   const [isRenewing, setIsRenewing] = useState(false)
 
   // Fetch members from Django REST API
@@ -116,10 +119,11 @@ const AdminMembership = () => {
 
       const matchesStatus = statusFilter === 'ALL' || member.membership_status === statusFilter
       const matchesYear = yearFilter === 'ALL' || member.year_level === yearFilter
+      const matchesFee = feeFilter === 'ALL' || member.membership_fee === feeFilter
 
-      return matchesSearch && matchesStatus && matchesYear
+      return matchesSearch && matchesStatus && matchesYear && matchesFee
     })
-  }, [members, searchTerm, statusFilter, yearFilter])
+  }, [members, searchTerm, statusFilter, yearFilter, feeFilter])
 
   // Pagination
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
@@ -148,7 +152,7 @@ const AdminMembership = () => {
     return mapping[level] || `${level} Year`
   }
 
-
+  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱50' : '₱25')
 
   const getMemberName = (member) =>
     `${member?.first_name || ''} ${member?.middle_name || ''} ${member?.last_name || ''}`.replace(/\s+/g, ' ').trim()
@@ -185,6 +189,7 @@ const AdminMembership = () => {
       year_level: member.year_level || '1',
       section: member.section || '',
       contact_number: member.contact_number || '',
+      membership_fee: member.membership_fee || 'SEMESTER',
       membership_status: member.membership_status || 'PENDING',
     })
   }
@@ -280,6 +285,7 @@ const AdminMembership = () => {
       section: '',
       contact_number: '',
       birthdate: '',
+      membership_fee: 'SEMESTER',
       membership_status: 'PENDING',
     })
     setIsAddModalOpen(true)
@@ -355,6 +361,7 @@ const AdminMembership = () => {
       'Email',
       'Year',
       'Department / Course',
+      'Fee',
       'Status',
       'Joined Date'
     ]
@@ -365,6 +372,7 @@ const AdminMembership = () => {
       const studentNum = (member.student_number || '').replace(/"/g, '""')
       const year = formatYearLevel(member.year_level)
       const dept = (member.course || '').replace(/"/g, '""')
+      const fee = formatFee(member.membership_fee)
       const status = member.membership_status
       const joined = member.created_at
         ? new Date(member.created_at).toLocaleDateString('en-US')
@@ -376,6 +384,7 @@ const AdminMembership = () => {
         `"${email}"`,
         `"${year}"`,
         `"${dept}"`,
+        `"${fee}"`,
         `"${status}"`,
         `"${joined}"`
       ]
@@ -551,7 +560,7 @@ const AdminMembership = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setIsRenewConfirmOpen(true)}
+                onClick={() => { setRenewFee('ALL'); setIsRenewConfirmOpen(true) }}
                 disabled={isRestricted}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -603,6 +612,20 @@ const AdminMembership = () => {
               <option value="2">2nd Year</option>
               <option value="3">3rd Year</option>
               <option value="4">4th Year</option>
+            </select>
+
+            {/* Membership Fee Filter */}
+            <select
+              value={feeFilter}
+              onChange={(e) => {
+                setFeeFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="ALL">All Fees</option>
+              <option value="SEMESTER">₱25 — Semester</option>
+              <option value="ANNUAL">₱50 — Academic Year</option>
             </select>
 
             {/* Results Counter */}
@@ -679,6 +702,10 @@ const AdminMembership = () => {
                           <span>{formatYearLevel(member.year_level)}</span>
                         </div>
                         <div className="flex items-center justify-between">
+                          <span className="font-medium text-slate-700">Fee</span>
+                          <span>{formatFee(member.membership_fee)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-700">Department</span>
                           <span>{member.course || 'Unassigned'}</span>
                         </div>
@@ -753,6 +780,7 @@ const AdminMembership = () => {
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Name</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Year</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Department</th>
+                <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Fee</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Status</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Joined</th>
                 <th className="px-3 py-3 text-right font-semibold text-slate-700 text-[11px] uppercase tracking-wider w-36">Actions</th>
@@ -795,6 +823,11 @@ const AdminMembership = () => {
                       </td>
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{formatYearLevel(member.year_level)}</td>
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{member.course || 'Unassigned'}</td>
+                      <td className="px-3 py-3">
+                        <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${member.membership_fee === 'ANNUAL' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`}>
+                          {formatFee(member.membership_fee)}
+                        </span>
+                      </td>
                       <td className="px-3 py-3">
                         <span className={`inline-flex px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${getStatusStyles(member.membership_status)}`}>
                           {member.membership_status}
@@ -853,7 +886,7 @@ const AdminMembership = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-3 py-6 text-center text-slate-500">
+                  <td colSpan="8" className="px-3 py-6 text-center text-slate-500">
                     <p className="text-[12px]">No members found</p>
                   </td>
                 </tr>
@@ -1136,6 +1169,23 @@ const AdminMembership = () => {
                       <option value="EXPIRED">Expired</option>
                     </select>
                   </div>
+
+                  {/* Membership Fee */}
+                  <div>
+                    <label htmlFor="membership_fee" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Membership Fee
+                    </label>
+                    <select
+                      id="membership_fee"
+                      name="membership_fee"
+                      value={formData.membership_fee}
+                      onChange={handleFormChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
+                    >
+                      <option value="SEMESTER">₱25 — 1 Semester</option>
+                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1180,17 +1230,19 @@ const AdminMembership = () => {
       <ConfirmModal
         isOpen={isRenewConfirmOpen}
         variant="info"
-        title="Renew all approved memberships?"
-        description="This will move every currently approved member back to Pending. Members will be asked to renew and require admin re-approval."
+        title="Renew approved memberships?"
+        description="This will move approved members back to Pending based on the membership fee you choose. Members will be asked to renew and require admin re-approval."
         confirmText="Renew All"
         cancelText="Cancel"
         busy={isRenewing}
         onConfirm={async () => {
           setIsRenewing(true)
           try {
-            await api.post('/members/renew-all/')
+            await api.post('/members/renew-all/', { fee: renewFee })
             window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
-            toast.success('All approved memberships set to Pending.')
+            toast.success(renewFee === 'ALL'
+              ? 'All approved memberships set to Pending.'
+              : `${renewFee === 'ANNUAL' ? '₱50' : '₱25'} memberships set to Pending.`)
             await fetchMembers()
             setIsRenewConfirmOpen(false)
           } catch (err) {
@@ -1200,7 +1252,38 @@ const AdminMembership = () => {
           }
         }}
         onCancel={() => setIsRenewConfirmOpen(false)}
-      />
+      >
+        <div className="mt-4">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Which members to renew</p>
+          <div className="flex flex-col gap-2">
+            {[
+              { value: 'ALL', label: 'All fee plans', desc: 'Everyone currently approved' },
+              { value: 'SEMESTER', label: '₱25 — 1 Semester', desc: 'Only ₱25 members' },
+              { value: 'ANNUAL', label: '₱50 — 1 Academic Year', desc: 'Only ₱50 members' },
+            ].map((opt) => (
+              <label
+                key={opt.value}
+                className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 cursor-pointer transition ${
+                  renewFee === opt.value ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="renew_fee"
+                  value={opt.value}
+                  checked={renewFee === opt.value}
+                  onChange={() => setRenewFee(opt.value)}
+                  className="h-4 w-4 text-sky-600 accent-sky-600"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{opt.label}</p>
+                  <p className="text-xs text-slate-500">{opt.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      </ConfirmModal>
 
       {/* Edit Member Modal */}
       {editTarget && (
@@ -1352,6 +1435,18 @@ const AdminMembership = () => {
                       <option value="EXPIRED">Expired</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Membership Fee</label>
+                    <select
+                      name="membership_fee"
+                      value={editForm.membership_fee}
+                      onChange={handleEditFormChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    >
+                      <option value="SEMESTER">₱25 — 1 Semester</option>
+                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1490,6 +1585,16 @@ const AdminMembership = () => {
                                 </a>
                               ) : (
                                 <span className="text-xs text-slate-400">—</span>
+                              )}
+                              {txn.receipt_image && (
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(txn.receipt_image, `ICPEP_Receipt_${txn.reference_number}.png`)}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                  Download
+                                </button>
                               )}
                               {txn.payment_proof_image && (
                                 <a

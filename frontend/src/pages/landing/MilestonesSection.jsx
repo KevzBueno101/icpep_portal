@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
+
+function clamp01(n) {
+  return Math.min(1, Math.max(0, n))
+}
 
 const CATEGORIES = {
   founding:    { label: 'Founding',     accent: '#38bdf8', dimAccent: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.35)'  },
@@ -135,12 +139,47 @@ function MilestoneCard({ milestone, visible, side }) {
   )
 }
 
+function TimelineTrack({ progress, align }) {
+  return (
+    <>
+      <div
+        className={`pointer-events-none absolute ${align} top-2 bottom-2 w-px`}
+        style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.3) 90%, transparent)' }}
+      >
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{
+            height: `${progress * 100}%`,
+            background: 'linear-gradient(180deg, rgba(56,189,248,0.15), #38bdf8)',
+            boxShadow: '0 0 8px rgba(56,189,248,0.7)',
+          }}
+        />
+      </div>
+      <div className={`pointer-events-none absolute ${align} top-2 bottom-2 z-20`}>
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ top: `${progress * 100}%`, left: '50%' }}
+        >
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+            <path d="M9 12 L0 0 H18 Z" fill="#38bdf8" />
+          </svg>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function MilestonesSection() {
   const [milestones, setMilestones] = useState([])
   const [loading, setLoading] = useState(true)
   const [visibleIds, setVisibleIds] = useState(new Set())
   const [showAllMilestones, setShowAllMilestones] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [circlePositions, setCirclePositions] = useState({})
   const rowRefs = useRef({})
+  const timelineRef = useRef(null)
+  const mobileTimelineRef = useRef(null)
+  const rafIdRef = useRef(null)
 
   const displayedMilestones = showAllMilestones ? milestones : milestones.slice(0, 3)
   const hasHiddenMilestones = milestones.length > displayedMilestones.length
@@ -183,6 +222,56 @@ export default function MilestonesSection() {
       return next
     })
   }, [milestones, showAllMilestones])
+
+  const measureAndCompute = useCallback(() => {
+    const wrapper = [timelineRef.current, mobileTimelineRef.current]
+      .find((el) => el && el.offsetHeight > 0)
+    if (!wrapper) return
+
+    const rect = wrapper.getBoundingClientRect()
+    const trackTop = rect.top + 8
+    const trackHeight = Math.max(1, rect.height - 16)
+
+    const positions = {}
+    wrapper.querySelectorAll('[data-circle-id]').forEach((el) => {
+      const r = el.getBoundingClientRect()
+      positions[Number(el.dataset.circleId)] = clamp01((r.top + r.height / 2 - trackTop) / trackHeight)
+    })
+    setCirclePositions(positions)
+
+    const total = rect.height + window.innerHeight
+    setScrollProgress(clamp01((window.innerHeight - rect.top) / total))
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (rafIdRef.current) return
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null
+        measureAndCompute()
+      })
+    }
+    const onResize = () => measureAndCompute()
+
+    measureAndCompute()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+
+    const ro = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => measureAndCompute())
+      : null
+    if (ro) {
+      if (timelineRef.current) ro.observe(timelineRef.current)
+      if (mobileTimelineRef.current) ro.observe(mobileTimelineRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      if (ro) ro.disconnect()
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+    }
+  }, [measureAndCompute, displayedMilestones.length])
 
   return (
     <section
@@ -236,11 +325,8 @@ export default function MilestonesSection() {
         )}
 
         {/* ── MOBILE: Single column timeline ── */}
-        {milestones.length > 0 && <div className="relative md:hidden">
-          <div
-            className="absolute left-[19px] top-2 bottom-2 w-px"
-            style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.3) 90%, transparent)' }}
-          />
+        {milestones.length > 0 && <div ref={mobileTimelineRef} className="relative md:hidden">
+          <TimelineTrack progress={scrollProgress} align="left-[19px] -translate-x-1/2" />
 
           {loading ? (
             <div className="space-y-8">
@@ -260,6 +346,7 @@ export default function MilestonesSection() {
               {displayedMilestones.map((milestone) => {
                 const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
                 const isVisible = visibleIds.has(milestone.id)
+                const isActive = scrollProgress >= (circlePositions[milestone.id] ?? 1)
 
                 return (
                   <div
@@ -270,16 +357,17 @@ export default function MilestonesSection() {
                   >
                     <div className="relative shrink-0 mt-1 z-10">
                       <div
-                        className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500"
+                        data-circle-id={milestone.id}
+                        className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110"
                         style={{
-                          background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.05)',
-                          border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
-                          boxShadow: isVisible ? `0 0 16px ${cat.dimAccent}` : 'none',
+                          background: isActive ? cat.dimAccent : 'rgba(255,255,255,0.05)',
+                          border: `2px solid ${isActive ? cat.accent : 'rgba(255,255,255,0.1)'}`,
+                          boxShadow: isActive ? `0 0 16px ${cat.dimAccent}` : 'none',
                         }}
                       >
                         <span
                           className="h-3 w-3 rounded-full transition-all duration-500"
-                          style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.2)' }}
+                          style={{ background: isActive ? cat.accent : 'rgba(255,255,255,0.2)' }}
                         />
                       </div>
                     </div>
@@ -295,11 +383,8 @@ export default function MilestonesSection() {
         </div>}
 
         {/* ── DESKTOP: Alternating left/right timeline ── */}
-        {milestones.length > 0 && <div className="relative hidden md:block">
-          <div
-            className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2"
-            style={{ background: 'linear-gradient(180deg, transparent, rgba(56,189,248,0.3) 8%, rgba(56,189,248,0.3) 92%, transparent)' }}
-          />
+        {milestones.length > 0 && <div ref={timelineRef} className="relative hidden md:block">
+          <TimelineTrack progress={scrollProgress} align="left-1/2 -translate-x-1/2" />
 
           {loading ? (
             <div className="space-y-14">
@@ -338,6 +423,7 @@ export default function MilestonesSection() {
                 const side = index % 2 === 0 ? 'left' : 'right'
                 const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
                 const isVisible = visibleIds.has(milestone.id)
+                const isActive = scrollProgress >= (circlePositions[milestone.id] ?? 1)
 
                 return (
                   <div
@@ -369,16 +455,17 @@ export default function MilestonesSection() {
                       className="absolute left-1/2 -translate-x-1/2 z-10"
                     >
                       <div
-                        className="h-12 w-12 rounded-full flex items-center justify-center transition-all duration-500"
+                        data-circle-id={milestone.id}
+                        className="h-12 w-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110"
                         style={{
-                          background: isVisible ? cat.dimAccent : 'rgba(255,255,255,0.04)',
-                          border: `2px solid ${isVisible ? cat.accent : 'rgba(255,255,255,0.1)'}`,
-                          boxShadow: isVisible ? `0 0 24px ${cat.dimAccent}` : 'none',
+                          background: isActive ? cat.dimAccent : 'rgba(255,255,255,0.04)',
+                          border: `2px solid ${isActive ? cat.accent : 'rgba(255,255,255,0.1)'}`,
+                          boxShadow: isActive ? `0 0 24px ${cat.dimAccent}` : 'none',
                         }}
                       >
                         <span
                           className="h-3.5 w-3.5 rounded-full transition-all duration-500"
-                          style={{ background: isVisible ? cat.accent : 'rgba(255,255,255,0.15)' }}
+                          style={{ background: isActive ? cat.accent : 'rgba(255,255,255,0.15)' }}
                         />
                       </div>
                     </div>
@@ -435,3 +522,4 @@ export default function MilestonesSection() {
     </section>
   )
 }
+

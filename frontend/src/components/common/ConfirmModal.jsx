@@ -10,6 +10,7 @@ export default function ConfirmModal({
   busy = false,
   onConfirm,
   onCancel,
+  children,
 }) {
   useEffect(() => {
     if (!isOpen) return
@@ -58,6 +59,7 @@ export default function ConfirmModal({
               {description && (
                 <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
               )}
+              {children}
             </div>
           </div>
         </div>

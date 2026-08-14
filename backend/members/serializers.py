@@ -26,6 +26,7 @@ class MemberProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_role = serializers.CharField(source='user.role', read_only=True)
+    fee_amount = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = MemberProfile
@@ -33,7 +34,8 @@ class MemberProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_email', 'user_role', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number', 'address',
             'birthdate', 'profile_picture', 'payment_method', 'payment_proof_image',
-            'coe_id_image', 'admin_message', 'membership_status', 'created_at', 'updated_at'
+            'coe_id_image', 'membership_fee', 'fee_amount', 'admin_message', 'membership_status',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
 
@@ -81,7 +83,7 @@ class MemberRenewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MemberProfile
-        fields = ['year_level', 'payment_method', 'payment_proof_image', 'coe_id_image']
+        fields = ['year_level', 'payment_method', 'membership_fee', 'payment_proof_image', 'coe_id_image']
 
 
 class PaymentSettingsSerializer(serializers.ModelSerializer):
@@ -98,13 +100,14 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_email', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
-            'address', 'birthdate', 'profile_picture', 'membership_status'
+            'address', 'birthdate', 'profile_picture', 'membership_fee', 'membership_status'
         ]
         extra_kwargs = {
             'middle_name': {'required': False, 'allow_blank': True},
             'address': {'required': False, 'allow_blank': True},
             'birthdate': {'required': False, 'allow_null': True},
             'profile_picture': {'required': False, 'allow_null': True},
+            'membership_fee': {'required': False},
             'membership_status': {'required': False},
         }
 
@@ -160,7 +163,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
             'id', 'member', 'transaction_type', 'transaction_type_display',
             'payment_method', 'payment_method_display', 'payment_proof_image',
             'receipt_image', 'status', 'status_display', 'reference_number',
-            'academic_year', 'approved_by_name', 'created_at', 'member_name',
+            'fee_amount', 'academic_year', 'approved_by_name', 'approved_by_position', 'created_at', 'member_name',
         ]
         read_only_fields = [
             'id', 'receipt_image', 'reference_number', 'created_at',
