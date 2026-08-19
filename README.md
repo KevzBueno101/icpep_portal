@@ -1,6 +1,6 @@
 # ICPEP Membership Portal
 
-A full-stack Django + React application for managing ICPEP.SE — Catanduanes State University student chapter membership, officer management, announcements, payment tracking, and e-receipt generation.
+A full-stack Django + React application for managing ICPEP.SE — Catanduanes State University student chapter membership, officer management, announcements, payment tracking, membership ID, and e-receipt generation.
 
 ## Tech Stack
 
