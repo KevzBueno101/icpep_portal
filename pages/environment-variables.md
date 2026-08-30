@@ -13,7 +13,7 @@ This is the authoritative list of every environment variable the system reads. T
 |---|---|---|
 | `DEBUG` | dev | `True` for local dev; `False` in production |
 | `SECRET_KEY` | ✅ prod | Django secret key |
-| `ALLOWED_HOSTS` | prod | Comma-separated hostnames (e.g. `icpep-portal-backend.onrender.com`) |
+| `ALLOWED_HOSTS` | prod | Comma-separated hostnames (e.g. `icpep-backend-mriy.onrender.com`) |
 | `DATABASE_URL` | ✅ prod | PostgreSQL connection string |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_SSLMODE` | alt | Individual DB vars (used by CI/tests instead of `DATABASE_URL`) |
 | `CORS_ALLOWED_ORIGINS` | ✅ prod | Comma-separated frontend origins (Vercel) |
@@ -43,9 +43,9 @@ This is the authoritative list of every environment variable the system reads. T
 
 | Variable | Value |
 |---|---|
-| `VITE_API_URL` | `https://icpep-portal-backend.onrender.com/api` |
-| `VITE_BACKEND_URL` | `https://icpep-portal-backend.onrender.com` |
-| `VITE_WS_URL` | `wss://icpep-portal-backend.onrender.com` |
+| `VITE_API_URL` | `https://icpep-backend-mriy.onrender.com/api` |
+| `VITE_BACKEND_URL` | `https://icpep-backend-mriy.onrender.com` |
+| `VITE_WS_URL` | `wss://icpep-backend-mriy.onrender.com` |
 
 Local dev (`frontend/.env` or default): `VITE_API_URL` falls back to `http://127.0.0.1:8000/api`.
 

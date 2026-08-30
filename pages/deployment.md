@@ -33,13 +33,13 @@ The portal is split across two hosts with automated CI/CD via GitHub Actions.
 
   | Variable | Value |
   |---|---|
-  | `VITE_API_URL` | `https://icpep-portal-backend.onrender.com/api` |
-  | `VITE_BACKEND_URL` | `https://icpep-portal-backend.onrender.com` |
-  | `VITE_WS_URL` | `wss://icpep-portal-backend.onrender.com` |
+  | `VITE_API_URL` | `https://icpep-backend-mriy.onrender.com/api` |
+  | `VITE_BACKEND_URL` | `https://icpep-backend-mriy.onrender.com` |
+  | `VITE_WS_URL` | `wss://icpep-backend-mriy.onrender.com` |
 
 ## Backend — Render
 
-- Service: `icpep-portal-backend.onrender.com`.
+- Service: `icpep-backend-mriy.onrender.com`.
 - **Branch is critical**: Render must be pointed at **`dev`** — the `main` branch historically predates several features (including the push app). If `vapid-key` returns `404`, the deployed code is from `main`.
 - Web process: `web: bash start.sh` (see [Boot sequence](#boot-sequence)).
 - Production database: Render-managed PostgreSQL (`DATABASE_URL`).
