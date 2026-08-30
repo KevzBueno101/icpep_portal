@@ -22,7 +22,6 @@ const AdminLogin = () => {
     position: '',
     department: '',
     academic_year: '',
-    admin_note: '',
   })
   const [profilePic, setProfilePic] = useState(null)
   const [profilePicPreview, setProfilePicPreview] = useState(null)
@@ -100,7 +99,6 @@ const AdminLogin = () => {
         position: '',
         department: '',
         academic_year: '',
-        admin_note: '',
       })
     } catch (err) {
       const data = err.response?.data
@@ -280,8 +278,16 @@ const AdminLogin = () => {
                   <input name="confirm_password" type="password" value={requestForm.confirm_password} onChange={handleRequestChange} required placeholder="Confirm password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input name="position" value={requestForm.position} onChange={handleRequestChange} placeholder="Requested position" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
-                  <input name="department" value={requestForm.department} onChange={handleRequestChange} placeholder="Department" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
+                    <option value="">Position</option>
+                    <option value="President">President</option>
+                    <option value="Vice President">Vice President</option>
+                    <option value="Secretary">Secretary</option>
+                    <option value="Treasurer">Treasurer</option>
+                    <option value="Auditor">Auditor</option>
+                    <option value="Adviser">Adviser</option>
+                  </select>
+                  <input name="department" value={requestForm.department} onChange={handleRequestChange} placeholder="Committee (Optional)" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 </div>
                 <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
@@ -292,7 +298,6 @@ const AdminLogin = () => {
                   )}
                   <input type="file" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
                 </label>
-                <textarea name="admin_note" value={requestForm.admin_note} onChange={handleRequestChange} placeholder="Tell the President why you need admin access" rows="3" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 <button type="submit" disabled={requestLoading} className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50">
                   {requestLoading ? 'Submitting...' : 'Submit Request'}
                 </button>
