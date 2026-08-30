@@ -619,6 +619,16 @@ const Register = () => {
           </div>
         </div>
 
+        <div className="mb-5 flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800">
+          <Info className="h-5 w-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">For BS CpE students only</p>
+            <p className="mt-1 text-sky-700">
+              Only currently enrolled students in B.S. Computer Engineering (BS CpE) can register as members of the ICPEP.se Portal.
+            </p>
+          </div>
+        </div>
+
         <div className="mb-6 space-y-2">
           <p className="text-sm text-slate-500">Step {step} of 5</p>
           <div className="h-2 rounded-full bg-slate-200">

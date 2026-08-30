@@ -108,12 +108,26 @@ class UserListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'officer_id', 'registration_status', 'access_level']
 
 
-class AdminProfileSerializer(serializers.ModelSerializer):
-    profile_picture = serializers.SerializerMethodField()
+MAX_PROFILE_PICTURE_BYTES = 10 * 1024 * 1024  # 10 MB
 
-    def get_profile_picture(self, obj):
-        request = self.context.get('request')
-        return _safe_profile_picture_url(getattr(obj, 'profile_picture', None), request=request)
+
+def validate_admin_profile_picture(value):
+    """Basic size sanity check for admin profile pictures.
+
+    DRF's ImageField already verifies the uploaded file decodes as an image.
+    """
+    if value is None:
+        return value
+    if value.size > MAX_PROFILE_PICTURE_BYTES:
+        raise serializers.ValidationError('Profile picture must be less than 10MB.')
+    return value
+
+
+class AdminProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    new_password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -137,8 +151,67 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'requested_department',
             'requested_academic_year',
             'admin_note',
+            'current_password',
+            'new_password',
+            'confirm_password',
         ]
-        read_only_fields = ['id', 'role', 'position', 'can_manage_roles', 'officer_id', 'registration_status', 'access_level']
+        read_only_fields = ['id', 'can_manage_roles', 'officer_id', 'registration_status', 'access_level']
+
+    def validate_profile_picture(self, value):
+        return validate_admin_profile_picture(value)
+
+    def validate(self, attrs):
+        new_password = attrs.get('new_password')
+        if new_password:
+            current_password = attrs.get('current_password')
+            if not current_password:
+                raise serializers.ValidationError(
+                    {'current_password': 'Current password is required to change your password.'}
+                )
+            if new_password != attrs.get('confirm_password'):
+                raise serializers.ValidationError(
+                    {'confirm_password': 'New password and confirm password do not match.'}
+                )
+            instance = getattr(self, 'instance', None)
+            if instance is not None and not instance.check_password(current_password):
+                raise serializers.ValidationError(
+                    {'current_password': 'Current password is incorrect.'}
+                )
+        return attrs
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['profile_picture'] = _safe_profile_picture_url(
+            getattr(instance, 'profile_picture', None),
+            request=self.context.get('request'),
+        )
+        return data
+
+    def update(self, instance, validated_data):
+        profile_picture = validated_data.pop('profile_picture', None)
+        new_password = validated_data.pop('new_password', None)
+
+        # Clamp strings to avoid Postgres varchar DataError
+        for attr, value in list(validated_data.items()):
+            if value is None:
+                continue
+            if isinstance(value, str):
+                if attr == 'academic_year':
+                    validated_data[attr] = value[:20]
+                else:
+                    validated_data[attr] = value[:100]
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if profile_picture is not None:
+            instance.profile_picture = profile_picture
+
+        if new_password:
+            instance.set_password(new_password)
+
+        instance.save()
+        return instance
 
 
 class AdminAccountSerializer(serializers.ModelSerializer):
