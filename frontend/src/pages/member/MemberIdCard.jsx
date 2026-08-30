@@ -17,10 +17,6 @@ const MEMBER_BENEFITS = [
     description: 'Connect with fellow BS CpE students and industry professionals.',
   },
   {
-    title: 'Academic Support',
-    description: 'Updates on tutorials, board exam reviews, and academic resources.',
-  },
-  {
     title: 'Discounts & Merch',
     description: 'Exclusive offers on organization merchandise and event registration.',
   },
