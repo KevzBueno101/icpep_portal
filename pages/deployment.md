@@ -26,7 +26,7 @@ The portal is split across two hosts with automated CI/CD via GitHub Actions.
 
 ## Frontend — Vercel
 
-- Project: `icpep-portal-test.vercel.app` (production), `icpep-portal.vercel.app` referenced in `docs.json` topbar.
+- Project: `icpep-catsu.vercel.app` (production).
 - Auto-deploys from the **`dev`** branch (this is important — Vercel is wired to `dev`, so all frontend work lands here).
 - Build command: `npm run build` (in `frontend/`), which runs Vite + the PWA service-worker build.
 - Env (`frontend/.env.production`):

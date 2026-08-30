@@ -19,6 +19,11 @@
     },
     {
       "source": "/(.*)",
+      "has": [{ "type": "host", "value": "icpep-catsu.vercel.app" }],
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "https://icpep-catsu.vercel.app" }]
+    },
+    {
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "icpep-portal-test.vercel.app" }],
       "headers": [{ "key": "Access-Control-Allow-Origin", "value": "https://icpep-portal-test.vercel.app" }]
     }
