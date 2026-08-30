@@ -65,6 +65,13 @@ const Login = () => {
         </div>
        </div>
 
+        <div className="mb-5 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800">
+          <p className="font-semibold">For BS CpE students only</p>
+          <p className="mt-1 text-sky-700">
+            Only currently enrolled students in B.S. Computer Engineering (BS CpE) can log in to the ICPEP.se Portal as members.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm text-slate-600 mb-1">Email</label>
