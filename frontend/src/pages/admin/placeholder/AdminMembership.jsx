@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download } from 'lucide-react'
 
 import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../../../components/common/ConfirmModal'
+import MembershipCard from '../../../components/member/MembershipCard'
 import { useAuth } from '../../../context/useAuth'
 import { EVENTS } from '../../../utils/events'
 import { downloadFile } from '../../../utils/download'
@@ -36,6 +37,7 @@ const AdminMembership = () => {
 
   // History Modal State
   const [historyTarget, setHistoryTarget] = useState(null)
+  const idCardRef = useRef(null)
   const [historyTransactions, setHistoryTransactions] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
@@ -1489,7 +1491,7 @@ const AdminMembership = () => {
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 rounded-t-3xl">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Transaction History</h3>
+                <h3 className="text-lg font-bold text-slate-900">Details</h3>
                 <p className="text-sm text-slate-500">
                   {historyTarget.first_name} {historyTarget.last_name}
                 </p>
@@ -1526,6 +1528,7 @@ const AdminMembership = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <th className="pb-2 pr-3 whitespace-nowrap">ID</th>
                         <th className="pb-2 pr-3 whitespace-nowrap">Ref #</th>
                         <th className="pb-2 pr-3 whitespace-nowrap">Date</th>
                         <th className="pb-2 pr-3 whitespace-nowrap">Type</th>
@@ -1537,6 +1540,19 @@ const AdminMembership = () => {
                     <tbody>
                       {historyTransactions.map((txn) => (
                         <tr key={txn.id} className="border-b border-slate-50 last:border-0">
+                          <td className="py-3 pr-3 whitespace-nowrap">
+                            <span className="font-mono text-xs text-slate-700">
+                              ID# {historyTarget.student_number || '—'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => idCardRef.current?.download()}
+                              className="ml-2 inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-slate-800 transition"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Download
+                            </button>
+                          </td>
                           <td className="py-3 pr-3 font-mono text-xs text-slate-700 whitespace-nowrap">
                             {txn.reference_number}
                           </td>
@@ -1596,6 +1612,19 @@ const AdminMembership = () => {
                   </table>
                 </div>
               )}
+
+              {/* Member ID Card */}
+              <div className="mt-6 border-t border-slate-100 pt-5">
+                <h4 className="text-sm font-bold text-slate-900 mb-1">Member ID Card</h4>
+                <p className="text-xs text-slate-500 mb-3">
+                  Download the printable member ID. Use the button on the card below.
+                </p>
+                <MembershipCard
+                  ref={idCardRef}
+                  profile={historyTarget}
+                  userId={historyTarget.user}
+                />
+              </div>
             </div>
           </div>
         </div>

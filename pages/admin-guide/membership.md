@@ -53,14 +53,15 @@ When you approve a member, the system automatically:
 
 The authorized signatory on the receipt is your full name.
 
-## Transaction History
+## Details
 
-Click **History** on any member to view their payment transactions:
+Click **History** on any member to view their payment transactions and member ID:
 
 > ![Transaction history modal screenshot](../images/admin-history.svg)
 
 Each transaction shows:
 
+- Member ID number + **Download** (prints the member's ID card)
 - Reference number (clickable receipt link)
 - Transaction date
 - Type (Registration / Renewal)
@@ -68,6 +69,8 @@ Each transaction shows:
 - Status (VERIFIED / PENDING / REJECTED)
 - Receipt image link
 - Payment proof image link
+
+The modal also embeds the full member ID card with its built-in **Download ID Card (PNG)** button.
 
 ## Editing Members
 
