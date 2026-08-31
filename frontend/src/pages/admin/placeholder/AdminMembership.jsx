@@ -60,7 +60,6 @@ const AdminMembership = () => {
     year_level: '1',
     section: '',
     contact_number: '',
-    birthdate: '',
     membership_status: 'PENDING',
   })
   const [isRenewConfirmOpen, setIsRenewConfirmOpen] = useState(false)
@@ -284,7 +283,6 @@ const AdminMembership = () => {
       year_level: '1',
       section: '',
       contact_number: '',
-      birthdate: '',
       membership_fee: 'SEMESTER',
       membership_status: 'PENDING',
     })
@@ -323,7 +321,6 @@ const AdminMembership = () => {
       
       // Clean up optional fields before payload dispatch
       if (!payload.middle_name.trim()) delete payload.middle_name
-      if (!payload.birthdate) delete payload.birthdate
 
       const response = await api.post('/members/', payload)
       
@@ -1134,21 +1131,6 @@ const AdminMembership = () => {
                       onChange={handleFormChange}
                       placeholder="09XXXXXXXXX"
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50"
-                    />
-                  </div>
-
-                  {/* Birthdate */}
-                  <div>
-                    <label htmlFor="birthdate" className="block text-xs font-semibold text-slate-700 mb-1">
-                      Birthdate
-                    </label>
-                    <input
-                      type="date"
-                      id="birthdate"
-                      name="birthdate"
-                      value={formData.birthdate}
-                      onChange={handleFormChange}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
                     />
                   </div>
 

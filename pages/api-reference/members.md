@@ -65,7 +65,6 @@ Content-Type: multipart/form-data
   "school": "University of Example",
   "course": "BSIT",
   "year": "2nd Year",
-  "address": "456 Oak St",
   "payment_method": "on_hand",
   "profile_picture": <file>
 }
@@ -102,7 +101,6 @@ Authorization: Bearer <access_token>
   "course": "BSIT",
   "year": "3rd Year",
   "contact_number": "09171234567",
-  "address": "123 Main St",
   "profile_picture": "https://res.cloudinary.com/...",
   "payment_proof_image": "https://res.cloudinary.com/...",
   "payment_method": "gcash",

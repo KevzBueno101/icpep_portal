@@ -51,8 +51,6 @@ erDiagram
         string contact_number
         string payment_method
         string membership_status
-        string address
-        date birthdate
         image profile_picture
         image payment_proof_image
         image coe_id_image
@@ -170,7 +168,6 @@ Custom auth model. `USERNAME_FIELD = 'email'`, `REQUIRED_FIELDS = ['username']`.
 | `payment_method` | CharField | `ON_HAND` / `GCASH` |
 | `payment_proof_image` | ImageField | `payment_proofs/` |
 | `coe_id_image` | ImageField | `coe_id_documents/` |
-| `address`, `birthdate` | Char/Date | Optional profile fields |
 | `profile_picture` | ImageField | `profiles/` |
 | `admin_message` | TextField | Shown to member on reject/approve |
 | `membership_status` | CharField | `PENDING` / `APPROVED` / `REJECTED` / `EXPIRED` (default PENDING) |

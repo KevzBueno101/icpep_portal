@@ -12,7 +12,7 @@ description: Member profile viewing/editing, profile picture upload, and passwor
 ## What it shows
 
 - View mode: personal info, contact, year level/section, photo
-- **Edit mode:** first/middle/last name, contact number, year level, section, address, birthdate
+- **Edit mode:** first/middle/last name, contact number, year level, section
 - **Change password** (current/new/confirm, ≥ 8 chars)
 - **Profile picture upload** with preview (≤ 10 MB, image only)
 

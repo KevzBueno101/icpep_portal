@@ -87,8 +87,6 @@ class MemberProfile(models.Model):
         default='ON_HAND',
     )
     payment_proof_image = models.ImageField(upload_to='payment_proofs/', null=True, blank=True)
-    address = models.TextField(blank=True)
-    birthdate = models.DateField(null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
     coe_id_image = models.ImageField(upload_to='coe_id_documents/', null=True, blank=True, verbose_name='COE/ID Document')
     admin_message = models.TextField(blank=True, verbose_name='Admin Message')
