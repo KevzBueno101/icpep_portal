@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/users/',   include('users.urls')),
     path('api/milestones/', include('milestones.urls')),
     path('api/announcements/', include('announcements.urls')),
+    path('api/about/', include('about.urls')),
     path('api/audit-logs/', include('audit_logs.urls')),
     path('api/push/', include('push.urls')),
     # duplicate include removed

@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'members',
     'milestones',
     'announcements',
+    'about',
     'audit_logs',
     'common',
     'push',

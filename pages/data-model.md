@@ -202,6 +202,18 @@ Singleton (id=1): `gcash_number`, `gcash_name`, `updated_at`. Edited by Presiden
 | `created_by` | FK → User (SET_NULL) |
 | `AnnouncementImage` | `announcement` FK (CASCADE), `image`, `order` |
 
+### `about.AboutSection`
+
+| Field | Notes |
+|---|---|
+| `section_type` | `MISSION` / `VISION` / `GOALS` / `HISTORY` / `CONSTITUTION` / `RESOLUTION` / `CUSTOM` |
+| `title`, `body` | Content; `body` blank allowed |
+| `document` | Optional file (PDF / image), `upload_to='org_documents/'` |
+| `document_name` | Display label for the attached file |
+| `is_published` | Visible on the member About page when checked |
+| `display_order` | Reorderable via `/api/about/admin/reorder/` |
+| `created_by` | FK → User (SET_NULL) |
+
 ### `milestones.Milestone` + `MilestoneImage`
 
 | Field | Notes |
@@ -218,8 +230,8 @@ Singleton (id=1): `gcash_number`, `gcash_name`, `updated_at`. Edited by Presiden
 |---|---|
 | `timestamp` | `auto_now_add`, indexed |
 | `admin_user` | FK → User (SET_NULL) |
-| `action_type` | 22 choices (see enums) |
-| `entity_type` | `Member` / `User` / `Milestone` / `Announcement` / `PaymentSettings` |
+| `action_type` | 26 choices (see enums) |
+| `entity_type` | `Member` / `User` / `Milestone` / `Announcement` / `About` / `PaymentSettings` |
 | `entity_id` | Loose integer ref (no FK constraint, polymorphic) |
 | `entity_name`, `details` (JSON), `ip_address` | Context |
 
@@ -245,8 +257,8 @@ Singleton (id=1): `gcash_number`, `gcash_name`, `updated_at`. Edited by Presiden
 | `PaymentTransaction.status` | `PENDING`, `VERIFIED` |
 | `Announcement.category` | `announcement`, `achievement`, `update`, `opportunity`, `event` |
 | `Milestone.category` | `founding`, `achievement`, `recognition`, `event`, `community`, `feature` |
-| `AuditLog.entity_type` | `Member`, `User`, `Milestone`, `Announcement`, `PaymentSettings` |
-| `AuditLog.action_type` | `MEMBER_APPROVED/REJECTED/CREATED/UPDATED/DELETED`, `ROLE_ASSIGNED`, `ADMIN_CREATED/UPDATED/DELETED`, `MILESTONE_CREATED/UPDATED/DELETED`, `MILESTONE_IMAGE_UPLOADED/DELETED`, `ANNOUNCEMENT_CREATED/UPDATED/DELETED`, `ANNOUNCEMENT_IMAGE_UPLOADED/DELETED`, `YEAR_END_RESET`, `PAYMENT_SETTINGS_UPDATED` |
+| `AuditLog.entity_type` | `Member`, `User`, `Milestone`, `Announcement`, `About`, `PaymentSettings` |
+| `AuditLog.action_type` | `MEMBER_APPROVED/REJECTED/CREATED/UPDATED/DELETED`, `ROLE_ASSIGNED`, `ADMIN_CREATED/UPDATED/DELETED`, `MILESTONE_CREATED/UPDATED/DELETED`, `MILESTONE_IMAGE_UPLOADED/DELETED`, `ANNOUNCEMENT_CREATED/UPDATED/DELETED`, `ANNOUNCEMENT_IMAGE_UPLOADED/DELETED`, `ABOUT_SECTION_CREATED/UPDATED/DELETED/REORDERED`, `YEAR_END_RESET`, `PAYMENT_SETTINGS_UPDATED` |
 
 ## Notable Constraints & Quirks
 
