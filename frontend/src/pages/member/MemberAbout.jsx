@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Users, Mail, MapPin, FileText, Eye } from 'lucide-react'
+import { Info, Shield, Users, Mail, MapPin, FileText, Eye, ChevronRight } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import { OfficersProvider } from '../../context/OfficersContext'
 import api from '../../api/axios'
 
-const FALLBACK_SECTIONS = [
+const FALLBACK_IDENTITY = [
   {
     section_type: 'MISSION',
     title: 'Our Mission',
@@ -22,14 +22,26 @@ const FALLBACK_SECTIONS = [
   },
 ]
 
-const SECTION_COLORS = {
-  MISSION: { badge: 'bg-sky-50 text-sky-600', title: 'text-slate-900' },
-  VISION: { badge: 'bg-indigo-50 text-indigo-600', title: 'text-slate-900' },
-  GOALS: { badge: 'bg-emerald-50 text-emerald-600', title: 'text-slate-900' },
-  HISTORY: { badge: 'bg-amber-50 text-amber-600', title: 'text-slate-900' },
-  CONSTITUTION: { badge: 'bg-violet-50 text-violet-600', title: 'text-slate-900' },
-  RESOLUTION: { badge: 'bg-rose-50 text-rose-600', title: 'text-slate-900' },
-  CUSTOM: { badge: 'bg-slate-100 text-slate-600', title: 'text-slate-900' },
+const IDENTITY_TYPES = new Set(['MISSION', 'VISION'])
+
+const isIdentity = (s) =>
+  IDENTITY_TYPES.has(s.section_type) ||
+  s.title?.toLowerCase().includes('core values')
+
+const FEED_COLORS = {
+  GOALS: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  HISTORY: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  CONSTITUTION: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
+  RESOLUTION: { bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
+  CUSTOM: { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
+}
+
+const TYPE_LABELS = {
+  GOALS: 'Goals',
+  HISTORY: 'History',
+  CONSTITUTION: 'Constitution & By-Laws',
+  RESOLUTION: 'Resolution',
+  CUSTOM: 'Section',
 }
 
 const isPdf = (section) => {
@@ -56,8 +68,11 @@ export default function MemberAbout() {
     }
   }, [])
 
-  const visibleSections =
-    sections && sections.length > 0 ? sections : sections === null ? null : FALLBACK_SECTIONS
+  const allSections =
+    sections && sections.length > 0 ? sections : sections === null ? null : FALLBACK_IDENTITY
+
+  const identitySections = allSections?.filter(isIdentity) ?? []
+  const feedSections = allSections?.filter((s) => !isIdentity(s)) ?? []
 
   return (
     <div className="space-y-10">
@@ -73,45 +88,128 @@ export default function MemberAbout() {
         </p>
       </div>
 
-      {/* Dynamic sections: Mission, Vision, Goals, History, etc. */}
-      {visibleSections && (
-        <div className="grid gap-6 md:grid-cols-3">
-          {visibleSections.map((section) => {
-            const colors = SECTION_COLORS[section.section_type] || SECTION_COLORS.CUSTOM
-            const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
-            return (
-              <div key={section.id || section.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between hover:shadow transition duration-200">
-                <div>
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-4 ${colors.badge}`}>
+      {/* Identity: Mission, Vision, Core Values */}
+      {identitySections.length > 0 && (
+        <div>
+          <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="h-1 w-5 rounded-full bg-sky-600" />
+            Our Identity
+          </h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {identitySections.map((section) => {
+              const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
+              const isMission = section.section_type === 'MISSION'
+              const isVision = section.section_type === 'VISION'
+              const accent = isMission
+                ? 'from-sky-500 to-sky-600'
+                : isVision
+                  ? 'from-indigo-500 to-indigo-600'
+                  : 'from-slate-500 to-slate-600'
+              const iconBg = isMission
+                ? 'bg-sky-50 text-sky-600'
+                : isVision
+                  ? 'bg-indigo-50 text-indigo-600'
+                  : 'bg-slate-100 text-slate-600'
+              return (
+                <div
+                  key={section.id || section.title}
+                  className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col"
+                >
+                  <div className={`absolute inset-x-0 top-0 h-1 rounded-t-3xl bg-gradient-to-r ${accent}`} />
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-4 ${iconBg}`}>
                     <Shield className="h-6 w-6" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900">{section.title}</h2>
+                  <h3 className="text-xl font-bold text-slate-900">{section.title}</h3>
                   {lines.length > 1 ? (
-                    <ul className="mt-4 space-y-2 text-sm text-slate-600 font-medium">
+                    <ul className="mt-4 space-y-2 text-sm text-slate-600 font-medium flex-1">
                       {lines.map((line, idx) => (
                         <li key={idx} className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-sky-600" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-sky-600 shrink-0" />
                           {line}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-4 text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                    <p className="mt-4 text-sm text-slate-600 leading-relaxed flex-1">{section.body}</p>
                   )}
                   {section.document_url && (
                     <button
                       type="button"
                       onClick={() => setPreview(section)}
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 self-start"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       {section.document_name || 'View Document'}
                     </button>
                   )}
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Feeds: History, Constitution, Resolutions, Goals, etc. */}
+      {feedSections.length > 0 && (
+        <div>
+          <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="h-1 w-5 rounded-full bg-sky-600" />
+            About the Organization
+          </h2>
+          <div className="space-y-4">
+            {feedSections.map((section) => {
+              const colors = FEED_COLORS[section.section_type] || FEED_COLORS.CUSTOM
+              const label = TYPE_LABELS[section.section_type] || 'Section'
+              const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
+              return (
+                <div
+                  key={section.id || section.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow transition-shadow duration-200"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full ${colors.dot}`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}>
+                          {label}
+                        </span>
+                        {section.document_url && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                            <FileText className="h-3 w-3" />
+                            {section.document_name || 'Document'}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
+                      {lines.length > 1 ? (
+                        <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
+                          {lines.map((line, idx) => (
+                            <li key={idx} className="flex items-center gap-2">
+                              <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
+                              {line}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                      )}
+                      {section.document_url && (
+                        <button
+                          type="button"
+                          onClick={() => setPreview(section)}
+                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {section.document_name || 'View Document'}
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
