@@ -32,7 +32,7 @@ export default function MobileMemberNavbar({ announcementsBadge = 0 }) {
       aria-label="Member mobile navigation"
       className="md:hidden fixed bottom-6 left-1/2 z-50 w-[92vw] max-w-[420px] -translate-x-1/2 pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="rounded-[28px] bg-white/90 backdrop-blur-lg border border-white/40 shadow-[0_12px_36px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.03)] px-3 py-2 flex items-center justify-around h-[72px]">
+      <div className="rounded-[28px] bg-white/90 backdrop-blur-lg border border-white/40 shadow-[0_12px_36px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.03)] px-3 py-2 flex items-center justify-around h-[72px] dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
         {NAV_ITEMS.map((item) => {
           const isActive = activeKey === item.key
           const Icon = item.Icon
@@ -48,8 +48,8 @@ export default function MobileMemberNavbar({ announcementsBadge = 0 }) {
               <div
                 className={`flex items-center justify-center transition-all duration-300 ease-out ${
                   isActive
-                    ? 'bg-sky-500/10 text-sky-600 px-5 py-2.5 rounded-2xl shadow-[0_4px_16px_rgba(14,165,233,0.18)] scale-105 border border-sky-500/10'
-                    : 'text-slate-500 hover:text-slate-800 p-2.5 rounded-2xl'
+                    ? 'bg-sky-500/10 text-sky-600 px-5 py-2.5 rounded-2xl shadow-[0_4px_16px_rgba(14,165,233,0.18)] scale-105 border border-sky-500/10 dark:text-sky-400'
+                    : 'text-slate-500 hover:text-slate-800 p-2.5 rounded-2xl dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
                 <Icon

@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
+import ThemeToggle from '../ThemeToggle'
 import { useAuth } from '../../context/useAuth'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
@@ -216,6 +217,9 @@ export default function AdminSidebar({
         </nav>
 
         <div className="shrink-0 px-4 pb-4">
+          <div className="mb-2 flex items-center justify-center">
+            <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
+          </div>
           <button
             type="button"
             onClick={() => setConfirmLogoutOpen(true)}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import ThemeToggle from './ThemeToggle'
 import {
   subscribeInstallPrompt,
   getInstallPrompt,
@@ -40,7 +41,7 @@ export default function Navbar() {
   const showInstallButton = installPrompt || (isIOS() && !isStandalone())
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/60 bg-white/60 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.55),0_10px_30px_rgba(2,132,199,0.12)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/60 bg-white/60 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.55),0_10px_30px_rgba(2,132,199,0.12)] dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-[0_0_0_1px_rgba(51,65,85,0.6),0_10px_30px_rgba(0,0,0,0.4)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* ── Left end: Logo + techy accent ── */}
@@ -51,7 +52,7 @@ export default function Navbar() {
             </div>
             <Link to="/" className="flex items-center gap-3 text-white" onClick={closeMobileMenu}>
               <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-9 w-auto" />
-              <span className="text-lg font-bold text-slate-900">ICpEP.SE</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">ICpEP.SE</span>
             </Link>
           </div>
 
@@ -60,25 +61,25 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/"
-                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
+                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
               >
                 Home
               </Link>
               <a
                 href="#announcements"
-                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700"
+                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
               >
                 Announcements
               </a>
               <a
                 href="#milestones"
-                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700"
+                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
               >
                 Achievements
               </a>
               <a
                 href="#officers"
-                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700"
+                className="rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-slate-900/5 hover:text-cyan-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
               >
                 Officers
               </a>
@@ -86,7 +87,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleInstall}
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
                 >
                   <svg
                     className="h-4 w-4"
@@ -107,7 +108,7 @@ export default function Navbar() {
               )}
               <Link
                 to="/login"
-                className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700"
+                className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
               >
                 Login
               </Link>
@@ -122,6 +123,7 @@ export default function Navbar() {
 
           {/* ── Right end: techy accent + mobile hamburger ── */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <div className="hidden md:flex items-center gap-1.5">
               <div className="w-1 h-1 rounded-full bg-cyan-400/60 animate-pulse shadow-[0_0_4px_rgba(34,211,238,0.6)]" />
               <div className="w-px h-5 bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
@@ -132,7 +134,7 @@ export default function Navbar() {
                 onClick={toggleMobileMenu}
                 aria-label="Toggle navigation"
                 aria-expanded={isMobileMenuOpen}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700/90 transition hover:bg-sky-100/50 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700/90 transition hover:bg-sky-100/50 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -149,33 +151,33 @@ export default function Navbar() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="border-t border-white/60 bg-white/60 backdrop-blur-xl md:hidden shadow-[0_0_0_1px_rgba(255,255,255,0.25)]">
+        <div className="border-t border-white/60 bg-white/60 backdrop-blur-xl md:hidden shadow-[0_0_0_1px_rgba(255,255,255,0.25)] dark:border-slate-800 dark:bg-slate-900/80">
           <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
             <Link
               to="/"
               onClick={closeMobileMenu}
-              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
             >
               Home
             </Link>
             <a
               href="#announcements"
               onClick={closeMobileMenu}
-              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
             >
               Announcements
             </a>
             <a
               href="#milestones"
               onClick={closeMobileMenu}
-              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
             >
               Achievements
             </a>
             <a
               href="#officers"
               onClick={closeMobileMenu}
-              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+              className="block rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
             >
               Officers
             </a>
@@ -186,7 +188,7 @@ export default function Navbar() {
                   closeMobileMenu()
                   handleInstall()
                 }}
-                className="inline-flex w-full items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700"
+                className="inline-flex w-full items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-slate-700/90 hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
               >
                 <svg
                   className="h-4 w-4"

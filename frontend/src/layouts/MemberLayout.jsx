@@ -6,6 +6,7 @@ import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
 import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, DollarSign } from 'lucide-react'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function MemberLayout({ children }) {
   const { user, logout, refreshUser, loading: authLoading } = useAuth()
@@ -88,24 +89,25 @@ export default function MemberLayout({ children }) {
         />
 
       {/* Mobile Header (fixed top) */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/70">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <img
               src="/icpep_logo.png"
               alt="ICPEP Logo"
-              className="h-8 w-8 rounded-lg ring-1 ring-slate-200 bg-white"
+              className="h-8 w-8 rounded-lg ring-1 ring-slate-200 bg-white dark:ring-slate-700 dark:bg-slate-800"
             />
-            <span className="font-bold text-base text-slate-900 tracking-wider">
+            <span className="font-bold text-base text-slate-900 tracking-wider dark:text-white">
               ICPEP<span className="text-sky-600">.SE</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => setShowHelpModal(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-sky-600 transition shadow-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-sky-600 transition shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-sky-400"
               aria-label="Membership Info"
             >
               <HelpCircle className="h-4.5 w-4.5" />
@@ -113,7 +115,7 @@ export default function MemberLayout({ children }) {
             <button
               type="button"
               onClick={() => setShowLogoutConfirm(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-red-600 transition shadow-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-red-600 transition shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-red-400"
               aria-label="Logout"
             >
               <LogOut className="h-4 w-4" />
@@ -133,18 +135,18 @@ export default function MemberLayout({ children }) {
       {/* Logout Confirmation Modal Overlay */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 shadow-xl animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 shadow-xl animate-in zoom-in-95 duration-200 dark:border-slate-700 dark:bg-slate-800">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 mb-4">
               <LogOut className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 text-center mb-1">Confirm Logout</h3>
-            <p className="text-slate-600 text-center text-sm mb-6">Are you sure you want to log out of your student member account?</p>
+            <h3 className="text-lg font-bold text-slate-900 text-center mb-1 dark:text-white">Confirm Logout</h3>
+            <p className="text-slate-600 text-center text-sm mb-6 dark:text-slate-300">Are you sure you want to log out of your student member account?</p>
 
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="flex-1 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
               >
                 Cancel
               </button>
