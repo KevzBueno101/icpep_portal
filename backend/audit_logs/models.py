@@ -24,6 +24,10 @@ class AuditLog(models.Model):
         ANNOUNCEMENT_DELETED = 'ANNOUNCEMENT_DELETED', 'Announcement Deleted'
         ANNOUNCEMENT_IMAGE_UPLOADED = 'ANNOUNCEMENT_IMAGE_UPLOADED', 'Announcement Image Uploaded'
         ANNOUNCEMENT_IMAGE_DELETED = 'ANNOUNCEMENT_IMAGE_DELETED', 'Announcement Image Deleted'
+        ABOUT_SECTION_CREATED = 'ABOUT_SECTION_CREATED', 'About Section Created'
+        ABOUT_SECTION_UPDATED = 'ABOUT_SECTION_UPDATED', 'About Section Updated'
+        ABOUT_SECTION_DELETED = 'ABOUT_SECTION_DELETED', 'About Section Deleted'
+        ABOUT_SECTION_REORDERED = 'ABOUT_SECTION_REORDERED', 'About Section Reordered'
         YEAR_END_RESET = 'YEAR_END_RESET', 'Year-End Reset'
         PAYMENT_SETTINGS_UPDATED = 'PAYMENT_SETTINGS_UPDATED', 'Payment Settings Updated'
 
@@ -32,6 +36,7 @@ class AuditLog(models.Model):
         USER = 'User', 'User'
         MILESTONE = 'Milestone', 'Milestone'
         ANNOUNCEMENT = 'Announcement', 'Announcement'
+        ABOUT = 'About', 'About'
         PAYMENT_SETTINGS = 'PaymentSettings', 'Payment Settings'
 
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)

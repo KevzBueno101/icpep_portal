@@ -65,7 +65,7 @@ Once logged in, your profile shows:
 
 Click **Edit Profile** to update:
 
-- Name, contact number, address
+- Name, contact number
 - Course, year, school
 - Profile picture
 

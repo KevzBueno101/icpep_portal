@@ -23,7 +23,6 @@ Content-Type: application/json
   "school": "University of Example",
   "course": "BSIT",
   "year": "3rd Year",
-  "address": "123 Main St",
   "payment_method": "gcash"
 }
 ```

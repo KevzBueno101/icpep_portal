@@ -83,7 +83,7 @@ This page collects the issues that recur most often, with the fix for each. Star
 
 **Cause:** The frontend origin isn't in `CORS_ALLOWED_ORIGINS`.
 
-**Fix:** Add the exact origin (e.g. `https://icpep-portal-test.vercel.app`) to the Render env and redeploy.
+**Fix:** Add the exact origin (e.g. `https://icpep-catsu.vercel.app`) to the Render env and redeploy.
 
 ### Old sessions get 401 after a redeploy
 

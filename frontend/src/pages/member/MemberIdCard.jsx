@@ -1,7 +1,26 @@
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import MembershipCard from '../../components/member/MembershipCard'
-import { CreditCard, ShieldCheck } from 'lucide-react'
+import { CreditCard, ShieldCheck, Award, CheckCircle2 } from 'lucide-react'
+
+const MEMBER_BENEFITS = [
+  {
+    title: 'Official Digital ID',
+    description: 'Your official ICPEP.SE digital student membership ID, valid for the academic year.',
+  },
+  {
+    title: 'Events & Activities',
+    description: 'Access to ICPEP.SE seminars, trainings, and organization activities.',
+  },
+  {
+    title: 'Networking',
+    description: 'Connect with fellow BS CpE students and industry professionals.',
+  },
+  {
+    title: 'Discounts & Merch',
+    description: 'Exclusive offers on organization merchandise and event registration.',
+  },
+]
 
 export default function MemberIdCard() {
   const { user } = useAuth()
@@ -38,10 +57,29 @@ export default function MemberIdCard() {
           <div>
             <h3 className="text-sm font-bold text-slate-900">Official Student Member Pass</h3>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              This card verifies your registration for the academic year. Tap the card to flip and expose the QR verification payload.
+              Please download and print this ID, it will use for future attendance system.
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Member Benefits */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <Award className="h-5 w-5 text-amber-500" />
+          <h2 className="text-lg font-bold text-slate-900">Member Benefits</h2>
+        </div>
+        <ul className="space-y-3">
+          {MEMBER_BENEFITS.map((benefit) => (
+            <li key={benefit.title} className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{benefit.title}</p>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{benefit.description}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )

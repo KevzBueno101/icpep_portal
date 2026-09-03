@@ -24,6 +24,7 @@ import AdminProfile from './pages/admin/AdminProfile'
 import EditAdminProfile from './pages/admin/EditAdminProfile'
 import OfficerIdCardPage from './pages/admin/OfficerIdCardPage'
 import AdminOfficersAccounts from './pages/admin/AdminOfficersAccounts'
+import AdminAbout from './pages/admin/AdminAbout'
 
 
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
@@ -173,6 +174,16 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <AdminAnnouncement />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/about"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminAbout />
                 </AdminLayout>
               </AdminProtectedRoute>
             }

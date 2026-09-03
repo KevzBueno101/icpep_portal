@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import { useAuth } from '../../context/useAuth'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
@@ -9,6 +9,7 @@ import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 const NAV_ITEMS = [
   { label: 'Dashboard',         to: '/admin/dashboard',         icon: LayoutDashboard },
   { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
+  { label: 'About Orgs',        to: '/admin/about',              icon: BookOpen },
   { label: 'Members',           to: '/admin/membership',         icon: Users },
   { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
   { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },

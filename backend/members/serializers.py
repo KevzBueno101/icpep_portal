@@ -32,8 +32,8 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         model = MemberProfile
         fields = [
             'id', 'user', 'user_email', 'user_role', 'first_name', 'middle_name', 'last_name',
-            'student_number', 'course', 'year_level', 'section', 'contact_number', 'address',
-            'birthdate', 'profile_picture', 'payment_method', 'payment_proof_image',
+            'student_number', 'course', 'year_level', 'section', 'contact_number',
+            'profile_picture', 'payment_method', 'payment_proof_image',
             'coe_id_image', 'membership_fee', 'fee_amount', 'admin_message', 'membership_status',
             'created_at', 'updated_at'
         ]
@@ -100,12 +100,10 @@ class MemberCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_email', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
-            'address', 'birthdate', 'profile_picture', 'membership_fee', 'membership_status'
+            'profile_picture', 'membership_fee', 'membership_status'
         ]
         extra_kwargs = {
             'middle_name': {'required': False, 'allow_blank': True},
-            'address': {'required': False, 'allow_blank': True},
-            'birthdate': {'required': False, 'allow_null': True},
             'profile_picture': {'required': False, 'allow_null': True},
             'membership_fee': {'required': False},
             'membership_status': {'required': False},

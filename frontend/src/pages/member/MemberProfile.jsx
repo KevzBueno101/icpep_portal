@@ -42,8 +42,6 @@ export default function MemberProfile() {
     contact_number: '',
     year_level: '',
     section: '',
-    address: '',
-    birthdate: '',
   })
 
   const [passwordForm, setPasswordForm] = useState({
@@ -93,8 +91,6 @@ export default function MemberProfile() {
       contact_number: profile.contact_number || '',
       year_level: profile.year_level ?? '',
       section: profile.section || '',
-      address: profile.address || '',
-      birthdate: profile.birthdate ? String(profile.birthdate).slice(0, 10) : '',
     })
     setSelectedFile(null)
     setPreviewUrl(null)
@@ -156,11 +152,6 @@ export default function MemberProfile() {
         contact_number: editForm.contact_number,
         year_level: editForm.year_level,
         section: editForm.section,
-        address: editForm.address,
-      }
-
-      if (editForm.birthdate) {
-        patchBase.birthdate = editForm.birthdate
       }
 
       if (selectedFile) {
@@ -316,7 +307,6 @@ export default function MemberProfile() {
               { label: 'Contact Number', key: 'contact_number', disabled: false },
               { label: 'Course', key: 'course', value: profile?.course || '', disabled: true },
               { label: 'Section/Block', key: 'section', disabled: false },
-              { label: 'Birthdate', key: 'birthdate', type: 'date', disabled: false },
             ].map((field) => {
               const isReadOnly = !editMode || field.disabled
               const value = field.value !== undefined ? field.value : (editMode ? editForm[field.key] : profile?.[field.key])
@@ -363,25 +353,6 @@ export default function MemberProfile() {
                   <option value="3">3rd Year</option>
                   <option value="4">4th Year</option>
                 </select>
-              )}
-            </div>
-
-            {/* Address Field (Full Width) */}
-            <div className="flex flex-col md:col-span-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                Home Address
-              </label>
-              {!editMode ? (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 font-medium">
-                  {profile?.address || '—'}
-                </div>
-              ) : (
-                <textarea
-                  value={editForm.address || ''}
-                  onChange={(e) => onChangeEditField('address', e.target.value)}
-                  rows="3"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
-                />
               )}
             </div>
           </div>

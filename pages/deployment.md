@@ -26,20 +26,20 @@ The portal is split across two hosts with automated CI/CD via GitHub Actions.
 
 ## Frontend — Vercel
 
-- Project: `icpep-portal-test.vercel.app` (production), `icpep-portal.vercel.app` referenced in `docs.json` topbar.
+- Project: `icpep-catsu.vercel.app` (production).
 - Auto-deploys from the **`dev`** branch (this is important — Vercel is wired to `dev`, so all frontend work lands here).
 - Build command: `npm run build` (in `frontend/`), which runs Vite + the PWA service-worker build.
 - Env (`frontend/.env.production`):
 
   | Variable | Value |
   |---|---|
-  | `VITE_API_URL` | `https://icpep-portal-backend.onrender.com/api` |
-  | `VITE_BACKEND_URL` | `https://icpep-portal-backend.onrender.com` |
-  | `VITE_WS_URL` | `wss://icpep-portal-backend.onrender.com` |
+  | `VITE_API_URL` | `https://icpep-backend-mriy.onrender.com/api` |
+  | `VITE_BACKEND_URL` | `https://icpep-backend-mriy.onrender.com` |
+  | `VITE_WS_URL` | `wss://icpep-backend-mriy.onrender.com` |
 
 ## Backend — Render
 
-- Service: `icpep-portal-backend.onrender.com`.
+- Service: `icpep-backend-mriy.onrender.com`.
 - **Branch is critical**: Render must be pointed at **`dev`** — the `main` branch historically predates several features (including the push app). If `vapid-key` returns `404`, the deployed code is from `main`.
 - Web process: `web: bash start.sh` (see [Boot sequence](#boot-sequence)).
 - Production database: Render-managed PostgreSQL (`DATABASE_URL`).

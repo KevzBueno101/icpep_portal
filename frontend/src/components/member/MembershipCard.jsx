@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import html2canvas from 'html2canvas'
 
@@ -360,7 +360,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
-export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
+const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0 }, ref) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -420,6 +420,10 @@ export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
       setSaving(false)
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    download: saveAsPng,
+  }))
 
   return (
     <div className="w-full flex flex-col items-center justify-center p-4">
@@ -489,4 +493,6 @@ export default function MembershipCard({ profile, userId, cacheKey = 0 }) {
       </div>
     </div>
   )
-}
+})
+
+export default MembershipCard
