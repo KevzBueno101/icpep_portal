@@ -388,6 +388,8 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
 
   const saveAsPng = async () => {
     if (!exportRef.current) return
+    const htmlEl = document.documentElement
+    const wasDark = htmlEl.classList.contains('dark')
     try {
       setSaving(true)
 
@@ -403,6 +405,10 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
         )
       )
 
+      // Export the ID card against a light palette so the PNG looks
+      // like a real ID regardless of the current dark-mode setting.
+      if (wasDark) htmlEl.classList.remove('dark')
+
       const canvas = await html2canvas(exportRef.current, {
         backgroundColor: '#ffffff',
         useCORS: true,
@@ -417,6 +423,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
     } catch (err) {
       console.error('Canvas processing error:', err)
     } finally {
+      if (wasDark) htmlEl.classList.add('dark')
       setSaving(false)
     }
   }

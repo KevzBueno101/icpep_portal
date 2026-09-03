@@ -4,6 +4,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Dark mode surface/typography overrides
+   These remap the app-wide light palette so every component
+   switches without editing each file. Because `.dark .bg-white`
+   has higher specificity than the bare `.bg-white` utility, these
+   win whenever dark mode is active.
+   ───────────────────────────────────────────────────────────── */
+.dark .bg-white { background-color: #1e293b; }            /* slate-800 */
+.dark .bg-slate-50 { background-color: rgb(30 41 59 / 0.6); }
+.dark .bg-slate-100 { background-color: #1e293b; }        /* slate-800 */
+.dark .bg-slate-200 { background-color: #334155; }        /* slate-700 */
+.dark .bg-slate-300 { background-color: #475569; }        /* slate-600 */
+
+.dark .text-slate-900 { color: #f1f5f9; }                 /* slate-100 */
+.dark .text-slate-800 { color: #e2e8f0; }                 /* slate-200 */
+.dark .text-slate-700 { color: #e2e8f0; }                 /* slate-200 */
+.dark .text-slate-600 { color: #cbd5e1; }                 /* slate-300 */
+.dark .text-slate-500 { color: #94a3b8; }                 /* slate-400 */
+.dark .text-slate-400 { color: #94a3b8; }                 /* slate-400 */
+
+.dark .border-slate-100 { border-color: rgb(51 65 85 / 0.6); }  /* slate-700/60 */
+.dark .border-slate-200 { border-color: #334155; }             /* slate-700 */
+.dark .border-slate-300 { border-color: #475569; }             /* slate-600 */
+
+/* Surfaces that must stay light even in dark mode — tag the element
+   with class="keep-light" to exempt it *container-level* (children
+   handled explicitly where needed, e.g. the digital ID card export
+   forces light in JS). */
+.dark .keep-light { background-color: #ffffff !important; }
+
 @layer base {
   *,
   *::before,
