@@ -111,6 +111,22 @@ class AdminRegistrationTests(APITestCase):
         self.assertFalse(user.is_active)
         self.assertEqual(user.requested_position, 'Treasurer')
 
+    def test_admin_registration_username_optional_and_auto_generated(self):
+        response = self.client.post('/api/auth/admin-register/', {
+            'email': 'auto-admin@example.com',
+            'password': 'Password123',
+            'confirm_password': 'Password123',
+            'first_name': 'Auto',
+            'last_name': 'Admin',
+            'position': 'Secretary',
+            'department': 'Docs',
+            'academic_year': '2025-2026',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(email='auto-admin@example.com')
+        self.assertEqual(user.username, 'auto-admin')
+
     def test_pending_admin_login_is_rejected(self):
         user = User.objects.create_user(
             email='pending@example.com',

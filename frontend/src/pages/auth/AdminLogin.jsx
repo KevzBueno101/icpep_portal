@@ -14,7 +14,6 @@ const AdminLogin = () => {
   const [showRequestForm, setShowRequestForm] = useState(false)
   const [requestForm, setRequestForm] = useState({
     email: '',
-    username: '',
     password: '',
     confirm_password: '',
     first_name: '',
@@ -23,6 +22,9 @@ const AdminLogin = () => {
     department: '',
     academic_year: '',
   })
+  const [requestErrors, setRequestErrors] = useState({})
+  const [showReqPass, setShowReqPass] = useState(false)
+  const [showReqConfirm, setShowReqConfirm] = useState(false)
   const [profilePic, setProfilePic] = useState(null)
   const [profilePicPreview, setProfilePicPreview] = useState(null)
   const [requestLoading, setRequestLoading] = useState(false)
@@ -77,6 +79,25 @@ const AdminLogin = () => {
 
   const handleRequestSubmit = async (e) => {
     e.preventDefault()
+    setRequestErrors({})
+
+    const errs = {}
+    if (!requestForm.first_name.trim()) errs.first_name = 'First name is required.'
+    if (!requestForm.last_name.trim()) errs.last_name = 'Last name is required.'
+    if (!requestForm.email.trim()) errs.email = 'Email is required.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestForm.email.trim())) errs.email = 'Enter a valid email address.'
+    if (!requestForm.position) errs.position = 'Position is required.'
+    if (!requestForm.password) errs.password = 'Password is required.'
+    else if (requestForm.password.length < 8) errs.password = 'Password must be at least 8 characters.'
+    if (!requestForm.confirm_password) errs.confirm_password = 'Confirm your password.'
+    else if (requestForm.password && requestForm.password !== requestForm.confirm_password) errs.confirm_password = 'Passwords do not match.'
+
+    if (Object.keys(errs).length > 0) {
+      setRequestErrors(errs)
+      toast.error('Please fix the highlighted fields.')
+      return
+    }
+
     setRequestLoading(true)
     try {
       const data = new FormData()
@@ -91,7 +112,6 @@ const AdminLogin = () => {
       setProfilePicPreview(null)
       setRequestForm({
         email: '',
-        username: '',
         password: '',
         confirm_password: '',
         first_name: '',
@@ -100,9 +120,18 @@ const AdminLogin = () => {
         department: '',
         academic_year: '',
       })
+      setRequestErrors({})
     } catch (err) {
       const data = err.response?.data
-      const msg = data?.detail || data?.email?.[0] || data?.username?.[0] || 'Unable to submit admin request.'
+      const fieldErr = {}
+      if (data) {
+        for (const [key, val] of Object.entries(data)) {
+          if (typeof val === 'string') fieldErr[key] = val
+          else if (Array.isArray(val)) fieldErr[key] = val[0]
+        }
+      }
+      setRequestErrors(fieldErr)
+      const msg = data?.detail || data?.email?.[0] || data?.password?.[0] || data?.confirm_password?.[0] || 'Unable to submit admin request.'
       toast.error(msg)
     } finally {
       setRequestLoading(false)
@@ -268,25 +297,70 @@ const AdminLogin = () => {
             {showRequestForm && (
               <form onSubmit={handleRequestSubmit} className="mt-4 space-y-3 rounded-xl border border-gray-800 bg-[#0a0a0f] p-3">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input name="first_name" value={requestForm.first_name} onChange={handleRequestChange} required placeholder="First name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
-                  <input name="last_name" value={requestForm.last_name} onChange={handleRequestChange} required placeholder="Last name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  <div>
+                    <input name="first_name" value={requestForm.first_name} onChange={handleRequestChange} required placeholder="First name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                    {requestErrors.first_name && <p className="mt-1 text-xs text-red-400">{requestErrors.first_name}</p>}
+                  </div>
+                  <div>
+                    <input name="last_name" value={requestForm.last_name} onChange={handleRequestChange} required placeholder="Last name" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                    {requestErrors.last_name && <p className="mt-1 text-xs text-red-400">{requestErrors.last_name}</p>}
+                  </div>
                 </div>
-                <input name="email" type="email" value={requestForm.email} onChange={handleRequestChange} required placeholder="Email" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
-                <input name="username" value={requestForm.username} onChange={handleRequestChange} required placeholder="Username" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <input name="password" type="password" value={requestForm.password} onChange={handleRequestChange} required placeholder="Password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
-                  <input name="confirm_password" type="password" value={requestForm.confirm_password} onChange={handleRequestChange} required placeholder="Confirm password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <div>
+                  <input name="email" type="email" value={requestForm.email} onChange={handleRequestChange} required placeholder="Email" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                  {requestErrors.email && <p className="mt-1 text-xs text-red-400">{requestErrors.email}</p>}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                    <option value="">Position</option>
-                    <option value="President">President</option>
-                    <option value="Vice President">Vice President</option>
-                    <option value="Secretary">Secretary</option>
-                    <option value="Treasurer">Treasurer</option>
-                    <option value="Auditor">Auditor</option>
-                    <option value="Adviser">Adviser</option>
-                  </select>
+                  <div>
+                    <div className="relative">
+                      <input name="password" type={showReqPass ? 'text' : 'password'} value={requestForm.password} onChange={handleRequestChange} required placeholder="Password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 pr-10 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                      <button type="button" onClick={() => setShowReqPass((prev) => !prev)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition">
+                        {showReqPass ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    {requestErrors.password && <p className="mt-1 text-xs text-red-400">{requestErrors.password}</p>}
+                  </div>
+                  <div>
+                    <div className="relative">
+                      <input name="confirm_password" type={showReqConfirm ? 'text' : 'password'} value={requestForm.confirm_password} onChange={handleRequestChange} required placeholder="Confirm password" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 pr-10 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                      <button type="button" onClick={() => setShowReqConfirm((prev) => !prev)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition">
+                        {showReqConfirm ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    {requestErrors.confirm_password && <p className="mt-1 text-xs text-red-400">{requestErrors.confirm_password}</p>}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
+                      <option value="">Position</option>
+                      <option value="President">President</option>
+                      <option value="Vice President">Vice President</option>
+                      <option value="Secretary">Secretary</option>
+                      <option value="Treasurer">Treasurer</option>
+                      <option value="Auditor">Auditor</option>
+                      <option value="Adviser">Adviser</option>
+                    </select>
+                    {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
+                  </div>
                   <input name="department" value={requestForm.department} onChange={handleRequestChange} placeholder="Committee (Optional)" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 </div>
                 <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />

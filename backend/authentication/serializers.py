@@ -10,6 +10,7 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True)
     profile_picture = serializers.ImageField(required=False, allow_null=True)
+    username = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -24,17 +25,30 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
         if User.objects.filter(email__iexact=data['email']).exists():
             raise serializers.ValidationError({'email': 'An account with this email already exists.'})
-        if User.objects.filter(username__iexact=data['username']).exists():
+        username = (data.get('username') or '').strip()
+        if username and User.objects.filter(username__iexact=username).exists():
             raise serializers.ValidationError({'username': 'An account with this username already exists.'})
         return data
+
+    @staticmethod
+    def _build_username(email):
+        """Auto-generate a unique username from the email when none is provided."""
+        base = email.split('@')[0].strip() or 'admin'
+        if not User.objects.filter(username__iexact=base).exists():
+            return base
+        suffix = 1
+        while User.objects.filter(username__iexact=f"{base}_{suffix}").exists():
+            suffix += 1
+        return f"{base}_{suffix}"
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
         password = validated_data.pop('password')
         profile_picture = validated_data.pop('profile_picture', None)
+        username = (validated_data.pop('username', '') or '').strip()
         user = User.objects.create_user(
             email=validated_data['email'],
-            username=validated_data['username'],
+            username=username or self._build_username(validated_data['email']),
             password=password,
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
