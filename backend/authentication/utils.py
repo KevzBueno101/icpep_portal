@@ -1,8 +1,10 @@
+import logging
 import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -10,6 +12,8 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from .models import FailedLoginAttempt
+
+logger = logging.getLogger(__name__)
 
 # Number of failed logins (per email/IP, within the 15-minute window) that
 # trigger the "Too many login attempts" block. Blocks on the 11th failure.
@@ -84,12 +88,11 @@ def send_password_reset_email(email, reset_url):
     """
     Sends the password reset email via SendGrid HTTP API in a background thread.
     Uses port 443, so it works on Render's free tier.
-    Falls back to django.core.mail.send_mail if SENDGRID_API_KEY is not set.
+    Falls back to django.core.mail.send_mail if SENDGRID_API_KEY is not set
+    or when SendGrid delivery fails (e.g. invalid key / unverified sender).
     """
-    def _send():
-        try:
-            subject = "Reset your ICPEP.SE password"
-            html = f"""<!DOCTYPE html>
+    subject = "Reset your ICPEP.SE password"
+    html = f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
@@ -111,29 +114,40 @@ This link expires in 24 hours.
 </body>
 </html>"""
 
-            api_key = getattr(settings, 'SENDGRID_API_KEY', '')
-            if api_key:
+    def _send():
+        api_key = getattr(settings, 'SENDGRID_API_KEY', '').strip()
+
+        def _smtp():
+            send_mail(
+                subject=subject,
+                message=f"Reset your password at: {reset_url}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html,
+            )
+
+        if api_key:
+            try:
                 message = Mail(
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to_emails=email,
                     subject=subject,
                     html_content=html,
                 )
-                sg = SendGridAPIClient(api_key)
-                sg.send(message)
-            else:
-                from django.core.mail import send_mail
-                send_mail(
-                    subject=subject,
-                    message=f"Reset your password at: {reset_url}",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    html_message=html,
+                SendGridAPIClient(api_key).send(message)
+                logger.info("Password reset email SENT to %s via SendGrid", email)
+                return
+            except Exception:
+                logger.exception(
+                    "Password reset email SendGrid delivery FAILED to %s; falling back to SMTP",
+                    email,
                 )
+
+        try:
+            _smtp()
+            logger.info("Password reset email SENT to %s via SMTP", email)
         except Exception:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.exception("Failed to send password reset email to %s", email)
+            logger.exception("Password reset email SMTP delivery FAILED to %s", email)
 
     thread = threading.Thread(target=_send, daemon=True)
     thread.start()
