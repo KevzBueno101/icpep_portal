@@ -11,6 +11,8 @@ from django.utils.http import urlsafe_base64_encode
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+from config.urlutils import clean_origin_url
+
 from .models import FailedLoginAttempt
 
 logger = logging.getLogger(__name__)
@@ -22,26 +24,29 @@ LOGIN_FAILURE_LIMIT = 10
 
 def build_password_reset_url(user, token, frontend_url=None, request=None):
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-    base_url = (frontend_url or getattr(settings, 'FRONTEND_URL', '') or '').strip().rstrip('/')
+    base_url = (
+        clean_origin_url(frontend_url)
+        or clean_origin_url(getattr(settings, 'FRONTEND_URL', ''))
+    )
 
     if base_url:
         return f"{base_url}/reset-password/{uidb64}/{token}"
 
     if request is not None:
         try:
-            origin = (request.headers.get('Origin') or '').strip()
+            origin = clean_origin_url(request.headers.get('Origin') or '')
             if origin:
                 return f"{origin.rstrip('/')}/reset-password/{uidb64}/{token}"
 
             referer = (request.headers.get('Referer') or '').strip()
             if referer:
                 parsed_referer = urlsplit(referer)
-                if parsed_referer.scheme and parsed_referer.netloc:
+                if clean_origin_url(f"{parsed_referer.scheme}://{parsed_referer.netloc}"):
                     return urlunsplit((parsed_referer.scheme, parsed_referer.netloc, f"/reset-password/{uidb64}/{token}", '', ''))
 
             forwarded_proto = request.headers.get('X-Forwarded-Proto', request.scheme)
             forwarded_host = request.headers.get('X-Forwarded-Host') or request.headers.get('Host')
-            if forwarded_host:
+            if forwarded_host and clean_origin_url(f"{forwarded_proto}://{forwarded_host}"):
                 return f"{forwarded_proto}://{forwarded_host.rstrip('/')}/reset-password/{uidb64}/{token}"
         except Exception:
             pass
