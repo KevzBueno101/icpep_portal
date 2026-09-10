@@ -39,7 +39,7 @@ function CardFront({ onFlip }) {
         <div className="mb-3 flex items-center justify-center">
           <div className="w-24 h-24 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white shadow-md">
             <img
-              src="/icpep_logo.jpg"
+              src="/icpep_logo.png"
               alt="ICpEP Logo"
               className="w-full h-full object-cover"
               onError={(e) => { e.target.style.display = 'none' }}
@@ -166,7 +166,7 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
           </div>
           <div className="flex flex-col items-center justify-center flex-1 w-full pb-1">
             <div className="w-34 h-34 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-white shadow-sm mb-2">
-              <img src="/icpep_logo.jpg" alt="ICpEP Logo" className="w-full h-full object-cover" />
+              <img src="/icpep_logo.png" alt="ICpEP Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-[6.5px] font-black uppercase tracking-widest text-slate-400 text-center block">
               Official Seal
@@ -208,7 +208,7 @@ function ExportCardFront() {
           background: '#fff', marginBottom: 12,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <img src="/icpep_logo.jpg" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src="/icpep_logo.png" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
         <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '0.2em', fontFamily: 'Arial, sans-serif' }}>
@@ -343,7 +343,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
             border: '1px solid #CBD5E1', background: '#fff', marginBottom: 6,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <img src="/icpep_logo.jpg" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/icpep_logo.png" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div style={{
             fontSize: 6, fontWeight: 900, textTransform: 'uppercase',
