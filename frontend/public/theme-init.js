@@ -8,5 +8,7 @@
           ? 'dark'
           : 'light'
     if (theme === 'dark') document.documentElement.classList.add('dark')
-  } catch (e) {}
+  } catch (e) {
+    /* localStorage unavailable — fall back to default light theme */
+  }
 })()

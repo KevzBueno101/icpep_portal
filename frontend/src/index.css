@@ -51,6 +51,41 @@
 .dark .bg-\[\#F5F7FA\] { background-color: #0f172a !important; }      /* slate-900 */
 .dark .from-\[\#F5F7FA\] { --tw-gradient-from: #0f172a !important; }
 
+/* Status/pastel tints — keep the hue but go translucent on dark
+   surfaces and brighten the accompanying icon/text (600/700/800 are
+   the "bold hue on pastel pill" pairings used by badges & tiles). */
+.dark .bg-sky-100 { background-color: rgb(56 189 248 / 0.15); }
+.dark .bg-amber-100 { background-color: rgb(251 191 36 / 0.15); }
+.dark .bg-green-100 { background-color: rgb(74 222 128 / 0.15); }
+.dark .bg-red-100 { background-color: rgb(248 113 113 / 0.15); }
+.dark .bg-purple-100 { background-color: rgb(192 132 252 / 0.15); }
+.dark .bg-blue-100 { background-color: rgb(96 165 250 / 0.15); }
+
+.dark .text-sky-600 { color: #38bdf8; }  /* sky-400 */
+.dark .text-sky-700 { color: #38bdf8; }
+.dark .text-sky-800 { color: #7dd3fc; }  /* sky-300 */
+.dark .text-amber-600 { color: #fbbf24; }  /* amber-400 */
+.dark .text-amber-700 { color: #fbbf24; }
+.dark .text-amber-800 { color: #fcd34d; }  /* amber-300 */
+.dark .text-green-600 { color: #4ade80; }  /* green-400 */
+.dark .text-green-700 { color: #4ade80; }
+.dark .text-red-600 { color: #f87171; }  /* red-400 */
+.dark .text-red-700 { color: #f87171; }
+.dark .text-purple-600 { color: #c084fc; }  /* purple-400 */
+.dark .text-purple-700 { color: #c084fc; }
+.dark .text-blue-600 { color: #60a5fa; }  /* blue-400 */
+.dark .text-blue-700 { color: #60a5fa; }
+
+/* Opacity-modified white/slate surfaces (e.g. glassy dashboard cards,
+   empty states) are distinct utilities from the plain ones, so map
+   them to their dark equivalents too. */
+.dark .bg-white\/80 { background-color: rgb(30 41 59 / 0.8); }
+.dark .bg-white\/50 { background-color: rgb(30 41 59 / 0.5); }
+.dark .bg-slate-50\/50 { background-color: rgb(30 41 59 / 0.5); }
+
+/* Inputs use ring-slate-200 as their border — mirror the border remap. */
+.dark .ring-slate-200 { --tw-ring-color: #334155; }
+
 /* Surfaces that must stay light even in dark mode — tag the element
    with class="keep-light" to exempt it *container-level* (children
    handled explicitly where needed, e.g. the digital ID card export
