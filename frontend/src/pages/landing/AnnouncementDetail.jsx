@@ -204,7 +204,7 @@ export default function AnnouncementDetail() {
               style={{ background: cat.dimAccent, borderColor: cat.border }}
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
-              <span className="text-xs font-semibold uppercase tracking-[0.25em]" style={{ color: cat.accent }}>
+              <span className="text-xs font-semibold tracking-wide" style={{ color: cat.accent }}>
                 {cat.label}
               </span>
             </div>
