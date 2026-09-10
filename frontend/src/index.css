@@ -28,6 +28,11 @@
 .dark .border-slate-200 { border-color: #334155; }             /* slate-700 */
 .dark .border-slate-300 { border-color: #475569; }             /* slate-600 */
 
+/* Hard-coded light section backgrounds — keep usable in dark mode.
+   #F5F7FA is the off-white used by landing sections (e.g. announcements). */
+.dark .bg-\[\#F5F7FA\] { background-color: #0f172a !important; }      /* slate-900 */
+.dark .from-\[\#F5F7FA\] { --tw-gradient-from: #0f172a !important; }
+
 /* Surfaces that must stay light even in dark mode — tag the element
    with class="keep-light" to exempt it *container-level* (children
    handled explicitly where needed, e.g. the digital ID card export
