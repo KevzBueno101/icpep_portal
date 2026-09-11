@@ -5,7 +5,7 @@ import { useMember } from '../context/MemberContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
 import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
-import { LogOut, HelpCircle, X, Shield, Award, Calendar, DollarSign } from 'lucide-react'
+import { LogOut, HelpCircle, X, Shield, Award, Calendar, PhilippinePeso } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 
 export default function MemberLayout({ children }) {
@@ -190,7 +190,7 @@ export default function MemberLayout({ children }) {
               <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <DollarSign className="h-4.5 w-4.5" />
+                    <PhilippinePeso className="h-4.5 w-4.5" />
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm">Membership Fees & Validity</h4>
@@ -230,7 +230,7 @@ export default function MemberLayout({ children }) {
                 </h4>
                 <ul className="text-xs text-slate-600 space-y-2 pl-4 list-disc leading-relaxed">
                   <li><strong>Non-Transferability:</strong> Membership details and cards are unique to you and cannot be shared or transferred to other students.</li>
-                  <li><strong>Active ID Status:</strong> To keep your Digital ID showing <span className="text-emerald-600 font-semibold">VERIFIED</span>, your registered payment and student number must be verified by the chapter treasurer.</li>
+                  <li><strong>Active ID Status:</strong> To keep your Digital ID showing <span className="text-emerald-600 font-semibold">VERIFIED</span>, your registered payment and student number must be verified by the membership director or assigned officer.</li>
                   <li><strong>Refund Policy:</strong> All registration and renewal fees are final, non-refundable, and non-transferable.</li>
                   <li><strong>Organization Conduct:</strong> Members must adhere to the ICPEP.SE constitution and follow active department/laboratory rules.</li>
                 </ul>
@@ -239,7 +239,7 @@ export default function MemberLayout({ children }) {
 
             {/* Footer */}
             <div className="border-t border-slate-100 p-4 bg-slate-50 shrink-0 text-center text-xs text-slate-500 font-medium">
-              Need assistance? Drop an email to <span className="text-sky-600 font-semibold">treasurer@icpep.se</span>
+              Need assistance? Drop an email to <span className="text-sky-600 font-semibold">icpep.se.catsuchapter@gmail.com</span>
             </div>
           </div>
         </div>
