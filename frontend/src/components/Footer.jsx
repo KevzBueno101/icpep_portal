@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Mail } from 'lucide-react'
+import PrivacyPolicyModal from './PrivacyPolicyModal'
+import DevCommitteeModal from './DevCommitteeModal'
 
 function FacebookIcon({ className }) {
   return (
@@ -17,10 +19,10 @@ function FacebookIcon({ className }) {
     </svg>
   )
 }
-import PrivacyPolicyModal from './PrivacyPolicyModal'
 
 export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [showCommittee, setShowCommittee] = useState(false)
 
   return (
     <footer className="relative z-50 bg-slate-900 py-12 text-white">
@@ -94,11 +96,20 @@ export default function Footer() {
         <hr className="mb-6 border-slate-700" />
 
         <div className="text-center text-sm text-slate-400">
-          <p>Developed by DevCommittee | ICpEP.SE CatSU @2026</p>
+          <p>Developed by{' '}
+            <button
+              type="button"
+              onClick={() => setShowCommittee(true)}
+              className="font-semibold text-sky-400 underline decoration-sky-400/30 underline-offset-2 transition hover:text-white hover:decoration-sky-400"
+            >
+              DevCommittee
+            </button>
+            {' '}| ICpEP.SE CatSU @2026</p>
         </div>
       </div>
 
       <PrivacyPolicyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+      <DevCommitteeModal isOpen={showCommittee} onClose={() => setShowCommittee(false)} />
     </footer>
   )
 }
