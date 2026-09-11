@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Bug, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Bug, ImagePlus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { publicApi } from '../api/axios'
 
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical']
+const MAX_SCREENSHOT_MB = 5
 
 export default function ReportBugButton() {
   const [isOpen, setIsOpen] = useState(false)
@@ -16,6 +17,9 @@ export default function ReportBugButton() {
     severity: 'Medium',
     steps: '',
   })
+  const [screenshot, setScreenshot] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const fileRef = useRef(null)
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -30,9 +34,25 @@ export default function ReportBugButton() {
     }
   }, [isOpen])
 
-  const openModal = () => setIsOpen(true)
+  const clearScreenshot = useCallback(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setScreenshot(null)
+    setPreviewUrl(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }, [previewUrl])
+
+  const openModal = () => {
+    setForm((prev) => ({
+      ...prev,
+      page: typeof window !== 'undefined' ? window.location.pathname : prev.page,
+    }))
+    setIsOpen(true)
+  }
+
   const closeModal = () => {
-    if (!sending) setIsOpen(false)
+    if (sending) return
+    clearScreenshot()
+    setIsOpen(false)
   }
 
   const handleChange = (e) => {
@@ -40,12 +60,38 @@ export default function ReportBugButton() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleScreenshot = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (PNG, JPG, etc.).')
+      e.target.value = ''
+      return
+    }
+    if (file.size > MAX_SCREENSHOT_MB * 1024 * 1024) {
+      toast.error(`Screenshot must be ${MAX_SCREENSHOT_MB} MB or smaller.`)
+      e.target.value = ''
+      return
+    }
+    clearScreenshot()
+    const url = URL.createObjectURL(file)
+    setScreenshot(file)
+    setPreviewUrl(url)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSending(true)
     try {
-      await publicApi.post('/feedback/bug-report/', form)
+      const fd = new FormData()
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v))
+      if (screenshot) fd.append('screenshot', screenshot)
+
+      await publicApi.post('/feedback/bug-report/', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       toast.success('Bug report sent. Thank you!')
+      clearScreenshot()
       setForm((prev) => ({
         ...prev,
         name: '',
@@ -56,12 +102,15 @@ export default function ReportBugButton() {
       }))
       setIsOpen(false)
     } catch (err) {
-      const detail =
-        err.response?.data?.detail ||
-        err.response?.data?.email?.[0] ||
-        err.response?.data?.summary?.[0] ||
+      const data = err.response?.data
+      let detail =
+        data?.detail ||
+        data?.email?.[0] ||
+        data?.summary?.[0] ||
+        data?.screenshot?.[0] ||
         err.message ||
         'Failed to send the report. Please try again.'
+      if (typeof detail !== 'string') detail = 'Failed to send the report. Please try again.'
       toast.error(detail)
     } finally {
       setSending(false)
@@ -203,9 +252,53 @@ export default function ReportBugButton() {
                   value={form.steps}
                   onChange={handleChange}
                   rows={4}
-                  placeholder="1. Go to...&#10;2. Click...&#10;3. Observed..."
+                  placeholder={'1. Go to...\n2. Click...\n3. Observed...'}
                   className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
                 />
+              </div>
+
+              {/* Screenshot upload */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Screenshot <span className="text-slate-400">(optional, max {MAX_SCREENSHOT_MB} MB)</span>
+                </label>
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScreenshot}
+                  className="hidden"
+                  aria-hidden
+                  tabIndex={-1}
+                />
+
+                {previewUrl ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={previewUrl}
+                      alt="Screenshot preview"
+                      className="h-32 rounded-xl border border-slate-200 object-cover shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={clearScreenshot}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white shadow hover:bg-rose-700"
+                      aria-label="Remove screenshot"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500 transition hover:border-sky-400 hover:text-sky-600"
+                  >
+                    <ImagePlus className="h-5 w-5 shrink-0" />
+                    <span>Click to attach a screenshot</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">

@@ -2,49 +2,34 @@ import logging
 import threading
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from django.core.validators import validate_email
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-logger = logging.getLogger(__name__)
+from .serializers import BugReportSerializer
 
-REQUIRED_FIELDS = {'name', 'email', 'summary'}
+logger = logging.getLogger(__name__)
 
 DEFAULT_BUG_REPORT_EMAIL = 'icpep.se.catsuchapter@gmail.com'
 
 
 class BugReportAPIView(APIView):
-    """Accept a bug report and email it to the chapter inbox."""
+    """Accept a bug report (with optional screenshot) and email it to the chapter inbox."""
 
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        payload = request.data or {}
+        serializer = BugReportSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        errors = {}
-        missing = REQUIRED_FIELDS - set(payload)
-        if missing:
-            errors['detail'] = (
-                'Missing required fields: ' + ', '.join(sorted(missing))
-            )
-        email = str(payload.get('email', '')).strip()
-        if email:
-            try:
-                validate_email(email)
-            except ValidationError:
-                errors['email'] = 'Enter a valid email address.'
-        if not str(payload.get('summary', '')).strip():
-            errors['summary'] = 'Summary of the bug is required.'
-        if errors:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        report = serializer.save()
 
         threading.Thread(
-            target=_deliver_bug_report, args=(payload,), daemon=True
+            target=_deliver_bug_report, args=(report, request), daemon=True
         ).start()
         return Response(
             {'message': 'Bug report received. Thank you!'},
@@ -52,30 +37,50 @@ class BugReportAPIView(APIView):
         )
 
 
-def _deliver_bug_report(payload):
+def _screenshot_url(report, request):
+    if not report.screenshot:
+        return None
+    url = report.screenshot.url
+    if url.startswith('/'):
+        url = request.build_absolute_uri(url)
+    return url
+
+
+def _deliver_bug_report(report, request):
     """Send the bug report via SendGrid, falling back to SMTP."""
     recipient = getattr(settings, 'BUG_REPORT_EMAIL', '') or DEFAULT_BUG_REPORT_EMAIL
-    subject = f"[Bug Report] {str(payload.get('summary', '')).strip()}"
+    subject = f"[Bug Report] {report.summary.strip()}"
+
+    shot = _screenshot_url(report, request)
 
     text = '\n'.join([
-        f"Summary: {payload.get('summary', '')}",
-        f"Reporter: {payload.get('name', '')} <{payload.get('email', '')}>",
-        f"Page: {payload.get('page', '') or 'n/a'}",
-        f"Severity: {payload.get('severity', '') or 'n/a'}",
+        f"Summary: {report.summary}",
+        f"Reporter: {report.name} <{report.email}>",
+        f"Page: {report.page or 'n/a'}",
+        f"Severity: {report.severity}",
+        f"Screenshot: {shot or 'None'}",
         '',
         'Steps to reproduce:',
-        payload.get('steps', '') or 'n/a',
+        report.steps or 'n/a',
     ])
 
-    html_rows = ''.join(
+    screenshot_row = (
+        f"<tr><td style='padding:6px 12px;font-weight:600;color:#334155;"
+        f"white-space:nowrap;'>Screenshot</td>"
+        f"<td style='padding:6px 12px;color:#0f172a;'>"
+        f"<a href='{shot}' style='color:#2563eb;'>{shot}</a></td></tr>"
+        if shot
+        else ''
+    )
+    html_rows = (
         f"<tr><td style='padding:6px 12px;font-weight:600;color:#334155;"
         f"white-space:nowrap;'>{label}</td>"
         f"<td style='padding:6px 12px;color:#0f172a;'>{value}</td></tr>"
         for label, value in [
-            ('Summary', str(payload.get('summary', ''))),
-            ('Reporter', f"{payload.get('name', '')} &lt;{payload.get('email', '')}&gt;"),
-            ('Page', str(payload.get('page', 'n/a'))),
-            ('Severity', str(payload.get('severity', 'n/a'))),
+            ('Summary', report.summary),
+            ('Reporter', f"{report.name} &lt;{report.email}&gt;"),
+            ('Page', report.page or 'n/a'),
+            ('Severity', report.severity),
         ]
     )
     html = f"""<!DOCTYPE html>
@@ -87,12 +92,13 @@ def _deliver_bug_report(payload):
 Submitted through the ICPEP.SE portal.
 </p>
 <table style="width:100%;border-collapse:collapse;font-size:14px;">
-{html_rows}
+{''.join(html_rows)}
+{screenshot_row}
 </table>
 <p style="color:#64748b;font-size:13px;margin-top:20px;">Steps to reproduce:</p>
 <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
 padding:12px 16px;color:#334155;font-size:14px;white-space:pre-wrap;">
-{payload.get('steps', '') or 'n/a'}
+{report.steps or 'n/a'}
 </div>
 </div>
 </body>
