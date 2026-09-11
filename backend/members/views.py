@@ -1,3 +1,4 @@
+import contextlib
 from datetime import date
 
 from django.core.files.base import ContentFile
@@ -16,6 +17,7 @@ from permissions import (
     _is_admin_or_president,
 )
 
+from .emails import notify_member_approved
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
 from .receipt_generator import generate_receipt_png
 from .serializers import (
@@ -288,6 +290,10 @@ class MemberApproveAPIView(APIView):
                     "Failed to generate receipt for %s: %s",
                     transaction.reference_number, e
                 )
+
+            # Notify the member that their account has been approved (non-blocking)
+            with contextlib.suppress(Exception):
+                notify_member_approved(profile)
 
         # Log member approval/rejection
         if new_status == 'APPROVED':

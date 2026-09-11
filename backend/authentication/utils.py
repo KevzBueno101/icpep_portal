@@ -3,6 +3,7 @@ import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
+import requests
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -155,4 +156,86 @@ This link expires in 24 hours.
             logger.exception("Password reset email SMTP delivery FAILED to %s", email)
 
     thread = threading.Thread(target=_send, daemon=True)
+    thread.start()
+
+
+BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
+
+
+def send_brevo_email(to_email, to_name, subject, html):
+    """
+    Send one transactional email via Brevo's REST API (requests).
+    No fallback — if BREVO_API_KEY is unset or delivery fails, it is only logged.
+    Returns True on success, False otherwise.
+    """
+    api_key = getattr(settings, 'BREVO_API_KEY', '').strip()
+    if not api_key:
+        logger.warning("BREVO_API_KEY not set — skipping email to %s", to_email)
+        return False
+
+    payload = {
+        'sender': {
+            'name': getattr(settings, 'BREVO_SENDER_NAME', 'ICpEP.SE CatSU'),
+            'email': settings.DEFAULT_FROM_EMAIL,
+        },
+        'to': [{'email': to_email, 'name': to_name}],
+        'subject': subject,
+        'htmlContent': html,
+    }
+
+    try:
+        res = requests.post(
+            BREVO_API_URL,
+            json=payload,
+            headers={'api-key': api_key, 'Accept': 'application/json'},
+            timeout=15,
+        )
+        res.raise_for_status()
+        logger.info("Brevo email SENT to %s (%s)", to_email, subject)
+        return True
+    except Exception:
+        logger.exception("Brevo email delivery FAILED to %s (%s)", to_email, subject)
+        return False
+
+
+def send_registration_welcome_email(user):
+    """
+    Welcome/onboarding email sent to a freshly registered member via Brevo
+    (background thread so it never blocks or breaks the registration response).
+    """
+    full_name = f"{user.first_name} {user.last_name}".strip()
+    frontend_url = getattr(settings, 'FRONTEND_URL', '') or 'https://icpep-catsu.vercel.app'
+
+    subject = 'Welcome to ICpEP.SE CatSU!'
+    html = f"""<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
+<h2 style="margin-top:0;color:#111;font-size:20px;">Welcome, {full_name}!</h2>
+<p style="color:#555;line-height:1.6;font-size:15px;">
+Thank you for registering with the <strong>ICpEP.SE CatSU</strong> portal.
+Your membership application has been received and is now pending approval
+by the chapter.
+</p>
+<p style="color:#555;line-height:1.6;font-size:15px;">
+You will receive a confirmation email once your membership is approved and
+you can start exploring the member dashboard.
+</p>
+<a href="{frontend_url}"
+   style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;
+          border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin:16px 0;">
+  Go to Portal
+</a>
+<p style="color:#999;font-size:13px;margin-top:24px;">
+If you didn&rsquo;t register on the ICPEP.SE portal, you can safely ignore this email.
+</p>
+</div>
+</body>
+</html>"""
+
+    thread = threading.Thread(
+        target=send_brevo_email,
+        args=(user.email, full_name, subject, html),
+        daemon=True,
+    )
     thread.start()
