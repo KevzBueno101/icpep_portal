@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import { EVENTS } from '../../utils/events'
+import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 import Skeleton from '../../components/Skeleton'
 
 
@@ -407,16 +408,35 @@ export default function EditAdminProfile({ triggerRefresh }) {
                   <label htmlFor="department" className="block text-sm font-semibold text-slate-700">
                     Department
                   </label>
-                  <input
+                  <select
                     id="department"
                     name="department"
-                    type="text"
                     disabled={saving}
-                    placeholder="e.g., Executive Office"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
                     value={formData.department}
-                    onChange={(e) => setFormData((s) => ({ ...s, department: e.target.value }))}
-                  />
+                    onChange={(e) =>
+                      setFormData((s) => {
+                        const department = e.target.value
+                        const allowed = positionsForGroup(department)
+                        const next = { ...s, department }
+                        if (s.position && allowed.length && !allowed.includes(s.position)) {
+                          next.position = ''
+                        }
+                        return next
+                      })
+                    }
+                  >
+                    <option value="">Select committee / department</option>
+                    {OFFICER_GROUPS.map((group) => (
+                      <option key={group.label} value={group.label}>
+                        {group.label}
+                      </option>
+                    ))}
+                    {formData.department &&
+                      !OFFICER_GROUPS.some((g) => g.label === formData.department) && (
+                        <option value={formData.department}>{formData.department}</option>
+                      )}
+                  </select>
                 </div>
 
                 <div>
@@ -540,16 +560,25 @@ export default function EditAdminProfile({ triggerRefresh }) {
                       <label htmlFor="position" className="block text-sm font-semibold text-slate-700">
                         Position
                       </label>
-                      <input
+                      <select
                         id="position"
                         name="position"
-                        type="text"
-                        disabled={saving}
-                        placeholder="e.g., President, Secretary, Treasurer, etc."
+                        disabled={saving || !formData.department}
                         className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
                         value={formData.position}
                         onChange={(e) => setFormData((s) => ({ ...s, position: e.target.value }))}
-                      />
+                      >
+                        <option value="">Select position</option>
+                        {positionsForGroup(formData.department).map((pos) => (
+                          <option key={pos} value={pos}>
+                            {pos}
+                          </option>
+                        ))}
+                        {formData.position &&
+                          !positionsForGroup(formData.department).includes(formData.position) && (
+                            <option value={formData.position}>{formData.position}</option>
+                          )}
+                      </select>
                     </div>
 
                     <div>

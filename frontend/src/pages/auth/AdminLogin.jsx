@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
+import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
 const AdminLogin = () => {
   const { adminLogin } = useAuth()
@@ -31,6 +32,15 @@ const AdminLogin = () => {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const handleRequestChange = (e) => setRequestForm({ ...requestForm, [e.target.name]: e.target.value })
+  const handleDepartmentChange = (value) => {
+    setRequestForm((prev) => {
+      const next = { ...prev, department: value }
+      if (prev.position && !positionsForGroup(value).includes(prev.position)) {
+        next.position = ''
+      }
+      return next
+    })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -350,18 +360,26 @@ const AdminLogin = () => {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
+                    <select name="department" value={requestForm.department} onChange={(e) => handleDepartmentChange(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
+                      <option value="">Committee / Department</option>
+                      {OFFICER_GROUPS.map((group) => (
+                        <option key={group.label} value={group.label}>
+                          {group.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
                       <option value="">Position</option>
-                      <option value="President">President</option>
-                      <option value="Vice President">Vice President</option>
-                      <option value="Secretary">Secretary</option>
-                      <option value="Treasurer">Treasurer</option>
-                      <option value="Auditor">Auditor</option>
-                      <option value="Adviser">Adviser</option>
+                      {positionsForGroup(requestForm.department).map((pos) => (
+                        <option key={pos} value={pos}>
+                          {pos}
+                        </option>
+                      ))}
                     </select>
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
-                  <input name="department" value={requestForm.department} onChange={handleRequestChange} placeholder="Committee (Optional)" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 </div>
                 <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
