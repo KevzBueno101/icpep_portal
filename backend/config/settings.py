@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'audit_logs',
     'common',
     'push',
+    'feedback',
 ]
 
 # Channels
@@ -348,6 +349,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+BUG_REPORT_EMAIL = os.getenv('BUG_REPORT_EMAIL', 'icpep.se.catsuchapter@gmail.com')
 FRONTEND_URL = clean_origin_url(os.getenv('FRONTEND_URL', '')) or 'https://icpep-catsu.vercel.app'
 
 # Password reset token expiry (seconds) — Django default is 3 days (259200)
