@@ -205,6 +205,7 @@ def send_registration_welcome_email(user):
     """
     full_name = f"{user.first_name} {user.last_name}".strip()
     frontend_url = getattr(settings, 'FRONTEND_URL', '') or 'https://icpep-catsu.vercel.app'
+    portal_url = f"{frontend_url.rstrip('/')}/login"
 
     subject = 'Welcome to ICpEP.SE CatSU!'
     html = f"""<!DOCTYPE html>
@@ -221,7 +222,7 @@ by the chapter.
 You will receive a confirmation email once your membership is approved and
 you can start exploring the member dashboard.
 </p>
-<a href="{frontend_url}"
+<a href="{portal_url}"
    style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;
           border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin:16px 0;">
   Go to Portal

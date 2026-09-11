@@ -16,6 +16,7 @@ def notify_member_approved(profile):
     user = profile.user
     full_name = f"{profile.first_name} {profile.last_name}".strip() or user.username
     frontend_url = getattr(settings, 'FRONTEND_URL', '') or 'https://icpep-catsu.vercel.app'
+    portal_url = f"{frontend_url.rstrip('/')}/login"
 
     subject = 'Your ICpEP.SE membership has been approved!'
     html = f"""<!DOCTYPE html>
@@ -27,7 +28,7 @@ def notify_member_approved(profile):
 Your <strong>ICpEP.SE CatSU</strong> membership has been <strong>approved</strong>.
 You can now log in to the portal and access your member dashboard.
 </p>
-<a href="{frontend_url}"
+<a href="{portal_url}"
    style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;
           border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin:16px 0;">
   Go to Portal

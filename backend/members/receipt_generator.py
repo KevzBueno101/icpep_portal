@@ -130,7 +130,7 @@ def generate_receipt_png(transaction, member):
 
     y_start = 250
     col1_x = 70
-    col2_x = 155
+    col2_x = 185
     row_h = 31
     proof_x = 512  # right-side image starts here; keep values left of it
 
