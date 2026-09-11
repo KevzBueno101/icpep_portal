@@ -483,7 +483,7 @@ const AdminOfficersAccounts = () => {
                     disabled={!canEdit || !form.department}
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
-                    <option value="">Select position</option>
+                    <option value="">Choose Position</option>
                     {positionsForGroup(form.department).map((pos) => (
                       <option key={pos} value={pos}>
                         {pos}
@@ -522,7 +522,7 @@ const AdminOfficersAccounts = () => {
                     disabled={!canEdit}
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   >
-                    <option value="">Select committee / department</option>
+                    <option value="">Choose Department</option>
                     {OFFICER_GROUPS.map((group) => (
                       <option key={group.label} value={group.label}>
                         {group.label}

@@ -426,7 +426,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
                       })
                     }
                   >
-                    <option value="">Select committee / department</option>
+                    <option value="">Choose Department</option>
                     {OFFICER_GROUPS.map((group) => (
                       <option key={group.label} value={group.label}>
                         {group.label}
@@ -568,7 +568,7 @@ export default function EditAdminProfile({ triggerRefresh }) {
                         value={formData.position}
                         onChange={(e) => setFormData((s) => ({ ...s, position: e.target.value }))}
                       >
-                        <option value="">Select position</option>
+                        <option value="">Choose Position</option>
                         {positionsForGroup(formData.department).map((pos) => (
                           <option key={pos} value={pos}>
                             {pos}

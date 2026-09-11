@@ -361,7 +361,7 @@ const AdminLogin = () => {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <select name="department" value={requestForm.department} onChange={(e) => handleDepartmentChange(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                      <option value="">Committee / Department</option>
+                      <option value="">Choose Department</option>
                       {OFFICER_GROUPS.map((group) => (
                         <option key={group.label} value={group.label}>
                           {group.label}
@@ -371,7 +371,7 @@ const AdminLogin = () => {
                   </div>
                   <div>
                     <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                      <option value="">Position</option>
+                      <option value="">Choose Position</option>
                       {positionsForGroup(requestForm.department).map((pos) => (
                         <option key={pos} value={pos}>
                           {pos}
