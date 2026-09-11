@@ -21,7 +21,6 @@ import PrivacyPolicyModal from './PrivacyPolicyModal'
 
 export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false)
-  const currentYear = new Date().getFullYear()
 
   return (
     <footer className="relative z-50 bg-slate-900 py-12 text-white">
@@ -53,7 +52,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:info@icpep.se" className="text-sm transition hover:text-white">
+                <a href="mailto:icpep.se.catsuchapter@gmail.com" className="text-sm transition hover:text-white">
                   Contact Us
                 </a>
               </li>
@@ -95,7 +94,7 @@ export default function Footer() {
         <hr className="mb-6 border-slate-700" />
 
         <div className="text-center text-sm text-slate-400">
-          <p>&copy; {currentYear} ICPEP.SE Portal. All rights reserved.</p>
+          <p>Developed by DevCommittee | ICpEP.SE CatSU @2026</p>
         </div>
       </div>
 

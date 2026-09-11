@@ -57,7 +57,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           </p>
           <p>
             For questions or concerns about your data, please contact the ICPEP administration at{' '}
-            <a href="mailto:info@icpep.se" className="text-sky-600 underline">info@icpep.se</a>.
+            <a href="mailto:icpep.se.catsuchapter@gmail.com" className="text-sky-600 underline">icpep.se.catsuchapter@gmail.com</a>.
           </p>
         </div>
 
