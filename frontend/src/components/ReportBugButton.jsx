@@ -131,7 +131,7 @@ export default function ReportBugButton() {
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-6"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/70 overflow-y-auto px-4 py-10"
           onClick={closeModal}
         >
           <div

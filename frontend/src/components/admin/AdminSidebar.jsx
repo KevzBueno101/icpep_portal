@@ -1,11 +1,10 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, Menu, X, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { LayoutDashboard, Users, UserCog, User, LogOut, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
 import { useAuth } from '../../context/useAuth'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
-
 
 const NAV_ITEMS = [
   { label: 'Dashboard',         to: '/admin/dashboard',         icon: LayoutDashboard },
@@ -19,56 +18,33 @@ const NAV_ITEMS = [
   { label: 'Logs / Audit Trails', to: '/admin/logs',            icon: ClipboardList },
 ]
 
-function Badge({ children, className = '' }) {
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${className}`}>{children}</span>
-  )
-}
-
-function SidebarLink({ to, label, icon: Icon, badge, onNavigate }) {
+function TopNavLink({ to, label, icon: Icon, badge, onNavigate }) {
   return (
     <NavLink
       to={to}
       onClick={onNavigate}
+      title={label}
+      aria-label={label}
       className={({ isActive }) =>
         [
-          'group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition',
+          'relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition',
           isActive
-            ? 'bg-white/15 text-white'
+            ? 'bg-white/20 text-white'
             : 'text-blue-100 hover:bg-white/10 hover:text-white',
         ].join(' ')
       }
     >
-      {({ isActive }) => (
-        <>
-          <span
-            aria-hidden
-            className={
-              isActive
-                ? 'inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 text-white'
-                : 'inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/0 text-white'
-            }
-          >
-            <Icon size={18} />
-          </span>
-          <span className="flex-1">{label}</span>
-          {badge ? <span className="ml-auto">{badge}</span> : null}
-        </>
-      )}
+      <Icon size={18} />
+      {badge ? (
+        <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white">
+          {badge}
+        </span>
+      ) : null}
     </NavLink>
   )
 }
 
-export default function AdminSidebar({
-  mobileOpen,
-  setMobileOpen,
-  badges = {},
-  quickActions = { enabled: true },
-  logout,
-}) {
-  // Ensure optional props don’t trigger lint errors when not used in some builds.
-  void logout
-  void quickActions
+export default function AdminSidebar({ badges = {}, logout }) {
   const { user } = useAuth()
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)
@@ -77,11 +53,8 @@ export default function AdminSidebar({
   const pendingBadge = badges?.pendingMembership
   const newLogsBadge = badges?.newLogs
 
-  const onNavigate = () => setMobileOpen(false)
-
   const userPosition = user?.position || 'NONE'
 
-  // Cache-bust profile picture URL so it updates immediately after change
   const prevPicRef = useRef(user?.profile_picture)
   const [picVersion, setPicVersion] = useState(0)
   useEffect(() => {
@@ -97,156 +70,121 @@ export default function AdminSidebar({
     const sep = base.includes('?') ? '&' : '?'
     return `${base}${sep}_cb=${picVersion}`
   }, [user?.profile_picture, picVersion])
+
   const userCard = useMemo(() => {
     const username = user?.username ? `@${user.username}` : '@admin'
     return { username, userPosition }
   }, [user?.username, userPosition])
 
-  const sidebar = (
-    <aside className="bg-[#001F4D] text-white lg:fixed lg:top-6 lg:left-6 lg:w-56 max-h-[calc(100vh-3rem)] w-full overflow-y-auto">
-      <div className="flex h-full flex-col border-r border-white/10">
-        <div className="shrink-0 px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-blue-100/70">Admin</p>
-          <p className="mt-1 text-base font-bold">Navigation</p>
-        </div>
-
-        <div className="shrink-0 px-2 pb-3">
-          <div className="rounded-2xl bg-white/5 p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                {user?.profile_picture ? (
-                  <img
-                    src={profilePicSrc}
-                    alt={user.username}
-                    className="h-10 w-10 flex-shrink-0 rounded-full object-cover border-2 border-white/20 overflow-hidden"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white border-2 border-white/20">
-                    <User size={18} />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold">{userCard.username}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <Badge className="bg-white/15 text-blue-100 border border-white/10">{userCard.userPosition}</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-2 py-2 text-xs font-semibold hover:bg-white/15"
-                  onClick={() => setUserMenuOpen((s) => !s)}
-                  aria-label="Open admin user menu"
-                >
-                  <ChevronDown size={14} />
-                </button>
-
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-10 z-10 w-44 rounded-2xl border border-white/10 bg-[#001F4D] shadow-xl">
-                    <NavLink
-                      to="/admin/profile"
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        onNavigate()
-                      }}
-                      className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
-                    >
-                      View Profile
-                    </NavLink>
-                    <NavLink
-                      to="/admin/edit-profile"
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        onNavigate()
-                      }}
-                      className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
-                    >
-                      Edit Profile
-                    </NavLink>
-                    <button
-                      type="button"
-                      className="w-full px-4 py-3 text-left text-sm text-red-200 hover:bg-white/10"
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        setConfirmLogoutOpen(true)
-                      }}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <LogOut size={16} /> Logout
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <nav className="px-2 pb-3">
-          <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const badge =
-                item.to === '/admin/membership'
-                  ? typeof pendingBadge === 'number' && pendingBadge > 0
-                    ? (
-                        <Badge className="bg-white/15 text-white">{pendingBadge > 99 ? '99+' : pendingBadge}</Badge>
-                      )
-                    : null
-                  : item.to === '/admin/logs'
-                    ? typeof newLogsBadge === 'number' && newLogsBadge > 0
-                      ? (
-                          <Badge className="bg-white/15 text-white">{newLogsBadge > 99 ? '99+' : newLogsBadge}</Badge>
-                        )
-                      : null
-                    : null
-
-              return (
-                <SidebarLink
-                  key={item.to}
-                  to={item.to}
-                  label={item.label}
-                  icon={item.icon}
-                  badge={badge}
-                  onNavigate={onNavigate}
-                />
-              )
-            })}
-          </div>
-        </nav>
-
-        <div className="shrink-0 px-4 pb-4">
-          <div className="mb-2 flex items-center justify-center">
-            <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
-          </div>
-          <button
-            type="button"
-            onClick={() => setConfirmLogoutOpen(true)}
-            className="w-full rounded-full border border-white/20 bg-white/0 px-4 py-2 text-sm font-semibold text-blue-100 hover:bg-white/10"
-          >
-            Sign Out
-          </button>
-        </div>
-      </div>
-    </aside>
-  )
+  const badgeCount = (to) => {
+    if (to === '/admin/membership') {
+      return typeof pendingBadge === 'number' && pendingBadge > 0
+        ? (pendingBadge > 99 ? '99+' : pendingBadge)
+        : null
+    }
+    if (to === '/admin/logs') {
+      return typeof newLogsBadge === 'number' && newLogsBadge > 0
+        ? (newLogsBadge > 99 ? '99+' : newLogsBadge)
+        : null
+    }
+    return null
+  }
 
   return (
     <>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setMobileOpen(false)}
-            className="absolute inset-0 bg-slate-900/50"
-          />
-          <div className="absolute left-0 top-0 h-full w-[86%] max-w-xs">{sidebar}</div>
-        </div>
-      )}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#001F4D] text-white shadow-lg shadow-slate-950/20">
+        <div className="mx-auto flex max-w-[1440px] items-center gap-2 px-3 py-2 sm:px-4">
+          {/* User */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setUserMenuOpen(s => !s)}
+              className="inline-flex items-center gap-2 rounded-xl px-1.5 py-1.5 transition hover:bg-white/10"
+              aria-label="Open admin user menu"
+            >
+              {user?.profile_picture ? (
+                <img
+                  src={profilePicSrc}
+                  alt={user.username}
+                  className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white/20 object-cover"
+                />
+              ) : (
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                  <User size={15} />
+                </span>
+              )}
+              <span className="hidden min-w-0 sm:block">
+                <span className="block truncate text-xs font-bold leading-tight">
+                  {userCard.username}
+                </span>
+                <span className="block text-[10px] font-semibold text-blue-100/70">
+                  {userCard.userPosition}
+                </span>
+              </span>
+              <ChevronDown size={14} className="text-blue-100" />
+            </button>
 
-      <div className="hidden lg:block">{sidebar}</div>
+            {userMenuOpen && (
+              <div className="absolute left-0 top-12 z-10 w-44 rounded-2xl border border-white/10 bg-[#001F4D] shadow-xl">
+                <NavLink
+                  to="/admin/profile"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
+                >
+                  View Profile
+                </NavLink>
+                <NavLink
+                  to="/admin/edit-profile"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
+                >
+                  Edit Profile
+                </NavLink>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserMenuOpen(false)
+                    setConfirmLogoutOpen(true)
+                  }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-200 hover:bg-white/10"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <LogOut size={16} /> Logout
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Nav icons — horizontally scrollable */}
+          <nav className="custom-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-1">
+            {NAV_ITEMS.map((item) => (
+              <TopNavLink
+                key={item.to}
+                to={item.to}
+                label={item.label}
+                icon={item.icon}
+                badge={badgeCount(item.to)}
+                onNavigate={() => setUserMenuOpen(false)}
+              />
+            ))}
+          </nav>
+
+          {/* Theme toggle + sign out */}
+          <div className="flex shrink-0 items-center gap-1">
+            <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
+            <button
+              type="button"
+              onClick={() => setConfirmLogoutOpen(true)}
+              title="Sign out"
+              aria-label="Sign out"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white"
+            >
+              <LogOut size={17} />
+            </button>
+          </div>
+        </div>
+      </header>
 
       <ConfirmModal
         isOpen={confirmLogoutOpen}
@@ -265,5 +203,3 @@ export default function AdminSidebar({
     </>
   )
 }
-
-

@@ -144,6 +144,25 @@
 /* Inputs use ring-slate-200 as their border — mirror the border remap. */
 .dark .ring-slate-200 { --tw-ring-color: #334155; }
 
+/* Form fields keep a native white background (UA "field" color) unless a
+   bg utility is present, so in dark mode they show light text on white.
+   Give inputs/selects/textareas a dark surface; options too. Elements that
+   already carry .bg-* classes keep theirs (higher specificity). */
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+.dark select,
+.dark textarea {
+  background-color: #1e293b; /* slate-800 */
+  color: #e2e8f0; /* slate-200 */
+}
+.dark select option {
+  background-color: #1e293b; /* slate-800 */
+  color: #e2e8f0; /* slate-200 */
+}
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file'])::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+
 /* Surfaces that must stay light even in dark mode — tag the element
    with class="keep-light" to exempt it *container-level* (children
    handled explicitly where needed, e.g. the digital ID card export

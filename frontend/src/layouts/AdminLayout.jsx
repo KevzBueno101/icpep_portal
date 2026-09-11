@@ -5,13 +5,8 @@ import AdminSidebar from '../components/admin/AdminSidebar'
 import api from '../api/axios'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
 
-const AdminLayout = ({
-  children,
-  badges = {},
-  quickActions = { enabled: true },
-}) => {
+const AdminLayout = ({ children, badges = {} }) => {
   const { user, loading, logout } = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [newLogsBadge, setNewLogsBadge] = useState(0)
   const isRestricted = user?.access_level === 'RESTRICTED'
@@ -20,7 +15,6 @@ const AdminLayout = ({
     setRefreshTrigger(prev => prev + 1)
   }
 
-  // Fetch logs stats for badge
   useEffect(() => {
     const fetchLogsStats = async () => {
       if (!user) return
@@ -31,7 +25,6 @@ const AdminLayout = ({
         const res = await api.get('/audit-logs/stats/', { params })
         setNewLogsBadge(res.data.new_logs || 0)
       } catch (err) {
-        // Silently fail for badge fetch
         console.error('Failed to fetch logs stats:', err)
       }
     }
@@ -39,7 +32,6 @@ const AdminLayout = ({
     fetchLogsStats()
   }, [user, refreshTrigger])
 
-  // Clone children and pass refresh props
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       return React.cloneElement(child, {
@@ -57,44 +49,22 @@ const AdminLayout = ({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       {isRestricted && (
-        <div className="fixed top-0 right-0 z-[60] text-slate-400 px-3 py-1 text-[10px] font-medium opacity-20">
+        <div className="fixed right-0 top-0 z-[60] px-3 py-1 text-[10px] font-medium text-slate-400 opacity-20">
           Restricted Account — Read Only
         </div>
       )}
-      <button
-        type="button"
-        className="lg:hidden fixed left-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-1 ring-white/10"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Open admin navigation"
-      >
-        <span className="block h-5 w-5 relative">
-          <span className="absolute left-0 top-1 h-0.5 w-5 bg-white" />
-          <span className="absolute left-0 top-2.5 h-0.5 w-5 bg-white" />
-          <span className="absolute left-0 top-4 h-0.5 w-5 bg-white" />
-        </span>
-      </button>
 
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-6">
-        <div className="flex gap-4 xl:gap-5">
-          <AdminSidebar
-            mobileOpen={sidebarOpen}
-            setMobileOpen={setSidebarOpen}
-            badges={{
-              pendingMembership: badges.pendingMembership ?? 0,
-              newLogs: newLogsBadge,
-            }}
-            quickActions={quickActions}
-            logout={logout}
-          />
+      <AdminSidebar
+        badges={{
+          pendingMembership: badges.pendingMembership ?? 0,
+          newLogs: newLogsBadge,
+        }}
+        logout={logout}
+      />
 
-          <div className="min-w-0 flex-1 lg:ml-56 pt-14 lg:pt-0">
-            <div className="pb-8">
-              {childrenWithProps}
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-6">
+        <div className="pb-8">{childrenWithProps}</div>
+      </main>
     </div>
   )
 }
