@@ -92,7 +92,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#001F4D] text-white shadow-lg shadow-slate-950/20">
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-[#001F4D] text-white shadow-lg shadow-slate-950/20">
         <div className="mx-auto flex max-w-[1440px] items-center gap-2 px-3 py-2 sm:px-4">
           {/* User */}
           <div className="relative shrink-0">

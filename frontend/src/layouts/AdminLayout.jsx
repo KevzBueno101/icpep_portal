@@ -62,7 +62,7 @@ const AdminLayout = ({ children, badges = {} }) => {
         logout={logout}
       />
 
-      <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-6">
+      <main className="mx-auto max-w-[1440px] px-4 pb-6 pt-14 sm:px-6 lg:px-6">
         <div className="pb-8">{childrenWithProps}</div>
       </main>
     </div>
