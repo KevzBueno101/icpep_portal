@@ -110,9 +110,9 @@ export default function PWAInstallPrompt() {
           <div className="flex flex-col gap-2">
             <button
               onClick={handleInstall}
-              className="w-full py-2 rounded-lg bg-white text-[#001F4D] font-semibold text-sm hover:bg-white/90 transition"
+              className="w-full py-2 rounded-lg bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition"
             >
-              I-install ang App
+              Install the web-app
             </button>
             <button
               onClick={handleDismiss}
