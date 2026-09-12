@@ -151,7 +151,7 @@ def generate_receipt_png(transaction, member):
     if not proof_url:
         # fallback: try from transaction
         proof_url = transaction.payment_proof_image.url if transaction.payment_proof_image else None
-    proof_img = _load_image_from_url(proof_url)
+    proof_img = _load_image_from_url(proof_url, max_size=(260, 260))
     if proof_img:
         margin = 22
         proof_w, proof_h = proof_img.size
