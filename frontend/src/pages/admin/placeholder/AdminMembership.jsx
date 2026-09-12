@@ -1175,7 +1175,7 @@ const AdminMembership = () => {
               {/* Password notice */}
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-blue-800 leading-relaxed">
+                <p className="text-[11px] text-blue-800 leading-relaxed dark:text-white">
                   <strong>Notice:</strong> Manually added members are automatically initialized with role <strong>MEMBER</strong> and a default temporary password of <strong>Changeme123!</strong>. They can log in immediately to complete their profile.
                 </p>
               </div>
