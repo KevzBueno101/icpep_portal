@@ -9,7 +9,7 @@ export default function MovingLogoText() {
         label: ' Institute of Computer Engineers of the Philippines - Student Edition ',
       },
       { img: '/cea-logo.png', label: ' College of Engineering and Architecture ' },
-      { img: '/catsu.jpg', label: ' Catanduanes State University ' },
+      { img: '/catsu.png', label: ' Catanduanes State University ' },
     ],
     []
   )
@@ -51,10 +51,9 @@ export default function MovingLogoText() {
                     <img
                       src={item.img}
                       alt={item.label}
-                      className="h-7 w-auto shrink-0 opacity-80 bg-transparent"
-                      style={{ background: 'transparent' }}
+                      className="h-7 w-auto max-w-none shrink-0 opacity-80 object-contain align-middle"
                     />
-                    <span className="text-sm font-semibold tracking-wide text-slate-400/50">
+                    <span className="text-sm font-semibold tracking-wide text-slate-400/50 leading-none">
                       {item.label}
                     </span>
                   </div>

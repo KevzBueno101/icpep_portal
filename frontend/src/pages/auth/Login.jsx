@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
+import ThemeToggle from '../../components/ThemeToggle'
 
 const Login = () => {
   const { login } = useAuth()
@@ -53,41 +54,44 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:shadow-black/40">
+    <div className="relative min-h-screen bg-slate-100 flex items-center justify-center px-4 dark:bg-slate-900">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/40">
         <div className="mb-8 flex flex-col items-center gap-3">
           <Link to="/" aria-label="Back to Home">
             <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto transition hover:opacity-80" />
           </Link>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">ICpEP.se Portal</h1>
-          <p className="text-slate-500 mt-1 text-sm">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">ICpEP.se Portal</h1>
+          <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">Sign in to your account</p>
         </div>
        </div>
 
-        <div className="mb-5 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800">
-          <p className="font-semibold">For BS CpE students only</p>
-          <p className="mt-1 text-sky-700">
+        <div className="mb-5 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800 dark:bg-sky-950/50 dark:ring-sky-900 dark:text-sky-200">
+          <p className="font-semibold dark:text-sky-100">For BS CpE students only</p>
+          <p className="mt-1 text-sky-700 dark:text-sky-300">
             Only currently enrolled students in B.S. Computer Engineering (BS CpE) can log in to the ICPEP.se Portal as members.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-slate-600 mb-1">Email</label>
+            <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">Email</label>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               required
-              className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+              className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 dark:ring-slate-600"
               placeholder="you@email.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-600 mb-1">Password</label>
+            <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -95,7 +99,7 @@ const Login = () => {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 pr-14 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 pr-14 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 dark:ring-slate-600"
                 placeholder="••••••••"
               />
               <button
@@ -148,7 +152,7 @@ const Login = () => {
             </Link>
           </div>
 
-          <p className="text-center text-sm text-slate-500 mt-4">
+          <p className="text-center text-sm text-slate-500 mt-4 dark:text-slate-400">
             No account yet? {' '} be a member of ICpEP.se and{' '}
             <Link to="/register" className="text-sky-600 hover:underline">
               Register here

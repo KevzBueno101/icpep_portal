@@ -32,90 +32,92 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
       className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
       aria-label={`${position} - ${fullName}`}
     >
-      {hasValidAvatar ? (
-        <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
-          <img
-            src={avatarUrl}
-            alt={fullName}
-            className="h-32 w-32 rounded-full bg-slate-200 object-cover"
-            onError={() => setImageError(true)}
-            loading="lazy"
-          />
+      <div className="flex items-center gap-4 sm:block">
+        {hasValidAvatar ? (
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100 sm:h-48 sm:w-full sm:rounded-none sm:bg-slate-100 sm:pt-6">
+            <img
+              src={avatarUrl}
+              alt={fullName}
+              className="h-16 w-16 rounded-full bg-slate-200 object-cover sm:h-32 sm:w-32"
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center sm:h-48 sm:w-full sm:pt-6">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-700 text-lg font-bold text-white sm:h-32 sm:w-32 sm:text-3xl">
+              {initials}
+            </span>
+          </div>
+        )}
+
+        {canEdit && (
+          <div className="absolute top-3 right-3" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-full bg-white/90 backdrop-blur p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 transition-colors"
+            >
+              <MoreVertical size={18} />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onEdit?.()
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onDelete?.()
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1 p-4 pl-0 pr-12 text-left sm:p-5 sm:pr-5 sm:text-center">
+          <h3 className="mb-1 text-lg font-bold text-slate-900 line-clamp-2 sm:text-xl">{fullName}</h3>
+
+          {/* Position should always exist for valid officers; keep spacing consistent */}
+          <p className="mb-2 font-semibold text-sky-600 line-clamp-1 text-sm">{position}</p>
+
+          {/* Keep vertical rhythm stable even when optional fields are missing */}
+          <div className="min-h-[44px]">
+            {office ? (
+              <p className="mb-2 text-sm text-slate-600 line-clamp-1">{office}</p>
+            ) : (
+              <div className="mb-2 h-5" />
+            )}
+
+            {academicYear ? (
+              <p className="text-xs text-slate-500 font-medium">AY {academicYear}</p>
+            ) : (
+              <div className="h-4" />
+            )}
+          </div>
+
+          {email || username ? (
+            <a
+              href={email ? `mailto:${email}` : undefined}
+              className="mt-2 inline-block text-xs text-slate-400 line-clamp-1 transition hover:text-slate-600 font-medium"
+            >
+              {email || username}
+            </a>
+          ) : null}
         </div>
-      ) : (
-        <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
-          <span className="flex h-32 w-32 items-center justify-center rounded-full bg-sky-700 text-3xl font-bold text-white">
-            {initials}
-          </span>
-        </div>
-      )}
-
-      {canEdit && (
-        <div className="absolute top-3 right-3" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-full bg-white/90 backdrop-blur p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 transition-colors"
-          >
-            <MoreVertical size={18} />
-          </button>
-
-          {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  onEdit?.()
-                }}
-                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  onDelete?.()
-                }}
-                className="w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="p-5 text-center">
-        <h3 className="mb-1 text-xl font-bold text-slate-900 line-clamp-2">{fullName}</h3>
-
-        {/* Position should always exist for valid officers; keep spacing consistent */}
-        <p className="mb-2 font-semibold text-sky-600 line-clamp-1 text-sm">{position}</p>
-
-        {/* Keep vertical rhythm stable even when optional fields are missing */}
-        <div className="min-h-[44px]">
-          {office ? (
-            <p className="mb-2 text-sm text-slate-600 line-clamp-1">{office}</p>
-          ) : (
-            <div className="mb-2 h-5" />
-          )}
-
-          {academicYear ? (
-            <p className="text-xs text-slate-500 font-medium">AY {academicYear}</p>
-          ) : (
-            <div className="h-4" />
-          )}
-        </div>
-
-        {email || username ? (
-          <a
-            href={email ? `mailto:${email}` : undefined}
-            className="mt-2 inline-block text-xs text-slate-400 line-clamp-1 transition hover:text-slate-600 font-medium"
-          >
-            {email || username}
-          </a>
-        ) : null}
       </div>
     </article>
   )

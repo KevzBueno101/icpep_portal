@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
 import { useAuth } from '../../context/useAuth'
@@ -49,11 +49,20 @@ export default function AdminSidebar({ badges = {}, logout }) {
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const pendingBadge = badges?.pendingMembership
   const newLogsBadge = badges?.newLogs
 
   const userPosition = user?.position || 'NONE'
+
+  const openLogoutConfirm = () => {
+    setDrawerOpen(false)
+    setUserMenuOpen(false)
+    setConfirmLogoutOpen(true)
+  }
+
+  const closeDrawer = () => setDrawerOpen(false)
 
   const prevPicRef = useRef(user?.profile_picture)
   const [picVersion, setPicVersion] = useState(0)
@@ -156,8 +165,18 @@ export default function AdminSidebar({ badges = {}, logout }) {
             )}
           </div>
 
-          {/* Nav icons — horizontally scrollable */}
-          <nav className="custom-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-1">
+          {/* Hamburger — mobile only */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open navigation menu"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white lg:hidden"
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Nav icons — desktop, horizontally scrollable */}
+          <nav className="custom-scrollbar hidden flex-1 items-center gap-1 overflow-x-auto px-1 lg:flex">
             {NAV_ITEMS.map((item) => (
               <TopNavLink
                 key={item.to}
@@ -175,7 +194,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
             <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
             <button
               type="button"
-              onClick={() => setConfirmLogoutOpen(true)}
+              onClick={openLogoutConfirm}
               title="Sign out"
               aria-label="Sign out"
               className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white"
@@ -185,6 +204,89 @@ export default function AdminSidebar({ badges = {}, logout }) {
           </div>
         </div>
       </header>
+
+      {/* Mobile / tablet navigation drawer */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={closeDrawer}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-[#001F4D] text-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                  <User size={15} />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold leading-tight">{userCard.username}</p>
+                  <p className="truncate text-[11px] font-semibold text-blue-100/70">{userCard.userPosition}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeDrawer}
+                aria-label="Close navigation menu"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon
+                const badge = badgeCount(item.to)
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={closeDrawer}
+                    className={({ isActive }) =>
+                      [
+                        'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'text-blue-100 hover:bg-white/10 hover:text-white',
+                      ].join(' ')
+                    }
+                  >
+                    <Icon size={18} />
+                    <span className="truncate">{item.label}</span>
+                    {badge ? (
+                      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </NavLink>
+                )
+              })}
+            </nav>
+
+            <div className="border-t border-white/10 p-3">
+              <NavLink
+                to="/admin/profile"
+                onClick={closeDrawer}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-100 transition hover:bg-white/10 hover:text-white"
+              >
+                <UserCog size={18} />
+                Profile
+              </NavLink>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <ThemeToggle className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
+                <button
+                  type="button"
+                  onClick={openLogoutConfirm}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-white/10"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={confirmLogoutOpen}

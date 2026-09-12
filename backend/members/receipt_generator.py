@@ -7,20 +7,22 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def _get_font(size, bold=False):
-    """Try to load a TTF font; fall back to default bitmap font."""
+    """Try to load a Courier (monospace) TTF font; fall back to default bitmap font."""
     try:
         if bold:
             paths = [
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-                '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-                'C:/Windows/Fonts/arialbd.ttf',
-                'C:/Windows/Fonts/arial.ttf',
+                'C:/Windows/Fonts/courbd.ttf',
+                'C:/Windows/Fonts/cour.ttf',
+                'C:/Windows/Fonts/courier.ttf',
+                '/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf',
+                '/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf',
             ]
         else:
             paths = [
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-                '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-                'C:/Windows/Fonts/arial.ttf',
+                'C:/Windows/Fonts/cour.ttf',
+                'C:/Windows/Fonts/courier.ttf',
+                '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf',
+                '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
             ]
         for p in paths:
             if os.path.exists(p):
@@ -93,6 +95,7 @@ def generate_receipt_png(transaction, member):
 
     font_sm = _get_font(12)
     font_md = _get_font(14)
+    font_md_bold = _get_font(14, bold=True)
     font_xl = _get_font(26, bold=True)
 
     # ── Border ──
@@ -137,8 +140,8 @@ def generate_receipt_png(transaction, member):
     for i, (label, value) in enumerate(fields):
         y = y_start + i * row_h
         draw.text((col1_x, y), label, fill=subtle_color, font=font_sm, anchor='lt')
-        value = _fit_text(draw, value, font_md, proof_x - col2_x - 20)
-        draw.text((col2_x, y), value, fill=text_color, font=font_md, anchor='lt')
+        value = _fit_text(draw, value, font_md_bold, proof_x - col2_x - 20)
+        draw.text((col2_x, y), value, fill=text_color, font=font_md_bold, anchor='lt')
 
     # ── Payment Proof thumbnail (right side) ──
     proof_url = member.payment_proof_image.url if member.payment_proof_image else None
@@ -163,7 +166,7 @@ def generate_receipt_png(transaction, member):
     if position and position.upper() != 'NONE':
         signatory = f"{signatory} — {position}"
     if signatory:
-        draw.text((sign_x, sig_y - 10), signatory, fill=text_color, font=font_md, anchor='lb')
+        draw.text((sign_x, sig_y - 10), signatory, fill=text_color, font=font_md_bold, anchor='lb')
     draw.text((sign_x, sig_y + 10), 'Authorized Signatory', fill=subtle_color, font=font_sm, anchor='lt')
 
     # ── Footer ──

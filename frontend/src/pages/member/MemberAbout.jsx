@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Users, Mail, MapPin, FileText, Eye, ChevronRight } from 'lucide-react'
+import { Info, Shield, Users, Mail, MapPin, FileText, Eye, ChevronRight, Code2 } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
+import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
 import api from '../../api/axios'
 
@@ -52,6 +53,7 @@ const isPdf = (section) => {
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -227,6 +229,29 @@ export default function MemberAbout() {
         </div>
       </OfficersProvider>
 
+      {/* Web-App Development Committee */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Code2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Web-App Development Committee</h2>
+              <p className="text-sm text-slate-500">Meet the team behind this portal.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDevCommitteeOpen(true)}
+            className="self-start md:self-auto inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
+          >
+            <ChevronRight className="h-4 w-4" />
+            View Members
+          </button>
+        </div>
+      </div>
+
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -249,6 +274,9 @@ export default function MemberAbout() {
         {/* background glow */}
         <div className="absolute -right-24 -bottom-24 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl" />
       </div>
+
+      {/* Web-App Development Committee modal */}
+      <DevCommitteeModal isOpen={devCommitteeOpen} onClose={() => setDevCommitteeOpen(false)} />
 
       {/* Document preview modal */}
       {preview && preview.document_url && (

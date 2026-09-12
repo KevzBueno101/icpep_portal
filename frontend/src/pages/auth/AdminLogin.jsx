@@ -19,8 +19,8 @@ const AdminLogin = () => {
     confirm_password: '',
     first_name: '',
     last_name: '',
-    position: '',
-    department: '',
+    position: 'President',
+    department: 'HEAD OFFICE',
     academic_year: '',
   })
   const [requestErrors, setRequestErrors] = useState({})
@@ -96,7 +96,9 @@ const AdminLogin = () => {
     if (!requestForm.last_name.trim()) errs.last_name = 'Last name is required.'
     if (!requestForm.email.trim()) errs.email = 'Email is required.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestForm.email.trim())) errs.email = 'Enter a valid email address.'
+    if (!requestForm.department) errs.department = 'Department is required.'
     if (!requestForm.position) errs.position = 'Position is required.'
+    if (!requestForm.academic_year.trim()) errs.academic_year = 'Academic year is required.'
     if (!requestForm.password) errs.password = 'Password is required.'
     else if (requestForm.password.length < 8) errs.password = 'Password must be at least 8 characters.'
     if (!requestForm.confirm_password) errs.confirm_password = 'Confirm your password.'
@@ -126,8 +128,8 @@ const AdminLogin = () => {
         confirm_password: '',
         first_name: '',
         last_name: '',
-        position: '',
-        department: '',
+        position: 'President',
+        department: 'HEAD OFFICE',
         academic_year: '',
       })
       setRequestErrors({})
@@ -360,18 +362,17 @@ const AdminLogin = () => {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <select name="department" value={requestForm.department} onChange={(e) => handleDepartmentChange(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                      <option value="">Choose Department</option>
+                    <select name="department" value={requestForm.department} required onChange={(e) => handleDepartmentChange(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
                       {OFFICER_GROUPS.map((group) => (
                         <option key={group.label} value={group.label}>
                           {group.label}
                         </option>
                       ))}
                     </select>
+                    {requestErrors.department && <p className="mt-1 text-xs text-red-400">{requestErrors.department}</p>}
                   </div>
                   <div>
-                    <select name="position" value={requestForm.position} onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                      <option value="">Choose Position</option>
+                    <select name="position" value={requestForm.position} required onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
                       {positionsForGroup(requestForm.department).map((pos) => (
                         <option key={pos} value={pos}>
                           {pos}
@@ -381,7 +382,8 @@ const AdminLogin = () => {
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
                 </div>
-                <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} required placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                {requestErrors.academic_year && <p className="mt-1 text-xs text-red-400">{requestErrors.academic_year}</p>}
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
                   {profilePicPreview ? (
                     <img src={profilePicPreview} alt="Preview" className="h-full w-full object-cover" />

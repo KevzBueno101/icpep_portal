@@ -49,7 +49,7 @@ export default function OfficersRosterGrid({ title = 'Officers Roster' }) {
                 key={i}
                 className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
               >
-                <div className="h-56 w-full bg-slate-200" />
+                <div className="h-48 w-full bg-slate-200" />
                 <div className="p-6">
                   <div className="h-5 bg-slate-200 rounded w-3/4" />
                   <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />

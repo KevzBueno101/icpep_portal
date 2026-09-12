@@ -145,7 +145,7 @@ export default function HeroSection() {
         {/* 3 Logos */}
         <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mb-10">
           {[
-            { src: "/catsu.jpg", alt: "CatSU Logo" },
+            { src: "/catsu.png", alt: "CatSU Logo" },
             { src: "/icpep_logo.png", alt: "ICpEP.SE Logo", large: true },
             { src: "/cea-logo.png", alt: "CEA Logo" },
           ].map((logo) => (

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { Info } from 'lucide-react'
+import ThemeToggle from '../../components/ThemeToggle'
 
 const YEAR_LEVELS = [
   { value: '1', label: '1st Year' },
@@ -37,7 +38,7 @@ const RETRY_DELAY = 5000
 
 const Field = ({ label, name, type = 'text', placeholder, value, onChange, required = true, error, info, ...inputProps }) => (
   <div>
-    <label className="block text-sm text-slate-600 mb-1">{label}</label>
+    <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">{label}</label>
     <input
       type={type}
       name={name}
@@ -57,7 +58,7 @@ const Field = ({ label, name, type = 'text', placeholder, value, onChange, requi
 
 const PasswordField = ({ label, name, value, onChange, show, onToggle, error }) => (
   <div>
-    <label className="block text-sm text-slate-600 mb-1">{label}</label>
+    <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">{label}</label>
     <div className="relative">
       <input
         type={show ? 'text' : 'password'}
@@ -111,10 +112,10 @@ const CopyableInput = ({ value, label }) => {
 
   return (
     <div className="space-y-2">
-      {label && <label className="block text-sm text-slate-600">{label}</label>}
+      {label && <label className="block text-sm text-slate-600 dark:text-slate-400">{label}</label>}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1 bg-slate-100 rounded-lg px-3 py-2 ring-1 ring-slate-200">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex items-center gap-2 flex-1 bg-slate-100 rounded-lg px-3 py-2 ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
@@ -122,7 +123,7 @@ const CopyableInput = ({ value, label }) => {
             type="text"
             value={value}
             readOnly
-            className="flex-1 bg-transparent text-sm text-slate-900 outline-none"
+            className="flex-1 bg-transparent text-sm text-slate-900 outline-none dark:text-slate-200"
           />
         </div>
         <button
@@ -609,29 +610,32 @@ const Register = () => {
   const usernameError = errors.username
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:shadow-black/40">
+    <div className="relative min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10 dark:bg-slate-900">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/40">
         <div className="mb-8 flex flex-col items-center gap-3">
           <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
-            <p className="text-slate-500 mt-1 text-sm">ICPEP.SE Membership Registration</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create an Account</h1>
+            <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">ICPEP.SE Membership Registration</p>
           </div>
         </div>
 
-        <div className="mb-5 flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800">
+        <div className="mb-5 flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800 dark:bg-sky-950/50 dark:ring-sky-900 dark:text-sky-200">
           <Info className="h-5 w-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold">For BS CpE students only</p>
-            <p className="mt-1 text-sky-700">
+            <p className="font-semibold dark:text-sky-100">For BS CpE students only</p>
+            <p className="mt-1 text-sky-700 dark:text-sky-300">
               Only currently enrolled students in B.S. Computer Engineering (BS CpE) can register as members of the ICPEP.se Portal.
             </p>
           </div>
         </div>
 
         <div className="mb-6 space-y-2">
-          <p className="text-sm text-slate-500">Step {step} of 5</p>
-          <div className="h-2 rounded-full bg-slate-200">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Step {step} of 5</p>
+          <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
             <div
               className="h-2 rounded-full bg-sky-600 transition-all duration-300"
               style={{ width: `${(step / 5) * 100}%` }}
@@ -1109,7 +1113,7 @@ const Register = () => {
           </div>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6 dark:text-slate-400">
           Already have an account?{' '}
           <Link to="/login" className="text-sky-600 hover:underline">Sign in</Link>
         </p>

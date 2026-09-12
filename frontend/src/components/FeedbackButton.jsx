@@ -6,7 +6,7 @@ export default function FeedbackButton() {
       href={FEEDBACK_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500 hover:shadow-xl"
+      className="group fixed bottom-32 right-5 z-50 flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500 hover:shadow-xl md:bottom-5"
       aria-label="Send feedback"
     >
       <svg

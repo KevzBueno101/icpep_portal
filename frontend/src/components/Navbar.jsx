@@ -210,7 +210,7 @@ export default function Navbar() {
             <Link
               to="/login"
               onClick={closeMobileMenu}
-              className="block rounded-md bg-sky-600 px-3 py-2 text-base font-medium text-white"
+              className="block rounded-md bg-sky-600 px-3 py-2 text-center text-base font-medium text-white"
             >
               Login
             </Link>
