@@ -616,7 +616,9 @@ const Register = () => {
       </div>
       <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/40">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
+          <Link to="/" aria-label="Go to homepage">
+            <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto transition hover:opacity-80" />
+          </Link>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create an Account</h1>
             <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">ICPEP.SE Membership Registration</p>
