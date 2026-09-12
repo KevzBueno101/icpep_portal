@@ -406,7 +406,7 @@ const AdminMembership = () => {
   if (loading && members.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+<div className="grid gap-3 grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="h-4 w-24 animate-pulse rounded bg-slate-200 mb-3" />
@@ -642,7 +642,7 @@ const AdminMembership = () => {
       {/* Members Table Section */}
       <div className="space-y-4">
         {/* Mobile cards */}
-        <div className="grid grid-cols-2 gap-3 md:hidden">
+        <div className="space-y-3 md:hidden">
           {paginatedMembers.length > 0 ? (
             paginatedMembers.map((member) => {
               const isExpanded = expandedMemberId === member.id
@@ -650,7 +650,7 @@ const AdminMembership = () => {
               return (
                 <article
                   key={member.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
+                  className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <button
                     type="button"
@@ -658,9 +658,9 @@ const AdminMembership = () => {
                     className="w-full text-left"
                     aria-expanded={isExpanded}
                   >
-                    <div className="flex flex-col items-start gap-2">
-                      <div className="flex w-full items-center justify-between gap-1">
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
                           {member.profile_picture ? (
                             <img
                               src={member.profile_picture}
@@ -671,31 +671,32 @@ const AdminMembership = () => {
                               }}
                             />
                           ) : (
-                            <span className="text-xs font-semibold text-blue-700">{memberName.trim().charAt(0) || '?'}</span>
+                            <span className="text-sm font-semibold text-blue-700">{memberName.trim().charAt(0) || '?'}</span>
                           )}
                         </div>
+
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{memberName}</p>
+                          <p className="text-xs text-slate-500 truncate">{member.student_number}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyles(member.membership_status)}`}>
+                          {member.membership_status}
+                        </span>
                         <ChevronDown
                           className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                         />
                       </div>
-
-                      <div className="w-full min-w-0">
-                        <p className="text-[13px] font-semibold text-slate-900 leading-tight truncate">{memberName}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{member.student_number}</p>
-                      </div>
-
-                      <span className={`inline-flex w-full justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight ${getStatusStyles(member.membership_status)}`}>
-                        {member.membership_status}
-                      </span>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
-                      <div className="grid gap-1.5 text-[11px] text-slate-600">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-slate-700">Email</span>
-                          <span className="font-mono text-[10px] truncate text-right">{member.user_email || 'No email'}</span>
+                    <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
+                      <div className="grid gap-2 text-sm text-slate-600">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-medium text-slate-700 shrink-0">Email</span>
+                          <span className="font-mono text-xs text-right truncate">{member.user_email || 'No email'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-700">Year</span>
@@ -706,8 +707,8 @@ const AdminMembership = () => {
                           <span>{formatFee(member.membership_fee)}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-slate-700">Dept</span>
-                          <span className="truncate text-right">{member.course || 'Unassigned'}</span>
+                          <span className="font-medium text-slate-700">Department</span>
+                          <span>{member.course || 'Unassigned'}</span>
                         </div>
                       </div>
 
@@ -715,10 +716,10 @@ const AdminMembership = () => {
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
-                          className="rounded-xl bg-sky-600 px-2 py-2 text-[13px] font-semibold text-white hover:bg-sky-700 transition"
+                          className="rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 transition"
                         >
-                          <span className="flex items-center justify-center gap-1">
-                            <CheckCircle className="w-3.5 h-3.5" />
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
                             Verify
                           </span>
                         </button>
@@ -726,10 +727,10 @@ const AdminMembership = () => {
                         <button
                           type="button"
                           onClick={() => fetchMemberHistory(member)}
-                          className="rounded-xl bg-indigo-500 px-2 py-2 text-[13px] font-semibold text-white hover:bg-indigo-600 transition"
+                          className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 transition"
                         >
-                          <span className="flex items-center justify-center gap-1">
-                            <ScrollText className="w-3.5 h-3.5" />
+                          <span className="flex items-center justify-center gap-2">
+                            <ScrollText className="w-4 h-4" />
                             History
                           </span>
                         </button>
@@ -737,10 +738,10 @@ const AdminMembership = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(member)}
-                          className="rounded-xl bg-amber-500 px-2 py-2 text-[13px] font-semibold text-white hover:bg-amber-600 transition"
+                          className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition"
                         >
-                          <span className="flex items-center justify-center gap-1">
-                            <PencilLine className="w-3.5 h-3.5" />
+                          <span className="flex items-center justify-center gap-2">
+                            <PencilLine className="w-4 h-4" />
                             Edit
                           </span>
                         </button>
@@ -748,10 +749,10 @@ const AdminMembership = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(member)}
-                          className="rounded-xl bg-red-600 px-2 py-2 text-[13px] font-semibold text-white hover:bg-red-700 transition"
+                          className="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 transition"
                         >
-                          <span className="flex items-center justify-center gap-1">
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <span className="flex items-center justify-center gap-2">
+                            <Trash2 className="w-4 h-4" />
                             Delete
                           </span>
                         </button>
@@ -762,7 +763,7 @@ const AdminMembership = () => {
               )
             })
           ) : (
-            <div className="col-span-2 rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
               <p className="text-sm">No members found</p>
             </div>
           )}
@@ -843,7 +844,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
-                            className="rounded-full bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 border border-sky-200 transition"
+                            className="rounded-full bg-teal-50 p-1.5 text-teal-700 hover:bg-teal-100 border border-teal-200 transition"
                             title="Verify"
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
@@ -852,7 +853,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => fetchMemberHistory(member)}
-                            className="rounded-full bg-indigo-50 p-1.5 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition"
+                            className="rounded-full bg-cyan-50 p-1.5 text-cyan-700 hover:bg-cyan-100 border border-cyan-200 transition"
                             title="History"
                           >
                             <ScrollText className="w-3.5 h-3.5" />
@@ -861,7 +862,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(member)}
-                            className="rounded-full bg-amber-50 p-1.5 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
+                            className="rounded-full bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 border border-sky-200 transition"
                             title="Edit"
                           >
                             <PencilLine className="w-3.5 h-3.5" />
@@ -870,7 +871,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(member)}
-                            className="rounded-full bg-red-50 p-1.5 text-red-700 hover:bg-red-100 border border-red-200 transition"
+                            className="rounded-full bg-blue-50 p-1.5 text-blue-700 hover:bg-blue-100 border border-blue-200 transition"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -898,7 +899,7 @@ const AdminMembership = () => {
             <p className="text-[11px] text-slate-600">
               Showing <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
               <span className="font-semibold">{Math.min(currentPage * itemsPerPage, filteredMembers.length)}</span> of{' '}
-              <span className="font-semibold">{filteredMembers.length}</span> results
+              <span className="font-semibold">{totalPages}</span> pages
             </p>
 
             <div className="flex flex-wrap gap-2">
