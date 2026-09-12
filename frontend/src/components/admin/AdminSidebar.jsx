@@ -18,16 +18,14 @@ const NAV_ITEMS = [
   { label: 'Logs / Audit Trails', to: '/admin/logs',            icon: ClipboardList },
 ]
 
-function TopNavLink({ to, label, icon: Icon, badge, onNavigate }) {
+function SidebarNavLink({ to, label, icon: Icon, badge, onClick }) {
   return (
     <NavLink
       to={to}
-      onClick={onNavigate}
-      title={label}
-      aria-label={label}
+      onClick={onClick}
       className={({ isActive }) =>
         [
-          'relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition',
+          'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
           isActive
             ? 'bg-white/20 text-white'
             : 'text-blue-100 hover:bg-white/10 hover:text-white',
@@ -35,8 +33,9 @@ function TopNavLink({ to, label, icon: Icon, badge, onNavigate }) {
       }
     >
       <Icon size={18} />
+      <span className="truncate">{label}</span>
       {badge ? (
-        <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white">
+        <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white">
           {badge}
         </span>
       ) : null}
@@ -99,10 +98,27 @@ export default function AdminSidebar({ badges = {}, logout }) {
     return null
   }
 
+  const navItems = NAV_ITEMS.map((item) => ({
+    ...item,
+    badge: badgeCount(item.to),
+  }))
+
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-[#001F4D] text-white shadow-lg shadow-slate-950/20">
-        <div className="mx-auto flex max-w-[1440px] items-center gap-2 px-3 py-2 sm:px-4">
+      {/* Mobile / tablet top bar — hamburger on the left, everything else on the right */}
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-[#001F4D] text-white shadow-lg shadow-slate-950/20 lg:hidden">
+        <div className="flex items-center gap-2 px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open navigation menu"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="flex-1" />
+
           {/* User */}
           <div className="relative shrink-0">
             <button
@@ -134,7 +150,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
             </button>
 
             {userMenuOpen && (
-              <div className="absolute left-0 top-12 z-10 w-44 rounded-2xl border border-white/10 bg-[#001F4D] shadow-xl">
+              <div className="absolute right-0 top-12 z-10 w-44 rounded-2xl border border-white/10 bg-[#001F4D] shadow-xl">
                 <NavLink
                   to="/admin/profile"
                   onClick={() => setUserMenuOpen(false)}
@@ -165,30 +181,6 @@ export default function AdminSidebar({ badges = {}, logout }) {
             )}
           </div>
 
-          {/* Hamburger — mobile only */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Open navigation menu"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-blue-100 transition hover:bg-white/10 hover:text-white lg:hidden"
-          >
-            <Menu size={20} />
-          </button>
-
-          {/* Nav icons — desktop, horizontally scrollable */}
-          <nav className="custom-scrollbar hidden flex-1 items-center gap-1 overflow-x-auto px-1 lg:flex">
-            {NAV_ITEMS.map((item) => (
-              <TopNavLink
-                key={item.to}
-                to={item.to}
-                label={item.label}
-                icon={item.icon}
-                badge={badgeCount(item.to)}
-                onNavigate={() => setUserMenuOpen(false)}
-              />
-            ))}
-          </nav>
-
           {/* Theme toggle + sign out */}
           <div className="flex shrink-0 items-center gap-1">
             <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
@@ -204,6 +196,64 @@ export default function AdminSidebar({ badges = {}, logout }) {
           </div>
         </div>
       </header>
+
+      {/* Desktop sidebar */}
+      <aside className="fixed left-0 top-0 z-40 hidden h-full w-64 flex-col border-r border-white/10 bg-[#001F4D] text-white shadow-xl shadow-slate-950/20 lg:flex">
+        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+          <img src="/icpep_logo.png" alt="ICpEP.SE" className="h-9 w-9 flex-shrink-0 rounded-full bg-white/10 object-contain" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold leading-tight">ICpEP.SE Portal</p>
+            <p className="truncate text-[11px] font-semibold text-blue-100/70">Admin Panel</p>
+          </div>
+        </div>
+
+        <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {navItems.map((item) => (
+            <SidebarNavLink
+              key={item.to}
+              to={item.to}
+              label={item.label}
+              icon={item.icon}
+              badge={item.badge}
+              onClick={() => setUserMenuOpen(false)}
+            />
+          ))}
+        </nav>
+
+        <div className="border-t border-white/10 p-3">
+          <NavLink
+            to="/admin/profile"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-100 transition hover:bg-white/10 hover:text-white"
+          >
+            {user?.profile_picture ? (
+              <img
+                src={profilePicSrc}
+                alt={user.username}
+                className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white/20 object-cover"
+              />
+            ) : (
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                <User size={15} />
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold leading-tight">{userCard.username}</span>
+              <span className="block truncate text-[11px] font-semibold text-blue-100/70">{userCard.userPosition}</span>
+            </span>
+          </NavLink>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <ThemeToggle className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
+            <button
+              type="button"
+              onClick={openLogoutConfirm}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-white/10"
+            >
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
+        </div>
+      </aside>
 
       {/* Mobile / tablet navigation drawer */}
       {drawerOpen && (
@@ -234,33 +284,29 @@ export default function AdminSidebar({ badges = {}, logout }) {
             </div>
 
             <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon
-                const badge = badgeCount(item.to)
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    onClick={closeDrawer}
-                    className={({ isActive }) =>
-                      [
-                        'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'text-blue-100 hover:bg-white/10 hover:text-white',
-                      ].join(' ')
-                    }
-                  >
-                    <Icon size={18} />
-                    <span className="truncate">{item.label}</span>
-                    {badge ? (
-                      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white">
-                        {badge}
-                      </span>
-                    ) : null}
-                  </NavLink>
-                )
-              })}
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={closeDrawer}
+                  className={({ isActive }) =>
+                    [
+                      'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'text-blue-100 hover:bg-white/10 hover:text-white',
+                    ].join(' ')
+                  }
+                >
+                  <item.icon size={18} />
+                  <span className="truncate">{item.label}</span>
+                  {item.badge ? (
+                    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </NavLink>
+              ))}
             </nav>
 
             <div className="border-t border-white/10 p-3">
