@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
-import { Info } from 'lucide-react'
+import { Info, Plus } from 'lucide-react'
 import ThemeToggle from '../../components/ThemeToggle'
 
 const YEAR_LEVELS = [
@@ -964,15 +964,51 @@ const Register = () => {
 
                   <div>
                     <label className="block text-sm text-slate-600 mb-2">Membership Fee</label>
-                    <select
-                      name="membership_fee"
-                      value={form.membership_fee}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-                    >
-                      <option value="SEMESTER">₱25 — Regular Membership</option>
-                      <option value="ANNUAL">₱60 — Membership Plus</option>
-                    </select>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.membership_fee === 'SEMESTER'
+                            ? 'border-sky-500 bg-sky-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="membership_fee"
+                          value="SEMESTER"
+                          checked={form.membership_fee === 'SEMESTER'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-sky-600 accent-sky-600"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-sky-700">₱25 — Regular Membership</p>
+                          <p className="text-xs text-slate-500">Standard membership</p>
+                        </div>
+                      </label>
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.membership_fee === 'ANNUAL'
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="membership_fee"
+                          value="ANNUAL"
+                          checked={form.membership_fee === 'ANNUAL'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-green-600 accent-green-600"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <Plus className="h-4 w-4 text-green-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-green-700">₱60 — Membership Plus</p>
+                            <p className="text-xs text-slate-500">With inclusions & add-ons</p>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
                     <p className="mt-1.5 text-xs text-slate-500">
                       Choose your coverage: ₱25 for Regular Membership or ₱60 for Membership Plus.
                     </p>
@@ -1069,14 +1105,13 @@ const Register = () => {
                     </label>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  <p className="font-semibold text-slate-800 mb-2">Instructions</p>
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-slate-700">
+                  <p className="font-semibold text-green-800 mb-2">Membership Plus Inclusions</p>
                   <ul className="list-disc list-inside space-y-2">
-                    <li>Piliin ang payment method: On-hand / Personal o GCash.</li>
-                    <li>I-upload ang screenshot ng payment receipt o transaction reference.</li>
-                    <li>If On-hand payment, please take a picture together with the officer in-charge then upload it here.</li>
-                    <li>Siguraduhing malinaw ang halagang binayaran at reference code.</li>
-                    <li>Wait for the approval.</li>
+                    <li>Laminated ID card</li>
+                    <li>With Documentary stamped</li>
+                    <li>Badge pin</li>
+                    <li>Stickers</li>
                   </ul>
                 </div>
               </div>

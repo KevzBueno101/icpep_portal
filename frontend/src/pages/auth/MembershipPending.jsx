@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Upload, Info } from 'lucide-react'
+import { Upload, Info, Plus } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import PageSkeleton from '../../components/skeletons/PageSkeleton'
@@ -306,18 +306,54 @@ const MembershipPending = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="membership_fee" className="block text-sm font-semibold text-slate-700">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Membership Fee
                   </label>
-                  <select
-                    id="membership_fee"
-                    value={membershipFee}
-                    onChange={(e) => setMembershipFee(e.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  >
-                    <option value="SEMESTER">₱25 — Regular Membership</option>
-                    <option value="ANNUAL">₱60 — Membership Plus</option>
-                  </select>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        membershipFee === 'SEMESTER'
+                          ? 'border-sky-500 bg-sky-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="membership_fee"
+                        value="SEMESTER"
+                        checked={membershipFee === 'SEMESTER'}
+                        onChange={(e) => setMembershipFee(e.target.value)}
+                        className="h-4 w-4 text-sky-600 accent-sky-600"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-sky-700">₱25 — Regular Membership</p>
+                        <p className="text-xs text-slate-500">Standard membership</p>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        membershipFee === 'ANNUAL'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="membership_fee"
+                        value="ANNUAL"
+                        checked={membershipFee === 'ANNUAL'}
+                        onChange={(e) => setMembershipFee(e.target.value)}
+                        className="h-4 w-4 text-green-600 accent-green-600"
+                      />
+                      <div className="flex items-center gap-1.5">
+                        <Plus className="h-4 w-4 text-green-600" />
+                        <div>
+                          <p className="text-sm font-semibold text-green-700">₱60 — Membership Plus</p>
+                          <p className="text-xs text-slate-500">With inclusions & add-ons</p>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                   <p className="mt-1.5 text-xs text-slate-500">
                     ₱25 covers Regular Membership; ₱60 covers Membership Plus.
                   </p>
