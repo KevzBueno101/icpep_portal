@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Users, Mail, MapPin, FileText, Eye, ChevronRight, Code2 } from 'lucide-react'
+import { Info, Shield, Mail, MapPin, FileText, Eye, ChevronRight, Code2 } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
@@ -217,16 +217,17 @@ export default function MemberAbout() {
 
       {/* Leadership Board */}
       <OfficersProvider>
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              <Users className="h-5 w-5" />
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Leadership Team</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Student Leadership Board</h2>
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Student Leadership Board</h2>
           </div>
-
-          <OfficersCarousel />
-        </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+            <OfficersCarousel />
+          </div>
+        </section>
       </OfficersProvider>
 
       {/* Web-App Development Committee */}
