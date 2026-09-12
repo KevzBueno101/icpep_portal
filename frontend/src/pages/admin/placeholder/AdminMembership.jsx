@@ -548,30 +548,30 @@ const AdminMembership = () => {
                 className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleExportCSV}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="w-4 h-4 shrink-0" />
                 Export CSV
               </button>
               <button
                 type="button"
                 onClick={() => { setRenewFee('ALL'); setIsRenewConfirmOpen(true) }}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4 shrink-0" />
                 Renew All
               </button>
               <button
                 onClick={handleOpenAddModal}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
                 Add Member
               </button>
             </div>
@@ -640,7 +640,7 @@ const AdminMembership = () => {
       {/* Members Table Section */}
       <div className="space-y-4">
         {/* Mobile cards */}
-        <div className="space-y-3 md:hidden">
+        <div className="grid grid-cols-2 gap-3 md:hidden">
           {paginatedMembers.length > 0 ? (
             paginatedMembers.map((member) => {
               const isExpanded = expandedMemberId === member.id
@@ -648,7 +648,7 @@ const AdminMembership = () => {
               return (
                 <article
                   key={member.id}
-                  className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
+                  className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <button
                     type="button"
@@ -656,9 +656,9 @@ const AdminMembership = () => {
                     className="w-full text-left"
                     aria-expanded={isExpanded}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="flex flex-col items-start gap-2">
+                      <div className="flex w-full items-center justify-between gap-1">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
                           {member.profile_picture ? (
                             <img
                               src={member.profile_picture}
@@ -669,32 +669,31 @@ const AdminMembership = () => {
                               }}
                             />
                           ) : (
-                            <span className="text-sm font-semibold text-blue-700">{memberName.trim().charAt(0) || '?'}</span>
+                            <span className="text-xs font-semibold text-blue-700">{memberName.trim().charAt(0) || '?'}</span>
                           )}
                         </div>
-
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{memberName}</p>
-                          <p className="text-xs text-slate-500">{member.student_number}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyles(member.membership_status)}`}>
-                          {member.membership_status}
-                        </span>
                         <ChevronDown
                           className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                         />
                       </div>
+
+                      <div className="w-full min-w-0">
+                        <p className="text-[13px] font-semibold text-slate-900 leading-tight truncate">{memberName}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{member.student_number}</p>
+                      </div>
+
+                      <span className={`inline-flex w-full justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight ${getStatusStyles(member.membership_status)}`}>
+                        {member.membership_status}
+                      </span>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
-                      <div className="grid gap-2 text-sm text-slate-600">
-                        <div className="flex items-center justify-between">
+                    <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
+                      <div className="grid gap-1.5 text-[11px] text-slate-600">
+                        <div className="flex items-center justify-between gap-2">
                           <span className="font-medium text-slate-700">Email</span>
-                          <span className="font-mono text-xs">{member.user_email || 'No email'}</span>
+                          <span className="font-mono text-[10px] truncate text-right">{member.user_email || 'No email'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-700">Year</span>
@@ -705,66 +704,63 @@ const AdminMembership = () => {
                           <span>{formatFee(member.membership_fee)}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-slate-700">Department</span>
-                          <span>{member.course || 'Unassigned'}</span>
+                          <span className="font-medium text-slate-700">Dept</span>
+                          <span className="truncate text-right">{member.course || 'Unassigned'}</span>
                         </div>
                       </div>
 
-                      <div className="grid gap-2">
-                        <div className="grid gap-2">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
-                            className="w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <CheckCircle className="w-4 h-4" />
-                              Verify
-                            </span>
-                          </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
+                          className="rounded-xl bg-sky-600 px-2 py-2 text-[13px] font-semibold text-white hover:bg-sky-700 transition"
+                        >
+                          <span className="flex items-center justify-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Verify
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => fetchMemberHistory(member)}
-                            className="w-full rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-600 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <ScrollText className="w-4 h-4" />
-                              History
-                            </span>
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => fetchMemberHistory(member)}
+                          className="rounded-xl bg-indigo-500 px-2 py-2 text-[13px] font-semibold text-white hover:bg-indigo-600 transition"
+                        >
+                          <span className="flex items-center justify-center gap-1">
+                            <ScrollText className="w-3.5 h-3.5" />
+                            History
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditModal(member)}
-                            className="w-full rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <PencilLine className="w-4 h-4" />
-                              Edit
-                            </span>
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(member)}
+                          className="rounded-xl bg-amber-500 px-2 py-2 text-[13px] font-semibold text-white hover:bg-amber-600 transition"
+                        >
+                          <span className="flex items-center justify-center gap-1">
+                            <PencilLine className="w-3.5 h-3.5" />
+                            Edit
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(member)}
-                            className="w-full rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(member)}
+                          className="rounded-xl bg-red-600 px-2 py-2 text-[13px] font-semibold text-white hover:bg-red-700 transition"
+                        >
+                          <span className="flex items-center justify-center gap-1">
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   )}
-
                 </article>
               )
             })
           ) : (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+            <div className="col-span-2 rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
               <p className="text-sm">No members found</p>
             </div>
           )}

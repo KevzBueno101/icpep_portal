@@ -248,83 +248,87 @@ const AdminDashboard = () => {
     <div className="space-y-8">
 
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-sky-100 p-2">
-              <Shield className="h-5 w-5 text-sky-600" />
+        <div className="flex justify-center">
+          <div className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <div className="mx-auto flex w-fit items-center gap-3">
+              <div className="rounded-full bg-blue-100 p-2">
+                <Shield className="h-5 w-5 text-blue-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Your role</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Admin accounts</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900 capitalize">{user.position}</p>
+            <p className="mt-1 text-xs text-slate-500">{canManageRoles ? 'You can manage admin roles.' : 'You have view-only access.'}</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalAdmins}</p>
-          <p className="mt-1 text-xs text-slate-500">Total admin users in the system.</p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-amber-100 p-2">
-              <Clock className="h-5 w-5 text-amber-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-amber-100 p-2">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Pending approvals</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Pending approvals</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalPending}</p>
+            <p className="mt-1 text-xs text-slate-500">Members awaiting approval.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalPending}</p>
-          <p className="mt-1 text-xs text-slate-500">Members awaiting approval.</p>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-green-100 p-2">
-              <UserCheck className="h-5 w-5 text-green-600" />
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-green-100 p-2">
+                <UserCheck className="h-5 w-5 text-green-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Approved members</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Approved members</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalApproved}</p>
+            <p className="mt-1 text-xs text-slate-500">Active members in the system.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalApproved}</p>
-          <p className="mt-1 text-xs text-slate-500">Active members in the system.</p>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-slate-100 p-2">
-              <Users className="h-5 w-5 text-slate-600" />
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-sky-100 p-2">
+                <Shield className="h-5 w-5 text-sky-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Admin accounts</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Total Members</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalAdmins}</p>
+            <p className="mt-1 text-xs text-slate-500">Total admin users in the system.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalMembers}</p>
-          <p className="mt-1 text-xs text-slate-500">All registered members in the system.</p>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-red-100 p-2">
-              <UserX className="h-5 w-5 text-red-600" />
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-slate-100 p-2">
+                <Users className="h-5 w-5 text-slate-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Total Members</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Rejected members</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalMembers}</p>
+            <p className="mt-1 text-xs text-slate-500">All registered members in the system.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalRejected}</p>
-          <p className="mt-1 text-xs text-slate-500">Members with rejected applications.</p>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-purple-100 p-2">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-red-100 p-2">
+                <UserX className="h-5 w-5 text-red-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Rejected members</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Expired members</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalRejected}</p>
+            <p className="mt-1 text-xs text-slate-500">Members with rejected applications.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{totalExpired}</p>
-          <p className="mt-1 text-xs text-slate-500">Members with expired memberships.</p>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-blue-100 p-2">
-              <Shield className="h-5 w-5 text-blue-600" />
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-purple-100 p-2">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+              </div>
+              <p className="text-xs text-slate-500 uppercase">Expired members</p>
             </div>
-            <p className="text-xs text-slate-500 uppercase">Your role</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{totalExpired}</p>
+            <p className="mt-1 text-xs text-slate-500">Members with expired memberships.</p>
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{user.position}</p>
-          <p className="mt-1 text-xs text-slate-500">{canManageRoles ? 'You can manage admin roles.' : 'You have view-only access.'}</p>
         </div>
       </div>
 

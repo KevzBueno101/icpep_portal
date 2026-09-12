@@ -39,14 +39,14 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
             <img
               src={avatarUrl}
               alt={fullName}
-              className="h-24 w-24 rounded-full bg-slate-200 object-cover sm:h-32 sm:w-32"
+              className="h-28 w-28 rounded-full bg-slate-200 object-cover sm:h-36 sm:w-36"
               onError={() => setImageError(true)}
               loading="lazy"
             />
           </div>
         ) : (
           <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
-            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-sky-700 text-xl font-bold text-white sm:h-32 sm:w-32 sm:text-3xl">
+            <span className="flex h-28 w-28 items-center justify-center rounded-full bg-sky-700 text-2xl font-bold text-white sm:h-36 sm:w-36 sm:text-4xl">
               {initials}
             </span>
           </div>
