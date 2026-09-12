@@ -195,7 +195,7 @@ export default function MemberLayout({ children }) {
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm">Membership Fees & Validity</h4>
                     <p className="text-slate-600 text-xs mt-1 leading-relaxed">
-                      Register for <span className="font-semibold text-emerald-600">1 Semester (PHP 25.00)</span> or <span className="font-semibold text-emerald-600">1 Academic Year (PHP 50.00)</span>. Payments can be settled via GCash or on-hand.
+                      Register for <span className="font-semibold text-emerald-600">Regular Membership (PHP 25.00)</span> or <span className="font-semibold text-emerald-600">Membership Plus (PHP 60.00)</span>. Payments can be settled via GCash or on-hand.
                     </p>
                   </div>
                 </div>

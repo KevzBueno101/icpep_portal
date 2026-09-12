@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='memberprofile',
             name='membership_fee',
-            field=models.CharField(choices=[('SEMESTER', '₱25 — 1 Semester'), ('ANNUAL', '₱50 — 1 Academic Year')], default='SEMESTER', max_length=10),
+            field=models.CharField(choices=[('SEMESTER', '₱25 — Regular Membership'), ('ANNUAL', '₱60 — Membership Plus')], default='SEMESTER', max_length=10),
         ),
         migrations.AddField(
             model_name='paymenttransaction',

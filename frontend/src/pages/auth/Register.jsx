@@ -970,11 +970,11 @@ const Register = () => {
                       onChange={handleChange}
                       className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
                     >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                      <option value="SEMESTER">₱25 — Regular Membership</option>
+                      <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                     <p className="mt-1.5 text-xs text-slate-500">
-                      Choose your coverage: ₱25 for one semester or ₱50 for the full academic year.
+                      Choose your coverage: ₱25 for Regular Membership or ₱60 for Membership Plus.
                     </p>
                   </div>
 

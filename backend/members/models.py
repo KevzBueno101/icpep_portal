@@ -64,8 +64,8 @@ class MemberProfile(models.Model):
         FOURTH = '4', '4th Year'
 
     class MembershipFee(models.TextChoices):
-        SEMESTER = 'SEMESTER', '₱25 — 1 Semester'
-        ANNUAL = 'ANNUAL', '₱50 — 1 Academic Year'
+        SEMESTER = 'SEMESTER', '₱25 — Regular Membership'
+        ANNUAL = 'ANNUAL', '₱60 — Membership Plus'
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     first_name = models.CharField(max_length=100)
@@ -99,4 +99,4 @@ class MemberProfile(models.Model):
 
     @property
     def fee_amount(self):
-        return 50 if self.membership_fee == MemberProfile.MembershipFee.ANNUAL else 25
+        return 60 if self.membership_fee == MemberProfile.MembershipFee.ANNUAL else 25

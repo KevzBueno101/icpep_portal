@@ -153,7 +153,7 @@ const AdminMembership = () => {
     return mapping[level] || `${level} Year`
   }
 
-  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱50' : '₱25')
+  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱60' : '₱25')
 
   const getMemberName = (member) =>
     `${member?.first_name || ''} ${member?.middle_name || ''} ${member?.last_name || ''}`.replace(/\s+/g, ' ').trim()
@@ -624,8 +624,8 @@ const AdminMembership = () => {
                 className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="ALL">All Fees</option>
-                <option value="SEMESTER">₱25 — Semester</option>
-                <option value="ANNUAL">₱50 — Academic Year</option>
+                <option value="SEMESTER">₱25 — Regular Membership</option>
+                <option value="ANNUAL">₱60 — Membership Plus</option>
               </select>
             </div>
 
@@ -1165,8 +1165,8 @@ const AdminMembership = () => {
                       onChange={handleFormChange}
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
                     >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                      <option value="SEMESTER">₱25 — Regular Membership</option>
+                      <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                   </div>
                 </div>
@@ -1225,7 +1225,7 @@ const AdminMembership = () => {
             window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success(renewFee === 'ALL'
               ? 'All approved memberships set to Pending.'
-              : `${renewFee === 'ANNUAL' ? '₱50' : '₱25'} memberships set to Pending.`)
+              : `${renewFee === 'ANNUAL' ? '₱60' : '₱25'} memberships set to Pending.`)
             await fetchMembers()
             setIsRenewConfirmOpen(false)
           } catch (err) {
@@ -1241,8 +1241,8 @@ const AdminMembership = () => {
           <div className="flex flex-col gap-2">
             {[
               { value: 'ALL', label: 'All fee plans', desc: 'Everyone currently approved' },
-              { value: 'SEMESTER', label: '₱25 — 1 Semester', desc: 'Only ₱25 members' },
-              { value: 'ANNUAL', label: '₱50 — 1 Academic Year', desc: 'Only ₱50 members' },
+              { value: 'SEMESTER', label: '₱25 — Regular Membership', desc: 'Only ₱25 members' },
+              { value: 'ANNUAL', label: '₱60 — Membership Plus', desc: 'Only ₱60 members' },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -1426,8 +1426,8 @@ const AdminMembership = () => {
                       onChange={handleEditFormChange}
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                      <option value="SEMESTER">₱25 — Regular Membership</option>
+                      <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                   </div>
                 </div>

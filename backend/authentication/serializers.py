@@ -83,7 +83,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     section            = serializers.CharField()
     contact_number     = serializers.CharField()
     payment_method     = serializers.ChoiceField(choices=[('ON_HAND', 'On-hand / Personal'), ('GCASH', 'GCash')], default='ON_HAND')
-    membership_fee     = serializers.ChoiceField(choices=[('SEMESTER', '₱25 — 1 Semester'), ('ANNUAL', '₱50 — 1 Academic Year')], default='SEMESTER')
+    membership_fee     = serializers.ChoiceField(choices=[('SEMESTER', '₱25 — Regular Membership'), ('ANNUAL', '₱60 — Membership Plus')], default='SEMESTER')
     profile_picture     = serializers.ImageField(required=False, allow_null=True)
     payment_proof_image = serializers.ImageField(required=False, allow_null=True)
     coe_id_image = serializers.FileField(required=False, allow_null=True)

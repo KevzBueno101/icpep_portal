@@ -315,11 +315,11 @@ const MembershipPending = () => {
                     onChange={(e) => setMembershipFee(e.target.value)}
                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
                   >
-                    <option value="SEMESTER">₱25 — 1 Semester</option>
-                    <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                    <option value="SEMESTER">₱25 — Regular Membership</option>
+                    <option value="ANNUAL">₱60 — Membership Plus</option>
                   </select>
                   <p className="mt-1.5 text-xs text-slate-500">
-                    ₱25 covers one semester; ₱50 covers the full academic year.
+                    ₱25 covers Regular Membership; ₱60 covers Membership Plus.
                   </p>
                 </div>
 
