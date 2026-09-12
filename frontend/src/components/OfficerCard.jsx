@@ -32,20 +32,21 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
       className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
       aria-label={`${position} - ${fullName}`}
     >
-      <div className="flex items-center gap-4 sm:block">
+      <div>
         {hasValidAvatar ? (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100 sm:h-48 sm:w-full sm:rounded-none sm:bg-slate-100 sm:pt-6">
+          <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
+
             <img
               src={avatarUrl}
               alt={fullName}
-              className="h-16 w-16 rounded-full bg-slate-200 object-cover sm:h-32 sm:w-32"
+              className="h-24 w-24 rounded-full bg-slate-200 object-cover sm:h-32 sm:w-32"
               onError={() => setImageError(true)}
               loading="lazy"
             />
           </div>
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center sm:h-48 sm:w-full sm:pt-6">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-700 text-lg font-bold text-white sm:h-32 sm:w-32 sm:text-3xl">
+          <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
+            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-sky-700 text-xl font-bold text-white sm:h-32 sm:w-32 sm:text-3xl">
               {initials}
             </span>
           </div>
@@ -88,22 +89,22 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
           </div>
         )}
 
-        <div className="min-w-0 flex-1 p-4 pl-0 pr-12 text-left sm:p-5 sm:pr-5 sm:text-center">
-          <h3 className="mb-1 text-lg font-bold text-slate-900 line-clamp-2 sm:text-xl">{fullName}</h3>
+        <div className="min-w-0 flex-1 p-4 text-center sm:p-5">
+          <h3 className="mb-1 font-bold text-slate-900 line-clamp-2 text-base sm:text-xl">{fullName}</h3>
 
           {/* Position should always exist for valid officers; keep spacing consistent */}
-          <p className="mb-2 font-semibold text-sky-600 line-clamp-1 text-sm">{position}</p>
+          <p className="mb-2 font-semibold text-sky-600 line-clamp-1 text-[13px] sm:text-sm">{position}</p>
 
           {/* Keep vertical rhythm stable even when optional fields are missing */}
           <div className="min-h-[44px]">
             {office ? (
-              <p className="mb-2 text-sm text-slate-600 line-clamp-1">{office}</p>
+              <p className="mb-2 text-[13px] text-slate-600 line-clamp-1 sm:text-sm">{office}</p>
             ) : (
               <div className="mb-2 h-5" />
             )}
 
             {academicYear ? (
-              <p className="text-xs text-slate-500 font-medium">AY {academicYear}</p>
+              <p className="text-[11px] text-slate-500 font-medium sm:text-xs">AY {academicYear}</p>
             ) : (
               <div className="h-4" />
             )}
@@ -112,7 +113,7 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
           {email || username ? (
             <a
               href={email ? `mailto:${email}` : undefined}
-              className="mt-2 inline-block text-xs text-slate-400 line-clamp-1 transition hover:text-slate-600 font-medium"
+              className="mt-2 inline-block text-[11px] text-slate-400 line-clamp-1 transition hover:text-slate-600 font-medium sm:text-xs"
             >
               {email || username}
             </a>
