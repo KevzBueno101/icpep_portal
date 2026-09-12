@@ -133,28 +133,34 @@ def generate_receipt_png(transaction, member):
 
     y_start = 250
     col1_x = 70
-    col2_x = 185
     row_h = 31
-    proof_x = 512  # right-side image starts here; keep values left of it
+
+    # Start the value column after the longest label so values never
+    # overlap their labels (works even with bitmap font fallbacks).
+    col2_x = col1_x + max((draw.textlength(label, font=font_sm) for label, _ in fields), default=0) + 24
+    value_max_width = W - 40 - col2_x
 
     for i, (label, value) in enumerate(fields):
         y = y_start + i * row_h
         draw.text((col1_x, y), label, fill=subtle_color, font=font_sm, anchor='lt')
-        value = _fit_text(draw, value, font_md_bold, proof_x - col2_x - 20)
+        value = _fit_text(draw, value, font_md_bold, value_max_width)
         draw.text((col2_x, y), value, fill=text_color, font=font_md_bold, anchor='lt')
 
-    # ── Payment Proof thumbnail (right side) ──
+    # ── Payment Proof thumbnail (bottom-right corner, clear of the fields) ──
     proof_url = member.payment_proof_image.url if member.payment_proof_image else None
     if not proof_url:
         # fallback: try from transaction
         proof_url = transaction.payment_proof_image.url if transaction.payment_proof_image else None
     proof_img = _load_image_from_url(proof_url)
     if proof_img:
-        proof_y = 250
-        draw.rectangle([proof_x - 5, proof_y - 5, proof_x + proof_img.width + 5, proof_y + proof_img.height + 30],
+        margin = 22
+        proof_w, proof_h = proof_img.size
+        proof_x = W - margin - proof_w
+        proof_y = H - margin - proof_h - 30
+        draw.rectangle([proof_x - 5, proof_y - 5, proof_x + proof_w + 5, proof_y + proof_h + 30],
                        outline=accent_color, width=1)
         img.paste(proof_img, (proof_x, proof_y), proof_img)
-        draw.text((proof_x + proof_img.width // 2, proof_y + proof_img.height + 8),
+        draw.text((proof_x + proof_w // 2, proof_y + proof_h + 8),
                   'Payment Proof', fill=subtle_color, font=font_sm, anchor='mt')
 
     # ── Signature (left-aligned, below proof area) ──
