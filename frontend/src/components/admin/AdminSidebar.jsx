@@ -264,13 +264,11 @@ export default function AdminSidebar({ badges = {}, logout }) {
           />
           <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-[#001F4D] text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white">
-                  <User size={15} />
-                </span>
+              <div className="flex min-w-0 items-center gap-3">
+                <img src="/icpep_logo.png" alt="ICpEP.SE" className="h-9 w-9 flex-shrink-0 rounded-full bg-white/10 object-contain" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold leading-tight">{userCard.username}</p>
-                  <p className="truncate text-[11px] font-semibold text-blue-100/70">{userCard.userPosition}</p>
+                  <p className="truncate text-sm font-bold leading-tight">ICpEP.SE Portal</p>
+                  <p className="truncate text-[11px] font-semibold text-blue-100/70">Admin Panel</p>
                 </div>
               </div>
               <button
@@ -315,8 +313,21 @@ export default function AdminSidebar({ badges = {}, logout }) {
                 onClick={closeDrawer}
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-100 transition hover:bg-white/10 hover:text-white"
               >
-                <UserCog size={18} />
-                Profile
+                {user?.profile_picture ? (
+                  <img
+                    src={profilePicSrc}
+                    alt={user.username}
+                    className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white/20 object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                    <User size={15} />
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold leading-tight">{userCard.username}</span>
+                  <span className="block truncate text-[11px] font-semibold text-blue-100/70">{userCard.userPosition}</span>
+                </span>
               </NavLink>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <ThemeToggle className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
