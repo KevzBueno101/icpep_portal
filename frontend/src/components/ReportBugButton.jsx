@@ -211,15 +211,15 @@ export default function ReportBugButton() {
                 <label htmlFor="bug-summary" className="mb-1 block text-xs font-semibold text-slate-700">
                   What happened? <span className="text-rose-500">*</span>
                 </label>
-                <input
+                <textarea
                   id="bug-summary"
                   name="summary"
-                  type="text"
+                  rows={3}
                   value={form.summary}
                   onChange={handleChange}
                   required
                   placeholder="Briefly describe the bug"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all duration-200"
                 />
               </div>
 
