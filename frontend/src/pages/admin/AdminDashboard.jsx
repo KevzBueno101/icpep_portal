@@ -263,7 +263,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-amber-100 p-2">

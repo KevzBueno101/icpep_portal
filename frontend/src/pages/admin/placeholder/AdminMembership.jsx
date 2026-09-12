@@ -552,26 +552,26 @@ const AdminMembership = () => {
               <button
                 onClick={handleExportCSV}
                 disabled={isRestricted}
-                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <FileDown className="w-4 h-4 shrink-0" />
+                <FileDown className="w-3.5 h-3.5 shrink-0" />
                 Export CSV
               </button>
               <button
                 type="button"
                 onClick={() => { setRenewFee('ALL'); setIsRenewConfirmOpen(true) }}
                 disabled={isRestricted}
-                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <RefreshCw className="w-4 h-4 shrink-0" />
+                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
                 Renew All
               </button>
               <button
                 onClick={handleOpenAddModal}
                 disabled={isRestricted}
-                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <Plus className="w-4 h-4 shrink-0" />
+                <Plus className="w-3.5 h-3.5 shrink-0" />
                 Add Member
               </button>
             </div>
@@ -579,53 +579,55 @@ const AdminMembership = () => {
 
           {/* Filters Row */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
-            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Filter:</p>
+            <p className="hidden text-xs font-semibold text-slate-600 uppercase tracking-wide sm:block">Filter:</p>
 
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="EXPIRED">Expired</option>
-            </select>
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:gap-2">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="EXPIRED">Expired</option>
+              </select>
 
-            {/* Year Level Filter */}
-            <select
-              value={yearFilter}
-              onChange={(e) => {
-                setYearFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Years</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
+              {/* Year Level Filter */}
+              <select
+                value={yearFilter}
+                onChange={(e) => {
+                  setYearFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
 
-            {/* Membership Fee Filter */}
-            <select
-              value={feeFilter}
-              onChange={(e) => {
-                setFeeFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Fees</option>
-              <option value="SEMESTER">₱25 — Semester</option>
-              <option value="ANNUAL">₱50 — Academic Year</option>
-            </select>
+              {/* Membership Fee Filter */}
+              <select
+                value={feeFilter}
+                onChange={(e) => {
+                  setFeeFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Fees</option>
+                <option value="SEMESTER">₱25 — Semester</option>
+                <option value="ANNUAL">₱50 — Academic Year</option>
+              </select>
+            </div>
 
             {/* Results Counter */}
             <div className="sm:ml-auto">
