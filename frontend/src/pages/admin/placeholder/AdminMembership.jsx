@@ -749,7 +749,7 @@ const AdminMembership = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(member)}
-                          className="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 transition"
+                          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100"
                         >
                           <span className="flex items-center justify-center gap-2">
                             <Trash2 className="w-4 h-4" />
@@ -871,7 +871,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(member)}
-                            className="rounded-full bg-blue-50 p-1.5 text-blue-700 hover:bg-blue-100 border border-blue-200 transition"
+                            className="rounded-full bg-red-50 p-1.5 text-red-700 hover:bg-red-100 border border-red-200 transition"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
