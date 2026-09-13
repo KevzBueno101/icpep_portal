@@ -1,6 +1,10 @@
+import os
+
 from rest_framework import serializers
 
 from .models import AboutSection
+
+ALLOWED_DOCUMENT_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg'}
 
 
 class AboutSectionSerializer(serializers.ModelSerializer):
@@ -35,3 +39,18 @@ class AboutSectionSerializer(serializers.ModelSerializer):
         if request:
             return request.build_absolute_uri(obj.document.url)
         return obj.document.url
+
+    def validate_document(self, file):
+        if file is None:
+            return file
+        ext = os.path.splitext(file.name or '')[1].lower()
+        if ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise serializers.ValidationError(
+                'Unsupported file type. Only PDF, PNG, JPG, or JPEG files are allowed.'
+            )
+        content_type = (getattr(file, 'content_type', '') or '').lower()
+        if content_type and 'pdf' not in content_type and not content_type.startswith('image/'):
+            raise serializers.ValidationError(
+                'Unsupported file type. Only PDF, PNG, JPG, or JPEG files are allowed.'
+            )
+        return file

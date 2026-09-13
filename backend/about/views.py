@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, status
+from cloudinary.exceptions import Error as CloudinaryError
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -30,7 +31,10 @@ class AboutSectionAdminListCreateAPIView(generics.ListCreateAPIView):
         return [CanManageContent()]
 
     def perform_create(self, serializer):
-        section = serializer.save(created_by=self.request.user)
+        try:
+            section = serializer.save(created_by=self.request.user)
+        except CloudinaryError:
+            raise serializers.ValidationError({'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'})
         log_action(
             user=self.request.user,
             action_type=AuditLog.ActionType.ABOUT_SECTION_CREATED,
@@ -57,7 +61,10 @@ class AboutSectionAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return [CanManageContent()]
 
     def perform_update(self, serializer):
-        section = serializer.save()
+        try:
+            section = serializer.save()
+        except CloudinaryError:
+            raise serializers.ValidationError({'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'})
         log_action(
             user=self.request.user,
             action_type=AuditLog.ActionType.ABOUT_SECTION_UPDATED,

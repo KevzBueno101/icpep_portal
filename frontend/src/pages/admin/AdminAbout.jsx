@@ -30,6 +30,13 @@ const isPdf = (section) => {
   return name.endsWith('.pdf')
 }
 
+const ALLOWED_DOCUMENT_TYPES = ['pdf', 'png', 'jpg', 'jpeg']
+
+const isAllowedDocument = (file) => {
+  const ext = (file?.name?.split('.').pop() || '').toLowerCase()
+  return ALLOWED_DOCUMENT_TYPES.includes(ext)
+}
+
 const AdminAbout = () => {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -147,7 +154,12 @@ const AdminAbout = () => {
       handleCancelEdit()
       fetchSections()
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to save about section.')
+      const detail =
+        err.response?.data?.detail ||
+        err.response?.data?.document?.[0] ||
+        err.response?.data?.document_name?.[0] ||
+        'Failed to save about section.'
+      toast.error(detail)
     } finally {
       setSaving(false)
     }
@@ -300,6 +312,12 @@ const AdminAbout = () => {
                   accept=".pdf,.png,.jpg,.jpeg"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null
+                    if (file && !isAllowedDocument(file)) {
+                      toast.error('Unsupported file type. Only PDF, PNG, JPG, or JPEG files are allowed.')
+                      e.target.value = ''
+                      setSelectedFile(null)
+                      return
+                    }
                     setSelectedFile(file)
                   }}
                   className="w-full cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -451,6 +469,12 @@ const AdminAbout = () => {
                             accept=".pdf,.png,.jpg,.jpeg"
                             onChange={(e) => {
                               const file = e.target.files?.[0] || null
+                              if (file && !isAllowedDocument(file)) {
+                                toast.error('Unsupported file type. Only PDF, PNG, JPG, or JPEG files are allowed.')
+                                e.target.value = ''
+                                setSelectedFile(null)
+                                return
+                              }
                               setSelectedFile(file)
                             }}
                             className="w-full cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-sm"
