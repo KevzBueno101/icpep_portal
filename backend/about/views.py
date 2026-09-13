@@ -5,8 +5,9 @@ import re
 import cloudinary.api
 import requests
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
+from django.views import View
 from cloudinary.exceptions import Error as CloudinaryError
 from cloudinary.utils import cloudinary_url
 from rest_framework import generics, permissions, serializers, status
@@ -137,25 +138,23 @@ class AboutSectionDocumentDeleteAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AboutSectionDocumentContentAPIView(APIView):
+class AboutSectionDocumentContentAPIView(View):
     """Streams an about section's attached document.
 
-    Cloudinary stores these as image/authenticated assets, which reject plain
-    unsigned delivery URLs with 401. Files are fetched server-side using
-    signed delivery URLs (or the local filesystem in dev) and streamed to the
-    browser same-origin so previews and downloads work reliably.
+    Plain Django view (no DRF content negotiation) so navigating to the URL
+    returns the raw file bytes instead of the browsable API. Cloudinary stores
+    these assets in a restricted/locked mode, which rejects plain unsigned
+    delivery URLs with 401, so files are fetched server-side using signed
+    delivery URLs (or the local filesystem in dev) and streamed same-origin.
     """
-
-    def get_permissions(self):
-        section = get_object_or_404(AboutSection, id=self.kwargs.get('section_id'))
-        if section.is_published:
-            return [permissions.AllowAny()]
-        return [IsAdmin()]
 
     def get(self, request, section_id):
         section = get_object_or_404(AboutSection, id=section_id)
+        if not section.is_published and not IsAdmin().has_permission(request, self):
+            return HttpResponseForbidden('You do not have permission to view this document.')
+
         if not section.document:
-            return Response({'detail': 'No document attached.'}, status=status.HTTP_404_NOT_FOUND)
+            return HttpResponseNotFound('No document attached.')
 
         data = self._load_bytes(section)
         if data is None:
@@ -167,7 +166,7 @@ class AboutSectionDocumentContentAPIView(APIView):
             ext, mimetypes.guess_type(name)[0] or 'application/octet-stream'
         )
 
-        disposition = 'attachment' if request.query_params.get('download') == '1' else 'inline'
+        disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
         safe_name = name.replace('"', '').replace('\n', '')
         response = HttpResponse(data, content_type=content_type)
         response['Content-Disposition'] = f'{disposition}; filename="{safe_name}"'
