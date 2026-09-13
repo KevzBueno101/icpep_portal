@@ -8,9 +8,7 @@ import {
   CheckCircle2,
   Eye,
   Download,
-  X,
   FileText,
-  Image as ImageIcon,
   Target,
   ScrollText,
   Gavel,
@@ -36,11 +34,6 @@ const emptyForm = {
   body: '',
   document_name: '',
   is_published: true,
-}
-
-const isPdf = (section) => {
-  const name = (section.document_name || section.document_url || '').toLowerCase()
-  return name.endsWith('.pdf')
 }
 
 const ALLOWED_DOCUMENT_TYPES = ['pdf', 'png', 'jpg', 'jpeg']
@@ -129,9 +122,6 @@ const AdminAbout = () => {
   const [selectedFile, setSelectedFile] = useState(null)
 
   const [deletingSection, setDeletingSection] = useState(null)
-  const [previewingSection, setPreviewingSection] = useState(null)
-  const [previewSrc, setPreviewSrc] = useState(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
 
   const isEditMode = !!editingSection
@@ -153,13 +143,6 @@ const AdminAbout = () => {
   useEffect(() => {
     fetchSections()
   }, [])
-
-  useEffect(() => {
-    const url = previewSrc
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [previewSrc])
 
   const handleCreate = (presetCategory) => {
     setEditingSection(null)
@@ -293,32 +276,9 @@ const AdminAbout = () => {
     }
   }
 
-  const openPreview = async (section) => {
+  const openPreview = (section) => {
     if (!section.document_url) return
-    setPreviewingSection(section)
-    if (!isPdf(section)) {
-      setPreviewSrc(section.document_url)
-      setPreviewLoading(false)
-      return
-    }
-    setPreviewLoading(true)
-    setPreviewSrc(null)
-    try {
-      const res = await fetch(section.document_url)
-      if (!res.ok) throw new Error('Preview fetch failed')
-      const blob = await res.blob()
-      setPreviewSrc(URL.createObjectURL(blob))
-    } catch {
-      toast.error('Failed to load document preview.')
-    } finally {
-      setPreviewLoading(false)
-    }
-  }
-
-  const closePreview = () => {
-    setPreviewLoading(false)
-    setPreviewSrc(null)
-    setPreviewingSection(null)
+    window.open(section.document_url, '_blank', 'noopener,noreferrer')
   }
 
   const typeLabel = (value) =>
@@ -535,7 +495,7 @@ const AdminAbout = () => {
                     onClick={() => openPreview(section)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    <Eye className="h-4 w-4" /> Preview
+                    <Eye className="h-4 w-4" /> {section.document_name || 'View Document'}
                   </button>
                   <button
                     type="button"
@@ -837,66 +797,6 @@ const AdminAbout = () => {
         onConfirm={handleDelete}
         onCancel={() => setDeletingSection(null)}
       />
-
-      {previewingSection && previewingSection.document_url && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 sm:items-center">
-          <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                {isPdf(previewingSection) ? (
-                  <FileText className="h-5 w-5 shrink-0 text-sky-600" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 shrink-0 text-violet-600" />
-                )}
-                <span className="truncate text-sm font-semibold text-slate-900">
-                  {previewingSection.document_name || 'Document'}
-                </span>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDownload(previewingSection)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Download className="h-4 w-4" /> Download
-                </button>
-                <button
-                  type="button"
-                  onClick={closePreview}
-                  className="inline-flex items-center rounded-full p-2 text-slate-500 hover:bg-slate-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto bg-slate-100 p-4">
-              {isPdf(previewingSection) ? (
-                previewLoading ? (
-                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
-                    Loading preview…
-                  </div>
-                ) : previewSrc ? (
-                  <iframe
-                    title={previewingSection.document_name || 'PDF preview'}
-                    src={previewSrc}
-                    className="h-full min-h-[65vh] w-full rounded-xl border border-slate-200 bg-white"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center py-24 text-sm text-red-500">
-                    Failed to load preview.
-                  </div>
-                )
-              ) : (
-                <img
-                  src={previewingSection.document_url}
-                  alt={previewingSection.document_name || 'Document preview'}
-                  className="mx-auto max-h-[70vh] w-auto rounded-xl border border-slate-200 bg-white p-2"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

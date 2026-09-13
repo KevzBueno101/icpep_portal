@@ -45,16 +45,8 @@ const TYPE_LABELS = {
   CUSTOM: 'Section',
 }
 
-const isPdf = (section) => {
-  const name = (section.document_name || section.document_url || '').toLowerCase()
-  return name.endsWith('.pdf')
-}
-
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [previewSrc, setPreviewSrc] = useState(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
   const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
 
   useEffect(() => {
@@ -72,39 +64,9 @@ export default function MemberAbout() {
     }
   }, [])
 
-  useEffect(() => {
-    const url = previewSrc
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [previewSrc])
-
-  const openPreview = async (section) => {
+  const openPreview = (section) => {
     if (!section.document_url) return
-    setPreview(section)
-    if (!isPdf(section)) {
-      setPreviewSrc(section.document_url)
-      setPreviewLoading(false)
-      return
-    }
-    setPreviewLoading(true)
-    setPreviewSrc(null)
-    try {
-      const res = await fetch(section.document_url)
-      if (!res.ok) throw new Error('Preview fetch failed')
-      const blob = await res.blob()
-      setPreviewSrc(URL.createObjectURL(blob))
-    } catch {
-      setPreviewSrc(null)
-    } finally {
-      setPreviewLoading(false)
-    }
-  }
-
-  const closePreview = () => {
-    setPreviewLoading(false)
-    setPreviewSrc(null)
-    setPreview(null)
+    window.open(section.document_url, '_blank', 'noopener,noreferrer')
   }
 
   const allSections =
@@ -315,55 +277,6 @@ export default function MemberAbout() {
 
       {/* Web-App Development Committee modal */}
       <DevCommitteeModal isOpen={devCommitteeOpen} onClose={() => setDevCommitteeOpen(false)} />
-
-      {/* Document preview modal */}
-      {preview && preview.document_url && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 sm:items-center">
-          <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <FileText className="h-5 w-5 shrink-0 text-sky-600" />
-                <span className="truncate text-sm font-semibold text-slate-900">
-                  {preview.document_name || 'Document'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={closePreview}
-                className="inline-flex items-center rounded-full p-2 text-2xl leading-none text-slate-500 hover:bg-slate-100"
-                aria-label="Close preview"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto bg-slate-100 p-4">
-              {isPdf(preview) ? (
-                previewLoading ? (
-                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
-                    Loading preview…
-                  </div>
-                ) : previewSrc ? (
-                  <iframe
-                    title={preview.document_name || 'PDF preview'}
-                    src={previewSrc}
-                    className="h-[70vh] w-full rounded-xl border border-slate-200 bg-white"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
-                    Failed to load preview.
-                  </div>
-                )
-              ) : (
-                <img
-                  src={preview.document_url}
-                  alt={preview.document_name || 'Document preview'}
-                  className="mx-auto max-h-[70vh] w-auto rounded-xl border border-slate-200 bg-white p-2"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
