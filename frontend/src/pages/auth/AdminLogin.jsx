@@ -34,9 +34,10 @@ const AdminLogin = () => {
   const handleRequestChange = (e) => setRequestForm({ ...requestForm, [e.target.name]: e.target.value })
   const handleDepartmentChange = (value) => {
     setRequestForm((prev) => {
+      const groupPositions = positionsForGroup(value)
       const next = { ...prev, department: value }
-      if (prev.position && !positionsForGroup(value).includes(prev.position)) {
-        next.position = ''
+      if (!groupPositions.includes(prev.position)) {
+        next.position = groupPositions[0] || ''
       }
       return next
     })
