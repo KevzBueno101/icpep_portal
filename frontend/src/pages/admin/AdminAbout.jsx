@@ -262,8 +262,10 @@ const AdminAbout = () => {
   const handleDownload = async (section) => {
     if (!section.document_url) return
     try {
-      const res = await api.get(section.document_url, { responseType: 'blob' })
-      const objectUrl = URL.createObjectURL(res.data)
+      const res = await fetch(section.document_url)
+      if (!res.ok) throw new Error('Download failed')
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = objectUrl
       link.download = section.document_name || 'document'

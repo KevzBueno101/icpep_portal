@@ -2,6 +2,23 @@ from django.conf import settings
 from django.db import models
 
 
+def _document_storage():
+    """Storage for about documents — public `raw` Cloudinary in production.
+
+    The Cloudinary account previously delivered these assets with restricted
+    auth (401 on plain URLs), so they are intentionally re-uploaded/stored as
+    public raw assets that need no signature. In dev (no Cloudinary settings)
+    the default local filesystem storage is used.
+    """
+    if getattr(settings, 'CLOUDINARY_STORAGE', None):
+        try:
+            from cloudinary_storage.storage import RawMediaCloudinaryStorage
+            return RawMediaCloudinaryStorage()
+        except ImportError:
+            pass
+    return None
+
+
 class AboutSection(models.Model):
     class SectionType(models.TextChoices):
         MISSION = 'MISSION', 'Mission'
@@ -19,7 +36,7 @@ class AboutSection(models.Model):
     )
     title = models.CharField(max_length=200)
     body = models.TextField(blank=True, default='')
-    document = models.FileField(upload_to='org_documents/', blank=True)
+    document = models.FileField(upload_to='org_documents/', blank=True, storage=_document_storage())
     document_name = models.CharField(max_length=255, blank=True, default='')
     is_published = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0, db_index=True)
