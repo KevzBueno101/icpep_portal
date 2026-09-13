@@ -1,5 +1,6 @@
 import os
 
+from django.urls import reverse
 from rest_framework import serializers
 
 from .models import AboutSection
@@ -35,10 +36,11 @@ class AboutSectionSerializer(serializers.ModelSerializer):
     def get_document_url(self, obj):
         if not obj.document:
             return None
+        path = reverse('about-section-document-content', kwargs={'section_id': obj.id})
         request = self.context.get('request')
         if request:
-            return request.build_absolute_uri(obj.document.url)
-        return obj.document.url
+            return request.build_absolute_uri(path)
+        return path
 
     def validate_document(self, file):
         if file is None:

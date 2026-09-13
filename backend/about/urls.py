@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.AboutSectionListAPIView.as_view(), name='about-section-list'),
+    path('document/<int:section_id>/', views.AboutSectionDocumentContentAPIView.as_view(), name='about-section-document-content'),
     path('admin/', views.AboutSectionAdminListCreateAPIView.as_view(), name='about-section-admin-list'),
     path('admin/reorder/', views.AboutSectionReorderAPIView.as_view(), name='about-section-reorder'),
     path('admin/<int:section_id>/document/', views.AboutSectionDocumentDeleteAPIView.as_view(), name='about-section-document-delete'),
