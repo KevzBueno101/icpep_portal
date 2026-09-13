@@ -219,13 +219,13 @@ class PaymentSettingsAPIView(APIView):
         return Response(PaymentSettingsSerializer(settings_obj).data)
 
     def patch(self, request):
-        pos_lower = (getattr(request.user, 'position', '') or '').lower()
-        is_president = 'president' in pos_lower
-        is_treasurer = (
-            getattr(request.user, 'role', '').upper() == 'ADMIN'
-            and 'treasurer' in pos_lower
-        )
-        if not (request.user and request.user.is_authenticated and (is_president or is_treasurer)):
+        # Any authenticated admin with FULL_CONTROL (or the President) may
+        # update payment settings, regardless of their specific position.
+        if not (
+            request.user
+            and request.user.is_authenticated
+            and getattr(request.user, 'can_manage_roles', False)
+        ):
             return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         settings_obj, _ = PaymentSettings.objects.get_or_create(id=1)
         serializer = PaymentSettingsSerializer(settings_obj, data=request.data, partial=True)
