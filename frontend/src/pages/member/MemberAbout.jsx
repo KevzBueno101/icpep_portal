@@ -318,7 +318,7 @@ export default function MemberAbout() {
 
       {/* Document preview modal */}
       {preview && preview.document_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 sm:items-center">
           <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
               <div className="flex min-w-0 items-center gap-2">

@@ -4,7 +4,6 @@ import api from '../../api/axios'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import SortableList from '../../components/admin/SortableList'
 import CardSkeleton from '../../components/skeletons/CardSkeleton'
-import { downloadFile } from '../../utils/download'
 import {
   CheckCircle2,
   Eye,
@@ -277,9 +276,21 @@ const AdminAbout = () => {
     }
   }
 
-  const handleDownload = (section) => {
+  const handleDownload = async (section) => {
     if (!section.document_url) return
-    downloadFile(section.document_url, section.document_name || 'document')
+    try {
+      const res = await api.get(section.document_url, { responseType: 'blob' })
+      const objectUrl = URL.createObjectURL(res.data)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = section.document_name || 'document'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      toast.error('Download failed.')
+    }
   }
 
   const openPreview = async (section) => {
@@ -828,7 +839,7 @@ const AdminAbout = () => {
       />
 
       {previewingSection && previewingSection.document_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 sm:items-center">
           <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
               <div className="flex min-w-0 items-center gap-2">
