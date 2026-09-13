@@ -174,7 +174,7 @@ class AboutSectionDocumentContentAPIView(APIView):
         return response
 
     def _load_bytes(self, section):
-        if not getattr(settings, '_cloudinary_configured', False):
+        if not getattr(settings, 'CLOUDINARY_STORAGE', None):
             with section.document.open('rb') as f:
                 return f.read()
 
