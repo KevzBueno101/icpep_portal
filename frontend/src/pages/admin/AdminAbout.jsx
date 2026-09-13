@@ -131,6 +131,8 @@ const AdminAbout = () => {
 
   const [deletingSection, setDeletingSection] = useState(null)
   const [previewingSection, setPreviewingSection] = useState(null)
+  const [previewSrc, setPreviewSrc] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
 
   const isEditMode = !!editingSection
@@ -152,6 +154,13 @@ const AdminAbout = () => {
   useEffect(() => {
     fetchSections()
   }, [])
+
+  useEffect(() => {
+    const url = previewSrc
+    return () => {
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [previewSrc])
 
   const handleCreate = (presetCategory) => {
     setEditingSection(null)
@@ -271,6 +280,34 @@ const AdminAbout = () => {
   const handleDownload = (section) => {
     if (!section.document_url) return
     downloadFile(section.document_url, section.document_name || 'document')
+  }
+
+  const openPreview = async (section) => {
+    if (!section.document_url) return
+    setPreviewingSection(section)
+    if (!isPdf(section)) {
+      setPreviewSrc(section.document_url)
+      setPreviewLoading(false)
+      return
+    }
+    setPreviewLoading(true)
+    setPreviewSrc(null)
+    try {
+      const res = await fetch(section.document_url)
+      if (!res.ok) throw new Error('Preview fetch failed')
+      const blob = await res.blob()
+      setPreviewSrc(URL.createObjectURL(blob))
+    } catch {
+      toast.error('Failed to load document preview.')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const closePreview = () => {
+    setPreviewLoading(false)
+    setPreviewSrc(null)
+    setPreviewingSection(null)
   }
 
   const typeLabel = (value) =>
@@ -484,7 +521,7 @@ const AdminAbout = () => {
                 <>
                   <button
                     type="button"
-                    onClick={() => setPreviewingSection(section)}
+                    onClick={() => openPreview(section)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     <Eye className="h-4 w-4" /> Preview
@@ -643,7 +680,7 @@ const AdminAbout = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setPreviewingSection(editingSection)}
+                      onClick={() => openPreview(editingSection)}
                       className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       Preview
@@ -814,7 +851,7 @@ const AdminAbout = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPreviewingSection(null)}
+                  onClick={closePreview}
                   className="inline-flex items-center rounded-full p-2 text-slate-500 hover:bg-slate-100"
                 >
                   <X className="h-5 w-5" />
@@ -823,11 +860,21 @@ const AdminAbout = () => {
             </div>
             <div className="flex-1 overflow-auto bg-slate-100 p-4">
               {isPdf(previewingSection) ? (
-                <iframe
-                  title={previewingSection.document_name || 'PDF preview'}
-                  src={previewingSection.document_url}
-                  className="h-full min-h-[65vh] w-full rounded-xl border border-slate-200 bg-white"
-                />
+                previewLoading ? (
+                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
+                    Loading preview…
+                  </div>
+                ) : previewSrc ? (
+                  <iframe
+                    title={previewingSection.document_name || 'PDF preview'}
+                    src={previewSrc}
+                    className="h-full min-h-[65vh] w-full rounded-xl border border-slate-200 bg-white"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-24 text-sm text-red-500">
+                    Failed to load preview.
+                  </div>
+                )
               ) : (
                 <img
                   src={previewingSection.document_url}

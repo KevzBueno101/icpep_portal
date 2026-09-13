@@ -53,6 +53,8 @@ const isPdf = (section) => {
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [previewSrc, setPreviewSrc] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
   const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
 
   useEffect(() => {
@@ -69,6 +71,41 @@ export default function MemberAbout() {
       mounted = false
     }
   }, [])
+
+  useEffect(() => {
+    const url = previewSrc
+    return () => {
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [previewSrc])
+
+  const openPreview = async (section) => {
+    if (!section.document_url) return
+    setPreview(section)
+    if (!isPdf(section)) {
+      setPreviewSrc(section.document_url)
+      setPreviewLoading(false)
+      return
+    }
+    setPreviewLoading(true)
+    setPreviewSrc(null)
+    try {
+      const res = await fetch(section.document_url)
+      if (!res.ok) throw new Error('Preview fetch failed')
+      const blob = await res.blob()
+      setPreviewSrc(URL.createObjectURL(blob))
+    } catch {
+      setPreviewSrc(null)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const closePreview = () => {
+    setPreviewLoading(false)
+    setPreviewSrc(null)
+    setPreview(null)
+  }
 
   const allSections =
     sections && sections.length > 0 ? sections : sections === null ? null : FALLBACK_IDENTITY
@@ -137,7 +174,7 @@ export default function MemberAbout() {
                   {section.document_url && (
                     <button
                       type="button"
-                      onClick={() => setPreview(section)}
+                      onClick={() => openPreview(section)}
                       className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 self-start"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -198,7 +235,7 @@ export default function MemberAbout() {
                       {section.document_url && (
                         <button
                           type="button"
-                          onClick={() => setPreview(section)}
+                          onClick={() => openPreview(section)}
                           className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -292,7 +329,7 @@ export default function MemberAbout() {
               </div>
               <button
                 type="button"
-                onClick={() => setPreview(null)}
+                onClick={closePreview}
                 className="inline-flex items-center rounded-full p-2 text-2xl leading-none text-slate-500 hover:bg-slate-100"
                 aria-label="Close preview"
               >
@@ -301,11 +338,21 @@ export default function MemberAbout() {
             </div>
             <div className="flex-1 overflow-auto bg-slate-100 p-4">
               {isPdf(preview) ? (
-                <iframe
-                  title={preview.document_name || 'PDF preview'}
-                  src={preview.document_url}
-                  className="h-[70vh] w-full rounded-xl border border-slate-200 bg-white"
-                />
+                previewLoading ? (
+                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
+                    Loading preview…
+                  </div>
+                ) : previewSrc ? (
+                  <iframe
+                    title={preview.document_name || 'PDF preview'}
+                    src={previewSrc}
+                    className="h-[70vh] w-full rounded-xl border border-slate-200 bg-white"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-24 text-sm text-slate-500">
+                    Failed to load preview.
+                  </div>
+                )
               ) : (
                 <img
                   src={preview.document_url}
