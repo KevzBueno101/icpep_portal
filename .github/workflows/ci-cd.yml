@@ -91,6 +91,7 @@ jobs:
       - name: Deploy Frontend → Vercel
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK != '' }}
         run: |
           if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
             echo "::warning::VERCEL_DEPLOY_HOOK is not configured — skipping Vercel deploy"
@@ -100,6 +101,7 @@ jobs:
       - name: Deploy Backend → Render
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
         run: |
           if [ -z "$RENDER_DEPLOY_HOOK" ]; then
             echo "::warning::RENDER_DEPLOY_HOOK is not configured — skipping Render deploy"
