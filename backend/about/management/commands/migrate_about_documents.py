@@ -1,11 +1,11 @@
-"""Re-host about documents as public `raw` Cloudinary assets.
+"""Re-host about documents as raw Cloudinary delivery assets.
 
-Documents were historically uploaded with a restricted/authenticated
-delivery mode (plain URLs 401). About docs are public information, so this
-command migrates each existing document: it downloads the original bytes via
-the Cloudinary Admin API (which is credential-based and works regardless of
-delivery restrictions), re-uploads them as a public `raw/upload` asset, and
-updates the stored field name so document.url resolves to the new URL.
+The Cloudinary account has an ACL that blocks all direct delivery (signed or
+unsigned), but the credentialed Admin API works. This command migrates each
+existing document: it downloads the original bytes via the Admin Download API,
+re-uploads them as a `raw/upload` asset with a proper file extension, and
+updates the stored field name so the backend byte-proxy (which fetches through
+the Admin API) can serve them.
 
 The command is idempotent: a section whose stored name already ends with a
 known document extension has already been migrated and is skipped.
@@ -13,7 +13,6 @@ known document extension has already been migrated and is skipped.
 
 import io
 import logging
-import zipfile
 
 import requests
 from cloudinary.exceptions import Error as CloudinaryError
@@ -33,7 +32,7 @@ _DOWNLOAD_URL = 'https://api.cloudinary.com/v1_1/{cloud}/{resource_type}/downloa
 
 
 class Command(BaseCommand):
-    help = 'Migrate about documents to public raw Cloudinary delivery.'
+    help = 'Migrate about documents to raw Cloudinary storage with working delivery.'
 
     def handle(self, *args, **options):
         storage = getattr(settings, 'CLOUDINARY_STORAGE', None)
@@ -42,11 +41,13 @@ class Command(BaseCommand):
             return
 
         cloud_name = storage.get('CLOUD_NAME')
-        auth = (storage.get('API_KEY'), storage.get('API_SECRET'))
-        if not all((cloud_name, auth[0], auth[1])):
+        api_key = storage.get('API_KEY')
+        api_secret = storage.get('API_SECRET')
+        if not all((cloud_name, api_key, api_secret)):
             self.stdout.write('Incomplete Cloudinary config — skipping about document migration.')
             return
 
+        auth = (api_key, api_secret)
         sections = AboutSection.objects.exclude(document='')
         migrated = 0
         failed = 0
@@ -74,18 +75,31 @@ class Command(BaseCommand):
         )
 
     def _migrate_one(self, section, public_id, cloud_name, auth):
-        resource_type, asset_type = self._find_existing(public_id)
+        resource_type, asset_type, file_format = self._find_existing(public_id)
         if not resource_type:
             logger.warning('No existing asset found for %s — leaving as-is.', public_id)
             return False
 
-        zip_bytes = self._download(public_id, resource_type, asset_type, cloud_name, auth)
-        if zip_bytes is None:
-            return False
-
-        data, extension = self._extract_original(public_id, zip_bytes)
+        data = self._download(public_id, resource_type, cloud_name, auth)
         if data is None:
             return False
+
+        base_name = public_id.rsplit('/', 1)[-1]
+        extension = ''
+        for ext in _KNOWN_EXTENSIONS:
+            if base_name.lower().endswith(ext):
+                extension = ext
+                break
+        if not extension and file_format:
+            ext_map = {
+                'pdf': '.pdf',
+                'png': '.png',
+                'jpg': '.jpg',
+                'jpeg': '.jpeg',
+                'gif': '.gif',
+                'webp': '.webp',
+            }
+            extension = ext_map.get(file_format.lower(), f'.{file_format.lower()}')
 
         new_public_id = public_id + extension if extension and not public_id.lower().endswith(extension.lower()) else public_id
         try:
@@ -112,21 +126,17 @@ class Command(BaseCommand):
         for resource_type in _RESOURCE_TYPES:
             try:
                 info = cloudinary.api.resource(public_id, resource_type=resource_type)
-                return resource_type, info.get('type') or 'upload'
+                return resource_type, info.get('type') or 'upload', info.get('format')
             except CloudinaryError:
                 continue
-        return None, None
+        return None, None, None
 
-    def _download(self, public_id, resource_type, asset_type, cloud_name, auth):
+    def _download(self, public_id, resource_type, cloud_name, auth):
         url = _DOWNLOAD_URL.format(cloud=cloud_name, resource_type=resource_type)
         try:
             resp = requests.get(
                 url,
-                params={
-                    'public_ids': public_id,
-                    'type': asset_type,
-                    'derived': 'false',
-                },
+                params={'public_id': public_id, 'type': 'upload', 'derived': 'false'},
                 auth=auth,
                 timeout=120,
             )
@@ -137,35 +147,3 @@ class Command(BaseCommand):
             logger.error('Download HTTP %s for %s', resp.status_code, public_id)
             return None
         return resp.content
-
-    @staticmethod
-    def _extract_original(public_id, zip_bytes):
-        try:
-            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
-                entries = [n for n in archive.namelist() if not n.endswith('/')]
-                if not entries:
-                    logger.error('Downloaded zip has no files for %s', public_id)
-                    return None, None
-
-                base = public_id.rsplit('/', 1)[-1]
-                matches = [n for n in entries if n.rsplit('/', 1)[-1].startswith(base)]
-                if not matches:
-                    logger.error('Zip has no entry matching %s (entries: %s)', public_id, entries)
-                    return None, None
-
-                def has_known_ext(name):
-                    return name.lower().endswith(_KNOWN_EXTENSIONS)
-
-                chosen = next((m for m in matches if has_known_ext(m)), matches[0])
-                data = archive.read(chosen)
-
-            name = chosen.rsplit('/', 1)[-1]
-            extension = ''
-            for ext in _KNOWN_EXTENSIONS:
-                if name.lower().endswith(ext):
-                    extension = ext
-                    break
-            return data, extension
-        except (zipfile.BadZipFile, KeyError) as exc:
-            logger.error('Failed to extract %s: %s', public_id, exc)
-            return None, None
