@@ -97,7 +97,7 @@ jobs:
             echo "::warning::VERCEL_DEPLOY_HOOK is not configured — skipping Vercel deploy"
             exit 0
           fi
-          curl -X POST "$VERCEL_DEPLOY_HOOK"
+          curl --fail --show-error --silent -X POST "$VERCEL_DEPLOY_HOOK"
       - name: Deploy Backend → Render
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
@@ -107,4 +107,4 @@ jobs:
             echo "::warning::RENDER_DEPLOY_HOOK is not configured — skipping Render deploy"
             exit 0
           fi
-          curl -X POST "$RENDER_DEPLOY_HOOK"
+          curl --fail --show-error --silent -X POST "$RENDER_DEPLOY_HOOK"
