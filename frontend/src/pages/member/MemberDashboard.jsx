@@ -4,7 +4,8 @@ import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import { downloadFile } from '../../utils/download'
-import { Bell, CreditCard, ArrowRight, UserCheck, Download } from 'lucide-react'
+import ImageModal from '../../components/ImageModal'
+import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2 } from 'lucide-react'
 
 
 
@@ -29,6 +30,7 @@ export default function MemberDashboard() {
 
   const [transactions, setTransactions] = useState([])
   const [txnLoading, setTxnLoading] = useState(true)
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -273,13 +275,21 @@ export default function MemberDashboard() {
                 <div className="mt-2 h-28 w-full animate-pulse rounded-2xl bg-slate-200" />
               ) : latestReceipt ? (
                 <div className="mt-2 space-y-3">
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  <button
+                    type="button"
+                    onClick={() => setReceiptModalOpen(true)}
+                    className="group relative block w-full cursor-zoom-in overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 hover:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-300 transition"
+                  >
                     <img
                       src={latestReceipt.receipt_image}
                       alt="E-receipt preview"
-                      className="w-full object-contain"
+                      className="w-full object-contain transition duration-300 group-hover:scale-[1.02]"
                     />
-                  </div>
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1.5 bg-black/40 text-white text-xs font-bold opacity-0 transition duration-200 group-hover:opacity-100">
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      Click to enlarge
+                    </span>
+                  </button>
                   <div className="flex gap-2">
                     <a
                       href={latestReceipt.receipt_image}
@@ -309,6 +319,13 @@ export default function MemberDashboard() {
           </div>
         </div>
       </div>
+
+      {receiptModalOpen && (
+        <ImageModal
+          images={[latestReceipt.receipt_image]}
+          onClose={() => setReceiptModalOpen(false)}
+        />
+      )}
     </div>
   )
 }

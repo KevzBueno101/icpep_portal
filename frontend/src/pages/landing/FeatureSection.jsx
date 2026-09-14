@@ -4,7 +4,7 @@ const features = [
   {
     title: 'Step 1 — Register',
     description:
-      'Create your profile and submit your details to become a member of ICPEP.SE. Membership fee is 25 pesos valid for 1 year, which helps us fund events, resources, and community initiatives.',
+      'Create your profile and submit your details to become a member of ICPEP.SE. Regular Membership fee is 25 pesos valid for 1 sem, which helps us fund events, resources, and community initiatives.',
     accent: '01',
   },
   {
@@ -16,7 +16,7 @@ const features = [
   {
     title: 'Step 3 — Verify',
     description:
-      'Check your profile and verify the membership ID details.',
+      'Check your profile and verify the membership ID details. And download your membership ID card. You can now access exclusive resources, and stay updated on the latest events and opportunities in the field of computer engineering and education.',
     accent: '03',
   },
 ]

@@ -268,16 +268,14 @@ const AdminLogin = () => {
               </div>
             </div>
 
-            {failedCount >= 3 && (
-              <div className="text-right -mt-2">
-                <Link
-                  to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
-                  className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            )}
+            <div className="text-right -mt-2">
+              <Link
+                to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+                className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <button
               type="submit"

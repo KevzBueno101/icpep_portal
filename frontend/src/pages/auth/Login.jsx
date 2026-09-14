@@ -125,16 +125,14 @@ const Login = () => {
             </div>
           </div>
 
-          {failedCount >= 3 && (
-            <div className="text-right -mt-3">
-              <Link
-                to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
-                className="text-xs font-semibold text-sky-600 hover:text-sky-700 underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          )}
+          <div className="text-right -mt-3">
+            <Link
+              to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+              className="text-xs font-semibold text-sky-600 hover:text-sky-700 underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           <button
             type="submit"

@@ -75,6 +75,15 @@ Must include the full env contract — see [Environment Variables](/environment-
 
 > **Workflow reality check:** Vercel auto-deploys from `dev`, so frontend changes ship on every `dev` push. The `deploy` job only runs on `main` pushes (which the team rarely makes). Do not rely on the deploy job for day-to-day publishing.
 
+### Deploy hook secrets
+
+The `deploy` job POSTs to deploy hooks guarded by GitHub Actions secrets. If a secret is missing, the step **skips with a warning** instead of failing the run — so configure the hooks for deploys to actually fire:
+
+| Secret | Where to create the hook | Add it at |
+|---|---|---|
+| `VERCEL_DEPLOY_HOOK` | Vercel → project → **Settings → Deploy Hooks** → create hook (copy URL) | `https://github.com/KevzBueno101/icpep_portal/settings/secrets/actions` |
+| `RENDER_DEPLOY_HOOK` | Render → service → **Settings → Deploy Hooks** → create hook (copy URL) | same |
+
 ## Management Commands
 
 | Command | Purpose |
