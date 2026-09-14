@@ -1,15 +1,15 @@
 import mimetypes
 import posixpath
+from urllib.parse import quote
 
 import requests
+from cloudinary.exceptions import Error as CloudinaryError
 from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
-from cloudinary.exceptions import Error as CloudinaryError
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from urllib.parse import quote
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
@@ -91,8 +91,10 @@ class AboutSectionAdminListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         try:
             section = serializer.save(created_by=self.request.user)
-        except CloudinaryError:
-            raise serializers.ValidationError({'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'})
+        except CloudinaryError as err:
+            raise serializers.ValidationError(
+                {'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'}
+            ) from err
         log_action(
             user=self.request.user,
             action_type=AuditLog.ActionType.ABOUT_SECTION_CREATED,
@@ -121,8 +123,10 @@ class AboutSectionAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         try:
             section = serializer.save()
-        except CloudinaryError:
-            raise serializers.ValidationError({'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'})
+        except CloudinaryError as err:
+            raise serializers.ValidationError(
+                {'document': 'File upload failed. Only PDF, PNG, JPG, or JPEG files are allowed.'}
+            ) from err
         log_action(
             user=self.request.user,
             action_type=AuditLog.ActionType.ABOUT_SECTION_UPDATED,
@@ -202,7 +206,7 @@ class AboutSectionDocumentContentAPIView(APIView):
 
         disposition = 'attachment' if request.query_params.get('download') else 'inline'
         response = HttpResponse(data, content_type=content_type)
-        response['Content-Disposition'] = "{}; filename*=UTF-8''{}".format(disposition, quote(filename))
+        response['Content-Disposition'] = f"{disposition}; filename*=UTF-8''{quote(filename)}"
         response['Access-Control-Allow-Origin'] = '*'
         return response
 

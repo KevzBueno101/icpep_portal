@@ -14,10 +14,10 @@ known document extension has already been migrated and is skipped.
 import io
 import logging
 
-import requests
-from cloudinary.exceptions import Error as CloudinaryError
 import cloudinary.api
 import cloudinary.uploader
+import requests
+from cloudinary.exceptions import Error as CloudinaryError
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
