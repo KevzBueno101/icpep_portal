@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Mail, MapPin, FileText, Eye, ChevronRight, Code2 } from 'lucide-react'
+import { Info, Shield, Mail, MapPin, Eye, ChevronRight, Code2 } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
@@ -140,7 +140,7 @@ export default function MemberAbout() {
                       className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 self-start"
                     >
                       <Eye className="h-3.5 w-3.5" />
-                      {section.document_name || 'View Document'}
+                      See pdf
                     </button>
                   )}
                 </div>
@@ -174,12 +174,6 @@ export default function MemberAbout() {
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}>
                           {label}
                         </span>
-                        {section.document_url && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
-                            <FileText className="h-3 w-3" />
-                            {section.document_name || 'Document'}
-                          </span>
-                        )}
                       </div>
                       <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
                       {lines.length > 1 ? (
@@ -200,9 +194,9 @@ export default function MemberAbout() {
                           onClick={() => openPreview(section)}
                           className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                          {section.document_name || 'View Document'}
-                          <ChevronRight className="h-3.5 w-3.5" />
+<Eye className="h-3.5 w-3.5" />
+                      See pdf
+                      <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>

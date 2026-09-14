@@ -11,18 +11,6 @@ import OfficersCarousel from '../../components/OfficersCarousel'
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 const COLORS = {
 
   APPROVED: '#22c55e',

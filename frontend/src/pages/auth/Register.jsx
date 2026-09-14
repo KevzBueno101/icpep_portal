@@ -385,12 +385,38 @@ const Register = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] ?? null
+
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Profile picture must not exceed 10MB')
+        return
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPG, PNG, GIF, and WebP images are allowed')
+        return
+      }
+    }
+
     setForm({ ...form, profile_picture: file })
     setPreviewUrl(file ? URL.createObjectURL(file) : '')
   }
 
   const handleProofChange = (e) => {
     const file = e.target.files?.[0] ?? null
+
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Payment proof must not exceed 10MB')
+        return
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPG, PNG, GIF, and WebP images are allowed')
+        return
+      }
+    }
+
     setForm({ ...form, payment_proof_image: file })
     setPaymentProofPreviewUrl(file ? URL.createObjectURL(file) : '')
   }

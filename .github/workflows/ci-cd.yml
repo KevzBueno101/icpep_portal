@@ -89,8 +89,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy Frontend → Vercel
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK is not configured — skipping Vercel deploy"
+            exit 0
+          fi
+          curl -X POST "$VERCEL_DEPLOY_HOOK"
       - name: Deploy Backend → Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK is not configured — skipping Render deploy"
+            exit 0
+          fi
+          curl -X POST "$RENDER_DEPLOY_HOOK"
