@@ -1,10 +1,10 @@
 import { X } from 'lucide-react'
 
 const COMMITTEE = [
-  { name: 'Kevin B. Bueno', role: 'Lead / Fullstack Developer' },
-  { name: 'Jhan Lorenz Bongon', role: 'Business Process Analyst' },
-  { name: 'Edcel Tanael', role: 'Documentation Officer' },
-  { name: 'Jayron Benavidez', role: 'QA Tester' },
+  { name: 'Kevin B. Bueno', role: 'Lead / Fullstack Developer', photo: '/devcom/kevin.jpg' },
+  { name: 'Jhan Lorenz Bongon', role: 'Business Process Analyst', photo: '/devcom/lorenz.jpeg' },
+  { name: 'Edcel Tanael', role: 'Documentation Officer', photo: '/devcom/Edcel Tanael.png' },
+  { name: 'Jayron Benavidez', role: 'QA Tester', photo: '/devcom/jayron.jpg' },
 ]
 
 export default function DevCommitteeModal({ isOpen, onClose }) {
@@ -35,9 +35,11 @@ export default function DevCommitteeModal({ isOpen, onClose }) {
           <ul className="space-y-4">
             {COMMITTEE.map((m) => (
               <li key={m.name} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">
-                  {m.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                </span>
+                <img
+                  src={m.photo}
+                  alt={m.name}
+                  className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-sky-100"
+                />
                 <div>
                   <p className="text-sm font-semibold text-slate-900">{m.name}</p>
                   <p className="text-xs text-slate-500">{m.role}</p>
