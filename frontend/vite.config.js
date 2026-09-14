@@ -15,7 +15,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       injectRegister: false,
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icpep_logo.jpg', 'pwa-192x192.jpg', 'pwa-512x512.jpg'],
       manifest: {
         name: 'ICpEP.SE CatSU Portal',

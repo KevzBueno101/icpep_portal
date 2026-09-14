@@ -5,9 +5,15 @@ import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
 
-// Auto-update: activate the new service worker as soon as it installs
-self.skipWaiting()
+// Take control of currently-open tabs as soon as the fresh service worker activates
 clientsClaim()
+
+// Gain control via the "Refresh now" button in the UpdateNotice banner
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 // Precache all build assets (manifest is injected at build time)
 precacheAndRoute(self.__WB_MANIFEST)
