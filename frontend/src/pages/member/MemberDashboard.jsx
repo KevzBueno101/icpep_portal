@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
-import { Bell, CreditCard, ArrowRight, UserCheck } from 'lucide-react'
+import api from '../../api/axios'
+import { downloadFile } from '../../utils/download'
+import { Bell, CreditCard, ArrowRight, UserCheck, Download } from 'lucide-react'
 
 
 
@@ -25,6 +27,24 @@ export default function MemberDashboard() {
   const { user } = useAuth()
   const { profile, paymentSettings, announcements, annLoading, paymentLoading } = useMember()
 
+  const [transactions, setTransactions] = useState([])
+  const [txnLoading, setTxnLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchTransactions = async () => {
+      try {
+        const res = await api.get('/members/transactions/')
+        if (!cancelled) setTransactions(res.data.results ?? res.data)
+      } catch {
+        // non-critical
+      } finally {
+        if (!cancelled) setTxnLoading(false)
+      }
+    }
+    fetchTransactions()
+    return () => { cancelled = true }
+  }, [])
 
   const memberFirstName = profile?.first_name || user?.first_name || ''
 
@@ -34,6 +54,12 @@ export default function MemberDashboard() {
     )
     return sorted.slice(0, 2)
   }, [announcements])
+
+  const latestReceipt = useMemo(() => {
+    return [...transactions]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .find((t) => t.receipt_image)
+  }, [transactions])
 
   return (
     <div className="space-y-8">
@@ -61,6 +87,97 @@ export default function MemberDashboard() {
         <div className="absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
+      {/* Recent Announcements */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <Bell className="h-5 w-5" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Recent Announcements</h2>
+          </div>
+          <Link
+            to="/member/announcements"
+            className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1.5"
+          >
+            <span>See all</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {annLoading && (
+          <div className="space-y-4 py-4">
+            <div className="rounded-2xl border border-slate-200 p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-5 w-16 animate-pulse rounded-full bg-slate-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-1/4 animate-pulse rounded bg-slate-200" />
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
+              </div>
+              <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-5 w-20 animate-pulse rounded-full bg-slate-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-1/3 animate-pulse rounded bg-slate-200" />
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                <div className="h-3 w-4/6 animate-pulse rounded bg-slate-200" />
+              </div>
+              <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
+            </div>
+          </div>
+        )}
+
+        {!annLoading && recentAnnouncements.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 my-4">
+            No announcements found.
+          </div>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2 my-2">
+          {!annLoading &&
+            recentAnnouncements.map((ann) => (
+              <button
+                key={ann.id}
+                type="button"
+                onClick={() => navigate(`/announcement/${ann.id}`)}
+                className="w-full text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300 group flex flex-col"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100">
+                    {ann.category || 'Announcement'}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-base font-bold text-slate-900 group-hover:text-sky-600 transition">
+                  {ann.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                  {ann.body}
+                </p>
+              </button>
+            ))}
+        </div>
+
+        <div className="border-t border-slate-100 pt-4 mt-6">
+          <p className="text-xs text-slate-500 text-center">
+            Need help? Contact an administrator at <span className="font-semibold">icpep.se.catsuchapter@gmail.com</span>
+          </p>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
@@ -80,172 +197,114 @@ export default function MemberDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: ID Quick access & Payment info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Quick ID Card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 mb-4">
-                <CreditCard className="h-6 w-6" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">Digital ID Card</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Access your digital membership pass. Swipe, flip to scan, or download for off-line use.
-              </p>
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Quick ID Card */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 mb-4">
+              <CreditCard className="h-6 w-6" />
             </div>
-            <Link
-              to="/member/id"
-              className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
-            >
-              <span>Open ID Card</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <h2 className="text-xl font-bold text-slate-900">Digital ID Card</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Access your digital membership pass. Swipe, flip to scan, or download for off-line use.
+            </p>
           </div>
-
-          {/* Payment Info */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">Payment Status</h2>
-              {paymentLoading && (
-                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-              )}
-            </div>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <div className="text-xs font-semibold uppercase text-slate-500">Method</div>
-                <div className="mt-1 text-sm font-semibold text-slate-900">
-                  {profile?.payment_method || '—'}
-                </div>
-              </div>
-
-              {profile?.payment_method === 'GCASH' && (
-                <div>
-                  <div className="text-xs font-semibold uppercase text-slate-500">GCash Details</div>
-                  <div className="mt-1 text-sm text-slate-950 font-medium bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <div className="font-semibold">{paymentSettings?.gcash_name || '—'}</div>
-                    <div className="text-slate-600">{paymentSettings?.gcash_number || '—'}</div>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="text-xs font-semibold uppercase text-slate-500">Proof of Payment</div>
-                {profile?.payment_proof_image ? (
-                  <div className="relative mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 group">
-                    <img
-                      src={profile.payment_proof_image}
-                      alt="Payment proof"
-                      className="h-28 w-full object-cover transition duration-300 group-hover:scale-105"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => window.open(profile.payment_proof_image, '_blank')}
-                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 text-white text-xs font-bold"
-                    >
-                      View Full Image
-                    </button>
-                  </div>
-                ) : (
-                  <p className="mt-2 text-sm text-slate-500">No proof image uploaded.</p>
-                )}
-              </div>
-            </div>
-          </div>
+          <Link
+            to="/member/id"
+            className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
+          >
+            <span>Open ID Card</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
-        {/* Right column: Announcements */}
-        <div className="lg:col-span-2">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm h-full flex flex-col justify-between">
+        {/* Payment Info */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900">Payment Status</h2>
+            {paymentLoading && (
+              <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+            )}
+          </div>
+
+          <div className="mt-4 space-y-4">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                    <Bell className="h-5 w-5" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Recent Announcements</h2>
-                </div>
-                <Link
-                  to="/member/announcements"
-                  className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1.5"
-                >
-                  <span>See all</span>
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              </div>
-
-              {annLoading && (
-                <div className="space-y-4 py-4">
-                  <div className="rounded-2xl border border-slate-200 p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="h-5 w-16 animate-pulse rounded-full bg-slate-200" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-                        <div className="h-3 w-1/4 animate-pulse rounded bg-slate-200" />
-                      </div>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
-                      <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
-                    </div>
-                    <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="h-5 w-20 animate-pulse rounded-full bg-slate-200" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
-                        <div className="h-3 w-1/3 animate-pulse rounded bg-slate-200" />
-                      </div>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
-                      <div className="h-3 w-4/6 animate-pulse rounded bg-slate-200" />
-                    </div>
-                    <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-200" />
-                  </div>
-                </div>
-              )}
-
-              {!annLoading && recentAnnouncements.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 my-4">
-                  No announcements found.
-                </div>
-              )}
-
-              <div className="space-y-4 my-2">
-                {!annLoading &&
-                  recentAnnouncements.map((ann) => (
-                    <button
-                      key={ann.id}
-                      type="button"
-                      onClick={() => navigate(`/announcement/${ann.id}`)}
-                      className="w-full text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300 group flex flex-col"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100">
-                          {ann.category || 'Announcement'}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}
-                        </span>
-                      </div>
-                      <h3 className="mt-3 text-base font-bold text-slate-900 group-hover:text-sky-600 transition">
-                        {ann.title}
-                      </h3>
-                      <p className="mt-2 line-clamp-2 text-sm text-slate-600">
-                        {ann.body}
-                      </p>
-                    </button>
-                  ))}
+              <div className="text-xs font-semibold uppercase text-slate-500">Method</div>
+              <div className="mt-1 text-sm font-semibold text-slate-900">
+                {profile?.payment_method || '—'}
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-4 mt-6">
-              <p className="text-xs text-slate-500 text-center">
-                Need help? Contact an administrator at <span className="font-semibold">icpep.se.catsuchapter@gmail.com</span>
-              </p>
+            {profile?.payment_method === 'GCASH' && (
+              <div>
+                <div className="text-xs font-semibold uppercase text-slate-500">GCash Details</div>
+                <div className="mt-1 text-sm text-slate-950 font-medium bg-slate-50 border border-slate-100 rounded-xl p-3">
+                  <div className="font-semibold">{paymentSettings?.gcash_name || '—'}</div>
+                  <div className="text-slate-600">{paymentSettings?.gcash_number || '—'}</div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div className="text-xs font-semibold uppercase text-slate-500">Proof of Payment</div>
+              {profile?.payment_proof_image ? (
+                <div className="relative mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 group">
+                  <img
+                    src={profile.payment_proof_image}
+                    alt="Payment proof"
+                    className="h-28 w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => window.open(profile.payment_proof_image, '_blank')}
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 text-white text-xs font-bold"
+                  >
+                    View Full Image
+                  </button>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500">No proof image uploaded.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold uppercase text-slate-500">E-Receipt</div>
+              {txnLoading ? (
+                <div className="mt-2 h-28 w-full animate-pulse rounded-2xl bg-slate-200" />
+              ) : latestReceipt ? (
+                <div className="mt-2 space-y-3">
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <img
+                      src={latestReceipt.receipt_image}
+                      alt="E-receipt preview"
+                      className="w-full object-contain"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <a
+                      href={latestReceipt.receipt_image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                    >
+                      <span>View</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => downloadFile(latestReceipt.receipt_image, `ICPEP_Receipt_${latestReceipt.reference_number}.png`)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500">
+                  Your e-receipt will appear here once your payment is approved.
+                </p>
+              )}
             </div>
           </div>
         </div>

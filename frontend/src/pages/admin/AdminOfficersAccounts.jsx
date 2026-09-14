@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import OfficerCard from '../../components/OfficerCard'
 import SortableList from '../../components/admin/SortableList'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
+import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
 import ConfirmModal from '../../components/common/ConfirmModal'
 
@@ -181,7 +182,16 @@ const AdminOfficersAccounts = () => {
   }
 
   const handleFormChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'department') {
+        const allowed = positionsForGroup(value)
+        if (next.position && !allowed.includes(next.position)) {
+          next.position = ''
+        }
+      }
+      return next
+    })
   }
 
   const validateForm = () => {
@@ -284,7 +294,7 @@ const AdminOfficersAccounts = () => {
             key={i}
             className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
           >
-            <div className="h-56 w-full bg-slate-200" />
+            <div className="h-48 w-full bg-slate-200" />
             <div className="p-6">
               <div className="h-5 bg-slate-200 rounded w-3/4" />
               <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
@@ -411,7 +421,7 @@ const AdminOfficersAccounts = () => {
             <div className="space-y-6 px-6 py-6 overflow-y-auto flex-1">
               <label className="space-y-2 text-sm text-slate-700">
                 <span>Profile Picture</span>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   {editAdmin?.profile_picture && !form.profile_picture && (
                     <img
                       src={resolveProfilePictureUrl(editAdmin.profile_picture)}
@@ -436,7 +446,7 @@ const AdminOfficersAccounts = () => {
                     accept="image/*"
                     onChange={(e) => handleFormChange('profile_picture', e.target.files?.[0] || null)}
                     disabled={!canEdit}
-                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                    className="w-full min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100 sm:flex-1 file:mr-4 file:h-full file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
                   />
                 </div>
               </label>
@@ -467,14 +477,23 @@ const AdminOfficersAccounts = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2 text-sm text-slate-700">
                   <span>Position</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.position}
                     onChange={(e) => handleFormChange('position', e.target.value)}
-                    placeholder="e.g., President, Secretary, Treasurer"
-                    disabled={!canEdit}
+                    disabled={!canEdit || !form.department}
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
-                  />
+                  >
+                    <option value="">Choose Position</option>
+                    {positionsForGroup(form.department).map((pos) => (
+                      <option key={pos} value={pos}>
+                        {pos}
+                      </option>
+                    ))}
+                    {form.position &&
+                      !positionsForGroup(form.department).includes(form.position) && (
+                        <option value={form.position}>{form.position}</option>
+                      )}
+                  </select>
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
                   <span>Year Level</span>
@@ -496,15 +515,24 @@ const AdminOfficersAccounts = () => {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2 text-sm text-slate-700">
-                  <span>Department</span>
-                  <input
-                    type="text"
+                  <span>Committee / Department</span>
+                  <select
                     value={form.department}
                     onChange={(e) => handleFormChange('department', e.target.value)}
-                    placeholder="e.g., Executive Office"
                     disabled={!canEdit}
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
-                  />
+                  >
+                    <option value="">Choose Department</option>
+                    {OFFICER_GROUPS.map((group) => (
+                      <option key={group.label} value={group.label}>
+                        {group.label}
+                      </option>
+                    ))}
+                    {form.department &&
+                      !OFFICER_GROUPS.some((g) => g.label === form.department) && (
+                        <option value={form.department}>{form.department}</option>
+                      )}
+                  </select>
                 </label>
                 <label className="space-y-2 text-sm text-slate-700">
                   <span>Academic Year</span>
@@ -518,7 +546,6 @@ const AdminOfficersAccounts = () => {
                   />
                 </label>
               </div>
-
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2 text-sm text-slate-700">
                   <span>Password</span>

@@ -552,7 +552,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
             <div className="space-y-6 px-6 py-6 overflow-y-auto flex-1">
               <label className="space-y-2 text-sm text-slate-700">
                 <span>Profile Picture</span>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   {editAdmin?.profile_picture && !form.profile_picture && (
                     <img
                       src={resolveProfilePictureUrl(editAdmin.profile_picture)}
@@ -578,7 +578,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
                     accept="image/*"
                     onChange={(e) => handleFormChange('profile_picture', e.target.files[0])}
                     disabled={!canEdit}
-                    className="flex-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
+                    className="w-full min-w-0 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100 sm:flex-1 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-200"
                   />
                 </div>
               </label>

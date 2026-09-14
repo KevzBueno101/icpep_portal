@@ -170,7 +170,7 @@ def admin_accounts_list(request):
             'user': UserListSerializer(new_admin).data,
         }, status=status.HTTP_201_CREATED)
 
-    admins = User.objects.filter(role='ADMIN').order_by('position', 'email')
+    admins = User.objects.filter(role='ADMIN', registration_status='APPROVED').order_by('position', 'email')
     paginator = PageNumberPagination()
     page = paginator.paginate_queryset(admins, request)
 
@@ -655,6 +655,7 @@ def officers_roster(request):
     # with positions belong in the public-facing leadership board.
     qs = User.objects.filter(
         role__in=['OFFICER', 'ADMIN'],
+        registration_status='APPROVED',
         is_active=True,
     ).exclude(position__isnull=True).exclude(position='').exclude(position__iexact='NONE')
 

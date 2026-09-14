@@ -2,7 +2,7 @@ export default function OfficerSkeleton() {
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       {/* Avatar skeleton */}
-      <div className="h-56 w-full bg-slate-200 animate-pulse" />
+      <div className="h-48 w-full bg-slate-200 animate-pulse" />
       
       {/* Content skeleton */}
       <div className="p-6 text-center space-y-3">

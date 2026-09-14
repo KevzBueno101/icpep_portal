@@ -33,6 +33,7 @@ from .utils import (
     recent_ip_failures,
     record_failed_attempt,
     send_password_reset_email,
+    send_registration_welcome_email,
 )
 
 logger = logging.getLogger(__name__)
@@ -145,6 +146,8 @@ def register(request):
     if serializer.is_valid():
         user    = serializer.save()
         refresh = RefreshToken.for_user(user)
+        with contextlib.suppress(Exception):
+            send_registration_welcome_email(user)
         return Response({
             'message': 'Registration successful.',
             'user':    UserSerializer(user).data,

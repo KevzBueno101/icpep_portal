@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 
 from authentication.models import FailedLoginAttempt
 from authentication.utils import build_password_reset_url
+from config.urlutils import clean_origin_url
 
 User = get_user_model()
 
@@ -25,6 +26,42 @@ class PasswordResetLinkTests(SimpleTestCase):
             f'https://portal.example.com/reset-password/{expected_uid}/test-token',
         )
         self.assertNotIn('//reset-password/', reset_url)
+
+    @override_settings(FRONTEND_URL='https://icpep-catsu.vercel.app,+https//icpep-portal-test.vercel.app')
+    def test_build_password_reset_url_ignores_malformed_frontend_url(self):
+        request = RequestFactory().get(
+            '/api/auth/forgot-password/',
+            HTTP_ORIGIN='https://icpep-catsu.vercel.app',
+        )
+        user = SimpleNamespace(pk=9)
+        expected_uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        reset_url = build_password_reset_url(user, 'fallback-token', request=request)
+
+        self.assertEqual(
+            reset_url,
+            f'https://icpep-catsu.vercel.app/reset-password/{expected_uid}/fallback-token',
+        )
+        self.assertNotIn(',+https', reset_url)
+        self.assertNotIn('icpep-portal-test', reset_url)
+
+    def test_clean_origin_url_rejects_chrome_omnibox_artifact(self):
+        self.assertEqual(
+            clean_origin_url('https://icpep-catsu.vercel.app,+https//icpep-portal-test.vercel.app'),
+            '',
+        )
+
+    def test_clean_origin_url_accepts_valid_urls(self):
+        self.assertEqual(
+            clean_origin_url('https://icpep-catsu.vercel.app/'),
+            'https://icpep-catsu.vercel.app',
+        )
+        self.assertEqual(
+            clean_origin_url('http://localhost:5173'),
+            'http://localhost:5173',
+        )
+        self.assertEqual(clean_origin_url('not a url'), '')
+        self.assertEqual(clean_origin_url(''), '')
 
     @override_settings(FRONTEND_URL='')
     def test_build_password_reset_url_uses_request_origin_when_frontend_url_is_missing(self):
@@ -73,6 +110,22 @@ class AdminRegistrationTests(APITestCase):
         self.assertEqual(user.registration_status, 'PENDING')
         self.assertFalse(user.is_active)
         self.assertEqual(user.requested_position, 'Treasurer')
+
+    def test_admin_registration_username_optional_and_auto_generated(self):
+        response = self.client.post('/api/auth/admin-register/', {
+            'email': 'auto-admin@example.com',
+            'password': 'Password123',
+            'confirm_password': 'Password123',
+            'first_name': 'Auto',
+            'last_name': 'Admin',
+            'position': 'Secretary',
+            'department': 'Docs',
+            'academic_year': '2025-2026',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(email='auto-admin@example.com')
+        self.assertEqual(user.username, 'auto-admin')
 
     def test_pending_admin_login_is_rejected(self):
         user = User.objects.create_user(

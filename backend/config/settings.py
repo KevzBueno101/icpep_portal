@@ -28,6 +28,8 @@ load_dotenv(dotenv_path=BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 from django.core.exceptions import ImproperlyConfigured
 
+from config.urlutils import clean_origin_url
+
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY env var is not set")
@@ -68,6 +70,7 @@ INSTALLED_APPS = [
     'audit_logs',
     'common',
     'push',
+    'feedback',
 ]
 
 # Channels
@@ -303,7 +306,7 @@ MIDDLEWARE    += ['csp.middleware.CSPMiddleware']
 _cloudinary_img_src = ('https://res.cloudinary.com',) if _cloudinary_configured else ()
 _backend_host = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')[0].strip()
 _backend_http = f"https://{_backend_host}" if not DEBUG else f"http://{_backend_host}:8000"
-_frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+_frontend_url = clean_origin_url(os.getenv('FRONTEND_URL', '')) or 'http://localhost:5173'
 
 # All allowed backend origins for connect-src
 _extra_connect = tuple(
@@ -339,6 +342,8 @@ CONTENT_SECURITY_POLICY = {
 # Email configuration — SendGrid preferred (HTTP API, works on Render free tier)
 # Falls back to Gmail SMTP for local dev
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'ICpEP.SE CatSU')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -346,7 +351,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://icpep-catsu.vercel.app')
+BUG_REPORT_EMAIL = os.getenv('BUG_REPORT_EMAIL', 'icpep.se.catsuchapter@gmail.com')
+FRONTEND_URL = clean_origin_url(os.getenv('FRONTEND_URL', '')) or 'https://icpep-catsu.vercel.app'
 
 # Password reset token expiry (seconds) — Django default is 3 days (259200)
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours

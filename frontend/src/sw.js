@@ -18,9 +18,11 @@ const navigationRoute = new NavigationRoute(createHandlerBoundToURL('/index.html
 })
 registerRoute(navigationRoute)
 
-// API requests — prefer cache, refresh in the background
+// API requests — prefer cache, refresh in the background.
+// Exclude /api/push/ so the VAPID key and subscription endpoints are never
+// served stale (a cached wrong key causes pushManager.subscribe to fail).
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/push/'),
   new StaleWhileRevalidate({
     cacheName: 'api-cache',
     plugins: [

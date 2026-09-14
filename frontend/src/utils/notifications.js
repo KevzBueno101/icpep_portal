@@ -22,13 +22,47 @@ export function isPushSupported() {
   )
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
 export async function getRegistration() {
-  return navigator.serviceWorker.getRegistration()
+  // If the service worker hasn't been registered yet, register it and wait
+  // until it is active. Early clicks on "Enable Notifications" otherwise fail
+  // with "Service worker is not ready yet."
+  if (!navigator.serviceWorker.controller && !(await navigator.serviceWorker.getRegistration())) {
+    try {
+      await navigator.serviceWorker.register('/sw.js')
+    } catch {
+      // Registration failed; fall through — getRegistration() below reports null.
+    }
+  }
+  try {
+    return await withTimeout(navigator.serviceWorker.ready, 10000)
+  } catch {
+    return navigator.serviceWorker.getRegistration()
+  }
 }
 
 export async function getVapidPublicKey() {
-  const res = await publicApi.get('/push/vapid-key/')
-  return res.data.public_key
+  // Retry a few times — a flaky network (or a possibly stale SW-backed
+  // request) can otherwise surface as a push "registration failed" error.
+  let lastError
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await publicApi.get('/push/vapid-key/')
+      const key = res.data.public_key
+      if (key) return key
+    } catch (err) {
+      lastError = err
+      if (err?.response?.status === 503) throw err
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800))
+  }
+  throw lastError || new Error('Could not load the push key from the server.')
 }
 
 export async function getSubscriptionStatus() {

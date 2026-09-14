@@ -1,0 +1,14 @@
+;(function () {
+  try {
+    var stored = localStorage.getItem('icpep_theme')
+    var theme =
+      stored === 'light' || stored === 'dark'
+        ? stored
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+    if (theme === 'dark') document.documentElement.classList.add('dark')
+  } catch (e) {
+    /* localStorage unavailable — fall back to default light theme */
+  }
+})()

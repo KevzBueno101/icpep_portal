@@ -153,7 +153,7 @@ const AdminMembership = () => {
     return mapping[level] || `${level} Year`
   }
 
-  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱50' : '₱25')
+  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱60' : '₱25')
 
   const getMemberName = (member) =>
     `${member?.first_name || ''} ${member?.middle_name || ''} ${member?.last_name || ''}`.replace(/\s+/g, ' ').trim()
@@ -406,7 +406,7 @@ const AdminMembership = () => {
   if (loading && members.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+<div className="grid gap-3 grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="h-4 w-24 animate-pulse rounded bg-slate-200 mb-3" />
@@ -548,30 +548,30 @@ const AdminMembership = () => {
                 className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleExportCSV}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="w-3.5 h-3.5 shrink-0" />
                 Export CSV
               </button>
               <button
                 type="button"
                 onClick={() => { setRenewFee('ALL'); setIsRenewConfirmOpen(true) }}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
                 Renew All
               </button>
               <button
                 onClick={handleOpenAddModal}
                 disabled={isRestricted}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-0"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 shrink-0" />
                 Add Member
               </button>
             </div>
@@ -579,53 +579,55 @@ const AdminMembership = () => {
 
           {/* Filters Row */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
-            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Filter:</p>
+            <p className="hidden text-xs font-semibold text-slate-600 uppercase tracking-wide sm:block">Filter:</p>
 
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="EXPIRED">Expired</option>
-            </select>
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:gap-2">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="EXPIRED">Expired</option>
+              </select>
 
-            {/* Year Level Filter */}
-            <select
-              value={yearFilter}
-              onChange={(e) => {
-                setYearFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Years</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
+              {/* Year Level Filter */}
+              <select
+                value={yearFilter}
+                onChange={(e) => {
+                  setYearFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
 
-            {/* Membership Fee Filter */}
-            <select
-              value={feeFilter}
-              onChange={(e) => {
-                setFeeFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="ALL">All Fees</option>
-              <option value="SEMESTER">₱25 — Semester</option>
-              <option value="ANNUAL">₱50 — Academic Year</option>
-            </select>
+              {/* Membership Fee Filter */}
+              <select
+                value={feeFilter}
+                onChange={(e) => {
+                  setFeeFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Fees</option>
+                <option value="SEMESTER">₱25 — Regular Membership</option>
+                <option value="ANNUAL">₱60 — Membership Plus</option>
+              </select>
+            </div>
 
             {/* Results Counter */}
             <div className="sm:ml-auto">
@@ -657,7 +659,7 @@ const AdminMembership = () => {
                     aria-expanded={isExpanded}
                   >
                     <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
                           {member.profile_picture ? (
                             <img
@@ -673,9 +675,9 @@ const AdminMembership = () => {
                           )}
                         </div>
 
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{memberName}</p>
-                          <p className="text-xs text-slate-500">{member.student_number}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{memberName}</p>
+                          <p className="text-xs text-slate-500 truncate">{member.student_number}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -692,9 +694,9 @@ const AdminMembership = () => {
                   {isExpanded && (
                     <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
                       <div className="grid gap-2 text-sm text-slate-600">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-slate-700">Email</span>
-                          <span className="font-mono text-xs">{member.user_email || 'No email'}</span>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-medium text-slate-700 shrink-0">Email</span>
+                          <span className="font-mono text-xs text-right truncate">{member.user_email || 'No email'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-700">Year</span>
@@ -710,56 +712,53 @@ const AdminMembership = () => {
                         </div>
                       </div>
 
-                      <div className="grid gap-2">
-                        <div className="grid gap-2">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
-                            className="w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <CheckCircle className="w-4 h-4" />
-                              Verify
-                            </span>
-                          </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
+                          className="rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 transition"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
+                            Verify
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => fetchMemberHistory(member)}
-                            className="w-full rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-600 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <ScrollText className="w-4 h-4" />
-                              History
-                            </span>
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => fetchMemberHistory(member)}
+                          className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 transition"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <ScrollText className="w-4 h-4" />
+                            History
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditModal(member)}
-                            className="w-full rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <PencilLine className="w-4 h-4" />
-                              Edit
-                            </span>
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(member)}
+                          className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <PencilLine className="w-4 h-4" />
+                            Edit
+                          </span>
+                        </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(member)}
-                            className="w-full rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 transition"
-                          >
-                            <span className="flex items-center justify-center gap-2">
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(member)}
+                          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   )}
-
                 </article>
               )
             })
@@ -845,7 +844,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => navigate(`/admin/membership/${member.id}/verify`)}
-                            className="rounded-full bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 border border-sky-200 transition"
+                            className="rounded-full bg-teal-50 p-1.5 text-teal-700 hover:bg-teal-100 border border-teal-200 transition"
                             title="Verify"
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
@@ -854,7 +853,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => fetchMemberHistory(member)}
-                            className="rounded-full bg-indigo-50 p-1.5 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition"
+                            className="rounded-full bg-cyan-50 p-1.5 text-cyan-700 hover:bg-cyan-100 border border-cyan-200 transition"
                             title="History"
                           >
                             <ScrollText className="w-3.5 h-3.5" />
@@ -863,7 +862,7 @@ const AdminMembership = () => {
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(member)}
-                            className="rounded-full bg-amber-50 p-1.5 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
+                            className="rounded-full bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 border border-sky-200 transition"
                             title="Edit"
                           >
                             <PencilLine className="w-3.5 h-3.5" />
@@ -900,7 +899,7 @@ const AdminMembership = () => {
             <p className="text-[11px] text-slate-600">
               Showing <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
               <span className="font-semibold">{Math.min(currentPage * itemsPerPage, filteredMembers.length)}</span> of{' '}
-              <span className="font-semibold">{filteredMembers.length}</span> results
+              <span className="font-semibold">{totalPages}</span> pages
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -1166,8 +1165,8 @@ const AdminMembership = () => {
                       onChange={handleFormChange}
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
                     >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                      <option value="SEMESTER">₱25 — Regular Membership</option>
+                      <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                   </div>
                 </div>
@@ -1176,7 +1175,7 @@ const AdminMembership = () => {
               {/* Password notice */}
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-blue-800 leading-relaxed">
+                <p className="text-[11px] text-blue-800 leading-relaxed dark:text-white">
                   <strong>Notice:</strong> Manually added members are automatically initialized with role <strong>MEMBER</strong> and a default temporary password of <strong>Changeme123!</strong>. They can log in immediately to complete their profile.
                 </p>
               </div>
@@ -1226,7 +1225,7 @@ const AdminMembership = () => {
             window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success(renewFee === 'ALL'
               ? 'All approved memberships set to Pending.'
-              : `${renewFee === 'ANNUAL' ? '₱50' : '₱25'} memberships set to Pending.`)
+              : `${renewFee === 'ANNUAL' ? '₱60' : '₱25'} memberships set to Pending.`)
             await fetchMembers()
             setIsRenewConfirmOpen(false)
           } catch (err) {
@@ -1242,8 +1241,8 @@ const AdminMembership = () => {
           <div className="flex flex-col gap-2">
             {[
               { value: 'ALL', label: 'All fee plans', desc: 'Everyone currently approved' },
-              { value: 'SEMESTER', label: '₱25 — 1 Semester', desc: 'Only ₱25 members' },
-              { value: 'ANNUAL', label: '₱50 — 1 Academic Year', desc: 'Only ₱50 members' },
+              { value: 'SEMESTER', label: '₱25 — Regular Membership', desc: 'Only ₱25 members' },
+              { value: 'ANNUAL', label: '₱60 — Membership Plus', desc: 'Only ₱60 members' },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -1427,8 +1426,8 @@ const AdminMembership = () => {
                       onChange={handleEditFormChange}
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
+                      <option value="SEMESTER">₱25 — Regular Membership</option>
+                      <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                   </div>
                 </div>

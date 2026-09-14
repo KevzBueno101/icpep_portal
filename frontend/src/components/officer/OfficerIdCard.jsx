@@ -58,7 +58,7 @@ const DisplayCard = React.forwardRef(function DisplayCard({ qrPayload, fullName,
         <div className="absolute inset-x-0" style={{ top: 16 }}>
           <div className="flex items-center justify-center gap-1 px-3">
             <img
-              src="/icpep_logo.jpg"
+              src="/icpep_logo.png"
               alt="ICpEP"
               className="h-12 w-12 flex-shrink-0 rounded-full object-cover bg-white shadow-md"
               onError={(e) => { e.target.style.display = 'none' }}
@@ -228,7 +228,7 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
       }
 
       const [icpep, cea, prof] = await Promise.all([
-        loadImg('/icpep_logo.jpg'),
+        loadImg('/icpep_logo.png'),
         loadImg('/cea-logo.png'),
         loadImg(profilePictureUrl),
       ])

@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.AboutSectionListAPIView.as_view(), name='about-section-list'),
     path('admin/', views.AboutSectionAdminListCreateAPIView.as_view(), name='about-section-admin-list'),
     path('admin/reorder/', views.AboutSectionReorderAPIView.as_view(), name='about-section-reorder'),
+    path('document/<int:section_id>/', views.AboutSectionDocumentContentAPIView.as_view(), name='about-section-document-content'),
     path('admin/<int:section_id>/document/', views.AboutSectionDocumentDeleteAPIView.as_view(), name='about-section-document-delete'),
     path('admin/<int:id>/', views.AboutSectionAdminDetailAPIView.as_view(), name='about-section-admin-detail'),
 ]

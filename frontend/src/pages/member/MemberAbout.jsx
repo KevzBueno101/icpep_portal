@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Users, Mail, MapPin, FileText, Eye, ChevronRight } from 'lucide-react'
+import { Info, Shield, Mail, MapPin, FileText, Eye, ChevronRight, Code2 } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
+import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
 import api from '../../api/axios'
 
@@ -44,14 +45,9 @@ const TYPE_LABELS = {
   CUSTOM: 'Section',
 }
 
-const isPdf = (section) => {
-  const name = (section.document_name || section.document_url || '').toLowerCase()
-  return name.endsWith('.pdf')
-}
-
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
-  const [preview, setPreview] = useState(null)
+  const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -67,6 +63,11 @@ export default function MemberAbout() {
       mounted = false
     }
   }, [])
+
+  const openPreview = (section) => {
+    if (!section.document_url) return
+    window.open(section.document_url, '_blank', 'noopener,noreferrer')
+  }
 
   const allSections =
     sections && sections.length > 0 ? sections : sections === null ? null : FALLBACK_IDENTITY
@@ -135,7 +136,7 @@ export default function MemberAbout() {
                   {section.document_url && (
                     <button
                       type="button"
-                      onClick={() => setPreview(section)}
+                      onClick={() => openPreview(section)}
                       className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 self-start"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -196,7 +197,7 @@ export default function MemberAbout() {
                       {section.document_url && (
                         <button
                           type="button"
-                          onClick={() => setPreview(section)}
+                          onClick={() => openPreview(section)}
                           className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -215,17 +216,41 @@ export default function MemberAbout() {
 
       {/* Leadership Board */}
       <OfficersProvider>
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              <Users className="h-5 w-5" />
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Leadership Team</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Student Leadership Board</h2>
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Student Leadership Board</h2>
           </div>
-
-          <OfficersCarousel />
-        </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+            <OfficersCarousel />
+          </div>
+        </section>
       </OfficersProvider>
+
+      {/* Web-App Development Committee */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Code2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Web-App Development Committee</h2>
+              <p className="text-sm text-slate-500">Meet the team behind this portal.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDevCommitteeOpen(true)}
+            className="self-start md:self-auto inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
+          >
+            <ChevronRight className="h-4 w-4" />
+            View Members
+          </button>
+        </div>
+      </div>
 
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">
@@ -250,44 +275,8 @@ export default function MemberAbout() {
         <div className="absolute -right-24 -bottom-24 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl" />
       </div>
 
-      {/* Document preview modal */}
-      {preview && preview.document_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <FileText className="h-5 w-5 shrink-0 text-sky-600" />
-                <span className="truncate text-sm font-semibold text-slate-900">
-                  {preview.document_name || 'Document'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreview(null)}
-                className="inline-flex items-center rounded-full p-2 text-2xl leading-none text-slate-500 hover:bg-slate-100"
-                aria-label="Close preview"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto bg-slate-100 p-4">
-              {isPdf(preview) ? (
-                <iframe
-                  title={preview.document_name || 'PDF preview'}
-                  src={preview.document_url}
-                  className="h-[70vh] w-full rounded-xl border border-slate-200 bg-white"
-                />
-              ) : (
-                <img
-                  src={preview.document_url}
-                  alt={preview.document_name || 'Document preview'}
-                  className="mx-auto max-h-[70vh] w-auto rounded-xl border border-slate-200 bg-white p-2"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Web-App Development Committee modal */}
+      <DevCommitteeModal isOpen={devCommitteeOpen} onClose={() => setDevCommitteeOpen(false)} />
     </div>
   )
 }

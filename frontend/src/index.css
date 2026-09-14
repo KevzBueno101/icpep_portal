@@ -4,6 +4,171 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Dark mode surface/typography overrides
+   These remap the app-wide light palette so every component
+   switches without editing each file. Because `.dark .bg-white`
+   has higher specificity than the bare `.bg-white` utility, these
+   win whenever dark mode is active.
+   ───────────────────────────────────────────────────────────── */
+.dark .bg-white { background-color: #1e293b; }            /* slate-800 */
+.dark .bg-slate-50 { background-color: rgb(30 41 59 / 0.6); }
+.dark .bg-slate-100 { background-color: #1e293b; }        /* slate-800 */
+.dark .bg-slate-200 { background-color: #334155; }        /* slate-700 */
+.dark .bg-slate-300 { background-color: #475569; }        /* slate-600 */
+
+.dark .text-slate-900 { color: #f1f5f9; }                 /* slate-100 */
+.dark .text-slate-800 { color: #e2e8f0; }                 /* slate-200 */
+.dark .text-slate-700 { color: #e2e8f0; }                 /* slate-200 */
+.dark .text-slate-600 { color: #cbd5e1; }                 /* slate-300 */
+.dark .text-slate-500 { color: #94a3b8; }                 /* slate-400 */
+.dark .text-slate-400 { color: #94a3b8; }                 /* slate-400 */
+
+.dark .border-slate-100 { border-color: rgb(51 65 85 / 0.6); }  /* slate-700/60 */
+.dark .border-slate-200 { border-color: #334155; }             /* slate-700 */
+.dark .border-slate-300 { border-color: #475569; }             /* slate-600 */
+
+/* Hover states reuse the light palette, so remap them too — otherwise e.g.
+   a card is #1e293b in dark mode but hover:bg-white flashes bright white,
+   and hover:text-slate-900 turns light text dark on dark. Mirror the base
+   mappings above (only the *light* tokens; already-dark slate-600+ are fine). */
+.dark .hover\:bg-white:hover { background-color: #1e293b !important; }
+.dark .hover\:bg-slate-50:hover { background-color: rgb(30 41 59 / 0.6) !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #1e293b !important; }
+.dark .hover\:bg-slate-200:hover { background-color: #334155 !important; }
+
+.dark .hover\:text-slate-900:hover { color: #f1f5f9 !important; }
+.dark .hover\:text-slate-800:hover { color: #e2e8f0 !important; }
+.dark .hover\:text-slate-700:hover { color: #e2e8f0 !important; }
+.dark .hover\:text-slate-600:hover { color: #cbd5e1 !important; }
+
+.dark .hover\:border-slate-200:hover { border-color: #334155 !important; }
+.dark .hover\:border-slate-300:hover { border-color: #475569 !important; }
+.dark .hover\:border-slate-400:hover { border-color: #64748b !important; }
+
+/* Hard-coded light section backgrounds — keep usable in dark mode.
+   #F5F7FA is the off-white used by landing sections (e.g. announcements). */
+.dark .bg-\[\#F5F7FA\] { background-color: #0f172a !important; }      /* slate-900 */
+.dark .from-\[\#F5F7FA\] { --tw-gradient-from: #0f172a !important; }
+
+/* Status/pastel tints — keep the hue but go translucent on dark
+   surfaces and brighten the accompanying icon/text (600/700/800 are
+   the "bold hue on pastel pill" pairings used by badges & tiles). */
+.dark .bg-sky-100 { background-color: rgb(56 189 248 / 0.15); }
+.dark .bg-amber-100 { background-color: rgb(251 191 36 / 0.15); }
+.dark .bg-green-100 { background-color: rgb(74 222 128 / 0.15); }
+.dark .bg-red-100 { background-color: rgb(248 113 113 / 0.15); }
+.dark .bg-purple-100 { background-color: rgb(192 132 252 / 0.15); }
+.dark .bg-blue-100 { background-color: rgb(96 165 250 / 0.15); }
+
+.dark .text-sky-600 { color: #38bdf8; }  /* sky-400 */
+.dark .text-sky-700 { color: #38bdf8; }
+.dark .text-sky-800 { color: #7dd3fc; }  /* sky-300 */
+.dark .text-amber-600 { color: #fbbf24; }  /* amber-400 */
+.dark .text-amber-700 { color: #fbbf24; }
+.dark .text-amber-800 { color: #fcd34d; }  /* amber-300 */
+.dark .text-green-600 { color: #4ade80; }  /* green-400 */
+.dark .text-green-700 { color: #4ade80; }
+.dark .text-red-600 { color: #f87171; }  /* red-400 */
+.dark .text-red-700 { color: #f87171; }
+.dark .text-purple-600 { color: #c084fc; }  /* purple-400 */
+.dark .text-purple-700 { color: #c084fc; }
+.dark .text-blue-600 { color: #60a5fa; }  /* blue-400 */
+.dark .text-blue-700 { color: #60a5fa; }
+
+/* Pale 50-tints (selection cards, radio tiles, callouts, info panels).
+   Without this they stayed pale in dark mode while the remapped text
+   above turned light — light-on-light, invisible. Keep the hue, go
+   translucent so the cards read as dark surfaces. */
+.dark .bg-sky-50 { background-color: rgb(56 189 248 / 0.12); }
+.dark .bg-amber-50 { background-color: rgb(251 191 36 / 0.12); }
+.dark .bg-green-50 { background-color: rgb(74 222 128 / 0.12); }
+.dark .bg-emerald-50 { background-color: rgb(52 211 153 / 0.12); }
+.dark .bg-red-50 { background-color: rgb(248 113 113 / 0.12); }
+.dark .bg-rose-50 { background-color: rgb(251 113 133 / 0.12); }
+.dark .bg-blue-50 { background-color: rgb(96 165 250 / 0.12); }
+.dark .bg-indigo-50 { background-color: rgb(129 140 248 / 0.12); }
+.dark .bg-violet-50 { background-color: rgb(167 139 250 / 0.12); }
+.dark .bg-purple-50 { background-color: rgb(192 132 252 / 0.12); }
+.dark .bg-teal-50 { background-color: rgb(45 212 191 / 0.12); }
+.dark .bg-cyan-50 { background-color: rgb(34 211 238 / 0.12); }
+.dark .bg-yellow-50 { background-color: rgb(250 204 21 / 0.12); }
+.dark .bg-orange-50 { background-color: rgb(251 146 60 / 0.12); }
+.dark .bg-pink-50 { background-color: rgb(244 114 182 / 0.12); }
+
+/* Colored borders that frame those tinted surfaces (200/300/400). */
+.dark .border-sky-200 { border-color: rgb(56 189 248 / 0.35); }
+.dark .border-sky-300 { border-color: rgb(56 189 248 / 0.55); }
+.dark .border-sky-400 { border-color: rgb(56 189 248 / 0.7); }
+.dark .border-amber-200 { border-color: rgb(251 191 36 / 0.35); }
+.dark .border-amber-300 { border-color: rgb(251 191 36 / 0.55); }
+.dark .border-green-200 { border-color: rgb(74 222 128 / 0.35); }
+.dark .border-green-300 { border-color: rgb(74 222 128 / 0.55); }
+.dark .border-emerald-200 { border-color: rgb(52 211 153 / 0.35); }
+.dark .border-emerald-300 { border-color: rgb(52 211 153 / 0.55); }
+.dark .border-red-200 { border-color: rgb(248 113 113 / 0.35); }
+.dark .border-red-300 { border-color: rgb(248 113 113 / 0.55); }
+.dark .border-blue-200 { border-color: rgb(96 165 250 / 0.35); }
+.dark .border-blue-300 { border-color: rgb(96 165 250 / 0.55); }
+.dark .border-indigo-200 { border-color: rgb(129 140 248 / 0.35); }
+.dark .border-rose-200 { border-color: rgb(251 113 133 / 0.35); }
+.dark .border-teal-200 { border-color: rgb(45 212 191 / 0.35); }
+.dark .border-yellow-200 { border-color: rgb(250 204 21 / 0.35); }
+.dark .border-cyan-400 { border-color: rgb(34 211 238 / 0.7); }
+.dark .border-purple-400 { border-color: rgb(192 132 252 / 0.7); }
+
+/* Native radio/checkbox accent colors — brighten so the control stays
+   visible on the dark tinted tiles. */
+.dark .accent-sky-600 { accent-color: #38bdf8; }
+.dark .accent-blue-600 { accent-color: #60a5fa; }
+.dark .accent-green-600 { accent-color: #4ade80; }
+.dark .accent-amber-600 { accent-color: #fbbf24; }
+.dark .accent-red-600 { accent-color: #f87171; }
+.dark .accent-purple-600 { accent-color: #c084fc; }
+.dark .accent-teal-600 { accent-color: #2dd4bf; }
+
+/* Colored focus rings often pair with the tints above. */
+.dark .ring-sky-100 { --tw-ring-color: rgb(56 189 248 / 0.15); }
+.dark .ring-sky-200 { --tw-ring-color: rgb(56 189 248 / 0.3); }
+.dark .ring-green-100 { --tw-ring-color: rgb(74 222 128 / 0.15); }
+.dark .ring-red-100 { --tw-ring-color: rgb(248 113 113 / 0.15); }
+.dark .ring-amber-100 { --tw-ring-color: rgb(251 191 36 / 0.15); }
+
+/* Opacity-modified white/slate surfaces (e.g. glassy dashboard cards,
+   empty states) are distinct utilities from the plain ones, so map
+   them to their dark equivalents too. */
+.dark .bg-white\/80 { background-color: rgb(30 41 59 / 0.8); }
+.dark .bg-white\/50 { background-color: rgb(30 41 59 / 0.5); }
+.dark .bg-slate-50\/50 { background-color: rgb(30 41 59 / 0.5); }
+
+/* Inputs use ring-slate-200 as their border — mirror the border remap. */
+.dark .ring-slate-200 { --tw-ring-color: #334155; }
+
+/* Form fields keep a native white background (UA "field" color) unless a
+   bg utility is present, so in dark mode they show light text on white.
+   Give inputs/selects/textareas a dark surface; options too. Elements that
+   already carry .bg-* classes keep theirs (higher specificity). */
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+.dark select,
+.dark textarea {
+  background-color: #1e293b; /* slate-800 */
+  color: #e2e8f0; /* slate-200 */
+}
+.dark select option {
+  background-color: #1e293b; /* slate-800 */
+  color: #e2e8f0; /* slate-200 */
+}
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file'])::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+
+/* Surfaces that must stay light even in dark mode — tag the element
+   with class="keep-light" to exempt it *container-level* (children
+   handled explicitly where needed, e.g. the digital ID card export
+   forces light in JS). */
+.dark .keep-light { background-color: #ffffff !important; }
+
 @layer base {
   *,
   *::before,

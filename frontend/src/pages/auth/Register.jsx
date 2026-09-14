@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
-import { Info } from 'lucide-react'
+import { Info, Plus, IdCard, Stamp, BadgeCheck, Sticker } from 'lucide-react'
+import ThemeToggle from '../../components/ThemeToggle'
 
 const YEAR_LEVELS = [
   { value: '1', label: '1st Year' },
@@ -37,7 +38,7 @@ const RETRY_DELAY = 5000
 
 const Field = ({ label, name, type = 'text', placeholder, value, onChange, required = true, error, info, ...inputProps }) => (
   <div>
-    <label className="block text-sm text-slate-600 mb-1">{label}</label>
+    <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">{label}</label>
     <input
       type={type}
       name={name}
@@ -57,7 +58,7 @@ const Field = ({ label, name, type = 'text', placeholder, value, onChange, requi
 
 const PasswordField = ({ label, name, value, onChange, show, onToggle, error }) => (
   <div>
-    <label className="block text-sm text-slate-600 mb-1">{label}</label>
+    <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">{label}</label>
     <div className="relative">
       <input
         type={show ? 'text' : 'password'}
@@ -111,10 +112,10 @@ const CopyableInput = ({ value, label }) => {
 
   return (
     <div className="space-y-2">
-      {label && <label className="block text-sm text-slate-600">{label}</label>}
+      {label && <label className="block text-sm text-slate-600 dark:text-slate-400">{label}</label>}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1 bg-slate-100 rounded-lg px-3 py-2 ring-1 ring-slate-200">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex items-center gap-2 flex-1 bg-slate-100 rounded-lg px-3 py-2 ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
@@ -122,7 +123,7 @@ const CopyableInput = ({ value, label }) => {
             type="text"
             value={value}
             readOnly
-            className="flex-1 bg-transparent text-sm text-slate-900 outline-none"
+            className="flex-1 bg-transparent text-sm text-slate-900 outline-none dark:text-slate-200"
           />
         </div>
         <button
@@ -609,29 +610,34 @@ const Register = () => {
   const usernameError = errors.username
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg">
+    <div className="relative min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10 dark:bg-slate-900">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/40">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto" />
+          <Link to="/" aria-label="Go to homepage">
+            <img src="/icpep_logo.png" alt="ICPEP.SE Logo" className="h-16 w-auto transition hover:opacity-80" />
+          </Link>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
-            <p className="text-slate-500 mt-1 text-sm">ICPEP.SE Membership Registration</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create an Account</h1>
+            <p className="text-slate-500 mt-1 text-sm dark:text-slate-400">ICPEP.SE Membership Registration</p>
           </div>
         </div>
 
-        <div className="mb-5 flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800">
+        <div className="mb-5 flex items-start gap-3 rounded-xl bg-sky-50 ring-1 ring-sky-200 p-4 text-sm text-sky-800 dark:bg-sky-950/50 dark:ring-sky-900 dark:text-sky-200">
           <Info className="h-5 w-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold">For BS CpE students only</p>
-            <p className="mt-1 text-sky-700">
+            <p className="font-semibold dark:text-sky-100">For BS CpE students only</p>
+            <p className="mt-1 text-sky-700 dark:text-sky-300">
               Only currently enrolled students in B.S. Computer Engineering (BS CpE) can register as members of the ICPEP.se Portal.
             </p>
           </div>
         </div>
 
         <div className="mb-6 space-y-2">
-          <p className="text-sm text-slate-500">Step {step} of 5</p>
-          <div className="h-2 rounded-full bg-slate-200">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Step {step} of 5</p>
+          <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
             <div
               className="h-2 rounded-full bg-sky-600 transition-all duration-300"
               style={{ width: `${(step / 5) * 100}%` }}
@@ -960,17 +966,53 @@ const Register = () => {
 
                   <div>
                     <label className="block text-sm text-slate-600 mb-2">Membership Fee</label>
-                    <select
-                      name="membership_fee"
-                      value={form.membership_fee}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-                    >
-                      <option value="SEMESTER">₱25 — 1 Semester</option>
-                      <option value="ANNUAL">₱50 — 1 Academic Year</option>
-                    </select>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.membership_fee === 'SEMESTER'
+                            ? 'border-sky-500 bg-sky-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="membership_fee"
+                          value="SEMESTER"
+                          checked={form.membership_fee === 'SEMESTER'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-sky-600 accent-sky-600"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-sky-700">₱25 — Regular Membership</p>
+                          <p className="text-xs text-slate-500">Standard membership</p>
+                        </div>
+                      </label>
+                      <label
+                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                          form.membership_fee === 'ANNUAL'
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="membership_fee"
+                          value="ANNUAL"
+                          checked={form.membership_fee === 'ANNUAL'}
+                          onChange={handleChange}
+                          className="h-4 w-4 text-green-600 accent-green-600"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <Plus className="h-4 w-4 text-green-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-green-700">₱60 — Membership Plus</p>
+                            <p className="text-xs text-slate-500">With inclusions & add-ons</p>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
                     <p className="mt-1.5 text-xs text-slate-500">
-                      Choose your coverage: ₱25 for one semester or ₱50 for the full academic year.
+                      Choose your coverage: ₱25 for Regular Membership or ₱60 for Membership Plus.
                     </p>
                   </div>
 
@@ -1065,14 +1107,33 @@ const Register = () => {
                     </label>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  <p className="font-semibold text-slate-800 mb-2">Instructions</p>
-                  <ul className="list-disc list-inside space-y-2">
-                    <li>Piliin ang payment method: On-hand / Personal o GCash.</li>
-                    <li>I-upload ang screenshot ng payment receipt o transaction reference.</li>
-                    <li>If On-hand payment, please take a picture together with the officer in-charge then upload it here.</li>
-                    <li>Siguraduhing malinaw ang halagang binayaran at reference code.</li>
-                    <li>Wait for the approval.</li>
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-slate-700">
+                  <p className="font-semibold text-green-800 mb-2">Membership Plus Inclusions</p>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                        <IdCard className="h-4 w-4" />
+                      </span>
+                      Laminated ID card
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                        <Stamp className="h-4 w-4" />
+                      </span>
+                      With Documentary stamped
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                        <BadgeCheck className="h-4 w-4" />
+                      </span>
+                      Badge pin
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                        <Sticker className="h-4 w-4" />
+                      </span>
+                      Stickers
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -1109,7 +1170,7 @@ const Register = () => {
           </div>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6 dark:text-slate-400">
           Already have an account?{' '}
           <Link to="/login" className="text-sky-600 hover:underline">Sign in</Link>
         </p>
