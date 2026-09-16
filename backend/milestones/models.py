@@ -14,6 +14,7 @@ class Milestone(models.Model):
     headline = models.CharField(max_length=200)
     description = models.TextField()
     content = models.TextField()
+    source = models.URLField(blank=True)
     date = models.DateField()
     category = models.CharField(
         max_length=20,
