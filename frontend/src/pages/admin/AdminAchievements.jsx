@@ -33,6 +33,7 @@ const AdminAchievements = () => {
     headline: '',
     description: '',
     content: '',
+    source: '',
     date: '',
     category: 'achievement',
   })
@@ -88,6 +89,7 @@ const AdminAchievements = () => {
       headline: '',
       description: '',
       content: '',
+      source: '',
       date: '',
       category: 'achievement',
     })
@@ -104,6 +106,7 @@ const AdminAchievements = () => {
       headline: milestone.headline,
       description: milestone.description,
       content: milestone.content,
+      source: milestone.source || '',
       date: milestone.date,
       category: milestone.category,
     })
@@ -118,6 +121,7 @@ const AdminAchievements = () => {
       headline: '',
       description: '',
       content: '',
+      source: '',
       date: '',
       category: 'achievement',
     })
@@ -357,6 +361,18 @@ const AdminAchievements = () => {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Source URL</label>
+              <input
+                type="url"
+                value={formData.source}
+                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                placeholder="https://example.com/source"
+              />
+              <p className="mt-1 text-xs text-slate-500">Optional link to the source of this milestone.</p>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
@@ -498,6 +514,18 @@ const AdminAchievements = () => {
                         />
                       </div>
 
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Source URL</label>
+                        <input
+                          type="url"
+                          value={formData.source}
+                          onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          placeholder="https://example.com/source"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">Optional link to the source of this milestone.</p>
+                      </div>
+
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
@@ -569,6 +597,19 @@ const AdminAchievements = () => {
                         <h3 className="text-lg font-semibold text-slate-900">{milestone.title}</h3>
                         <p className="mt-1 text-sm text-slate-600">{milestone.headline}</p>
                         <p className="mt-1 text-sm text-slate-500 line-clamp-2">{milestone.description}</p>
+                        {milestone.source && (
+                          <a
+                            href={milestone.source}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-sky-600 hover:text-sky-700"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                            </svg>
+                            Source
+                          </a>
+                        )}
                         {milestone.images && milestone.images.length > 0 && (
                           <div className="mt-3">
                             <p className="text-xs text-slate-500 mb-2">{milestone.images.length} image(s)</p>

@@ -1090,7 +1090,7 @@ const Register = () => {
                   ) : (
                     <div className="flex items-start gap-3 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
                       <Info className="h-5 w-5 shrink-0 mt-0.5" />
-                      <p>Please take a picture with the designated officer as proof of on-hand payment.</p>
+                      <p>Please take a picture with the designated officer as proof of on-hand payment. You may visit at ICpEP.se Office and look for available officers for membership registration.</p>
                     </div>
                   )}
 

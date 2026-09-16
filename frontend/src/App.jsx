@@ -43,6 +43,7 @@ import MemberIdCard from './pages/member/MemberIdCard'
 import MemberAbout from './pages/member/MemberAbout'
 import MemberProfile from './pages/member/MemberProfile'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+import UpdateNotice from './components/UpdateNotice'
 import FeedbackButton from './components/FeedbackButton'
 import ReportBugButton from './components/ReportBugButton'
 
@@ -59,6 +60,7 @@ function App() {
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
         />
         <PWAInstallPrompt />
+        <UpdateNotice />
         <ReportBugButton />
         <FeedbackButton />
         <NetworkStatus />

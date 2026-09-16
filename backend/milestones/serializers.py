@@ -18,7 +18,7 @@ class MilestoneListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Milestone
-        fields = ['id', 'headline', 'description', 'date', 'date_display', 'category', 'first_image']
+        fields = ['id', 'headline', 'description', 'date', 'date_display', 'category', 'first_image', 'source']
 
     def get_first_image(self, obj):
         first_image = obj.images.first()
@@ -37,7 +37,7 @@ class MilestoneDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Milestone
-        fields = ['id', 'title', 'headline', 'description', 'content', 'date', 'date_display', 'category', 'images', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'headline', 'description', 'content', 'source', 'date', 'date_display', 'category', 'images', 'created_at', 'updated_at']
 
 
 class MilestoneCreateUpdateSerializer(serializers.ModelSerializer):
@@ -46,4 +46,4 @@ class MilestoneCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Milestone
-        fields = ['id', 'title', 'headline', 'description', 'content', 'date', 'category', 'images']
+        fields = ['id', 'title', 'headline', 'description', 'content', 'source', 'date', 'category', 'images']
