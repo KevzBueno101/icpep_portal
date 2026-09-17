@@ -246,7 +246,6 @@ export default function ChatWidget() {
                 error={error}
                 onRetry={retry}
                 onClearError={clearError}
-                disabled={messages.length === 0 && showWelcome}
               />
               <p className="mt-2 text-center text-[10px] text-slate-400">
                 Powered by Google Gemini • Session: {sessionId}
