@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/push/', include('push.urls')),
     path('api/feedback/', include('feedback.urls')),
     path('api/partnership/', include('partnership.urls')),
-    # duplicate include removed
+    path('api/chatbot/', include('chatbot.urls')),
 ]
 
 # Serve locally stored media files even in production.

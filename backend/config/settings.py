@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'push',
     'feedback',
     'partnership',
+    'chatbot',
 ]
 
 # Channels
@@ -285,6 +286,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
+    'DEFAULT_THROTTLE_RATES': {
+        'gemini_user_minute': '30/minute',
+        'gemini_user_daily': '100/day',
+    },
 }
 
 SECURE_BROWSER_XSS_FILTER     = True
