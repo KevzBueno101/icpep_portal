@@ -104,7 +104,7 @@ export default function ChatWidget() {
 
   if (isMinimized) {
     return (
-      <div ref={widgetRef} className="fixed bottom-6 right-6 z-50">
+      <div ref={widgetRef} className="fixed bottom-24 right-6 z-50">
         <button
           onClick={handleMaximize}
           className="relative flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-bounce-subtle"
@@ -128,7 +128,7 @@ export default function ChatWidget() {
         <button
           ref={widgetRef}
           onClick={toggleOpen}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4"
+          className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4"
           aria-label="Open chatbot"
         >
           <MessageSquare className="h-7 w-7" />
@@ -139,7 +139,7 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           ref={widgetRef}
-          className="fixed bottom-6 right-6 z-50 w-full max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
+          className="fixed bottom-24 right-6 z-50 w-full max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
         >
           <div className="flex flex-col h-[500px] md:h-[550px] lg:h-[600px] max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}
