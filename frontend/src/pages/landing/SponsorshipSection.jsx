@@ -23,6 +23,7 @@ const benefits = [
 
 export default function SponsorshipSection() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
+  const [attachment, setAttachment] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (e) => {
@@ -30,17 +31,25 @@ export default function SponsorshipSection() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleFileChange = (e) => {
+    setAttachment(e.target.files[0] || null)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await publicApi.post('/partnership/partnership/', {
-        name: form.name,
-        email: form.email,
-        message: form.message,
-      })
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('email', form.email)
+      formData.append('message', form.message)
+      if (attachment) {
+        formData.append('attachment', attachment)
+      }
+      await publicApi.post('/partnership/partnership/', formData)
       toast.success('Partnership proposal sent successfully!')
       setForm({ name: '', email: '', message: '' })
+      setAttachment(null)
     } catch {
       toast.error('Failed to send proposal. Please try again.')
     } finally {
@@ -140,18 +149,34 @@ export default function SponsorshipSection() {
                 />
               </div>
 
-               <button
-                 type="submit"
-                 disabled={submitting}
-                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                 <Mail className="h-4 w-4" />
-                 {submitting ? 'Sending...' : 'Send Proposal'}
-               </button>
+              <div>
+                <label htmlFor="sponsor-attachment" className="mb-1.5 block text-sm font-semibold text-slate-300">
+                  Attachment <span className="text-slate-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  id="sponsor-attachment"
+                  name="attachment"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-cyan-300 hover:file:bg-cyan-500/30"
+                />
+                {attachment && (
+                  <p className="mt-1 text-xs text-cyan-400">{attachment.name}</p>
+                )}
+              </div>
 
-               <p className="text-center text-xs text-slate-500">
-                 Submit the form and we will reach out to you via email.
-               </p>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Mail className="h-4 w-4" />
+                {submitting ? 'Sending...' : 'Send Proposal'}
+              </button>
+
+              <p className="text-center text-xs text-slate-500">
+                Submit the form and we will reach out to you via email.
+              </p>
             </form>
           </div>
         </div>

@@ -2,6 +2,7 @@ import logging
 import threading
 
 from django.conf import settings
+from django.core.mail import send_mail
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,6 +26,14 @@ class PartnershipAPIView(APIView):
         full_name = partnership.name
         subject = f"Partnership Proposal from {full_name}"
 
+        attachment_info = ""
+        if partnership.attachment:
+            attachment_url = partnership.attachment.url if partnership.attachment else ""
+            attachment_info = f"""
+<p style="margin-top:16px;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#334155;font-size:14px;">
+<strong>Attachment:</strong> <a href="{attachment_url}" target="_blank" style="color:#2563eb;">{partnership.attachment.name}</a>
+</p>"""
+
         html = f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:40px 16px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
@@ -40,6 +49,7 @@ You have received a new partnership inquiry from the ICPEP.SE portal.
 <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#334155;font-size:14px;white-space:pre-wrap;">
 {partnership.message}
 </div>
+{attachment_info}
 <p style="color:#999;font-size:13px;margin-top:24px;">
 Submitted through the ICPEP.SE portal on {partnership.created_at.strftime('%Y-%m-%d %H:%M')}.
 </p>
@@ -48,11 +58,25 @@ Submitted through the ICPEP.SE portal on {partnership.created_at.strftime('%Y-%m
 </html>"""
 
         recipient_email = getattr(settings, 'BUG_REPORT_EMAIL', 'icpep.se.catsuchapter@gmail.com')
-        thread = threading.Thread(
-            target=send_brevo_email,
-            args=(recipient_email, 'ICPEP.SE CatSU', subject, html),
-            daemon=True,
-        )
+
+        def _deliver():
+            brevo_ok = send_brevo_email(
+                recipient_email, 'ICPEP.SE CatSU', subject, html
+            )
+            if not brevo_ok:
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=f"Name: {full_name}\nEmail: {partnership.email}\n\n{partnership.message}",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[recipient_email],
+                        html_message=html,
+                    )
+                    logger.info("Partnership email SENT via SMTP fallback")
+                except Exception:
+                    logger.exception("Partnership email delivery FAILED via SMTP")
+
+        thread = threading.Thread(target=_deliver, daemon=True)
         thread.start()
 
         return Response(

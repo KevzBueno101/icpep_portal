@@ -6,4 +6,4 @@ from .models import Partnership
 class PartnershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partnership
-        fields = ['name', 'email', 'message']
+        fields = ['name', 'email', 'message', 'attachment']
