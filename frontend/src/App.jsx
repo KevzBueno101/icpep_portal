@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import NetworkStatus from './components/NetworkStatus'
 import { AuthProvider } from './context/AuthContext'
+import { RefreshProvider } from './context/RefreshContext'
 import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import AdminProtectedRoute from './routes/AdminProtectedRoute'
@@ -55,6 +56,7 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
       <AuthProvider>
+      <RefreshProvider>
         <Toaster
           position="top-right"
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
@@ -243,6 +245,7 @@ function App() {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+      </RefreshProvider>
       </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle'
+import RefreshButton from './RefreshButton'
 import {
   subscribeInstallPrompt,
   getInstallPrompt,
@@ -121,9 +122,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* ── Right end: techy accent + mobile hamburger ── */}
+          {/* ── Right end: techy accent + refresh + mobile hamburger ── */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <RefreshButton />
             <div className="hidden md:flex items-center gap-1.5">
               <div className="w-1 h-1 rounded-full bg-cyan-400/60 animate-pulse shadow-[0_0_4px_rgba(34,211,238,0.6)]" />
               <div className="w-px h-5 bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
@@ -221,6 +223,16 @@ export default function Navbar() {
             >
               Register
             </Link>
+            <button
+              type="button"
+              onClick={() => { closeMobileMenu(); window.location.reload() }}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-base font-medium text-cyan-600 hover:bg-sky-100/40 dark:text-sky-400 dark:hover:bg-slate-800"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
           </div>
         </div>
       )}
