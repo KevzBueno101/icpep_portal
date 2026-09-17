@@ -54,10 +54,9 @@ function MilestoneCard({ milestone, visible, side }) {
   const cat = CATEGORIES[milestone.category] || CATEGORIES.achievement
 
   return (
-    <Link
-      to={`/milestone/${milestone.id}`}
+    <div
       className={`
-        w-full transition-all duration-700 ease-out block
+        w-full transition-all duration-700 ease-out
         ${visible
           ? 'opacity-100 translate-y-0'
           : side === 'left'
@@ -66,7 +65,7 @@ function MilestoneCard({ milestone, visible, side }) {
       `}
     >
       <div
-        className="relative rounded-2xl p-6 sm:p-7 hover:scale-[1.015] transition-transform duration-300"
+        className="relative h-full rounded-2xl p-6 sm:p-7 hover:scale-[1.015] transition-transform duration-300"
         style={{
           background: 'rgba(255,255,255,0.04)',
           border: `1px solid ${cat.border}`,
@@ -80,6 +79,7 @@ function MilestoneCard({ milestone, visible, side }) {
           style={{ background: `linear-gradient(90deg, transparent, ${cat.accent}, transparent)` }}
         />
 
+      <Link to={`/milestone/${milestone.id}`} className="block">
         {/* Category badge + date row */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <span
@@ -134,8 +134,25 @@ function MilestoneCard({ milestone, visible, side }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </div>
+      </Link>
+
+        {/* Source link */}
+        {milestone.source && (
+          <a
+            href={milestone.source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-3 text-sm font-semibold transition-opacity duration-200 hover:opacity-80"
+            style={{ color: cat.accent }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+            </svg>
+            Source
+          </a>
+        )}
       </div>
-    </Link>
+    </div>
   )
 }
 

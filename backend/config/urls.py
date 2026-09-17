@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/audit-logs/', include('audit_logs.urls')),
     path('api/push/', include('push.urls')),
     path('api/feedback/', include('feedback.urls')),
+    path('api/partnership/', include('partnership.urls')),
     # duplicate include removed
 ]
 

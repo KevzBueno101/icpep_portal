@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'common',
     'push',
     'feedback',
+    'partnership',
 ]
 
 # Channels
@@ -233,6 +234,9 @@ else:
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r"^http://localhost:\d+$",
         r"^http://127\.0\.0\.1:\d+$",
+        r"^https://.*\.vercel\.app$",
+        r"^https://.*\.onrender\.com$",
+        r"^https://icpep-frontend-vercel\.app$",
     ]
 
 CORS_ALLOW_CREDENTIALS = False
@@ -287,8 +291,8 @@ SECURE_BROWSER_XSS_FILTER     = True
 SECURE_CONTENT_TYPE_NOSNIFF    = True
 X_FRAME_OPTIONS                = 'DENY'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE    = None
+FILE_UPLOAD_MAX_MEMORY_SIZE    = None
 
 # HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
 if not DEBUG:

@@ -1,25 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { useRefresh } from '../context/RefreshContext'
 
 const UPDATE_CHECK_INTERVAL = 60_000
 
 export default function UpdateNotice() {
-  const [needRefresh, setNeedRefresh] = useState(false)
+  const { needRefresh, clearRefresh, triggerRefresh } = useRefresh()
   const registrationRef = useRef(null)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     let cancelled = false
 
-    const markUpdateAvailable = (worker) => {
-      if (worker && worker.state === 'installed' && navigator.serviceWorker.controller) {
-        if (!cancelled) setNeedRefresh(true)
-      }
+    const markUpdateAvailable = () => {
+      if (!cancelled) triggerRefresh()
     }
 
     const watchRegistration = (registration) => {
       const watchInstalling = (worker) => {
-        worker.addEventListener('statechange', () => markUpdateAvailable(worker))
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+            markUpdateAvailable()
+          }
+        })
       }
 
       if (registration.installing) {
@@ -72,9 +75,8 @@ export default function UpdateNotice() {
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('focus', onVisible)
     }
-  }, [])
+  }, [triggerRefresh, clearRefresh])
 
-  // Once the fresh service worker takes control, reload to load the new build.
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     const onControllerChange = () => window.location.reload()
@@ -116,7 +118,7 @@ export default function UpdateNotice() {
             </button>
             <button
               type="button"
-              onClick={() => setNeedRefresh(false)}
+              onClick={() => clearRefresh()}
               className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-white/10 transition"
             >
               Later
