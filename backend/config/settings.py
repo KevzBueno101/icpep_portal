@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'common',
     'push',
     'feedback',
+    'partnership',
 ]
 
 # Channels
