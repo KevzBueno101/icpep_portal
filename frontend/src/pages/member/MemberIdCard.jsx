@@ -1,7 +1,7 @@
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import MembershipCard from '../../components/member/MembershipCard'
-import { CreditCard, ShieldCheck, Award, CheckCircle2 } from 'lucide-react'
+import { CreditCard, ShieldCheck, Award, CheckCircle2, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 const MEMBER_BENEFITS = [
   {
@@ -22,6 +22,13 @@ const MEMBER_BENEFITS = [
   },
 ]
 
+const MEMBERSHIP_PLUS_INCLUSIONS = [
+  { icon: IdCard, label: 'Laminated ID card' },
+  { icon: Stamp, label: 'With Documentary stamped' },
+  { icon: BadgeCheck, label: 'Badge pin' },
+  { icon: Sticker, label: 'Stickers' },
+]
+
 export default function MemberIdCard() {
   const { user } = useAuth()
   const { profile, profileCacheKey } = useMember()
@@ -33,6 +40,12 @@ export default function MemberIdCard() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-3">
           <CreditCard className="h-8 w-8 text-sky-600" />
           Digital ID Card
+          {profile?.membership_fee === 'ANNUAL' && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-700">
+              <Plus className="h-3 w-3" />
+              Membership Plus
+            </span>
+          )}
         </h1>
         <p className="mt-2 text-slate-600 text-sm">
           Your official ICPEP.SE digital student membership pass. Tap to flip to show the verification QR code.
@@ -62,6 +75,26 @@ export default function MemberIdCard() {
           </div>
         </div>
       </div>
+
+      {/* Membership Plus Inclusions */}
+      {profile?.membership_fee === 'ANNUAL' && (
+        <div className="rounded-3xl border border-green-200 bg-green-50 p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-green-700" />
+            <h2 className="text-lg font-bold text-green-900">Membership Plus Inclusions</h2>
+          </div>
+          <ul className="space-y-3">
+            {MEMBERSHIP_PLUS_INCLUSIONS.map((item) => (
+              <li key={item.label} className="flex items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                  <item.icon className="h-4 w-4" />
+                </span>
+                <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Member Benefits */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
