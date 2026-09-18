@@ -215,7 +215,7 @@ function ExportCardFront() {
           Membership ID Card
         </div>
         <div style={{ color: '#6B7280', fontSize: 7, fontStyle: 'italic', marginTop: 4, fontFamily: 'Arial, sans-serif' }}>
-          Valid for 1 Academic Year
+          Valid for 1 Semester
         </div>
       </div>
     </div>

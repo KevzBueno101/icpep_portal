@@ -227,29 +227,27 @@ export default function MemberDashboard() {
               Access your digital membership pass. Swipe, flip to scan, or download for off-line use.
             </p>
 
-            {profile?.membership_fee === 'ANNUAL' && (
-              <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4">
-                <p className="mb-2.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-green-800">
-                  <Award className="h-3.5 w-3.5" />
-                  Membership Plus Inclusions
-                </p>
-                <ul className="space-y-2">
-                  {[
-                    { icon: IdCard, label: 'Laminated ID card' },
-                    { icon: Stamp, label: 'With Documentary stamped' },
-                    { icon: BadgeCheck, label: 'Badge pin' },
-                    { icon: Sticker, label: 'Stickers' },
-                  ].map((item) => (
-                    <li key={item.label} className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
-                        <item.icon className="h-3.5 w-3.5" />
-                      </span>
-                      {item.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4">
+              <p className="mb-2.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-green-800">
+                <Award className="h-3.5 w-3.5" />
+                Membership Plus Inclusions
+              </p>
+              <ul className="space-y-2">
+                {[
+                  { icon: IdCard, label: 'Laminated ID card' },
+                  { icon: Stamp, label: 'With Documentary stamped' },
+                  { icon: BadgeCheck, label: 'Badge pin' },
+                  { icon: Sticker, label: 'Stickers' },
+                ].map((item) => (
+                  <li key={item.label} className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    {item.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <Link
             to="/member/id"

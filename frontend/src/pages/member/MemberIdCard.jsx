@@ -77,8 +77,7 @@ export default function MemberIdCard() {
       </div>
 
       {/* Membership Plus Inclusions */}
-      {profile?.membership_fee === 'ANNUAL' && (
-        <div className="rounded-3xl border border-green-200 bg-green-50 p-6 shadow-sm">
+      <div className="rounded-3xl border border-green-200 bg-green-50 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <Award className="h-5 w-5 text-green-700" />
             <h2 className="text-lg font-bold text-green-900">Membership Plus Inclusions</h2>
@@ -94,7 +93,6 @@ export default function MemberIdCard() {
             ))}
           </ul>
         </div>
-      )}
 
       {/* Member Benefits */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
