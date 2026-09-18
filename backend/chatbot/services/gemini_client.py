@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiClient:
-    DEFAULT_MODEL = 'gemini-2.5-flash'
-    FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+    DEFAULT_MODEL = 'gemini-3.6-flash'
+    FALLBACK_MODELS = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 
     def __init__(self):
         api_key = os.getenv('GEMINI_API_KEY')
@@ -30,9 +30,12 @@ class GeminiClient:
         """
         last_error = None
         
+        # Deduplicate while preserving order
+        tried = set()
         for model_name in [self.model_name] + self.FALLBACK_MODELS:
-            if model_name in [m for m in [self.model_name] + self.FALLBACK_MODELS if m != self.model_name]:
+            if model_name in tried:
                 continue
+            tried.add(model_name)
             try:
                 response = self.client.models.generate_content(
                     model=model_name,
