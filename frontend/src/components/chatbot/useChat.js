@@ -1,12 +1,40 @@
 import { useReducer, useCallback, useRef, useEffect } from 'react'
 import { chatbotAPI } from '../../api/chatbot'
 
+const STORAGE_MESSAGES_KEY = 'chatbot_messages_v1'
+const STORAGE_SESSION_KEY = 'chatbot_session_id'
+
 const initialState = {
   messages: [],
   isLoading: false,
   error: null,
   sessionId: null,
   retryCount: 0,
+}
+
+function loadInitialState() {
+  let messages = []
+  let sessionId = null
+  try {
+    sessionId = localStorage.getItem(STORAGE_SESSION_KEY)
+    const raw = localStorage.getItem(STORAGE_MESSAGES_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        messages = parsed
+          .filter(
+            (m) =>
+              m &&
+              typeof m.content === 'string' &&
+              (m.role === 'user' || m.role === 'assistant')
+          )
+          .slice(-50)
+      }
+    }
+  } catch {
+    messages = []
+  }
+  return { ...initialState, messages, sessionId }
 }
 
 function chatReducer(state, action) {
@@ -45,19 +73,28 @@ function chatReducer(state, action) {
 }
 
 export function useChat() {
-  const [state, dispatch] = useReducer(chatReducer, initialState)
+  const [state, dispatch] = useReducer(chatReducer, undefined, loadInitialState)
   const abortControllerRef = useRef(null)
   const retryTimeoutRef = useRef(null)
 
   // Initialize or restore session ID from localStorage
   useEffect(() => {
-    let sessionId = localStorage.getItem('chatbot_session_id')
+    let sessionId = localStorage.getItem(STORAGE_SESSION_KEY)
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-      localStorage.setItem('chatbot_session_id', sessionId)
+      localStorage.setItem(STORAGE_SESSION_KEY, sessionId)
     }
     dispatch({ type: 'SET_SESSION_ID', payload: sessionId })
   }, [])
+
+  // Persist messages so chat history survives re-mounts and page reloads
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(state.messages.slice(-50)))
+    } catch {
+      // Storage may be full/unavailable — ignore
+    }
+  }, [state.messages])
 
   const sendMessage = useCallback(async (message) => {
     if (!message.trim() || state.isLoading) return
@@ -80,7 +117,7 @@ export function useChat() {
         dispatch({ type: 'ADD_BOT_MESSAGE', payload: response.data.response })
         if (response.data.session_id) {
           dispatch({ type: 'SET_SESSION_ID', payload: response.data.session_id })
-          localStorage.setItem('chatbot_session_id', response.data.session_id)
+          localStorage.setItem(STORAGE_SESSION_KEY, response.data.session_id)
         }
       } else if (response.data.error) {
         const retryAfter = response.data.retry_after
@@ -142,10 +179,11 @@ export function useChat() {
 
   const clearChat = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' })
-    localStorage.removeItem('chatbot_session_id')
+    localStorage.removeItem(STORAGE_MESSAGES_KEY)
+    localStorage.removeItem(STORAGE_SESSION_KEY)
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
     dispatch({ type: 'SET_SESSION_ID', payload: newSessionId })
-    localStorage.setItem('chatbot_session_id', newSessionId)
+    localStorage.setItem(STORAGE_SESSION_KEY, newSessionId)
   }, [])
 
   // Cleanup on unmount
