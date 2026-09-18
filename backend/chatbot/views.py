@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from .serializers import ChatRequestSerializer, ChatResponseSerializer, ChatErrorSerializer
 from .services.groq_client import GroqClient
-from .services.context_builder import build_context, get_session_history, update_session_history
+from .services.context_builder import SYSTEM_PROMPT, build_context, get_session_history, update_session_history
 from .throttles import ChatUserMinuteThrottle, ChatUserDailyThrottle
 
 logger = logging.getLogger(__name__)
@@ -59,8 +59,12 @@ class ChatAPIView(APIView):
             )
 
         try:
-            # Build context with system prompt + user info
-            context = build_context(user, message, session_id)
+            # Build context with system prompt + live portal data + user info
+            try:
+                context = build_context(user, message, session_id)
+            except Exception as e:
+                logger.warning(f'Chatbot context build failed, using base prompt only: {e}')
+                context = SYSTEM_PROMPT
 
             # Optionally include recent history for multi-turn (stateless in-memory)
             history = get_session_history(session_id)

@@ -1,4 +1,14 @@
+import logging
 from typing import Optional
+
+from django.contrib.auth import get_user_model
+
+from announcements.models import Announcement
+from about.models import AboutSection
+from milestones.models import Milestone
+from members.models import MemberProfile, PaymentSettings
+
+logger = logging.getLogger(__name__)
 
 
 SYSTEM_PROMPT = """You are the ICPEP Membership Portal Assistant, an AI chatbot for the ICPEP-CatSU (Institute of Computer Engineers of the Philippines - Student Edition, Catanduanes State University Chapter) portal.
@@ -92,18 +102,159 @@ Current date context: The assistant doesn't have real-time date access. For time
 _session_contexts = {}
 
 
+def _truncate(text: str, limit: int) -> str:
+    """Trim text to `limit` chars with an ellipsis."""
+    text = (text or '').strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + '…'
+
+
+def _is_approved_member(user) -> bool:
+    """True if the user has an APPROVED member profile."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    return MemberProfile.objects.filter(user=user, membership_status='APPROVED').exists()
+
+
+def _officers_section() -> str:
+    """Current officers, mirroring the public roster logic in users/views.py."""
+    User = get_user_model()
+    leadership_order = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Auditor']
+    qs = User.objects.filter(
+        role__in=['OFFICER', 'ADMIN'],
+        registration_status='APPROVED',
+        is_active=True,
+    ).exclude(position__isnull=True).exclude(position='').exclude(position__iexact='NONE')
+
+    rows = []
+    for u in qs:
+        pos = (u.position or '').strip()
+        pos_lower = pos.lower()
+        if 'vice president' in pos_lower or 'vice pres' in pos_lower:
+            canon = 'Vice President'
+        elif 'president' in pos_lower:
+            canon = 'President'
+        elif 'secretary' in pos_lower:
+            canon = 'Secretary'
+        elif 'treasurer' in pos_lower:
+            canon = 'Treasurer'
+        elif 'auditor' in pos_lower:
+            canon = 'Auditor'
+        else:
+            canon = pos
+        full_name = f"{getattr(u, 'first_name', '') or ''} {getattr(u, 'last_name', '') or ''}".strip()
+        if full_name and canon:
+            rows.append((leadership_order.index(canon) if canon in leadership_order else 999, canon, full_name))
+
+    rows.sort(key=lambda r: (r[0], len(r[1])))
+    if not rows:
+        return ''
+    lines = [f"- {canon}: {name}" for _, canon, name in rows[:8]]
+    return "**Current Officers (from portal):**\n" + "\n".join(lines)
+
+
+def _announcements_section(user) -> str:
+    """Latest published announcements. members_only are gated to approved members."""
+    qs = Announcement.objects.filter(is_published=True).order_by('display_order', '-created_at')[:8]
+    rows = []
+    for ann in qs:
+        if ann.members_only and not _is_approved_member(user):
+            continue
+        date = ann.created_at.strftime('%b %d, %Y') if ann.created_at else ''
+        snippet = _truncate(ann.body, 160)
+        rows.append(f"- [{ann.category}] {ann.title} ({date}): {snippet}")
+        if len(rows) >= 5:
+            break
+    if not rows:
+        return ''
+    return "**Latest Announcements (from portal):**\n" + "\n".join(rows)
+
+
+def _about_section() -> str:
+    """Published Mission/Vision/Goals/History sections."""
+    qs = AboutSection.objects.filter(is_published=True).order_by('display_order', 'created_at')[:8]
+    rows = []
+    for sec in qs:
+        if sec.section_type not in ('MISSION', 'VISION', 'GOALS', 'HISTORY'):
+            continue
+        body = _truncate(sec.body or sec.document_name or 'No details provided.', 220)
+        label = dict(AboutSection.SectionType.choices).get(sec.section_type, sec.title)
+        rows.append(f"- **{label}**: {body}")
+        if len(rows) >= 4:
+            break
+    if not rows:
+        return ''
+    return "**About the Organization (from portal):**\n" + "\n".join(rows)
+
+
+def _milestones_section() -> str:
+    """Top recent milestones (achievements, recognitions, events)."""
+    qs = Milestone.objects.order_by('display_order', '-date')[:6]
+    rows = []
+    for m in qs:
+        date = m.date.strftime('%b %Y') if m.date else ''
+        desc = _truncate(m.description, 140)
+        rows.append(f"- {m.title} ({date}): {desc}")
+    if not rows:
+        return ''
+    return "**Recent Milestones / Achievements (from portal):**\n" + "\n".join(rows)
+
+
+def _payment_section() -> str:
+    """Current GCash payment details."""
+    settings_obj = PaymentSettings.objects.filter(id=1).first()
+    if not settings_obj:
+        return ''
+    return (
+        "**Current Payment Details (from portal):**\n"
+        f"- GCash Name: {settings_obj.gcash_name or '—'}\n"
+        f"- GCash Number: {settings_obj.gcash_number or '—'}"
+    )
+
+
+def _live_data_section(user) -> str:
+    """Assemble the LIVE PORTAL DATA block. Each section is isolated so a
+    failure in one never breaks the others."""
+    parts = []
+    builders = [_officers_section, _about_section, _milestones_section, _payment_section]
+    for build in builders:
+        try:
+            section = build()
+            if section:
+                parts.append(section)
+        except Exception:
+            logger.exception(f'Chatbot live data section "{build.__name__}" failed; skipped.')
+    try:
+        ann = _announcements_section(user)
+        if ann:
+            parts.append(ann)
+    except Exception:
+        logger.exception('Chatbot live data announcements failed; skipped.')
+
+    if not parts:
+        return ''
+    block = "\n\n# 📡 LIVE PORTAL DATA (fetched from the portal database just now — treat this as the source of truth)\n"
+    block += "\n\n".join(parts)
+    block += (
+        "\n\nUse the LIVE PORTAL DATA above as the primary source of truth when answering. "
+        "If the answer is not in the live data, you may use the general organization info below. "
+        "If it is still not covered, say you'll check with the officers and point to icpep.se.catsuchapter@gmail.com."
+    )
+    return block
+
+
 def build_context(user, message: str, session_id: Optional[str] = None) -> str:
     """
     Build the full context for the chatbot including system prompt.
-    In stateless mode, we just return the system prompt.
-    For multi-turn, we could append recent history here.
+    Injects live portal data (officers, announcements, about, milestones,
+    payment details) retrieved from the database at request time.
     """
-    # Could add user-specific context here (role, membership status, etc.)
     user_context = ""
     if user and user.is_authenticated:
         user_context = f"\n\nCurrent user: {user.email} (Role: {getattr(user, 'role', 'N/A')}, Access: {getattr(user, 'access_level', 'N/A')})"
 
-    return SYSTEM_PROMPT + user_context
+    return SYSTEM_PROMPT + _live_data_section(user) + user_context
 
 
 def get_session_history(session_id: str) -> list:
