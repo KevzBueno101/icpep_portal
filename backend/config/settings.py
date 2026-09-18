@@ -287,8 +287,8 @@ REST_FRAMEWORK = {
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
     'DEFAULT_THROTTLE_RATES': {
-        'gemini_user_minute': '30/minute',
-        'gemini_user_daily': '100/day',
+        'chat_user_minute': '30/minute',
+        'chat_user_daily': '100/day',
     },
 }
 

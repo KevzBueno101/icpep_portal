@@ -248,7 +248,7 @@ export default function ChatWidget() {
                 onClearError={clearError}
               />
               <p className="mt-2 text-center text-[10px] text-slate-400">
-                Powered by Google Gemini
+                Powered by Groq AI (Llama)
               </p>
             </div>
           </div>
