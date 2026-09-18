@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from google.api_core.exceptions import NotFound
 
 from .serializers import ChatRequestSerializer, ChatResponseSerializer, ChatErrorSerializer
 from .services.gemini_client import GeminiClient
@@ -93,25 +92,23 @@ class ChatAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        except NotFound as e:
-            # Model name is invalid/retired — a config bug, not a transient outage
-            logger.error(f'Gemini model not found: {e}')
-            return Response(
-                ChatErrorSerializer({'error': 'Chatbot configuration error. Contact admin.'}).data,
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
         except Exception as e:
             logger.exception(f'Chatbot error for user={user.email}: {e}')
             error_msg = str(e)
 
-            if 'ResourceExhausted' in type(e).__name__ or 'rate limit' in error_msg.lower():
+            if 'ResourceExhausted' in type(e).__name__ or 'rate limit' in error_msg.lower() or '429' in error_msg:
                 error_response = ChatErrorSerializer({
                     'error': 'Rate limit exceeded. Please try again later.',
                     'detail': 'Gemini API quota exceeded.',
                     'retry_after': 60
                 }).data
                 return Response(error_response, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+            if 'not found' in error_msg.lower() or 'not supported' in error_msg.lower() or '404' in error_msg:
+                return Response(
+                    ChatErrorSerializer({'error': 'Chatbot configuration error. Contact admin.'}).data,
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
             return Response(
                 ChatErrorSerializer({
