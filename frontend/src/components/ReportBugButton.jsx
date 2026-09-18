@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bug, ImagePlus, X } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { publicApi } from '../api/axios'
 
@@ -7,6 +8,8 @@ const SEVERITIES = ['Low', 'Medium', 'High', 'Critical']
 const MAX_SCREENSHOT_MB = 5
 
 export default function ReportBugButton() {
+  const location = useLocation()
+  const isAdmin = location.pathname.startsWith('/admin')
   const [isOpen, setIsOpen] = useState(false)
   const [sending, setSending] = useState(false)
   const [form, setForm] = useState({
@@ -122,7 +125,7 @@ return (
       <button
         type="button"
         onClick={openModal}
-        className="group fixed bottom-[10.5rem] left-5 z-50 flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-24"
+        className={`group fixed bottom-[10.5rem] z-50 flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-24 ${isAdmin ? 'right-5' : 'left-5'}`}
         aria-label="Report a bug"
       >
         <Bug className="h-5 w-5" />
