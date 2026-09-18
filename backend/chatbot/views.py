@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from google.api_core.exceptions import NotFound
 
 from .serializers import ChatRequestSerializer, ChatResponseSerializer, ChatErrorSerializer
 from .services.gemini_client import GeminiClient
@@ -22,9 +23,14 @@ class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [GeminiUserMinuteThrottle, GeminiUserDailyThrottle]
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.gemini_client = GeminiClient()
+    _gemini_client = None
+
+    @property
+    def gemini_client(self):
+        # Lazily instantiate once per process instead of once per request
+        if ChatAPIView._gemini_client is None:
+            ChatAPIView._gemini_client = GeminiClient()
+        return ChatAPIView._gemini_client
 
     def post(self, request):
         serializer = ChatRequestSerializer(data=request.data)
@@ -79,10 +85,25 @@ class ChatAPIView(APIView):
                 'session_id': session_id
             }).data)
 
+        except ValueError as e:
+            # Raised by GeminiClient.__init__ when GEMINI_API_KEY is missing
+            logger.exception(f'Gemini client config error: {e}')
+            return Response(
+                ChatErrorSerializer({'error': 'Chatbot configuration error. Contact admin.'}).data,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        except NotFound as e:
+            # Model name is invalid/retired — a config bug, not a transient outage
+            logger.error(f'Gemini model not found: {e}')
+            return Response(
+                ChatErrorSerializer({'error': 'Chatbot configuration error. Contact admin.'}).data,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         except Exception as e:
             logger.exception(f'Chatbot error for user={user.email}: {e}')
             error_msg = str(e)
-            retry_after = None
 
             if 'ResourceExhausted' in type(e).__name__ or 'rate limit' in error_msg.lower():
                 error_response = ChatErrorSerializer({
@@ -91,12 +112,6 @@ class ChatAPIView(APIView):
                     'retry_after': 60
                 }).data
                 return Response(error_response, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-            if 'API key' in error_msg or 'authentication' in error_msg.lower():
-                return Response(
-                    ChatErrorSerializer({'error': 'Chatbot configuration error. Contact admin.'}).data,
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
 
             return Response(
                 ChatErrorSerializer({
