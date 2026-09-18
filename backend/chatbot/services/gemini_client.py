@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiClient:
-    DEFAULT_MODEL = 'gemini-3.6-flash'
-    FALLBACK_MODELS = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+    DEFAULT_MODEL = 'gemini-1.5-flash'
+    FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-3.6-flash']
 
     def __init__(self):
         api_key = os.getenv('GEMINI_API_KEY')
@@ -50,7 +50,11 @@ class GeminiClient:
             except Exception as e:
                 last_error = e
                 logger.warning(f'Gemini model "{model_name}" failed: {e}')
-                if '404' in str(e) or 'not found' in str(e).lower() or 'not supported' in str(e).lower():
+                error_str = str(e).lower()
+                # Continue to next model on: model not found, overloaded, or unavailable
+                if ('404' in error_str or 'not found' in error_str or 'not supported' in error_str 
+                    or '503' in error_str or 'unavailable' in error_str or 'overloaded' in error_str 
+                    or 'high demand' in error_str):
                     continue
                 break
         

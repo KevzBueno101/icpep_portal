@@ -248,7 +248,7 @@ export default function ChatWidget() {
                 onClearError={clearError}
               />
               <p className="mt-2 text-center text-[10px] text-slate-400">
-                Powered by Google Gemini • Session: {sessionId}
+                Powered by Google Gemini
               </p>
             </div>
           </div>
