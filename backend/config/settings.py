@@ -296,8 +296,8 @@ SECURE_BROWSER_XSS_FILTER     = True
 SECURE_CONTENT_TYPE_NOSNIFF    = True
 X_FRAME_OPTIONS                = 'DENY'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE    = None
-FILE_UPLOAD_MAX_MEMORY_SIZE    = None
+DATA_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024  # 10 MB kept in memory
+FILE_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024  # 10 MB kept in memory
 
 # HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
 if not DEBUG:
