@@ -20,6 +20,10 @@ const MEMBER_BENEFITS = [
     title: 'Discounts & Merch',
     description: 'Exclusive offers on organization merchandise and event registration.',
   },
+  {
+    title: 'Regional Chapter',
+    description: 'Eligibility in Regional Chapter Membership, events, and competitions.',
+  },
 ]
 
 const MEMBERSHIP_PLUS_INCLUSIONS = [
