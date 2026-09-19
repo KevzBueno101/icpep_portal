@@ -1,7 +1,7 @@
 import { clientsClaim } from 'workbox-core'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
-import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
 
@@ -18,11 +18,51 @@ self.addEventListener('message', (event) => {
 // Precache all build assets (manifest is injected at build time)
 precacheAndRoute(self.__WB_MANIFEST)
 
-// SPA navigation fallback (exclude API calls)
-const navigationRoute = new NavigationRoute(createHandlerBoundToURL('/index.html'), {
-  denylist: [/\/api\//],
-})
+// SPA navigation fallback (exclude API calls). If the cached app shell
+// (index.html) is unavailable — e.g. cache eviction or a stale install —
+// fall back to fetching it from the network instead of showing a blank page.
+const navigationRoute = new NavigationRoute(
+  async ({ event }) => {
+    const cached = await caches.match('/index.html')
+    if (cached) return cached
+    return fetch(event.request)
+  },
+  {
+    denylist: [/\/api\//],
+  }
+)
 registerRoute(navigationRoute)
+
+// Hashed build assets (JS/CSS). Guard against the SPA HTML fallback (Vercel
+// serves index.html for any 404) masquerading as JavaScript/CSS, which throws
+// a MIME-type error and blanks out the whole app.
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/assets/'),
+  async ({ request }) => {
+    try {
+      const response = await fetch(request)
+      if (response.ok) {
+        const type = response.headers.get('content-type') || ''
+        if (!type.includes('text/html')) {
+          const cache = await caches.open('asset-cache')
+          cache.put(request, response.clone())
+        }
+        return response
+      }
+    } catch {
+      // Offline — fall through to the cache below.
+    }
+    const cachedResponse = await caches.match(request)
+    if (cachedResponse) {
+      const type = cachedResponse.headers.get('content-type') || ''
+      if (!type.includes('text/html')) return cachedResponse
+    }
+    return new Response('Not found', {
+      status: 404,
+      headers: { 'Content-Type': 'text/plain' },
+    })
+  }
+)
 
 // API requests — prefer cache, refresh in the background.
 // Exclude /api/push/ so the VAPID key and subscription endpoints are never

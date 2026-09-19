@@ -75,7 +75,7 @@ A: Open the Digital ID page, then tap the "Download ID Card (PNG)" button. Print
 **Q: What if I have a payment/portal problem?**
 A: Use the Feedback button (left side of the portal) or email icpep.se.catsuchapter@gmail.com. For technical portal issues, use "Report Bug".
 
-**Q: Where can I see announcements/events?**
+**Q: Where can I see announcements?**
 A: The Announcements section of the portal, visible to members.
 
 ## Escalation Rules

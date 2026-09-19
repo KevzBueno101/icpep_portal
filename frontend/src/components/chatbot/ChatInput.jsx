@@ -71,7 +71,7 @@ export default function ChatInput({ onSend, isLoading, error, onRetry, onClearEr
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about membership, events, fees..."
+          placeholder="Ask about membership, fees, or announcements..."
           disabled={isLoading || disabled}
           rows={rows}
           maxLength={2000}

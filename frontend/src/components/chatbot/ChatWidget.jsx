@@ -7,7 +7,7 @@ import ChatInput from './ChatInput'
 const WELCOME_MESSAGES = [
   "Hi! I'm the ICPEP Portal Assistant. How can I help you today?",
   "Welcome! Ask me about membership, events, fees, or anything ICPEP-related.",
-  "Hello! Need info on membership status, upcoming events, or organization FAQs? I'm here to help.",
+  "Hello! Need info on membership, the organization, or the portal? I'm here to help.",
 ]
 
 function getRandomWelcome() {
@@ -97,8 +97,8 @@ export default function ChatWidget() {
 
   const quickQuestions = [
     { label: 'Membership fees', question: 'How much is the membership fee and how do I pay?' },
-    { label: 'Upcoming events', question: 'What are the upcoming ICPEP events?' },
-    { label: 'Event certificates', question: 'How do I get certificates for events I attended?' },
+    { label: 'Current officers', question: 'Who are the current officers?' },
+    { label: 'Latest announcements', question: 'What are the latest announcements?' },
     { label: 'Member benefits', question: 'What benefits do I get as a member?' },
   ]
 
