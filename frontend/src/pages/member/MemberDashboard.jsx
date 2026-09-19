@@ -5,7 +5,7 @@ import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import { downloadFile } from '../../utils/download'
 import ImageModal from '../../components/ImageModal'
-import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, RefreshCw, Award, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
+import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 
 
@@ -81,14 +81,6 @@ export default function MemberDashboard() {
               <UserCheck className="h-4 w-4" />
               APPROVED MEMBER
             </span>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition"
-              aria-label="Reload dashboard"
-            >
-              <RefreshCw className="h-4.5 w-4.5" />
-            </button>
           </div>
         </div>
 
