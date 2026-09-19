@@ -19,10 +19,17 @@ export default function UpdateNotice() {
     const watchRegistration = (registration) => {
       const watchInstalling = (worker) => {
         worker.addEventListener('statechange', () => {
-          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          if (worker.state === 'installed' && (navigator.serviceWorker.controller || registration.active)) {
             markUpdateAvailable()
           }
         })
+      }
+
+      // A new version may already be downloaded and waiting (e.g. the app was
+      // opened after a deploy landed) — detect it immediately instead of
+      // waiting for the next updatefound event.
+      if (registration.waiting) {
+        markUpdateAvailable()
       }
 
       if (registration.installing) {
@@ -37,7 +44,14 @@ export default function UpdateNotice() {
       navigator.serviceWorker
         .getRegistration()
         .then((registration) => {
-          if (registration) registration.update()
+          if (!registration) return
+          if (registration.waiting) {
+            // A newer version is still sitting in "waiting" — keep the
+            // indicator visible until the user actually refreshes.
+            markUpdateAvailable()
+            return
+          }
+          registration.update().catch(() => {})
         })
         .catch(() => {})
     }
