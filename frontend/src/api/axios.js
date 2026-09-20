@@ -77,8 +77,7 @@ api.interceptors.response.use(
     if (
       status === 401 &&
       original &&
-      !original._retry &&
-      !original.url?.includes('/auth/me/')
+      !original._retry
     ) {
       original._retry = true
       const refresh = getRefreshToken()
