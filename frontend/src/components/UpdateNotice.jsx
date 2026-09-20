@@ -100,12 +100,12 @@ export default function UpdateNotice() {
   }, [])
 
   const handleRefresh = () => {
+    clearRefresh()
     const registration = registrationRef.current
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-    } else {
-      window.location.reload()
     }
+    window.location.reload()
   }
 
   if (!needRefresh) return null
