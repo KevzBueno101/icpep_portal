@@ -213,6 +213,9 @@ const Register = () => {
     }
 
     if (typeof data === 'string') {
+      if (data.trimStart().startsWith('<')) {
+        return ['Something went wrong on our server. Please try again in a few minutes.']
+      }
       return [data]
     }
 
@@ -614,7 +617,15 @@ const Register = () => {
             await new Promise((r) => setTimeout(r, RETRY_DELAY))
             continue
           }
-          formatRegistrationErrors(err.response?.data).forEach((message) => toast.error(message))
+          const bodyIsHtml =
+            typeof err.response?.data === 'string' && err.response.data.trimStart().startsWith('<')
+          if (!err.response || err.response?.status >= 500 || bodyIsHtml) {
+            toast.error('Something went wrong on our server. Please try again in a few minutes.', {
+              duration: 5000,
+            })
+          } else {
+            formatRegistrationErrors(err.response?.data).forEach((message) => toast.error(message))
+          }
           return
         }
       }

@@ -5,7 +5,7 @@ import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import { downloadFile } from '../../utils/download'
 import ImageModal from '../../components/ImageModal'
-import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2 } from 'lucide-react'
+import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 
 
@@ -206,10 +206,40 @@ export default function MemberDashboard() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 mb-4">
               <CreditCard className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Digital ID Card</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-900">Digital ID Card</h2>
+              {profile?.membership_fee === 'ANNUAL' && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-700">
+                  <Plus className="h-3 w-3" />
+                  Membership Plus
+                </span>
+              )}
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               Access your digital membership pass. Swipe, flip to scan, or download for off-line use.
             </p>
+
+            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4">
+              <p className="mb-2.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-green-800">
+                <Award className="h-3.5 w-3.5" />
+                Membership Plus Inclusions
+              </p>
+              <ul className="space-y-2">
+                {[
+                  { icon: IdCard, label: 'Laminated ID card' },
+                  { icon: Stamp, label: 'With Documentary stamped' },
+                  { icon: BadgeCheck, label: 'Badge pin' },
+                  { icon: Sticker, label: 'Stickers' },
+                ].map((item) => (
+                  <li key={item.label} className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    {item.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <Link
             to="/member/id"

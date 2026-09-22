@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Home, Bell, CreditCard, Info, User, LogOut, HelpCircle } from 'lucide-react'
 import ThemeToggle from '../ThemeToggle'
+import RefreshButton from '../RefreshButton'
 
 const NAV_ITEMS = [
   { label: 'Home', to: '/member/dashboard', Icon: Home },
@@ -57,6 +58,7 @@ export default function DesktopMemberNavbar({ user, onLogout, onHelpClick }) {
           {/* User Info & Actions */}
           <div className="flex items-center gap-4">
             <ThemeToggle />
+            <RefreshButton className="h-10 w-10" />
             <div className="flex items-center gap-2">
               <button
                 type="button"

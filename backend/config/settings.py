@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'push',
     'feedback',
     'partnership',
+    'chatbot',
 ]
 
 # Channels
@@ -285,14 +286,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
+    'DEFAULT_THROTTLE_RATES': {
+        'chat_user_minute': '30/minute',
+        'chat_user_daily': '100/day',
+    },
 }
 
 SECURE_BROWSER_XSS_FILTER     = True
 SECURE_CONTENT_TYPE_NOSNIFF    = True
 X_FRAME_OPTIONS                = 'DENY'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE    = None
-FILE_UPLOAD_MAX_MEMORY_SIZE    = None
+DATA_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024  # 10 MB kept in memory
+FILE_UPLOAD_MAX_MEMORY_SIZE    = 10 * 1024 * 1024  # 10 MB kept in memory
 
 # HTTPS / Secure cookie settings — auto-enabled when not in DEBUG
 if not DEBUG:

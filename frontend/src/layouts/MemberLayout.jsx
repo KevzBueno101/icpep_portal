@@ -7,6 +7,8 @@ import MobileMemberNavbar from '../components/member/MobileMemberNavbar'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, PhilippinePeso } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
+import RefreshButton from '../components/RefreshButton'
+import ChatWidget from '../components/chatbot/ChatWidget'
 
 export default function MemberLayout({ children }) {
   const { user, logout, refreshUser, loading: authLoading } = useAuth()
@@ -104,6 +106,7 @@ export default function MemberLayout({ children }) {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <RefreshButton className="h-9 w-9" />
             <button
               type="button"
               onClick={() => setShowHelpModal(true)}
@@ -244,6 +247,9 @@ export default function MemberLayout({ children }) {
           </div>
         </div>
       )}
+
+      {/* Chatbot Widget */}
+      <ChatWidget />
       </div>
   )
 }

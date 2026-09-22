@@ -117,12 +117,12 @@ export default function ReportBugButton() {
     }
   }
 
-  return (
+return (
     <>
       <button
         type="button"
         onClick={openModal}
-        className="group fixed bottom-[10.5rem] right-5 z-50 flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-24"
+        className="group fixed bottom-[10.5rem] left-5 z-50 flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-24"
         aria-label="Report a bug"
       >
         <Bug className="h-5 w-5" />

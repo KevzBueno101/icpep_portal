@@ -30,6 +30,43 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Shared in-flight refresh so concurrent 401s (e.g. dashboard parallel fetches)
+// reuse ONE refresh call instead of each posting the same refresh token — the
+// first rotation succeeds, the duplicate calls would get a blacklisted token
+// and force an unwanted logout.
+let refreshPromise = null
+
+function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refresh = getRefreshToken()
+      if (!refresh) throw new Error('No refresh token available')
+
+      const res = await axios.post(`${API_BASE}/auth/refresh/`, { refresh })
+
+      // SimpleJWT rotates the refresh token on every call, so persist the NEW
+      // pair. Which bucket (admin vs member) owns it is decided by the refresh
+      // token we actually used, so stale keys from the other session are never
+      // overwritten.
+      const isAdminBucket = refresh === localStorage.getItem(ADMIN_REFRESH_KEY)
+
+      if (isAdminBucket) {
+        localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
+        localStorage.setItem(ADMIN_REFRESH_KEY, res.data.refresh)
+      } else {
+        localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
+        localStorage.setItem(MEMBER_REFRESH_KEY, res.data.refresh)
+      }
+
+      return res.data
+    })()
+    refreshPromise.finally(() => {
+      refreshPromise = null
+    })
+  }
+  return refreshPromise
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -40,35 +77,16 @@ api.interceptors.response.use(
     if (
       status === 401 &&
       original &&
-      !original._retry &&
-      !original.url?.includes('/auth/me/')
+      !original._retry
     ) {
       original._retry = true
       const refresh = getRefreshToken()
 
       if (refresh) {
         try {
-          const res = await axios.post(
-            `${API_BASE}/auth/refresh/`,
-            { refresh }
-          )
+          const res = await refreshSession()
 
-          // Write new access token back to the same session type that triggered this request.
-          // This avoids cases where an admin refresh key exists (or is stale) but the current request is a member request.
-          const currentAuthHeader = original.headers?.Authorization
-          const memberAccess = localStorage.getItem(MEMBER_ACCESS_KEY)
-
-          const isMemberRequest =
-            currentAuthHeader?.includes(memberAccess) ||
-            (memberAccess && currentAuthHeader?.includes(`Bearer ${memberAccess}`))
-
-          if (isMemberRequest) {
-            localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
-          } else {
-            localStorage.setItem(ADMIN_ACCESS_KEY, res.data.access)
-          }
-
-          original.headers.Authorization = `Bearer ${res.data.access}`
+          original.headers.Authorization = `Bearer ${res.access}`
           return api(original)
         } catch {
           // Refresh failed; fall through and clear the stale session below.

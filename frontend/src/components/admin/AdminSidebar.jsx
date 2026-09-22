@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Users, UserCog, User, LogOut, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
+import RefreshButton from '../RefreshButton'
 import { useAuth } from '../../context/useAuth'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
 
@@ -183,6 +184,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
 
           {/* Theme toggle + sign out */}
           <div className="flex shrink-0 items-center gap-1">
+            <RefreshButton className="h-9 w-9 text-blue-100 hover:bg-white/10 hover:text-white" />
             <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
             <button
               type="button"
@@ -242,6 +244,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
             </span>
           </NavLink>
           <div className="mt-2 flex items-center justify-between gap-2">
+            <RefreshButton className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
             <ThemeToggle className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
             <button
               type="button"

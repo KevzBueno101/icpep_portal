@@ -286,10 +286,32 @@ class AssignRoleSerializer(serializers.Serializer):
 class OfficerCreateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
-    first_name = serializers.CharField(max_length=50)
-    last_name = serializers.CharField(max_length=50)
+    first_name = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
+    last_name = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
     # NOTE: positions are dynamic (free text) — there is no User.Position
     # choices class on the model, so this must be a CharField, not ChoiceField.
-    position = serializers.CharField(max_length=100, allow_blank=True, required=False)
-    department = serializers.CharField(max_length=100, allow_blank=True, required=False)
-    academic_year = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    position = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
+    department = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
+    academic_year = serializers.CharField(max_length=20, allow_blank=True, required=False, default='')
+    username = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    role = serializers.ChoiceField(choices=User.Role.choices, required=False, default=User.Role.ADMIN)
+
+    def validate(self, attrs):
+        email = attrs['email'].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError({'email': 'An account with this email already exists.'})
+        username = (attrs.get('username') or '').strip()
+        if username and User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError({'username': 'An account with this username already exists.'})
+        return attrs
+
+    @staticmethod
+    def _build_username(email):
+        """Auto-generate a unique username from the email when none is provided."""
+        base = email.split('@')[0].strip() or 'officer'
+        candidate = base
+        suffix = 1
+        while User.objects.filter(username__iexact=candidate).exists():
+            candidate = f'{base}_{suffix}'
+            suffix += 1
+        return candidate

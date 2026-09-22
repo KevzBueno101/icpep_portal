@@ -1,6 +1,7 @@
 import os
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -560,14 +561,28 @@ def create_officer_account(request):
     validated = serializer.validated_data
     UserModel = get_user_model()
 
-    new_user = UserModel.objects.create_user(
-        email=validated['email'],
-        username=validated['username'],
-        password=validated['password'],
-        role=validated['role'],
-        position=validated['position'],
-        term_start=(timezone.now().date() if validated['position'] != 'NONE' else None),
-    )
+    username = (validated.get('username') or '').strip() or \
+        OfficerCreateSerializer._build_username(validated['email'])
+
+    try:
+        new_user = UserModel.objects.create_user(
+            email=validated['email'],
+            username=username,
+            password=validated['password'],
+            role=validated.get('role', UserModel.Role.ADMIN),
+            position=validated.get('position', ''),
+            first_name=validated.get('first_name', ''),
+            last_name=validated.get('last_name', ''),
+            department=validated.get('department', ''),
+            academic_year=validated.get('academic_year', ''),
+            registration_status=UserModel.RegistrationStatus.APPROVED,
+            term_start=(timezone.now().date() if validated.get('position') not in ('', 'NONE') else None),
+        )
+    except IntegrityError:
+        return Response(
+            {'detail': 'Could not create the officer account. This email or username may already be in use.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     log_action(
         user=request.user,
