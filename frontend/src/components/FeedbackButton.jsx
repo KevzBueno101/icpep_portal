@@ -8,7 +8,7 @@ export default function FeedbackButton() {
       href={FEEDBACK_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="group fixed bottom-28 left-5 z-50 flex items-center gap-1.5 rounded-full bg-sky-600 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500 hover:shadow-xl md:bottom-4"
+      className="group fixed bottom-[13.5rem] right-6 z-50 flex items-center gap-1.5 rounded-full bg-sky-600 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500 hover:shadow-xl"
       aria-label="Send feedback"
     >
       <FileText className="h-4 w-4" />
