@@ -122,10 +122,10 @@ return (
       <button
         type="button"
         onClick={openModal}
-        className="group fixed bottom-[8.5rem] left-5 z-50 flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-20"
+        className="group fixed bottom-[8.5rem] left-5 z-50 flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl md:bottom-20"
         aria-label="Report a bug"
       >
-        <Bug className="h-5 w-5" />
+        <Bug className="h-4 w-4" />
         <span className="hidden sm:inline">Report a Bug</span>
       </button>
 

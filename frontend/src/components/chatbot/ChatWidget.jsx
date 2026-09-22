@@ -139,7 +139,7 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           ref={widgetRef}
-          className="fixed bottom-24 right-6 z-50 w-full max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
+          className="fixed inset-x-3 bottom-24 z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
         >
           <div className="flex flex-col h-[500px] md:h-[550px] lg:h-[600px] max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}
@@ -210,7 +210,7 @@ export default function ChatWidget() {
 
               {isLoading && messages.length > 0 && (
                 <ChatMessage
-                  message={{ role: 'assistant', content: '', timestamp: Date.now() }}
+                  message={{ role: 'assistant', content: '' }}
                   isStreaming={true}
                 />
               )}
