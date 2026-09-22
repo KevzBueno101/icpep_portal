@@ -41,11 +41,15 @@ This is the authoritative list of every environment variable the system reads. T
 
 ## Frontend (`frontend/.env.production`)
 
+Committed file = **production** (routes via the `icpep-api-main` Cloudflare Worker to the main/prod Render backend).
+
 | Variable | Value |
 |---|---|
-| `VITE_API_URL` | `https://icpep-backend-mriy.onrender.com/api` |
-| `VITE_BACKEND_URL` | `https://icpep-backend-mriy.onrender.com` |
-| `VITE_WS_URL` | `wss://icpep-backend-mriy.onrender.com` |
+| `VITE_API_URL` | `https://icpep-api-main.icpep-se-catsuchapter.workers.dev/api` |
+| `VITE_BACKEND_URL` | `https://icpep-api-main.icpep-se-catsuchapter.workers.dev` |
+| `VITE_WS_URL` | `wss://icpep-portal-backend.onrender.com` |
+
+> **Dev/test (`icpep-catsu.vercel.app`):** the dev Vercel project's dashboard `VITE_*` overrides point to the **`icpep-api`** worker (→ `icpep-backend-mriy.onrender.com`, dev branch/database). Vercel dashboard vars always win over the committed file.
 
 Local dev (`frontend/.env` or default): `VITE_API_URL` falls back to `http://127.0.0.1:8000/api`.
 

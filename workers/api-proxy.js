@@ -1,12 +1,17 @@
-const ORIGIN = 'https://icpep-backend-mriy.onrender.com'
+const BACKENDS = {
+  'icpep-api.icpep-se-catsuchapter.workers.dev': 'https://icpep-backend-mriy.onrender.com',
+  'icpep-api-main.icpep-se-catsuchapter.workers.dev': 'https://icpep-portal-backend.onrender.com',
+}
+const DEFAULT_BACKEND = 'https://icpep-backend-mriy.onrender.com'
 
 export default {
   async fetch(request) {
+    const origin = BACKENDS[request.headers.get('host')] || DEFAULT_BACKEND
     const url = new URL(request.url)
-    const target = ORIGIN + url.pathname + url.search
+    const target = origin + url.pathname + url.search
 
     const headers = new Headers(request.headers)
-    headers.set('Host', new URL(ORIGIN).host)
+    headers.set('Host', new URL(origin).host)
     headers.set('X-Forwarded-Proto', 'https')
     headers.set('X-Forwarded-Host', request.headers.get('host') || '')
     const cfIp = request.headers.get('CF-Connecting-IP')
