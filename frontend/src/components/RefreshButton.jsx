@@ -3,25 +3,31 @@ import { RefreshCw } from 'lucide-react'
 import { useRefresh } from '../context/RefreshContext'
 
 export default function RefreshButton({ className = '' }) {
-  const { needRefresh } = useRefresh()
+  const { needRefresh, clearRefresh } = useRefresh()
   const [spinning, setSpinning] = useState(false)
 
   const handleRefresh = () => {
     if (spinning) return
     setSpinning(true)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .getRegistration()
-        .then((registration) => {
-          if (registration?.waiting) {
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-          }
-        })
-        .catch(() => {})
-    }
-    setTimeout(() => {
+    clearRefresh()
+    if (!('serviceWorker' in navigator)) {
       window.location.reload()
-    }, 300)
+      return
+    }
+    navigator.serviceWorker
+      .getRegistration()
+      .then((registration) => {
+        if (registration?.waiting) {
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload()
+          })
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          setTimeout(() => window.location.reload(), 3000)
+        } else {
+          window.location.reload()
+        }
+      })
+      .catch(() => window.location.reload())
   }
 
   return (
