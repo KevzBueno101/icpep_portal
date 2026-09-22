@@ -3,6 +3,8 @@ import toast from 'react-hot-toast'
 import { Mail, Handshake, Users, Sparkles } from 'lucide-react'
 import { publicApi } from '../../api/axios'
 
+const MAX_ATTACHMENT_MB = 10
+
 const benefits = [
   {
     icon: Users,
@@ -32,7 +34,18 @@ export default function SponsorshipSection() {
   }
 
   const handleFileChange = (e) => {
-    setAttachment(e.target.files[0] || null)
+    const file = e.target.files?.[0]
+    if (!file) {
+      setAttachment(null)
+      return
+    }
+    if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+      toast.error(`Attachment must be ${MAX_ATTACHMENT_MB} MB or smaller.`)
+      e.target.value = ''
+      setAttachment(null)
+      return
+    }
+    setAttachment(file)
   }
 
   const handleSubmit = async (e) => {
@@ -46,12 +59,24 @@ export default function SponsorshipSection() {
       if (attachment) {
         formData.append('attachment', attachment)
       }
-      await publicApi.post('/partnership/partnership/', formData)
+      await publicApi.post('/partnership/partnership/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       toast.success('Partnership proposal sent successfully!')
       setForm({ name: '', email: '', message: '' })
       setAttachment(null)
-    } catch {
-      toast.error('Failed to send proposal. Please try again.')
+    } catch (err) {
+      const data = err.response?.data
+      let detail =
+        data?.detail ||
+        data?.name?.[0] ||
+        data?.email?.[0] ||
+        data?.message?.[0] ||
+        data?.attachment?.[0] ||
+        err.message ||
+        'Failed to send proposal. Please try again.'
+      if (typeof detail !== 'string') detail = 'Failed to send proposal. Please try again.'
+      toast.error(detail)
     } finally {
       setSubmitting(false)
     }
@@ -151,7 +176,7 @@ export default function SponsorshipSection() {
 
               <div>
                 <label htmlFor="sponsor-attachment" className="mb-1.5 block text-sm font-semibold text-slate-300">
-                  Attachment <span className="text-slate-500 font-normal">(optional)</span>
+                  Attachment <span className="text-slate-500 font-normal">(optional, max {MAX_ATTACHMENT_MB} MB)</span>
                 </label>
                 <input
                   id="sponsor-attachment"
