@@ -176,7 +176,7 @@ export default function MemberAbout() {
                         </span>
                       </div>
                       <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
-                      {lines.length > 1 ? (
+                      {lines.length > 1 && section.section_type !== 'HISTORY' ? (
                         <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
                           {lines.map((line, idx) => (
                             <li key={idx} className="flex items-center gap-2">
@@ -186,7 +186,7 @@ export default function MemberAbout() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                        <p className="mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{section.body}</p>
                       )}
                       {section.document_url && (
                         <button
