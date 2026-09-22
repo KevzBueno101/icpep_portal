@@ -9,6 +9,16 @@ export default function RefreshButton({ className = '' }) {
   const handleRefresh = () => {
     if (spinning) return
     setSpinning(true)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .getRegistration()
+        .then((registration) => {
+          if (registration?.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          }
+        })
+        .catch(() => {})
+    }
     setTimeout(() => {
       window.location.reload()
     }, 300)
