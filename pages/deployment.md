@@ -26,23 +26,47 @@ The portal is split across two hosts with automated CI/CD via GitHub Actions.
 
 ## Frontend — Vercel
 
-- Project: `icpep-catsu.vercel.app` (production).
-- Auto-deploys from the **`dev`** branch (this is important — Vercel is wired to `dev`, so all frontend work lands here).
+There are **two Vercel projects**:
+
+| Project | Branch | Domain |
+|---|---|---|
+| Production | `main` | `icpepcatsu.app` |
+| Dev/Test | `dev` | `icpep-catsu.vercel.app` |
+
 - Build command: `npm run build` (in `frontend/`), which runs Vite + the PWA service-worker build.
-- Env (`frontend/.env.production`):
+- The committed `frontend/.env.production` is the **production default** (`icpep-api-main`). Both projects carry dashboard `VITE_*` overrides; the **dev project's dashboard override points to `icpep-api`** so dev/test stays on the dev backend and database.
 
-  | Variable | Value |
-  |---|---|
-  | `VITE_API_URL` | `https://icpep-backend-mriy.onrender.com/api` |
-  | `VITE_BACKEND_URL` | `https://icpep-backend-mriy.onrender.com` |
-  | `VITE_WS_URL` | `wss://icpep-backend-mriy.onrender.com` |
+## Cloudflare Workers — API proxy
 
-## Backend — Render
+The browser can't reach `*.onrender.com` (PLDT/ISP TCP-443 block), so a **Cloudflare Worker** reverse-proxies the backend. One source file (`workers/api-proxy.js`) picks the backend from the worker's own hostname:
 
-- Service: `icpep-backend-mriy.onrender.com`.
-- **Branch is critical**: Render must be pointed at **`dev`** — the `main` branch historically predates several features (including the push app). If `vapid-key` returns `404`, the deployed code is from `main`.
+| Worker | Origin (Render) |
+|---|---|
+| `icpep-api.icpep-se-catsuchapter.workers.dev` | `https://icpep-backend-mriy.onrender.com` (dev/test, DB = dev) |
+| `icpep-api-main.icpep-se-catsuchapter.workers.dev` | `https://icpep-portal-backend.onrender.com` (main/prod, DB = prod) |
+
+Deployed by pasting `workers/api-proxy.js` into each worker (dashboard). The worker rewrites `Host` to the backend origin and sets `X-Forwarded-Proto/For/Host` (backend keeps `ALLOWED_HOSTS` untouched).
+
+Frontend env (committed `frontend/.env.production` = production):
+
+| Variable | Value |
+|---|---|
+| `VITE_API_URL` | `https://icpep-api-main.icpep-se-catsuchapter.workers.dev/api` |
+| `VITE_BACKEND_URL` | `https://icpep-api-main.icpep-se-catsuchapter.workers.dev` |
+| `VITE_WS_URL` | `wss://icpep-portal-backend.onrender.com` |
+
+Dev/test dashboard override replaces these with the `icpep-api` worker (`VITE_WS_URL` → `wss://icpep-backend-mriy.onrender.com`).
+
+## Backend — Render (two services)
+
+| Service | Branch | Purpose |
+|---|---|---|
+| `icpep-portal-backend.onrender.com` | **`main`** | Production (prod DB) |
+| `icpep-backend-mriy.onrender.com` | **`dev`** | Dev/Test (dev DB) |
+
+- **Branch is critical**: `icpep-portal-backend` must point at `main`, `icpep-backend-mriy` at `dev`. If `vapid-key` returns `404`, the deployed code predates the push app.
 - Web process: `web: bash start.sh` (see [Boot sequence](#boot-sequence)).
-- Production database: Render-managed PostgreSQL (`DATABASE_URL`).
+- Each service has its own Render-managed PostgreSQL (`DATABASE_URL`).
 
 ### Boot sequence (`backend/start.sh`)
 
