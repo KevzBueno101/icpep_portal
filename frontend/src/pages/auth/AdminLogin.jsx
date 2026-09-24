@@ -1,15 +1,63 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
-const academicYearFromDate = (value) => {
-  if (!value) return ''
-  const [y, m] = value.split('-').map(Number)
-  if (!y || !m) return ''
-  return m >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`
+const buildAcademicYear = () => {
+  const currentYear = new Date().getFullYear()
+  const options = []
+  for (let y = currentYear - 10; y <= currentYear + 2; y += 1) {
+    options.push(String(y))
+  }
+  return options
+}
+
+const YEAR_OPTIONS = buildAcademicYear()
+
+const YearPicker = ({ label, value, placeholder, open, onToggle, onSelect }) => {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onToggle(false)
+    }
+    if (open) document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [open, onToggle])
+
+  return (
+    <div className="relative flex-1">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggle(!open)
+        }}
+        className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-left text-gray-200 outline-none focus:border-blue-500/60"
+      >
+        {value || <span className="text-gray-500">{placeholder}</span>}
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-800 bg-[#0f0f18] shadow-xl">
+          {YEAR_OPTIONS.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => onSelect(year)}
+              className={`block w-full px-3 py-1.5 text-left text-sm transition hover:bg-blue-600/30 ${
+                value === year ? 'text-blue-400' : 'text-gray-200'
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+      )}
+      {label && <span className="sr-only">{label}</span>}
+    </div>
+  )
 }
 
 const AdminLogin = () => {
@@ -31,7 +79,9 @@ const AdminLogin = () => {
     academic_year: '',
   })
   const [requestErrors, setRequestErrors] = useState({})
-  const [academicYearDate, setAcademicYearDate] = useState('')
+  const [ayStart, setAyStart] = useState('')
+  const [ayEnd, setAyEnd] = useState('')
+  const [openPicker, setOpenPicker] = useState(null)
   const [showReqPass, setShowReqPass] = useState(false)
   const [showReqConfirm, setShowReqConfirm] = useState(false)
   const [profilePic, setProfilePic] = useState(null)
@@ -50,10 +100,16 @@ const AdminLogin = () => {
       return next
     })
   }
-  const handleAcademicYearDateChange = (e) => {
-    const value = e.target.value
-    setAcademicYearDate(value)
-    setRequestForm((prev) => ({ ...prev, academic_year: academicYearFromDate(value) }))
+  const handleYearSelect = (which, year) => {
+    const nextStart = which === 'start' ? year : ayStart
+    const nextEnd = which === 'end' ? year : ayEnd
+    if (which === 'start') setAyStart(year)
+    if (which === 'end') setAyEnd(year)
+    setRequestForm((prev) => ({
+      ...prev,
+      academic_year: nextStart && nextEnd ? `${nextStart}-${nextEnd}` : '',
+    }))
+    setOpenPicker(null)
   }
 
   const handleSubmit = async (e) => {
@@ -113,6 +169,7 @@ const AdminLogin = () => {
     if (!requestForm.department) errs.department = 'Department is required.'
     if (!requestForm.position) errs.position = 'Position is required.'
     if (!requestForm.academic_year.trim()) errs.academic_year = 'Academic year is required.'
+    else if (ayEnd && ayStart && Number(ayEnd) < Number(ayStart)) errs.academic_year = 'End year must be the same as or later than start year.'
     if (!requestForm.password) errs.password = 'Password is required.'
     else if (requestForm.password.length < 8) errs.password = 'Password must be at least 8 characters.'
     if (!requestForm.confirm_password) errs.confirm_password = 'Confirm your password.'
@@ -147,7 +204,9 @@ const AdminLogin = () => {
         academic_year: '',
       })
       setRequestErrors({})
-      setAcademicYearDate('')
+      setAyStart('')
+      setAyEnd('')
+      setOpenPicker(null)
     } catch (err) {
       const data = err.response?.data
       const fieldErr = {}
@@ -399,7 +458,25 @@ const AdminLogin = () => {
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
                 </div>
-                <input type="month" name="academic_year" value={academicYearDate} required onChange={handleAcademicYearDateChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60 [color-scheme:dark]" />
+                <div className="flex items-center gap-2">
+                  <YearPicker
+                    label="Start year"
+                    value={ayStart}
+                    placeholder="Start year"
+                    open={openPicker === 'start'}
+                    onToggle={() => setOpenPicker(openPicker === 'start' ? null : 'start')}
+                    onSelect={(year) => handleYearSelect('start', year)}
+                  />
+                  <span className="text-sm text-gray-500">–</span>
+                  <YearPicker
+                    label="End year"
+                    value={ayEnd}
+                    placeholder="End year"
+                    open={openPicker === 'end'}
+                    onToggle={() => setOpenPicker(openPicker === 'end' ? null : 'end')}
+                    onSelect={(year) => handleYearSelect('end', year)}
+                  />
+                </div>
                 {requestErrors.academic_year && <p className="mt-1 text-xs text-red-400">{requestErrors.academic_year}</p>}
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
                   {profilePicPreview ? (
