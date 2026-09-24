@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useMember } from '../context/MemberContext'
 import DesktopMemberNavbar from '../components/member/DesktopMemberNavbar'
@@ -13,9 +13,17 @@ import ChatWidget from '../components/chatbot/ChatWidget'
 export default function MemberLayout({ children }) {
   const { user, logout, refreshUser, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const { announcements, profileLoading, profile } = useMember()
+  const location = useLocation()
+  const { profileLoading, profile, unreadAnnouncements, markAnnouncementsSeen } = useMember()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
+
+  // Visiting the announcements page marks everything as read.
+  useEffect(() => {
+    if (location.pathname.startsWith('/member/announcements')) {
+      markAnnouncementsSeen()
+    }
+  }, [location.pathname, markAnnouncementsSeen])
 
   // Live membership-status guard: bounce the member to the pending page the
   // moment their status is no longer APPROVED (e.g. admin triggers Renew-All),
@@ -88,6 +96,7 @@ export default function MemberLayout({ children }) {
           user={user}
           onLogout={() => setShowLogoutConfirm(true)}
           onHelpClick={() => setShowHelpModal(true)}
+          announcementsBadge={unreadAnnouncements}
         />
 
       {/* Mobile Header (fixed top) */}
@@ -133,7 +142,7 @@ export default function MemberLayout({ children }) {
       </main>
 
       {/* Mobile Footer Navigation */}
-      <MobileMemberNavbar announcementsBadge={announcements?.length || 0} />
+      <MobileMemberNavbar announcementsBadge={unreadAnnouncements} />
 
       {/* Logout Confirmation Modal Overlay */}
       {showLogoutConfirm && (
