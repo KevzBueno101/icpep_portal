@@ -399,7 +399,7 @@ const AdminLogin = () => {
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
                 </div>
-                <input type="date" name="academic_year" value={academicYearDate} required onChange={handleAcademicYearDateChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60 [color-scheme:dark]" />
+                <input type="month" name="academic_year" value={academicYearDate} required onChange={handleAcademicYearDateChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60 [color-scheme:dark]" />
                 {requestErrors.academic_year && <p className="mt-1 text-xs text-red-400">{requestErrors.academic_year}</p>}
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
                   {profilePicPreview ? (
