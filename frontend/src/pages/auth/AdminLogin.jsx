@@ -5,15 +5,12 @@ import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
-const ACADEMIC_YEAR_OPTIONS = (() => {
-  const options = []
-  const startYear = new Date().getFullYear() - 5
-  const endYear = new Date().getFullYear() + 1
-  for (let y = startYear; y <= endYear; y += 1) {
-    options.push(`${y}-${y + 1}`)
-  }
-  return options
-})()
+const academicYearFromDate = (value) => {
+  if (!value) return ''
+  const [y, m] = value.split('-').map(Number)
+  if (!y || !m) return ''
+  return m >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`
+}
 
 const AdminLogin = () => {
   const { adminLogin } = useAuth()
@@ -34,6 +31,7 @@ const AdminLogin = () => {
     academic_year: '',
   })
   const [requestErrors, setRequestErrors] = useState({})
+  const [academicYearDate, setAcademicYearDate] = useState('')
   const [showReqPass, setShowReqPass] = useState(false)
   const [showReqConfirm, setShowReqConfirm] = useState(false)
   const [profilePic, setProfilePic] = useState(null)
@@ -51,6 +49,11 @@ const AdminLogin = () => {
       }
       return next
     })
+  }
+  const handleAcademicYearDateChange = (e) => {
+    const value = e.target.value
+    setAcademicYearDate(value)
+    setRequestForm((prev) => ({ ...prev, academic_year: academicYearFromDate(value) }))
   }
 
   const handleSubmit = async (e) => {
@@ -144,6 +147,7 @@ const AdminLogin = () => {
         academic_year: '',
       })
       setRequestErrors({})
+      setAcademicYearDate('')
     } catch (err) {
       const data = err.response?.data
       const fieldErr = {}
@@ -395,14 +399,7 @@ const AdminLogin = () => {
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
                 </div>
-                <select name="academic_year" value={requestForm.academic_year} required onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
-                  <option value="" disabled>Select academic year</option>
-                  {ACADEMIC_YEAR_OPTIONS.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+                <input type="date" name="academic_year" value={academicYearDate} required onChange={handleAcademicYearDateChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60 [color-scheme:dark]" />
                 {requestErrors.academic_year && <p className="mt-1 text-xs text-red-400">{requestErrors.academic_year}</p>}
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
                   {profilePicPreview ? (
