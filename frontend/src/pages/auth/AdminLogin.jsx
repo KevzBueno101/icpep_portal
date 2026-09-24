@@ -18,14 +18,31 @@ const YEAR_OPTIONS = buildAcademicYear()
 
 const YearPicker = ({ label, value, placeholder, open, onToggle, onSelect }) => {
   const ref = useRef(null)
+  const [typedYear, setTypedYear] = useState('')
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) onToggle(false)
+      if (ref.current && !ref.current.contains(e.target)) {
+        setTypedYear('')
+        onToggle(false)
+      }
     }
     if (open) document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [open, onToggle])
+
+  const handleQuickSelect = (year) => {
+    onSelect(year)
+    setTypedYear('')
+  }
+
+  const handleManualConfirm = () => {
+    const year = typedYear.trim()
+    if (/^\d{4}$/.test(year)) {
+      onSelect(year)
+      setTypedYear('')
+    }
+  }
 
   return (
     <div className="relative flex-1">
@@ -40,19 +57,42 @@ const YearPicker = ({ label, value, placeholder, open, onToggle, onSelect }) => 
         {value || <span className="text-gray-500">{placeholder}</span>}
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-800 bg-[#0f0f18] shadow-xl">
-          {YEAR_OPTIONS.map((year) => (
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-800 bg-[#0f0f18] shadow-xl">
+          <div className="flex gap-1 border-b border-gray-800 p-2">
+            <input
+              type="number"
+              min="1900"
+              max="9999"
+              value={typedYear}
+              onChange={(e) => setTypedYear(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleManualConfirm()
+              }}
+              placeholder="Any year"
+              className="w-full rounded border border-gray-800 bg-[#0a0a12] px-2 py-1 text-sm text-gray-200 outline-none focus:border-blue-500/60"
+            />
             <button
-              key={year}
               type="button"
-              onClick={() => onSelect(year)}
-              className={`block w-full px-3 py-1.5 text-left text-sm transition hover:bg-blue-600/30 ${
-                value === year ? 'text-blue-400' : 'text-gray-200'
-              }`}
+              onClick={handleManualConfirm}
+              className="shrink-0 rounded bg-blue-600 px-2 py-1 text-sm text-white transition hover:bg-blue-500"
             >
-              {year}
+              OK
             </button>
-          ))}
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            {YEAR_OPTIONS.map((year) => (
+              <button
+                key={year}
+                type="button"
+                onClick={() => handleQuickSelect(year)}
+                className={`block w-full px-3 py-1.5 text-left text-sm transition hover:bg-blue-600/30 ${
+                  value === year ? 'text-blue-400' : 'text-gray-200'
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       {label && <span className="sr-only">{label}</span>}
