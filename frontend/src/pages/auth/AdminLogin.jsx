@@ -131,7 +131,7 @@ const AdminLogin = () => {
         if (v) data.append(k, v)
       }
       if (profilePic) data.append('profile_picture', profilePic)
-      await publicApi.post('/auth/admin-register/', data)
+      await publicApi.post('/auth/admin-register/', data, { timeout: 60000 })
       toast.success('Admin access request submitted. Please wait for President approval.')
       setShowRequestForm(false)
       setProfilePic(null)
