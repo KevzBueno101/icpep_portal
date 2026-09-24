@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageSquare, X, Minimize2, Maximize2, RefreshCw, Trash2, Info, Send, Loader2, Bot } from 'lucide-react'
+import { X, Minimize2, Maximize2, RefreshCw, Trash2, Info, Send, Loader2, Bot } from 'lucide-react'
 import { useChat } from './useChat'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
@@ -131,7 +131,12 @@ export default function ChatWidget() {
           className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4"
           aria-label="Open chatbot"
         >
-          <MessageSquare className="h-7 w-7" />
+          <Bot className="h-7 w-7" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       )}
 

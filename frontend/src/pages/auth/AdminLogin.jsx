@@ -144,7 +144,11 @@ const AdminLogin = () => {
         }
       }
       setRequestErrors(fieldErr)
-      const msg = data?.detail || data?.email?.[0] || data?.password?.[0] || data?.confirm_password?.[0] || 'Unable to submit admin request.'
+      const knownKeys = ['detail', 'email', 'password', 'confirm_password', 'profile_picture']
+      if (!data || Object.keys(fieldErr).length === 0 || !Object.keys(fieldErr).some((k) => knownKeys.includes(k))) {
+        console.error('Admin request failed:', err)
+      }
+      const msg = data?.detail || data?.email?.[0] || data?.password?.[0] || data?.confirm_password?.[0] || data?.profile_picture?.[0] || 'Unable to submit admin request.'
       toast.error(msg)
     } finally {
       setRequestLoading(false)
@@ -391,6 +395,7 @@ const AdminLogin = () => {
                   )}
                   <input type="file" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
                 </label>
+                {requestErrors.profile_picture && <p className="mt-1 text-xs text-red-400">{requestErrors.profile_picture}</p>}
                 <button type="submit" disabled={requestLoading} className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50">
                   {requestLoading ? 'Submitting...' : 'Submit Request'}
                 </button>

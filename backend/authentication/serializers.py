@@ -3,6 +3,7 @@ from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
 from members.models import MemberProfile
+from members.serializers import validate_image_file
 
 User = get_user_model()
 
@@ -30,6 +31,9 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
         if username and User.objects.filter(username__iexact=username).exists():
             raise serializers.ValidationError({'username': 'An account with this username already exists.'})
         return data
+
+    def validate_profile_picture(self, value):
+        return validate_image_file(value)
 
     @staticmethod
     def _build_username(email):
@@ -140,7 +144,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 user = User.objects.create_user(**validated_data)
                 MemberProfile.objects.create(user=user, **profile_fields)
-        except IntegrityError:
+        except IntegrityError as err:
             # Safety net for concurrent signups or a race on unique fields
             # (email/username/student_number). The atomic block rolls back, so
             # no half-created account is ever left behind.
@@ -150,7 +154,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                     'This email, username, or student number may already be registered. '
                     'Please try again.'
                 ]
-            })
+            }) from err
         return user
 
     def validate_profile_picture(self, value):
