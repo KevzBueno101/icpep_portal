@@ -144,9 +144,9 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           ref={widgetRef}
-          className="fixed inset-x-3 bottom-24 z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
+          className="fixed inset-x-3 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
         >
-          <div className="flex flex-col h-[500px] md:h-[550px] lg:h-[600px] max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex flex-col h-[calc(100dvh-9.5rem)] max-h-[85vh] md:h-[550px] md:max-h-[85vh] lg:h-[600px] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 shrink-0 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
               <div className="flex items-center gap-2.5">
