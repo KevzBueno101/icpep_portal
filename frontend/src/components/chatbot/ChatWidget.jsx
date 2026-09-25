@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { X, Minimize2, Maximize2, RefreshCw, Trash2, Info, Send, Loader2, Bot } from 'lucide-react'
+import { X, RefreshCw, Info, Bot } from 'lucide-react'
 import { useChat } from './useChat'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
@@ -78,11 +78,6 @@ export default function ChatWidget() {
     setIsOpen((prev) => !prev)
     setIsMinimized(false)
     setUnreadCount(0)
-  }, [])
-
-  const handleMinimize = useCallback(() => {
-    setIsMinimized(true)
-    setIsOpen(false)
   }, [])
 
   const handleMaximize = useCallback(() => {
@@ -168,13 +163,6 @@ export default function ChatWidget() {
                   <RefreshCw className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={handleMinimize}
-                  className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800"
-                  aria-label="Minimize"
-                >
-                  <Minimize2 className="h-4 w-4" />
-                </button>
-                <button
                   onClick={() => { setIsOpen(false); setIsMinimized(true); }}
                   className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800"
                   aria-label="Close"
@@ -185,7 +173,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
               {showWelcome && messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 mb-4 dark:bg-sky-900/30">
