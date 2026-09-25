@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMember } from '../../context/MemberContext'
 import NotificationToggle from '../../components/NotificationToggle'
+import { formatCategory } from '../../utils/announcementCategories'
 import { Search, Bell, Filter } from 'lucide-react'
 
 export default function MemberAnnouncements() {
@@ -13,7 +14,7 @@ export default function MemberAnnouncements() {
   const categories = useMemo(() => {
     const list = new Set(['ALL'])
     announcements.forEach((a) => {
-      if (a.category) list.add(a.category.toUpperCase())
+      if (a.category) list.add(a.category.toLowerCase())
     })
     return Array.from(list)
   }, [announcements])
@@ -24,7 +25,7 @@ export default function MemberAnnouncements() {
     )
 
     if (selectedCategory !== 'ALL') {
-      list = list.filter((a) => a.category?.toUpperCase() === selectedCategory)
+      list = list.filter((a) => a.category?.toLowerCase() === selectedCategory)
     }
 
     if (searchQuery.trim()) {
@@ -87,7 +88,7 @@ export default function MemberAnnouncements() {
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
-              {cat}
+              {cat === 'ALL' ? 'All' : formatCategory(cat)}
             </button>
           ))}
         </div>
@@ -134,7 +135,7 @@ export default function MemberAnnouncements() {
             >
               <div className="flex items-center justify-between gap-4">
                 <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
-                  {ann.category || 'General'}
+                  {formatCategory(ann.category)}
                 </span>
                 <span className="text-xs text-slate-400">
                   {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
