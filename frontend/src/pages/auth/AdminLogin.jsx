@@ -1,9 +1,104 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
+
+const buildAcademicYear = () => {
+  const currentYear = new Date().getFullYear()
+  const options = []
+  for (let y = currentYear - 10; y <= currentYear + 2; y += 1) {
+    options.push(String(y))
+  }
+  return options
+}
+
+const YEAR_OPTIONS = buildAcademicYear()
+
+const YearPicker = ({ label, value, placeholder, open, onToggle, onSelect }) => {
+  const ref = useRef(null)
+  const [typedYear, setTypedYear] = useState('')
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setTypedYear('')
+        onToggle(false)
+      }
+    }
+    if (open) document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [open, onToggle])
+
+  const handleQuickSelect = (year) => {
+    onSelect(year)
+    setTypedYear('')
+  }
+
+  const handleManualConfirm = () => {
+    const year = typedYear.trim()
+    if (/^\d{4}$/.test(year)) {
+      onSelect(year)
+      setTypedYear('')
+    }
+  }
+
+  return (
+    <div className="relative flex-1">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggle(!open)
+        }}
+        className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-left text-gray-200 outline-none focus:border-blue-500/60"
+      >
+        {value || <span className="text-gray-500">{placeholder}</span>}
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-800 bg-[#0f0f18] shadow-xl">
+          <div className="flex gap-1 border-b border-gray-800 p-2">
+            <input
+              type="number"
+              min="1900"
+              max="9999"
+              value={typedYear}
+              onChange={(e) => setTypedYear(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleManualConfirm()
+              }}
+              placeholder="Any year"
+              className="w-full rounded border border-gray-800 bg-[#0a0a12] px-2 py-1 text-sm text-gray-200 outline-none focus:border-blue-500/60"
+            />
+            <button
+              type="button"
+              onClick={handleManualConfirm}
+              className="shrink-0 rounded bg-blue-600 px-2 py-1 text-sm text-white transition hover:bg-blue-500"
+            >
+              OK
+            </button>
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            {YEAR_OPTIONS.map((year) => (
+              <button
+                key={year}
+                type="button"
+                onClick={() => handleQuickSelect(year)}
+                className={`block w-full px-3 py-1.5 text-left text-sm transition hover:bg-blue-600/30 ${
+                  value === year ? 'text-blue-400' : 'text-gray-200'
+                }`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {label && <span className="sr-only">{label}</span>}
+    </div>
+  )
+}
 
 const AdminLogin = () => {
   const { adminLogin } = useAuth()
@@ -24,6 +119,9 @@ const AdminLogin = () => {
     academic_year: '',
   })
   const [requestErrors, setRequestErrors] = useState({})
+  const [ayStart, setAyStart] = useState('')
+  const [ayEnd, setAyEnd] = useState('')
+  const [openPicker, setOpenPicker] = useState(null)
   const [showReqPass, setShowReqPass] = useState(false)
   const [showReqConfirm, setShowReqConfirm] = useState(false)
   const [profilePic, setProfilePic] = useState(null)
@@ -41,6 +139,17 @@ const AdminLogin = () => {
       }
       return next
     })
+  }
+  const handleYearSelect = (which, year) => {
+    const nextStart = which === 'start' ? year : ayStart
+    const nextEnd = which === 'end' ? year : ayEnd
+    if (which === 'start') setAyStart(year)
+    if (which === 'end') setAyEnd(year)
+    setRequestForm((prev) => ({
+      ...prev,
+      academic_year: nextStart && nextEnd ? `${nextStart}-${nextEnd}` : '',
+    }))
+    setOpenPicker(null)
   }
 
   const handleSubmit = async (e) => {
@@ -100,6 +209,7 @@ const AdminLogin = () => {
     if (!requestForm.department) errs.department = 'Department is required.'
     if (!requestForm.position) errs.position = 'Position is required.'
     if (!requestForm.academic_year.trim()) errs.academic_year = 'Academic year is required.'
+    else if (ayEnd && ayStart && Number(ayEnd) < Number(ayStart)) errs.academic_year = 'End year must be the same as or later than start year.'
     if (!requestForm.password) errs.password = 'Password is required.'
     else if (requestForm.password.length < 8) errs.password = 'Password must be at least 8 characters.'
     if (!requestForm.confirm_password) errs.confirm_password = 'Confirm your password.'
@@ -118,7 +228,7 @@ const AdminLogin = () => {
         if (v) data.append(k, v)
       }
       if (profilePic) data.append('profile_picture', profilePic)
-      await publicApi.post('/auth/admin-register/', data)
+      await publicApi.post('/auth/admin-register/', data, { timeout: 60000 })
       toast.success('Admin access request submitted. Please wait for President approval.')
       setShowRequestForm(false)
       setProfilePic(null)
@@ -134,6 +244,9 @@ const AdminLogin = () => {
         academic_year: '',
       })
       setRequestErrors({})
+      setAyStart('')
+      setAyEnd('')
+      setOpenPicker(null)
     } catch (err) {
       const data = err.response?.data
       const fieldErr = {}
@@ -144,7 +257,11 @@ const AdminLogin = () => {
         }
       }
       setRequestErrors(fieldErr)
-      const msg = data?.detail || data?.email?.[0] || data?.password?.[0] || data?.confirm_password?.[0] || 'Unable to submit admin request.'
+      const knownKeys = ['detail', 'email', 'password', 'confirm_password', 'profile_picture']
+      if (!data || Object.keys(fieldErr).length === 0 || !Object.keys(fieldErr).some((k) => knownKeys.includes(k))) {
+        console.error('Admin request failed:', err)
+      }
+      const msg = data?.detail || data?.email?.[0] || data?.password?.[0] || data?.confirm_password?.[0] || data?.profile_picture?.[0] || 'Unable to submit admin request.'
       toast.error(msg)
     } finally {
       setRequestLoading(false)
@@ -381,7 +498,25 @@ const AdminLogin = () => {
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
                   </div>
                 </div>
-                <input name="academic_year" value={requestForm.academic_year} onChange={handleRequestChange} required placeholder="Academic year" className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60" />
+                <div className="flex items-center gap-2">
+                  <YearPicker
+                    label="Start year"
+                    value={ayStart}
+                    placeholder="Start year"
+                    open={openPicker === 'start'}
+                    onToggle={() => setOpenPicker(openPicker === 'start' ? null : 'start')}
+                    onSelect={(year) => handleYearSelect('start', year)}
+                  />
+                  <span className="text-sm text-gray-500">–</span>
+                  <YearPicker
+                    label="End year"
+                    value={ayEnd}
+                    placeholder="End year"
+                    open={openPicker === 'end'}
+                    onToggle={() => setOpenPicker(openPicker === 'end' ? null : 'end')}
+                    onSelect={(year) => handleYearSelect('end', year)}
+                  />
+                </div>
                 {requestErrors.academic_year && <p className="mt-1 text-xs text-red-400">{requestErrors.academic_year}</p>}
                 <label className="flex items-center justify-center w-full h-24 rounded-lg border border-dashed border-gray-700 bg-[#0f0f18] cursor-pointer hover:border-blue-500/60 transition overflow-hidden">
                   {profilePicPreview ? (
@@ -391,6 +526,7 @@ const AdminLogin = () => {
                   )}
                   <input type="file" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
                 </label>
+                {requestErrors.profile_picture && <p className="mt-1 text-xs text-red-400">{requestErrors.profile_picture}</p>}
                 <button type="submit" disabled={requestLoading} className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50">
                   {requestLoading ? 'Submitting...' : 'Submit Request'}
                 </button>

@@ -6,6 +6,17 @@ import { EVENTS } from '../utils/events'
 
 const MemberContext = createContext(null)
 
+const getSeenKey = (userId) => `icpep_seen_announcements_${userId}`
+
+const getLastSeenAt = (userId) => {
+  try {
+    const raw = localStorage.getItem(getSeenKey(userId))
+    return raw ? Number(raw) || 0 : 0
+  } catch {
+    return 0
+  }
+}
+
 export const MemberProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState(null)
@@ -15,6 +26,37 @@ export const MemberProvider = ({ children }) => {
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [announcements, setAnnouncements] = useState([])
   const [annLoading, setAnnLoading] = useState(false)
+  const [lastSeenAt, setLastSeenAt] = useState(() => getLastSeenAt(user?.id))
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
+
+  const markAnnouncementsSeen = useCallback(() => {
+    if (!user?.id) return
+    const now = Date.now()
+    try {
+      localStorage.setItem(getSeenKey(user.id), String(now))
+    } catch {
+      // localStorage unavailable — badge just stays visible
+    }
+    setLastSeenAt(now)
+    setUnreadAnnouncements(0)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    setLastSeenAt(getLastSeenAt(user.id))
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!announcements.length) {
+      setUnreadAnnouncements(0)
+      return
+    }
+    const unread = announcements.filter((a) => {
+      const created = new Date(a.created_at || 0).getTime()
+      return created > lastSeenAt
+    }).length
+    setUnreadAnnouncements(unread)
+  }, [announcements, lastSeenAt])
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -123,6 +165,8 @@ export const MemberProvider = ({ children }) => {
     paymentLoading,
     announcements,
     annLoading,
+    unreadAnnouncements,
+    markAnnouncementsSeen,
     refreshProfile: fetchProfile,
     refreshPaymentSettings: fetchPaymentSettings,
     refreshAnnouncements: fetchAnnouncements,

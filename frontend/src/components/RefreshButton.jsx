@@ -10,6 +10,11 @@ export default function RefreshButton({ className = '' }) {
     if (spinning) return
     setSpinning(true)
     clearRefresh()
+    try {
+      localStorage.setItem('icpep_update_acknowledged_at', String(Date.now()))
+    } catch {
+      // ignore
+    }
     if (!('serviceWorker' in navigator)) {
       window.location.reload()
       return

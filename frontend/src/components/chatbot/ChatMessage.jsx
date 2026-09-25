@@ -33,7 +33,7 @@ export default function ChatMessage({ message, isStreaming = false }) {
 
   return (
     <div
-      className={`flex gap-2.5 max-w-[85%] ${alignClass} animate-in slide-in-from-bottom-2 duration-300`}
+      className={`flex w-full items-end gap-2 min-w-0 ${alignClass} animate-in slide-in-from-bottom-2 duration-300`}
       onMouseEnter={() => setShowCopy(true)}
       onMouseLeave={() => setShowCopy(false)}
     >
@@ -43,12 +43,11 @@ export default function ChatMessage({ message, isStreaming = false }) {
         </div>
       )}
 
-      <div className="flex flex-col gap-1">
+      <div className="flex min-w-0 max-w-[85%] flex-col gap-1">
         <div
-          className={`relative rounded-2xl px-4 py-2.5 ${bubbleBg} ${textAlign} ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}`}
-          style={{ maxWidth: '100%' }}
+          className={`relative rounded-2xl px-4 py-2.5 max-w-full break-words ${bubbleBg} ${textAlign} ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}`}
         >
-          <div className="whitespace-pre-wrap text-sm leading-relaxed break-words">
+          <div className="whitespace-pre-wrap text-sm leading-relaxed break-words [overflow-wrap:anywhere]">
             {message.content}
           </div>
 

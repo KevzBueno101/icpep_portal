@@ -1,6 +1,5 @@
 import io
 import os
-import urllib.request
 
 from django.conf import settings
 from PIL import Image, ImageDraw, ImageFont
@@ -41,23 +40,9 @@ def _load_logo():
     return None
 
 
-def _load_image_from_url(url, max_size=(200, 200)):
-    """Download an image from URL and return a Pillow Image thumbnail, or None."""
-    if not url:
-        return None
-    try:
-        resp = urllib.request.urlopen(url, timeout=10)
-        data = resp.read()
-        pil = Image.open(io.BytesIO(data)).convert('RGBA')
-        pil.thumbnail(max_size, Image.LANCZOS)
-        return pil
-    except Exception:
-        return None
-
-
 def _fit_text(draw, text, font, max_width):
     """Truncate text to fit max_width px (with ellipsis) so long values
-    can never run into the payment-proof image on the right."""
+    never overflow the receipt width."""
     text = str(text)
     if draw.textlength(text, font=font) <= max_width:
         return text
@@ -77,7 +62,7 @@ def generate_receipt_png(transaction, member):
         transaction_type, payment_method, status, approved_by_name,
         approved_by_position).
     member : MemberProfile
-        The member profile (for full name and payment_proof_image).
+        The member profile (for full name).
 
     Returns
     -------
@@ -93,10 +78,10 @@ def generate_receipt_png(transaction, member):
     img = Image.new('RGB', (W, H), bg_color)
     draw = ImageDraw.Draw(img)
 
-    font_sm = _get_font(12)
-    font_md = _get_font(14)
-    font_md_bold = _get_font(14, bold=True)
-    font_xl = _get_font(26, bold=True)
+    font_sm = _get_font(14)
+    font_md = _get_font(17)
+    font_md_bold = _get_font(17, bold=True)
+    font_xl = _get_font(30, bold=True)
 
     # ── Border ──
     draw.rounded_rectangle([10, 10, W - 10, H - 10], radius=16, outline=accent_color, width=2)
@@ -133,7 +118,7 @@ def generate_receipt_png(transaction, member):
 
     y_start = 250
     col1_x = 70
-    row_h = 31
+    row_h = 38
 
     # Start the value column after the longest label so values never
     # overlap their labels (works even with bitmap font fallbacks).
@@ -146,24 +131,7 @@ def generate_receipt_png(transaction, member):
         value = _fit_text(draw, value, font_md_bold, value_max_width)
         draw.text((col2_x, y), value, fill=text_color, font=font_md_bold, anchor='lt')
 
-    # ── Payment Proof thumbnail (bottom-right corner, clear of the fields) ──
-    proof_url = member.payment_proof_image.url if member.payment_proof_image else None
-    if not proof_url:
-        # fallback: try from transaction
-        proof_url = transaction.payment_proof_image.url if transaction.payment_proof_image else None
-    proof_img = _load_image_from_url(proof_url, max_size=(260, 260))
-    if proof_img:
-        margin = 22
-        proof_w, proof_h = proof_img.size
-        proof_x = W - margin - proof_w
-        proof_y = H - margin - proof_h - 30
-        draw.rectangle([proof_x - 5, proof_y - 5, proof_x + proof_w + 5, proof_y + proof_h + 30],
-                       outline=accent_color, width=1)
-        img.paste(proof_img, (proof_x, proof_y), proof_img)
-        draw.text((proof_x + proof_w // 2, proof_y + proof_h + 8),
-                  'Payment Proof', fill=subtle_color, font=font_sm, anchor='mt')
-
-    # ── Signature (left-aligned, below proof area) ──
+    # ── Signature (left-aligned) ──
     sig_y = 620
     sign_x = 70
     draw.line([sign_x, sig_y, sign_x + 300, sig_y], fill=text_color, width=1)

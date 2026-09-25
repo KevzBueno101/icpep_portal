@@ -4,6 +4,7 @@ import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import { downloadFile } from '../../utils/download'
+import { formatCategory } from '../../utils/announcementCategories'
 import ImageModal from '../../components/ImageModal'
 import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
@@ -93,7 +94,7 @@ export default function MemberDashboard() {
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
               <Bell className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-bold text-slate-900">Recent Announcements</h2>
@@ -156,8 +157,8 @@ export default function MemberDashboard() {
                 className="w-full text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300 group flex flex-col"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100">
-                    {ann.category || 'Announcement'}
+                  <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 border border-sky-100">
+                    {formatCategory(ann.category)}
                   </span>
                   <span className="text-xs text-slate-400">
                     {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}

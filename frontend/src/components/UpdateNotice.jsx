@@ -3,6 +3,17 @@ import { useRefresh } from '../context/RefreshContext'
 
 const UPDATE_CHECK_INTERVAL = 60_000
 
+const wasJustAcknowledged = () => {
+  try {
+    const at = Number(localStorage.getItem('icpep_update_acknowledged_at'))
+    if (!at || Date.now() - at > 10000) return false
+    localStorage.removeItem('icpep_update_acknowledged_at')
+    return true
+  } catch {
+    return false
+  }
+}
+
 export default function UpdateNotice() {
   const { triggerRefresh } = useRefresh()
   const registrationRef = useRef(null)
@@ -24,7 +35,10 @@ export default function UpdateNotice() {
         })
       }
 
-      if (registration.waiting) {
+      // A freshly-installed waiting worker right after a user-initiated refresh
+      // (or the mount right after reload) is the one they already acted on — do
+      // not re-trigger the red dot for it.
+      if (!wasJustAcknowledged() && registration.waiting) {
         markUpdateAvailable()
       }
 

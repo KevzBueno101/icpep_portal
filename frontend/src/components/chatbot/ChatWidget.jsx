@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageSquare, X, Minimize2, Maximize2, RefreshCw, Trash2, Info, Send, Loader2, Bot } from 'lucide-react'
+import { X, RefreshCw, Info, Bot } from 'lucide-react'
 import { useChat } from './useChat'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
@@ -80,11 +80,6 @@ export default function ChatWidget() {
     setUnreadCount(0)
   }, [])
 
-  const handleMinimize = useCallback(() => {
-    setIsMinimized(true)
-    setIsOpen(false)
-  }, [])
-
   const handleMaximize = useCallback(() => {
     setIsMinimized(false)
     setIsOpen(true)
@@ -131,7 +126,12 @@ export default function ChatWidget() {
           className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4"
           aria-label="Open chatbot"
         >
-          <MessageSquare className="h-7 w-7" />
+          <Bot className="h-7 w-7" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       )}
 
@@ -139,9 +139,9 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           ref={widgetRef}
-          className="fixed inset-x-3 bottom-24 z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
+          className="fixed inset-x-3 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
         >
-          <div className="flex flex-col h-[500px] md:h-[550px] lg:h-[600px] max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex flex-col h-[calc(100dvh-9.5rem)] max-h-[85vh] md:h-[550px] md:max-h-[85vh] lg:h-[600px] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 shrink-0 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
               <div className="flex items-center gap-2.5">
@@ -163,13 +163,6 @@ export default function ChatWidget() {
                   <RefreshCw className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={handleMinimize}
-                  className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800"
-                  aria-label="Minimize"
-                >
-                  <Minimize2 className="h-4 w-4" />
-                </button>
-                <button
                   onClick={() => { setIsOpen(false); setIsMinimized(true); }}
                   className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800"
                   aria-label="Close"
@@ -180,7 +173,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
               {showWelcome && messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 mb-4 dark:bg-sky-900/30">
