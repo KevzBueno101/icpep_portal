@@ -55,7 +55,7 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen bg-slate-100 flex items-center justify-center px-4 dark:bg-slate-900">
-      <div className="absolute top-4 right-4">
+      <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
       <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg dark:border dark:border-slate-600 dark:bg-slate-800 dark:shadow-black/40">
