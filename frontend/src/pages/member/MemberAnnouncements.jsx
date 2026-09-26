@@ -131,31 +131,43 @@ export default function MemberAnnouncements() {
               key={ann.id}
               type="button"
               onClick={() => navigate(`/announcement/${ann.id}`)}
-              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full"
+              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full overflow-hidden"
             >
-              <div className="flex items-center justify-between gap-4">
-                <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
-                  {formatCategory(ann.category)}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }) : ''}
-                </span>
-              </div>
-              <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
-                {ann.title}
-              </h2>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1">
-                {ann.body}
-              </p>
-              <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
-                <span>Read announcement</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
+              {ann.first_image && (
+                <div className="relative w-full overflow-hidden bg-slate-100">
+                  <img
+                    src={ann.first_image}
+                    alt={ann.title || 'Announcement'}
+                    loading="lazy"
+                    className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  />
+                </div>
+              )}
+              <div className="flex flex-col p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
+                    {formatCategory(ann.category)}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }) : ''}
+                  </span>
+                </div>
+                <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
+                  {ann.title}
+                </h2>
+                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1">
+                  {ann.body}
+                </p>
+                <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
+                  <span>Read announcement</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </div>
               </div>
             </button>
           ))}
