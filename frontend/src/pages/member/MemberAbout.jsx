@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Mail, MapPin, Eye, ChevronRight, Code2 } from 'lucide-react'
+import { Info, Shield, Mail, MapPin, Eye, ChevronRight, ChevronDown, Code2 } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
@@ -23,14 +23,13 @@ const FALLBACK_IDENTITY = [
   },
 ]
 
-const IDENTITY_TYPES = new Set(['MISSION', 'VISION'])
+const IDENTITY_TYPES = new Set(['MISSION', 'VISION', 'GOALS'])
 
 const isIdentity = (s) =>
   IDENTITY_TYPES.has(s.section_type) ||
   s.title?.toLowerCase().includes('core values')
 
 const FEED_COLORS = {
-  GOALS: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
   HISTORY: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
   CONSTITUTION: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
   RESOLUTION: { bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
@@ -38,16 +37,18 @@ const FEED_COLORS = {
 }
 
 const TYPE_LABELS = {
-  GOALS: 'Goals',
-  HISTORY: 'History',
   CONSTITUTION: 'Constitution & By-Laws',
   RESOLUTION: 'Resolution',
+  HISTORY: 'History',
   CUSTOM: 'Section',
 }
+
+const FEED_ORDER = { CONSTITUTION: 0, RESOLUTION: 1, HISTORY: 2 }
 
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
   const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
+  const [expandedHistory, setExpandedHistory] = useState(() => new Set())
 
   useEffect(() => {
     let mounted = true
@@ -74,6 +75,23 @@ export default function MemberAbout() {
 
   const identitySections = allSections?.filter(isIdentity) ?? []
   const feedSections = allSections?.filter((s) => !isIdentity(s)) ?? []
+  const orderedFeedSections = [...feedSections].sort((a, b) => {
+    const oa = FEED_ORDER[a.section_type] ?? 99
+    const ob = FEED_ORDER[b.section_type] ?? 99
+    return oa - ob
+  })
+
+  const toggleHistory = (id) => {
+    setExpandedHistory((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
 
   return (
     <div className="space-y-10">
@@ -89,28 +107,71 @@ export default function MemberAbout() {
         </p>
       </div>
 
-      {/* Identity: Mission, Vision, Core Values */}
+      {/* Leadership Board */}
+      <OfficersProvider>
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Leadership Team</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Student Leadership Board</h2>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+            <OfficersCarousel />
+          </div>
+        </section>
+      </OfficersProvider>
+
+      {/* Web-App Development Committee */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Code2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Web-App Development Committee</h2>
+              <p className="text-sm text-slate-500">Meet the team behind this portal.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDevCommitteeOpen(true)}
+            className="self-start md:self-auto inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
+          >
+            <ChevronRight className="h-4 w-4" />
+            View Members
+          </button>
+        </div>
+      </div>
+
+      {/* Identity: Mission, Vision, Core Values, Goals */}
       {identitySections.length > 0 && (
         <div>
           <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
             <span className="h-1 w-5 rounded-full bg-sky-600" />
-            Our Identity
+            Our Mission, Vision & Goals
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {identitySections.map((section) => {
               const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
               const isMission = section.section_type === 'MISSION'
               const isVision = section.section_type === 'VISION'
+              const isGoals = section.section_type === 'GOALS'
               const accent = isMission
                 ? 'from-sky-500 to-sky-600'
                 : isVision
                   ? 'from-indigo-500 to-indigo-600'
-                  : 'from-slate-500 to-slate-600'
+                  : isGoals
+                    ? 'from-emerald-500 to-emerald-600'
+                    : 'from-slate-500 to-slate-600'
               const iconBg = isMission
                 ? 'bg-sky-50 text-sky-600'
                 : isVision
                   ? 'bg-indigo-50 text-indigo-600'
-                  : 'bg-slate-100 text-slate-600'
+                  : isGoals
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : 'bg-slate-100 text-slate-600'
               return (
                 <div
                   key={section.id || section.title}
@@ -150,18 +211,20 @@ export default function MemberAbout() {
         </div>
       )}
 
-      {/* Feeds: History, Constitution, Resolutions, Goals, etc. */}
-      {feedSections.length > 0 && (
+      {/* Feeds: Constitution, Resolutions, History, others */}
+      {orderedFeedSections.length > 0 && (
         <div>
           <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
             <span className="h-1 w-5 rounded-full bg-sky-600" />
             About the Organization
           </h2>
           <div className="space-y-4">
-            {feedSections.map((section) => {
+            {orderedFeedSections.map((section) => {
               const colors = FEED_COLORS[section.section_type] || FEED_COLORS.CUSTOM
               const label = TYPE_LABELS[section.section_type] || 'Section'
               const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
+              const isHistory = section.section_type === 'HISTORY'
+              const isExpanded = expandedHistory.has(section.id)
               return (
                 <div
                   key={section.id || section.title}
@@ -176,7 +239,7 @@ export default function MemberAbout() {
                         </span>
                       </div>
                       <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
-                      {lines.length > 1 && section.section_type !== 'HISTORY' ? (
+                      {lines.length > 1 && !isHistory ? (
                         <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
                           {lines.map((line, idx) => (
                             <li key={idx} className="flex items-center gap-2">
@@ -186,7 +249,21 @@ export default function MemberAbout() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                        <p
+                          className={`mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed transition-all duration-200 ${isHistory && !isExpanded ? 'line-clamp-4' : ''}`}
+                        >
+                          {section.body}
+                        </p>
+                      )}
+                      {isHistory && (
+                        <button
+                          type="button"
+                          onClick={() => toggleHistory(section.id)}
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
+                        >
+                          {isExpanded ? 'Show less' : 'Show more'}
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
                       )}
                       {section.document_url && (
                         <button
@@ -194,9 +271,9 @@ export default function MemberAbout() {
                           onClick={() => openPreview(section)}
                           className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
                         >
-<Eye className="h-3.5 w-3.5" />
-                      See pdf
-                      <ChevronRight className="h-3.5 w-3.5" />
+                          <Eye className="h-3.5 w-3.5" />
+                          See pdf
+                          <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>
@@ -207,44 +284,6 @@ export default function MemberAbout() {
           </div>
         </div>
       )}
-
-      {/* Leadership Board */}
-      <OfficersProvider>
-        <section className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Leadership Team</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Student Leadership Board</h2>
-            </div>
-          </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-            <OfficersCarousel />
-          </div>
-        </section>
-      </OfficersProvider>
-
-      {/* Web-App Development Committee */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              <Code2 className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Web-App Development Committee</h2>
-              <p className="text-sm text-slate-500">Meet the team behind this portal.</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setDevCommitteeOpen(true)}
-            className="self-start md:self-auto inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition shadow-sm"
-          >
-            <ChevronRight className="h-4 w-4" />
-            View Members
-          </button>
-        </div>
-      </div>
 
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">
