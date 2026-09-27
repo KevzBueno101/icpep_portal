@@ -219,6 +219,13 @@ export default function HeroSection() {
             <span className="ml-2 opacity-0 transition group-hover:opacity-100">↗</span>
           </a>
           <a
+            href="/login"
+            className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-[15px] font-semibold text-white/90 backdrop-blur transition hover:border-cyan-400/40 hover:bg-white/10"
+          >
+            <span className="mr-2">⟶</span>
+            Login as member
+          </a>
+          <a
             href={import.meta.env.VITE_FACEBOOK_URL || 'https://www.facebook.com/Icpep.seCatSu'}
             target="_blank"
             rel="noreferrer"
