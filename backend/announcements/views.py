@@ -201,6 +201,18 @@ class AnnouncementEmailBlastAPIView(APIView):
 
         result = send_announcement_blast(announcement)
 
+        # Only lock the announcement as emailed when at least one send actually
+        # went out. Otherwise the admin would be permanently blocked from
+        # retrying (e.g. zero approved members, or every send failed).
+        if result['sent'] == 0:
+            if result['recipients'] == 0:
+                detail = ('No approved members found to email. The blast would '
+                          'have gone to every active member with an APPROVED profile.')
+            else:
+                detail = (f'No emails were delivered ({result["failed"]} failed). '
+                          'Check the BREVO_API_KEY/sender and try again.')
+            return Response({'detail': detail, **result}, status=status.HTTP_200_OK)
+
         announcement.email_blast_sent_at = timezone.now()
         announcement.save(update_fields=['email_blast_sent_at'])
 

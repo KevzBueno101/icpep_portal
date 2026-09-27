@@ -46,9 +46,14 @@ def _brevo_send(payload):
         )
         res.raise_for_status()
         return True
-    except Exception:
-        logger.exception('Brevo email delivery FAILED to %s',
-                         (payload.get('to') or [{}])[0].get('email'))
+    except Exception as exc:
+        res = locals().get('res')
+        status = getattr(res, 'status_code', None)
+        body = getattr(res, 'text', '')[:300] if res is not None else ''
+        logger.warning(
+            'Brevo email delivery FAILED to %s (status=%s): %s %s',
+            (payload.get('to') or [{}])[0].get('email'), status, exc, body,
+        )
         return False
 
 

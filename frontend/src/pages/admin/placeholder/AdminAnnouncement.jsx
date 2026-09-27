@@ -213,8 +213,10 @@ const AdminAnnouncement = () => {
     setEmailBlastLoading(true)
     try {
       const res = await api.post(`/announcements/admin/${emailBlastingAnnouncement.id}/email-blast/`)
-      const { sent, failed, queued } = res.data
-      if (queued > 0) {
+      const { sent, failed, queued, recipients } = res.data
+      if (sent === 0) {
+        toast.error(res.data.detail || `No emails were sent (${recipients ?? 0} recipients).`)
+      } else if (queued > 0) {
         toast.success(`Email blast started: ${sent} sent, ${queued} queued for tomorrow (daily limit reached).`)
       } else {
         toast.success(`Email sent to ${sent} members${failed ? `, ${failed} failed` : ''}.`)

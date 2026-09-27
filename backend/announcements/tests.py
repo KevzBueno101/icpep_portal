@@ -104,8 +104,36 @@ class AnnouncementEmailBlastTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['recipients'], 0)
         self.assertEqual(response.data['sent'], 0)
         mock_send.assert_not_called()
+        # No send happened -> the announcement must NOT be locked as sent.
+        self.announcement.refresh_from_db()
+        self.assertIsNone(self.announcement.email_blast_sent_at)
+        self.assertEqual(BlastLog.objects.count(), 0)
+
+    @patch('announcements.blast.send_email_blocking', return_value=False)
+    def test_blast_all_failed_does_not_lock_announcement(self, mock_send):
+        response = self.client.post(
+            f'/api/announcements/admin/{self.announcement.id}/email-blast/'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['sent'], 0)
+        self.assertEqual(response.data['failed'], 1)
+        mock_send.assert_called_once()
+        self.announcement.refresh_from_db()
+        self.assertIsNone(self.announcement.email_blast_sent_at)
+
+        # A retry is allowed and (with a healthy sender) succeeds.
+        mock_send.return_value = True
+        retry = self.client.post(
+            f'/api/announcements/admin/{self.announcement.id}/email-blast/'
+        )
+        self.assertEqual(retry.status_code, status.HTTP_200_OK, retry.data)
+        self.assertEqual(retry.data['sent'], 1)
+        self.announcement.refresh_from_db()
+        self.assertIsNotNone(self.announcement.email_blast_sent_at)
 
     def test_public_announcement_cannot_be_blasted(self):
         self.announcement.members_only = False
