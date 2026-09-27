@@ -33,13 +33,10 @@ class Command(BaseCommand):
         for announcement in announcements:
             if remaining_today <= 0:
                 break
-            latest_log = announcement.blast_logs.first()
-            already_sent = announcement.blast_logs.aggregate(
-                n=Sum('sent_count')
-            )['n'] or 0
-            if latest_log and already_sent >= latest_log.recipient_count:
-                continue
             result = send_announcement_blast(announcement)
+            if result['sent'] == 0 and result['queued'] == 0:
+                # Nothing was pending for this announcement (already fully sent).
+                continue
             flushed += 1
             remaining_today -= result['sent']
             self.stdout.write(
