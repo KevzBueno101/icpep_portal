@@ -26,12 +26,13 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             'pinned',
             'is_published',
             'members_only',
+            'email_blast_sent_at',
             'images',
             'first_image',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'email_blast_sent_at']
 
     def get_first_image(self, obj):
         first_image = obj.images.first()

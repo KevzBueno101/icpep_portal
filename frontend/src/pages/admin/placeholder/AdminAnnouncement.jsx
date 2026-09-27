@@ -43,6 +43,9 @@ const AdminAnnouncement = () => {
 
   const [deletingAnnouncement, setDeletingAnnouncement] = useState(null)
 
+  const [emailBlastingAnnouncement, setEmailBlastingAnnouncement] = useState(null)
+  const [emailBlastLoading, setEmailBlastLoading] = useState(false)
+
   const [formData, setFormData] = useState(emptyForm)
 
   // Image upload UI (client-side only; actual upload happens after save)
@@ -113,6 +116,7 @@ const AdminAnnouncement = () => {
       author: announcement.author || '',
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
+      members_only: !!announcement.members_only,
     })
     setSelectedImages([])
   }
@@ -201,6 +205,27 @@ const AdminAnnouncement = () => {
       fetchAnnouncements()
     } catch (err) {
       toast.error('Failed to delete announcement.')
+    }
+  }
+
+  const handleEmailBlast = async () => {
+    if (!emailBlastingAnnouncement) return
+    setEmailBlastLoading(true)
+    try {
+      const res = await api.post(`/announcements/admin/${emailBlastingAnnouncement.id}/email-blast/`)
+      const { sent, failed, queued } = res.data
+      if (queued > 0) {
+        toast.success(`Email blast started: ${sent} sent, ${queued} queued for tomorrow (daily limit reached).`)
+      } else {
+        toast.success(`Email sent to ${sent} members${failed ? `, ${failed} failed` : ''}.`)
+      }
+      setEmailBlastingAnnouncement(null)
+      fetchAnnouncements()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to send email blast.')
+      setEmailBlastingAnnouncement(null)
+    } finally {
+      setEmailBlastLoading(false)
     }
   }
 
@@ -794,6 +819,22 @@ const AdminAnnouncement = () => {
                       >
                         {announcement.pinned ? 'Unpin' : 'Pin'}
                       </button>
+                      {announcement.members_only && announcement.is_published && (
+                        announcement.email_blast_sent_at ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Email sent
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setEmailBlastingAnnouncement(announcement)}
+                            className="rounded-full border border-indigo-300 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                          >
+                            Send Email
+                          </button>
+                        )
+                      )}
                       <button
                         type="button"
                         onClick={() => handleEdit(announcement)}
@@ -865,6 +906,18 @@ const AdminAnnouncement = () => {
         busy={false}
         onConfirm={handleDelete}
         onCancel={() => setDeletingAnnouncement(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!emailBlastingAnnouncement}
+        variant="info"
+        title="Send email to all approved members?"
+        description={`This will email "${emailBlastingAnnouncement?.title}" to every approved member. This action can only be done once per announcement.`}
+        confirmText={emailBlastLoading ? 'Sending...' : 'Send Email'}
+        cancelText="Cancel"
+        busy={emailBlastLoading}
+        onConfirm={handleEmailBlast}
+        onCancel={() => setEmailBlastingAnnouncement(null)}
       />
     </div>
   )

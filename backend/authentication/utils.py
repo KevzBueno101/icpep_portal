@@ -1,17 +1,13 @@
 import logging
-import threading
 from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
-import requests
 from django.conf import settings
-from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
+from common.email_service import send_email, send_email_blocking
 from config.urlutils import clean_origin_url
 
 from .models import FailedLoginAttempt
@@ -92,10 +88,8 @@ def recent_ip_failures(ip, minutes=15):
 
 def send_password_reset_email(email, reset_url):
     """
-    Sends the password reset email via SendGrid HTTP API in a background thread.
-    Uses port 443, so it works on Render's free tier.
-    Falls back to django.core.mail.send_mail if SENDGRID_API_KEY is not set
-    or when SendGrid delivery fails (e.g. invalid key / unverified sender).
+    Sends the password reset email via Brevo in a background thread
+    (never blocks or breaks the reset request; failures are logged only).
     """
     subject = "Reset your ICPEP.SE password"
     html = f"""<!DOCTYPE html>
@@ -120,82 +114,25 @@ This link expires in 24 hours.
 </body>
 </html>"""
 
-    def _send():
-        api_key = getattr(settings, 'SENDGRID_API_KEY', '').strip()
-
-        def _smtp():
-            send_mail(
-                subject=subject,
-                message=f"Reset your password at: {reset_url}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=html,
-            )
-
-        if api_key:
-            try:
-                message = Mail(
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to_emails=email,
-                    subject=subject,
-                    html_content=html,
-                )
-                SendGridAPIClient(api_key).send(message)
-                logger.info("Password reset email SENT to %s via SendGrid", email)
-                return
-            except Exception:
-                logger.exception(
-                    "Password reset email SendGrid delivery FAILED to %s; falling back to SMTP",
-                    email,
-                )
-
-        try:
-            _smtp()
-            logger.info("Password reset email SENT to %s via SMTP", email)
-        except Exception:
-            logger.exception("Password reset email SMTP delivery FAILED to %s", email)
-
-    thread = threading.Thread(target=_send, daemon=True)
-    thread.start()
-
-
-BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
+    send_email(
+        subject=subject,
+        recipient_email=email,
+        recipient_name='',
+        html=html,
+    )
 
 
 def send_brevo_email(to_email, to_name, subject, html):
     """
-    Send one transactional email via Brevo's REST API (requests).
-    No fallback — if BREVO_API_KEY is unset or delivery fails, it is only logged.
-    Returns True on success, False otherwise.
+    Backwards-compatible wrapper over the unified email service.
+    Sends synchronously; returns True on success, False otherwise.
     """
-    api_key = getattr(settings, 'BREVO_API_KEY', '').strip()
-    if not api_key:
-        logger.warning("BREVO_API_KEY not set — skipping email to %s", to_email)
-        return False
-
-    payload = {
-        'sender': {
-            'name': getattr(settings, 'BREVO_SENDER_NAME', 'ICpEP.SE CatSU'),
-            'email': settings.DEFAULT_FROM_EMAIL,
-        },
-        'to': [{'email': to_email, 'name': to_name}],
-        'subject': subject,
-        'htmlContent': html,
-    }
-
-    try:
-        res = requests.post(
-            BREVO_API_URL,
-            json=payload,
-            headers={'api-key': api_key, 'Accept': 'application/json'},
-            timeout=15,
-        )
-        res.raise_for_status()
-        logger.info("Brevo email SENT to %s (%s)", to_email, subject)
-        return True
-    except Exception:
-        logger.exception("Brevo email delivery FAILED to %s (%s)", to_email, subject)
-        return False
+    return send_email_blocking(
+        subject=subject,
+        recipient_email=to_email,
+        recipient_name=to_name,
+        html=html,
+    )
 
 
 def send_registration_welcome_email(user):
@@ -234,9 +171,9 @@ If you didn&rsquo;t register on the ICPEP.SE portal, you can safely ignore this 
 </body>
 </html>"""
 
-    thread = threading.Thread(
-        target=send_brevo_email,
-        args=(user.email, full_name, subject, html),
-        daemon=True,
+    send_email(
+        subject=subject,
+        recipient_email=user.email,
+        recipient_name=full_name,
+        html=html,
     )
-    thread.start()

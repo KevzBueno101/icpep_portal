@@ -22,6 +22,7 @@ class Announcement(models.Model):
     display_order = models.PositiveIntegerField(default=0, db_index=True)
     is_published = models.BooleanField(default=True)
     members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
+    email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -57,3 +58,28 @@ class AnnouncementImage(models.Model):
 
     def __str__(self):
         return f'{self.announcement.title} - Image {self.order}'
+
+
+class BlastLog(models.Model):
+    """One row per email-blast run for an announcement.
+
+    Used to honor the Brevo daily quota: ``sent_count`` tracks how many
+    recipients were attempted so a later flush command can resume safely.
+    """
+    announcement = models.ForeignKey(
+        Announcement,
+        on_delete=models.CASCADE,
+        related_name='blast_logs',
+    )
+    recipient_count = models.PositiveIntegerField(default=0)
+    sent_count = models.PositiveIntegerField(default=0)
+    failed_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Announcement Blast Log'
+        verbose_name_plural = 'Announcement Blast Logs'
+
+    def __str__(self):
+        return f'Blast #{self.id} for "{self.announcement.title}" ({self.sent_count}/{self.recipient_count})'
