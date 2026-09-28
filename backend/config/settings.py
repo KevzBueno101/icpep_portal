@@ -355,9 +355,7 @@ CONTENT_SECURITY_POLICY = {
     }
 }
 
-# Email configuration — SendGrid preferred (HTTP API, works on Render free tier)
-# Falls back to Gmail SMTP for local dev
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+# Email configuration — Brevo REST API (works on Render free tier, no SMTP port)
 BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
 BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'ICpEP.SE CatSU')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -366,7 +364,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@icpepcatsu.app')
+# Max outbound emails per day via Brevo (free tier = 300/day). Env-overridable.
+BREVO_DAILY_SEND_LIMIT = int(os.getenv('BREVO_DAILY_SEND_LIMIT', '300'))
 BUG_REPORT_EMAIL = os.getenv('BUG_REPORT_EMAIL', 'icpep.se.catsuchapter@gmail.com')
 FRONTEND_URL = clean_origin_url(os.getenv('FRONTEND_URL', '')) or 'https://icpep-catsu.vercel.app'
 

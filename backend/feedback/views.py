@@ -2,12 +2,11 @@ import logging
 import threading
 
 from django.conf import settings
-from django.core.mail import send_mail
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+
+from common.email_service import send_email_blocking
 
 from .serializers import BugReportSerializer
 
@@ -47,22 +46,11 @@ def _screenshot_url(report, request):
 
 
 def _deliver_bug_report(report, request):
-    """Send the bug report via SendGrid, falling back to SMTP."""
+    """Send the bug report via Brevo (background thread, failures logged only)."""
     recipient = getattr(settings, 'BUG_REPORT_EMAIL', '') or DEFAULT_BUG_REPORT_EMAIL
     subject = f"[Bug Report] {report.summary.strip()}"
 
     shot = _screenshot_url(report, request)
-
-    text = '\n'.join([
-        f"Summary: {report.summary}",
-        f"Reporter: {report.name} <{report.email}>",
-        f"Page: {report.page or 'n/a'}",
-        f"Severity: {report.severity}",
-        f"Screenshot: {shot or 'None'}",
-        '',
-        'Steps to reproduce:',
-        report.steps or 'n/a',
-    ])
 
     screenshot_row = (
         f"<tr><td style='padding:6px 12px;font-weight:600;color:#334155;"
@@ -104,34 +92,10 @@ padding:12px 16px;color:#334155;font-size:14px;white-space:pre-wrap;">
 </body>
 </html>"""
 
-    def _smtp():
-        send_mail(
-            subject=subject,
-            message=text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient],
-            html_message=html,
-        )
-
-    api_key = getattr(settings, 'SENDGRID_API_KEY', '').strip()
-    if api_key:
-        try:
-            message = Mail(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to_emails=recipient,
-                subject=subject,
-                html_content=html,
-            )
-            SendGridAPIClient(api_key).send(message)
-            logger.info("Bug report email SENT to %s via SendGrid", recipient)
-            return
-        except Exception:
-            logger.exception(
-                "Bug report email SendGrid delivery FAILED; falling back to SMTP"
-            )
-
-    try:
-        _smtp()
-        logger.info("Bug report email SENT to %s via SMTP", recipient)
-    except Exception:
-        logger.exception("Bug report email delivery FAILED to %s", recipient)
+    send_email_blocking(
+        subject=subject,
+        recipient_email=recipient,
+        recipient_name='',
+        html=html,
+    )
+    logger.info('Bug report email SENT to %s', recipient)

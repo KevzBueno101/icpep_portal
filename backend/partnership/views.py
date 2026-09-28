@@ -2,12 +2,11 @@ import logging
 import threading
 
 from django.conf import settings
-from django.core.mail import send_mail
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+
+from common.email_service import send_email_blocking
 
 from .serializers import PartnershipSerializer
 
@@ -46,19 +45,11 @@ def _attachment_url(partnership, request):
 
 
 def _deliver_partnership(partnership, request):
-    """Email the proposal via SendGrid, falling back to SMTP (mirrors bug reports)."""
+    """Email the proposal via Brevo (background thread, failures logged only)."""
     recipient = getattr(settings, 'BUG_REPORT_EMAIL', '') or DEFAULT_PARTNERSHIP_EMAIL
     subject = f"Partnership Proposal from {partnership.name.strip()}"
 
     attachment = _attachment_url(partnership, request)
-
-    text = '\n'.join([
-        f"Name: {partnership.name}",
-        f"Email: {partnership.email}",
-        f"Attachment: {attachment or 'None'}",
-        '',
-        partnership.message,
-    ])
 
     attachment_row = (
         f"<tr><td style='padding:6px 12px;font-weight:600;color:#334155;"
@@ -99,34 +90,10 @@ Submitted through the ICPEP.SE portal on {partnership.created_at.strftime('%Y-%m
 </body>
 </html>"""
 
-    def _smtp():
-        send_mail(
-            subject=subject,
-            message=text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient],
-            html_message=html,
-        )
-
-    api_key = getattr(settings, 'SENDGRID_API_KEY', '').strip()
-    if api_key:
-        try:
-            message = Mail(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to_emails=recipient,
-                subject=subject,
-                html_content=html,
-            )
-            SendGridAPIClient(api_key).send(message)
-            logger.info("Partnership email SENT to %s via SendGrid", recipient)
-            return
-        except Exception:
-            logger.exception(
-                "Partnership email SendGrid delivery FAILED; falling back to SMTP"
-            )
-
-    try:
-        _smtp()
-        logger.info("Partnership email SENT to %s via SMTP", recipient)
-    except Exception:
-        logger.exception("Partnership email delivery FAILED to %s", recipient)
+    send_email_blocking(
+        subject=subject,
+        recipient_email=recipient,
+        recipient_name='',
+        html=html,
+    )
+    logger.info('Partnership email SENT to %s', recipient)

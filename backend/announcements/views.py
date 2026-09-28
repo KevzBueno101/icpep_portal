@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +10,7 @@ from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 from push.services import send_announcement_push
 
+from .blast import send_announcement_blast
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
 
@@ -171,3 +173,57 @@ class AnnouncementImageUploadAPIView(APIView):
 class AnnouncementReorderAPIView(ReorderAPIView):
     model = Announcement
     permission_classes = [CanManageContent]
+
+
+class AnnouncementEmailBlastAPIView(APIView):
+    """Manually trigger the email blast for a members-only announcement.
+
+    Only published members-only announcements are eligible. Each
+    announcement can only be triggered once; the remainder above the daily
+    Brevo quota is queued for the flush_announcement_emails command.
+    """
+    permission_classes = [CanManageContent]
+
+    def post(self, request, id):
+        announcement = get_object_or_404(Announcement, id=id)
+
+        if not announcement.members_only or not announcement.is_published:
+            return Response(
+                {'detail': 'Email blast is only available for published, members-only announcements.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if announcement.email_blast_sent_at:
+            return Response(
+                {'detail': 'Email blast already sent for this announcement.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = send_announcement_blast(announcement)
+
+        # Only lock the announcement as emailed when at least one send actually
+        # went out. Otherwise the admin would be permanently blocked from
+        # retrying (e.g. zero approved members, or every send failed).
+        if result['sent'] == 0:
+            if result['recipients'] == 0:
+                detail = ('No approved members found to email. The blast would '
+                          'have gone to every active member with an APPROVED profile.')
+            else:
+                detail = (f'No emails were delivered ({result["failed"]} failed). '
+                          'Check the BREVO_API_KEY/sender and try again.')
+            return Response({'detail': detail, **result}, status=status.HTTP_200_OK)
+
+        announcement.email_blast_sent_at = timezone.now()
+        announcement.save(update_fields=['email_blast_sent_at'])
+
+        log_action(
+            user=request.user,
+            action_type=AuditLog.ActionType.ANNOUNCEMENT_CREATED,
+            entity_type=AuditLog.EntityType.ANNOUNCEMENT,
+            entity_id=announcement.id,
+            entity_name=announcement.title,
+            details={'email_blast': True, 'sent': result['sent'], 'failed': result['failed']},
+            request=request,
+        )
+
+        return Response(result, status=status.HTTP_200_OK)

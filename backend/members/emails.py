@@ -1,9 +1,8 @@
 import logging
-import threading
 
 from django.conf import settings
 
-from authentication.utils import send_brevo_email
+from common.email_service import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +39,9 @@ If you have any questions, feel free to reach out to the chapter.
 </body>
 </html>"""
 
-    thread = threading.Thread(
-        target=send_brevo_email,
-        args=(user.email, full_name, subject, html),
-        daemon=True,
+    send_email(
+        subject=subject,
+        recipient_email=user.email,
+        recipient_name=full_name,
+        html=html,
     )
-    thread.start()

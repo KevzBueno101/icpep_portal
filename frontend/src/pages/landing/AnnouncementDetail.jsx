@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
@@ -53,11 +53,13 @@ export default function AnnouncementDetail() {
 
   const [announcement, setAnnouncement] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [requiresLogin, setRequiresLogin] = useState(false)
   const [modalImages, setModalImages] = useState(null)
   const [modalInitialIndex, setModalInitialIndex] = useState(0)
 
   const fetchAnnouncement = async () => {
     setLoading(true)
+    setRequiresLogin(false)
     try {
       const client = user && user.role !== 'ADMIN' ? api : publicApi
       const res = await client.get(`/announcements/${id}/${user ? '?include_members_only=1' : ''}`)
@@ -65,6 +67,9 @@ export default function AnnouncementDetail() {
     } catch (err) {
       console.error('Failed to fetch announcement:', err)
       setAnnouncement(null)
+      if (err.response?.status === 404 && !user) {
+        setRequiresLogin(true)
+      }
     } finally {
       setLoading(false)
     }
@@ -141,6 +146,48 @@ export default function AnnouncementDetail() {
             <div className="h-4 w-4/6 animate-pulse rounded bg-slate-700" />
             <div className="h-4 w-full animate-pulse rounded bg-slate-700" />
             <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (requiresLogin) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}
+      >
+        <div className="text-center px-4">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-sky-500/10 ring-1 ring-sky-500/30">
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white">This announcement is for members</h1>
+          <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Log in to your ICpEP.SE member account to view this announcement.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/login', { state: { from: `/announcement/${id}` } })}
+            className="mt-6 inline-block rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-700"
+          >
+            Log in to view
+          </button>
+          <div className="mt-4 space-x-3">
+            <button
+              type="button"
+              onClick={handleBackToAnnouncements}
+              className="inline-block text-sky-400 hover:text-sky-300 text-sm"
+            >
+              Back to announcements
+            </button>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
+            <Link to="/register" className="inline-block text-sky-400 hover:text-sky-300 text-sm">
+              Not a member yet? Register
+            </Link>
           </div>
         </div>
       </div>
