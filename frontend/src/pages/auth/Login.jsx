@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -8,6 +8,7 @@ import ThemeToggle from '../../components/ThemeToggle'
 const Login = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -25,7 +26,12 @@ const Login = () => {
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard')
       } else {
-        navigate(user.membership_status === 'APPROVED' ? '/member/dashboard' : '/membership-pending')
+        const from = location.state?.from
+        if (from && user.membership_status === 'APPROVED') {
+          navigate(from, { replace: true })
+        } else {
+          navigate(user.membership_status === 'APPROVED' ? '/member/dashboard' : '/membership-pending')
+        }
       }
 
     } catch (err) {
