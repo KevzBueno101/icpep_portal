@@ -24,7 +24,11 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [])
 
   return (
@@ -57,7 +61,7 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-full bg-white/90 backdrop-blur p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 transition-colors"
+              className="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
             >
               <MoreVertical size={18} />
             </button>

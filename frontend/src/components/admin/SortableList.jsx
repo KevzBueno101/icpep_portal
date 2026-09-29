@@ -32,11 +32,11 @@ function SortableItem({ id, children, disabled }) {
       <div className="relative">
         <button
           type="button"
-          className={`absolute top-2 left-2 z-10 cursor-grab rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 ${disabled ? 'hidden' : ''}`}
+          className={`absolute top-2 left-2 z-10 cursor-grab touch-none select-none rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing ${disabled ? 'hidden' : ''}`}
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4" />
+          <GripVertical className="h-5 w-5" />
         </button>
         {children}
       </div>

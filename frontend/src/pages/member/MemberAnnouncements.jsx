@@ -46,10 +46,6 @@ export default function MemberAnnouncements() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-            <Bell className="h-8 w-8 text-sky-600" />
-            Announcements Feed
-          </h1>
           <p className="mt-2 text-slate-600 text-sm md:text-base">
             Stay updated with the latest news, events, and academic updates from ICPEP.SE.
           </p>
