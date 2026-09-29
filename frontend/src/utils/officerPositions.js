@@ -14,6 +14,7 @@ export const OFFICER_GROUPS = [
       'Business Managers',
       'Public Relations Officer',
       'Project Manager',
+      'Adviser',
     ],
   },
   {

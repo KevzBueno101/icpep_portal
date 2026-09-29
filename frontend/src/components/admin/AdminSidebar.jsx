@@ -184,7 +184,7 @@ export default function AdminSidebar({ badges = {}, logout }) {
 
           {/* Theme toggle + sign out */}
           <div className="flex shrink-0 items-center gap-1">
-            <RefreshButton className="h-9 w-9 text-blue-100 hover:bg-white/10 hover:text-white" />
+            <RefreshButton className="h-9 w-9 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />
             <ThemeToggle className="border-white/20 bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/0 dark:text-blue-100" />
             <button
               type="button"

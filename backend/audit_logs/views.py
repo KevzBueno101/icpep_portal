@@ -21,7 +21,7 @@ class AuditLogListAPIView(generics.ListAPIView):
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
-        queryset = AuditLog.objects.all()
+        queryset = AuditLog.objects.select_related('admin_user')
 
         # Filter by action type
         action_type = self.request.query_params.get('action_type')
@@ -60,7 +60,7 @@ class AuditLogExportAPIView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        queryset = AuditLog.objects.all()
+        queryset = AuditLog.objects.select_related('admin_user')
 
         # Apply same filters as list view
         action_type = request.query_params.get('action_type')
@@ -97,6 +97,7 @@ class AuditLogExportAPIView(APIView):
         writer = csv.writer(response)
         writer.writerow([
             'Timestamp',
+            'Admin Name',
             'Admin Email',
             'Admin Username',
             'Action',
@@ -108,8 +109,13 @@ class AuditLogExportAPIView(APIView):
         ])
 
         for log in queryset:
+            admin_user = log.admin_user
+            admin_name = ''
+            if admin_user is not None:
+                admin_name = f"{admin_user.first_name} {admin_user.last_name}".strip() or admin_user.username
             writer.writerow([
                 log.timestamp,
+                admin_name,
                 log.admin_user.email if log.admin_user else '',
                 log.admin_user.username if log.admin_user else '',
                 log.get_action_type_display(),

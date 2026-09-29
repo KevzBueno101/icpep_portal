@@ -8,7 +8,6 @@ import Skeleton from '../../components/Skeleton'
 import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
-import RefreshButton from '../../components/RefreshButton'
 
 
 
@@ -236,12 +235,9 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-8">
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Dashboard</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Overview of your organization.</p>
-        </div>
-        <RefreshButton />
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Dashboard</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Overview of your organization.</p>
       </div>
 
       <div className="space-y-4">

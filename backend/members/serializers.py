@@ -27,6 +27,7 @@ class MemberProfileSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_role = serializers.CharField(source='user.role', read_only=True)
     fee_amount = serializers.IntegerField(read_only=True)
+    latest_reference_number = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MemberProfile
@@ -35,9 +36,13 @@ class MemberProfileSerializer(serializers.ModelSerializer):
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'profile_picture', 'payment_method', 'payment_proof_image',
             'coe_id_image', 'membership_fee', 'fee_amount', 'admin_message', 'membership_status',
-            'created_at', 'updated_at'
+            'latest_reference_number', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
+
+    def get_latest_reference_number(self, obj):
+        txn = obj.transactions.order_by('-created_at').first()
+        return txn.reference_number if txn else ''
 
     def _resolve_cloudinary_url(self, url, field_instance):
         if not url or 'res.cloudinary.com' in url:
@@ -94,19 +99,26 @@ class PaymentSettingsSerializer(serializers.ModelSerializer):
 
 class MemberCreateSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(write_only=True)
+    payment_proof_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        validators=[validate_image_file]
+    )
 
     class Meta:
         model = MemberProfile
         fields = [
             'id', 'user_email', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
-            'profile_picture', 'membership_fee', 'membership_status'
+            'profile_picture', 'membership_fee', 'membership_status',
+            'payment_method', 'payment_proof_image'
         ]
         extra_kwargs = {
             'middle_name': {'required': False, 'allow_blank': True},
             'profile_picture': {'required': False, 'allow_null': True},
             'membership_fee': {'required': False},
             'membership_status': {'required': False},
+            'payment_method': {'required': False},
         }
 
     def validate_user_email(self, value):

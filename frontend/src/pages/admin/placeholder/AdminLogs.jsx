@@ -55,6 +55,25 @@ const formatDate = (dateString) => {
   })
 }
 
+const DETAIL_LABELS = {
+  email: 'Email',
+  old_status: 'Old status',
+  new_status: 'New status',
+  approved_by: 'Approved by',
+  approved_by_position: 'Position',
+  status: 'Status',
+  role: 'Role',
+  expired_count: 'Expired count',
+  type: 'Type',
+  fee: 'Fee',
+  title: 'Title',
+}
+
+const formatDetailValue = (value) => {
+  const str = String(value)
+  return str.length > 60 ? `${str.slice(0, 57)}...` : str
+}
+
 const AdminLogs = () => {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -277,8 +296,11 @@ const AdminLogs = () => {
                   <tr key={log.id} className="hover:bg-slate-50">
                     <td className="px-6 py-4 text-sm text-slate-900">{formatDate(log.timestamp)}</td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      <div className="font-medium text-slate-900">{log.admin_username || 'Unknown'}</div>
+                      <div className="font-medium text-slate-900">{log.admin_name || log.admin_username || 'Unknown'}</div>
                       <div className="text-xs text-slate-500">{log.admin_email || ''}</div>
+                      {log.admin_position && (
+                        <div className="text-xs text-slate-400">{log.admin_position}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getActionBadgeColor(log.action_type)}`}>
@@ -292,8 +314,8 @@ const AdminLogs = () => {
                     <td className="px-6 py-4 text-sm text-slate-600">
                       {log.details && Object.keys(log.details).length > 0 && (
                         <div className="text-xs text-slate-500">
-                          {Object.entries(log.details).slice(0, 2).map(([key, value]) => (
-                            <div key={key}>{key}: {String(value).substring(0, 30)}</div>
+                          {Object.entries(log.details).map(([key, value]) => (
+                            <div key={key}>{DETAIL_LABELS[key] || key}: {formatDetailValue(value)}</div>
                           ))}
                         </div>
                       )}

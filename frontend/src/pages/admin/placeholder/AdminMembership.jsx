@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download } from 'lucide-react'
+import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download, Upload } from 'lucide-react'
 
 import api from '../../../api/axios'
 import { toast } from 'react-hot-toast'
@@ -62,8 +62,11 @@ const AdminMembership = () => {
     year_level: '1',
     section: '',
     contact_number: '',
+    payment_method: 'ON_HAND',
     membership_status: 'PENDING',
   })
+  const [paymentProofFile, setPaymentProofFile] = useState(null)
+  const [paymentProofPreview, setPaymentProofPreview] = useState('')
   const [isRenewConfirmOpen, setIsRenewConfirmOpen] = useState(false)
   const [renewFee, setRenewFee] = useState('ALL')
   const [isRenewing, setIsRenewing] = useState(false)
@@ -285,15 +288,29 @@ const AdminMembership = () => {
       year_level: '1',
       section: '',
       contact_number: '',
+      payment_method: 'ON_HAND',
       membership_fee: 'SEMESTER',
       membership_status: 'PENDING',
     })
+    setPaymentProofFile(null)
+    setPaymentProofPreview('')
     setIsAddModalOpen(true)
   }
 
   const handleFormChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const buildFormData = (data, files = {}) => {
+    const fd = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') fd.append(key, value)
+    })
+    Object.entries(files).forEach(([key, file]) => {
+      if (file instanceof File) fd.append(key, file)
+    })
+    return fd
   }
 
   const handleFormSubmit = async (e) => {
@@ -317,20 +334,25 @@ const AdminMembership = () => {
       return
     }
 
-    try {
+try {
       setIsSubmitting(true)
       const payload = { ...formData }
-      
+
       // Clean up optional fields before payload dispatch
       if (!payload.middle_name.trim()) delete payload.middle_name
 
-      const response = await api.post('/members/', payload)
-      
+      const hasProof = paymentProofFile instanceof File
+      const response = hasProof
+        ? await api.post('/members/', buildFormData(payload, { payment_proof_image: paymentProofFile }))
+        : await api.post('/members/', payload)
+
       // Prepend newly added member into local records dynamically
       setMembers((prev) => [response.data, ...prev])
       window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
       toast.success('Member created successfully!')
       setIsAddModalOpen(false)
+      setPaymentProofFile(null)
+      setPaymentProofPreview('')
     } catch (err) {
       console.error('Failed to create member:', err)
       const errors = err.response?.data
@@ -362,6 +384,7 @@ const AdminMembership = () => {
       'Department / Course',
       'Fee',
       'Status',
+      'Receipt Ref #',
       'Joined Date'
     ]
 
@@ -373,6 +396,7 @@ const AdminMembership = () => {
       const dept = (member.course || '').replace(/"/g, '""')
       const fee = formatFee(member.membership_fee)
       const status = member.membership_status
+      const refNumber = (member.latest_reference_number || '').replace(/"/g, '""')
       const joined = member.created_at
         ? new Date(member.created_at).toLocaleDateString('en-US')
         : 'N/A'
@@ -385,6 +409,7 @@ const AdminMembership = () => {
         `"${dept}"`,
         `"${fee}"`,
         `"${status}"`,
+        `"${refNumber}"`,
         `"${joined}"`
       ]
     })
@@ -1169,6 +1194,55 @@ const AdminMembership = () => {
                       <option value="ANNUAL">₱60 — Membership Plus</option>
                     </select>
                   </div>
+
+                  {/* Payment Method */}
+                  <div>
+                    <label htmlFor="payment_method" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Payment Method
+                    </label>
+                    <select
+                      id="payment_method"
+                      name="payment_method"
+                      value={formData.payment_method}
+                      onChange={handleFormChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
+                    >
+                      <option value="ON_HAND">On-hand / Personal</option>
+                      <option value="GCASH">GCash</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Proof of Payment Upload */}
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Proof of Payment <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <label className="flex items-center justify-center gap-3 border-2 border-dashed border-slate-300 rounded-xl px-4 py-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                    {paymentProofPreview ? (
+                      <img
+                        src={paymentProofPreview}
+                        alt="Proof of payment preview"
+                        className="h-16 w-16 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <Upload className="h-5 w-5 text-slate-400" />
+                    )}
+                    <span className="text-sm text-slate-600">
+                      {paymentProofFile ? paymentProofFile.name : 'Click to upload a screenshot / image of payment'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        setPaymentProofFile(file)
+                        setPaymentProofPreview(URL.createObjectURL(file))
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
 

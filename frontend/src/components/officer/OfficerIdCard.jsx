@@ -16,13 +16,14 @@ const C = {
 
 const CARD_W = 300
 const CARD_H = 500
+const QR_SIZE = 96
+const EXPORT_PADDING = 28
 
 /* ─── Display Card ─────────────────────────────────────────────────────── */
 
-const DisplayCard = React.forwardRef(function DisplayCard({ qrPayload, fullName, position, yearText, officerId, profilePictureUrl, avatarInitial }, ref) {
+const DisplayCard = ({ qrPayload, qrImageSrc, fullName, position, profilePictureUrl, avatarInitial }) => {
   return (
     <div
-      ref={ref}
       className="relative overflow-hidden rounded-[28px] shadow-[0_24px_64px_-12px_rgba(11,24,48,0.45)] select-none"
       style={{ width: CARD_W, height: CARD_H, background: C.white, flexShrink: 0 }}
     >
@@ -108,7 +109,7 @@ const DisplayCard = React.forwardRef(function DisplayCard({ qrPayload, fullName,
       <div className="absolute inset-x-0" style={{ top: '35%', bottom: 0 }}>
         <div className="flex h-full flex-col px-6 pt-2">
           {/* Name + Position */}
-          <div className="text-center mt-10">
+          <div className="text-center mt-9">
             <div className="text-[8px] font-bold uppercase tracking-[0.3em]" style={{ color: C.accent }}>
               Officer
             </div>
@@ -123,37 +124,37 @@ const DisplayCard = React.forwardRef(function DisplayCard({ qrPayload, fullName,
 
           {/* QR + Verification */}
           <div
-            className="mt-1.5 flex items-center justify-center gap-3 rounded-[18px] px-4 py-3"
+            className="mt-1.5 flex flex-col items-center justify-center gap-2.5 rounded-[18px] px-4 py-3"
             style={{
               background: `linear-gradient(135deg, ${C.cardBg} 0%, white 100%)`,
             }}
           >
-            <div className="min-w-0">
+            <div className="text-center">
               <p className="text-[7px] font-bold uppercase tracking-[0.2em]" style={{ color: C.slate }}>ICpEP.SE</p>
               <p className="mt-0.5 text-[9px] font-semibold" style={{ color: C.slate }}>
                 Officer's ID Card
               </p>
             </div>
             <div className="flex-shrink-0">
-              <QRCodeSVG value={qrPayload} size={64} includeMargin={false} fgColor={C.navy} />
+              {qrImageSrc ? (
+                <img src={qrImageSrc} alt="QR" width={QR_SIZE} height={QR_SIZE} />
+              ) : (
+                <QRCodeSVG value={qrPayload} size={QR_SIZE} includeMargin={false} fgColor={C.navy} />
+              )}
             </div>
           </div>
-
-          {/* Footer */}
-          <p className="mt-auto pb-2.5 text-center text-[7.5px] italic" style={{ color: '#94A3B8' }}>
-            Official verification pass — valid for the current academic year
-          </p>
         </div>
       </div>
     </div>
   )
-})
+}
 
 /* ─── Main Component ────────────────────────────────────────────────────── */
 
 export default function OfficerIdCard({ profile, user, profilePictureUrl: profilePictureUrlProp }) {
-  const cardRef = useRef(null)
+  const exportRef = useRef(null)
   const [saving, setSaving] = useState(false)
+  const [qrImageSrc, setQrImageSrc] = useState('')
 
   const fullName = useMemo(() => {
     return [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || '—'
@@ -190,210 +191,50 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
     return () => observer.disconnect()
   }, [])
 
-  const loadImg = (src) => new Promise((resolve) => {
-    if (!src) { resolve(null); return }
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = () => resolve(null)
-    img.src = src
-  })
+  const waitForImages = (root) => {
+    const images = root ? Array.from(root.querySelectorAll('img')) : []
+    return Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) return resolve()
+            img.onload = resolve
+            img.onerror = resolve
+          })
+      )
+    )
+  }
 
   const saveAsPng = async () => {
     try {
       setSaving(true)
 
-      const S = 3
-      const W = CARD_W * S
-      const H = CARD_H * S
-      const canvas = document.createElement('canvas')
-      canvas.width = W
-      canvas.height = H
-      const ctx = canvas.getContext('2d')
-      const X = (v) => v * S
-
-      const rr = (cx, cy, cw, ch, r) => {
-        const rx = X(r), x = X(cx), y = X(cy), w = X(cw), h = X(ch)
-        ctx.beginPath()
-        ctx.moveTo(x + rx, y)
-        ctx.lineTo(x + w - rx, y)
-        ctx.quadraticCurveTo(x + w, y, x + w, y + rx)
-        ctx.lineTo(x + w, y + h - rx)
-        ctx.quadraticCurveTo(x + w, y + h, x + w - rx, y + h)
-        ctx.lineTo(x + rx, y + h)
-        ctx.quadraticCurveTo(x, y + h, x, y + h - rx)
-        ctx.lineTo(x, y + rx)
-        ctx.quadraticCurveTo(x, y, x + rx, y)
-        ctx.closePath()
-      }
-
-      const [icpep, cea, prof] = await Promise.all([
-        loadImg('/icpep_logo.png'),
-        loadImg('/cea-logo.png'),
-        loadImg(profilePictureUrl),
-      ])
-
+      // html2canvas cannot rasterise the inline-SVG QR, so render the QR as a
+      // crisp <img> in the hidden export clone. Use a high-res source so it
+      // stays sharp at the 3x supersample scale.
       const qrDataUrl = await QRCode.toDataURL(qrPayload, {
-        width: X(80), margin: 0, color: { dark: C.navy, light: '#ffffff' },
+        width: QR_SIZE * 3,
+        margin: 0,
+        color: { dark: C.navy, light: '#ffffff' },
       })
-      const qrImg = await loadImg(qrDataUrl)
+      setQrImageSrc(qrDataUrl)
 
-      ctx.save()
-      rr(0, 0, CARD_W, CARD_H, 28)
-      ctx.clip()
+      // Give React a tick to swap the SVG for the <img> before exporting.
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      await waitForImages(exportRef.current)
 
-      ctx.fillStyle = C.white
-      ctx.fillRect(0, 0, X(CARD_W), X(CARD_H))
+      const canvas = await html2canvas(exportRef.current, {
+        backgroundColor: '#E2E8F0',
+        useCORS: true,
+        allowTaint: true,
+        scale: 3,
+        logging: false,
+      })
 
-      const navyH = 0.35 * H
-      const grad = ctx.createLinearGradient(0, 0, X(CARD_W), navyH)
-      grad.addColorStop(0, '#0B1830')
-      grad.addColorStop(0.4, '#132244')
-      grad.addColorStop(1, '#1C3B6B')
-      ctx.fillStyle = grad
-      ctx.fillRect(0, 0, X(CARD_W), navyH)
-
-      const accent = (hex, a) => {
-        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
-        ctx.fillStyle = `rgba(${r},${g},${b},${a})`
-      }
-
-      const LS = (size) => S * size
-      const TX = (size, weight, color, align, baseline) => {
-        ctx.font = `${weight || 'normal'} ${LS(size)}px Arial,sans-serif`
-        ctx.fillStyle = color
-        ctx.textAlign = align || 'center'
-        ctx.textBaseline = baseline || 'top'
-      }
-
-      const diagY = navyH * 0.59 / S
-      accent('#2B7BE4', 0.12)
-      ctx.beginPath()
-      ctx.moveTo(0, X(diagY))
-      ctx.lineTo(X(CARD_W), X(diagY + CARD_W * 0.05))
-      ctx.lineTo(X(CARD_W), X(diagY + CARD_W * 0.1))
-      ctx.lineTo(0, X(diagY + CARD_W * 0.05))
-      ctx.closePath()
-      ctx.fill()
-
-      // header logos + text
-      const lY = X(16), lS = X(48), lGap = X(4)
-      if (icpep) {
-        ctx.save(); ctx.beginPath(); ctx.arc(lY + lS/2, lY + lS/2, lS/2, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip()
-        ctx.drawImage(icpep, lY, lY, lS, lS); ctx.restore()
-      }
-      if (cea) {
-        const cx = X(CARD_W) - lY - lS
-        ctx.save(); ctx.beginPath(); ctx.arc(cx + lS/2, lY + lS/2, lS/2, 0, Math.PI*2); ctx.clip()
-        ctx.drawImage(cea, cx, lY, lS, lS); ctx.restore()
-      }
-
-      const textCX = X(CARD_W) / 2
-      TX(7.5, '700', 'rgba(255,255,255,0.9)')
-      ctx.fillText('Institute of Computer Engineers of the Philippines - Student Edition', textCX, lY + LS(2), X(CARD_W - 130))
-      TX(6.5, '600', 'rgba(191,219,254,0.8)')
-      ctx.fillText('College of Engineering and Architecture', textCX, lY + LS(16), X(CARD_W - 130))
-      TX(6, '700', 'rgba(147,197,253,0.7)')
-      ctx.fillText('CATANDUANES STATE UNIVERSITY', textCX, lY + LS(30), X(CARD_W - 130))
-
-      // profile photo
-      const pCX = X(CARD_W) / 2, pY = X(0.35 * CARD_H), pS = X(88), pHalf = pS / 2
-      ctx.save()
-      ctx.beginPath()
-      ctx.arc(pCX, pY, pHalf, 0, Math.PI * 2)
-      ctx.fillStyle = C.cardBg
-      ctx.fill()
-      ctx.lineWidth = X(3)
-      ctx.strokeStyle = '#fff'
-      ctx.stroke()
-      ctx.clip()
-      if (prof) {
-        ctx.drawImage(prof, pCX - pHalf, pY - pHalf, pS, pS)
-      } else {
-        ctx.restore()
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(pCX, pY, pHalf, 0, Math.PI * 2)
-        ctx.clip()
-        ctx.fillStyle = C.cardBg
-        ctx.fill()
-        ctx.restore()
-        ctx.save()
-        TX(24, '900', C.slate, 'center', 'middle')
-        ctx.fillText(avatarInitial, pCX, pY)
-      }
-      ctx.restore()
-
-      // name + position
-      const nameTop = pY + pHalf + X(14)
-      TX(8, '700', C.accent)
-      ctx.fillText('OFFICER', textCX, nameTop)
-
-      const nSize = LS(18)
-      TX(18, '900', C.navy, 'center', 'top')
-      ctx.fillText(fullName, textCX, nameTop + nSize + LS(4), X(CARD_W - 48))
-
-      const divY = nameTop + nSize + LS(4) + X(6) + LS(18) + X(14)
-      const gradLine = ctx.createLinearGradient(textCX - LS(24), divY, textCX + LS(24), divY)
-      gradLine.addColorStop(0, 'transparent')
-      gradLine.addColorStop(0.5, C.accent)
-      gradLine.addColorStop(1, 'transparent')
-      ctx.fillStyle = gradLine
-      ctx.fillRect(textCX - LS(24), divY, LS(48), LS(1))
-
-      TX(11, '700', C.royal, 'center', 'top')
-      ctx.fillText(profile?.position || '\u2014', textCX, divY + LS(10))
-
-      // qr section — centered group (text + QR)
-      const qrY = divY + LS(28)
-      const qrH = X(84)
-      rr(24, qrY/S, CARD_W - 48, 84, 18)
-      const qGrad = ctx.createLinearGradient(0, qrY, 0, qrY + qrH)
-      qGrad.addColorStop(0, C.cardBg)
-      qGrad.addColorStop(1, '#fff')
-      ctx.fillStyle = qGrad
-      ctx.fill()
-
-      if (qrImg) {
-        const qs = X(64)
-        const qrText1 = 'ICpEP.SE'
-        const qrText2 = "Officer's ID Card"
-
-        TX(7, '700', C.slate, 'left')
-        const tw1 = ctx.measureText(qrText1).width
-        TX(9, '600', C.slate, 'left')
-        const tw2 = ctx.measureText(qrText2).width
-        const textW = Math.max(tw1, tw2)
-        const gap = LS(12)
-        const totalW = textW + gap + qs
-        const groupLeft = textCX - totalW / 2
-
-        TX(7, '700', C.slate, 'left')
-        ctx.fillText(qrText1, groupLeft, qrY + X(14))
-        TX(9, '600', C.slate, 'left')
-        ctx.fillText(qrText2, groupLeft, qrY + X(28))
-        ctx.drawImage(qrImg, groupLeft + textW + gap, qrY + (qrH - qs) / 2, qs, qs)
-      }
-
-      const footY = X(CARD_H) - X(10)
-      TX(7.5, 'normal', '#94A3B8', 'center', 'bottom')
-      ctx.font = `italic ${LS(7.5)}px Arial,sans-serif`
-      ctx.fillText('Official verification pass \u2014 valid for the current academic year', textCX, footY)
-
-      ctx.restore()
-
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          alert('Download failed: Could not generate image.')
-          return
-        }
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `ICpEP_Officer_Card_${officerId || 'officer'}.png`
-        a.click()
-        URL.revokeObjectURL(url)
-      }, 'image/png')
+      const a = document.createElement('a')
+      a.href = canvas.toDataURL('image/png')
+      a.download = `ICpEP_Officer_Card_${officerId || 'officer'}.png`
+      a.click()
     } catch (err) {
       console.error('Canvas rendering error:', err)
       alert('Download failed: ' + (err.message || 'Unknown error'))
@@ -407,15 +248,44 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
       <div ref={cardWrapperRef} className="w-full flex justify-center overflow-hidden" style={{ height: CARD_H * scale }}>
         <div style={{ transform: `scale(${scale})`, transformOrigin: 'top center', flexShrink: 0 }}>
           <DisplayCard
-            ref={cardRef}
             qrPayload={qrPayload}
             fullName={fullName}
             position={profile?.position || ''}
-            yearText={''}
-            officerId={officerId}
             profilePictureUrl={profilePictureUrl}
             avatarInitial={avatarInitial}
           />
+        </div>
+      </div>
+
+      {/* Hidden export clone — same component, QR as <img>, off-screen so html2canvas can snapshot it */}
+      <div
+        style={{
+          position: 'fixed',
+          left: -9999,
+          top: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          ref={exportRef}
+          style={{
+            padding: EXPORT_PADDING,
+            background: '#E2E8F0',
+            width: CARD_W + (EXPORT_PADDING * 2),
+            height: CARD_H + (EXPORT_PADDING * 2),
+          }}
+        >
+          <div style={{ width: CARD_W, height: CARD_H }}>
+            <DisplayCard
+              qrPayload={qrPayload}
+              qrImageSrc={qrImageSrc || undefined}
+              fullName={fullName}
+              position={profile?.position || ''}
+              profilePictureUrl={profilePictureUrl}
+              avatarInitial={avatarInitial}
+            />
+          </div>
         </div>
       </div>
 

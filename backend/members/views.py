@@ -312,7 +312,15 @@ class MemberApproveAPIView(APIView):
             details={
                 'email': profile.user.email,
                 'old_status': old_status,
-                'new_status': new_status
+                'new_status': new_status,
+                **(
+                    {
+                        'approved_by': f"{request.user.first_name} {request.user.last_name}".strip(),
+                        'approved_by_position': request.user.position or '',
+                    }
+                    if new_status in ('APPROVED', 'REJECTED')
+                    else {}
+                ),
             },
             request=request
         )

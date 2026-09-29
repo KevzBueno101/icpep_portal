@@ -405,16 +405,6 @@ const AdminOfficersAccounts = () => {
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{editAdmin ? 'Edit officer' : 'New officer'}</p>
                   <h2 className="text-xl font-semibold text-slate-900">{editAdmin ? 'Update officer details' : 'Create officer account'}</h2>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalOpen(false)
-                    resetForm()
-                  }}
-                  className="rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                >
-                  Close
-                </button>
               </div>
             </div>
 
