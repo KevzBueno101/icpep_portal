@@ -124,12 +124,12 @@ const DisplayCard = ({ qrPayload, qrImageSrc, fullName, position, profilePicture
 
           {/* QR + Verification */}
           <div
-            className="mt-1.5 flex items-center justify-center gap-3 rounded-[18px] px-4 py-3"
+            className="mt-1.5 flex flex-col items-center justify-center gap-2.5 rounded-[18px] px-4 py-3"
             style={{
               background: `linear-gradient(135deg, ${C.cardBg} 0%, white 100%)`,
             }}
           >
-            <div className="min-w-0">
+            <div className="text-center">
               <p className="text-[7px] font-bold uppercase tracking-[0.2em]" style={{ color: C.slate }}>ICpEP.SE</p>
               <p className="mt-0.5 text-[9px] font-semibold" style={{ color: C.slate }}>
                 Officer's ID Card
@@ -143,11 +143,6 @@ const DisplayCard = ({ qrPayload, qrImageSrc, fullName, position, profilePicture
               )}
             </div>
           </div>
-
-          {/* Footer */}
-          <p className="mt-auto pb-2.5 text-center text-[7.5px] italic" style={{ color: '#94A3B8' }}>
-            Official verification pass — valid for the current academic year
-          </p>
         </div>
       </div>
     </div>
