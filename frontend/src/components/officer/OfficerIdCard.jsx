@@ -17,6 +17,7 @@ const C = {
 const CARD_W = 300
 const CARD_H = 500
 const QR_SIZE = 96
+const EXPORT_PADDING = 28
 
 /* ─── Display Card ─────────────────────────────────────────────────────── */
 
@@ -269,19 +270,27 @@ export default function OfficerIdCard({ profile, user, profilePictureUrl: profil
           top: 0,
           opacity: 0,
           pointerEvents: 'none',
-          padding: 28,
-          background: '#E2E8F0',
         }}
       >
-        <div ref={exportRef} style={{ width: CARD_W, height: CARD_H }}>
-          <DisplayCard
-            qrPayload={qrPayload}
-            qrImageSrc={qrImageSrc || undefined}
-            fullName={fullName}
-            position={profile?.position || ''}
-            profilePictureUrl={profilePictureUrl}
-            avatarInitial={avatarInitial}
-          />
+        <div
+          ref={exportRef}
+          style={{
+            padding: EXPORT_PADDING,
+            background: '#E2E8F0',
+            width: CARD_W + (EXPORT_PADDING * 2),
+            height: CARD_H + (EXPORT_PADDING * 2),
+          }}
+        >
+          <div style={{ width: CARD_W, height: CARD_H }}>
+            <DisplayCard
+              qrPayload={qrPayload}
+              qrImageSrc={qrImageSrc || undefined}
+              fullName={fullName}
+              position={profile?.position || ''}
+              profilePictureUrl={profilePictureUrl}
+              avatarInitial={avatarInitial}
+            />
+          </div>
         </div>
       </div>
 
