@@ -49,7 +49,7 @@ export const CATEGORY_DEFS = [
   },
   {
     key: 'CUSTOM',
-    label: 'Custom / Others',
+    label: 'Other Documents',
     subtitle: 'Other sections',
     icon: FolderOpen,
     iconBox: 'bg-slate-100 text-slate-600',
