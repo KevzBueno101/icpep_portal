@@ -634,38 +634,6 @@ def officers_roster(request):
     with complete information.
     """
 
-    leadership_positions = [
-        'President',
-        'Vice President',
-        'Secretary',
-        'Treasurer',
-        'Auditor',
-    ]
-
-    def normalize_position(pos):
-        """Map a raw position string to one of the canonical leadership titles.
-
-        Uses contains-based matching so entries like 'External Vice President'
-        or 'Vice Pres' still resolve correctly.
-        Returns the canonical title, or the original position string if no
-        match is found (so non-standard positions still show up as-is).
-        """
-        if not pos:
-            return ''
-        p_lower = str(pos).strip().lower()
-        # Check specific matches first (most to least specific)
-        if 'vice president' in p_lower or 'vice pres' in p_lower:
-            return 'Vice President'
-        if 'president' in p_lower:
-            return 'President'
-        if 'secretary' in p_lower:
-            return 'Secretary'
-        if 'treasurer' in p_lower:
-            return 'Treasurer'
-        if 'auditor' in p_lower:
-            return 'Auditor'
-        return str(pos).strip()
-
     # Include both OFFICER and ADMIN roles — all active officers/admins
     # with positions belong in the public-facing leadership board.
     qs = User.objects.filter(
@@ -674,15 +642,8 @@ def officers_roster(request):
         is_active=True,
     ).exclude(position__isnull=True).exclude(position='').exclude(position__iexact='NONE')
 
-    roster = []
-    for u in qs:
-        canon = normalize_position(getattr(u, 'position', ''))
-        if canon and canon in leadership_positions:
-            u.position = canon
-        roster.append(u)
-
-    order_index = {p: i for i, p in enumerate(leadership_positions)}
-    roster.sort(key=lambda u: (getattr(u, 'display_order', 0), order_index.get(getattr(u, 'position', ''), 999)))
+    roster = list(qs)
+    roster.sort(key=lambda u: (getattr(u, 'display_order', 0), getattr(u, 'position', '')))
 
     # Serialize and filter out invalid records
     results = []
