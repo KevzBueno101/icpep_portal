@@ -288,13 +288,13 @@ const AdminOfficersAccounts = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {[...Array(8)].map((_, i) => (
           <div
             key={i}
             className="animate-pulse rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
           >
-            <div className="h-48 w-full bg-slate-200" />
+<div className="h-40 w-full bg-slate-200 sm:h-48" />
             <div className="p-6">
               <div className="h-5 bg-slate-200 rounded w-3/4" />
               <div className="mt-2 h-4 bg-slate-200 rounded w-1/2" />
@@ -313,7 +313,7 @@ const AdminOfficersAccounts = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Admin</p>
             <div className="mt-2 flex items-center gap-3">
-              <h1 className="text-3xl font-semibold text-slate-900">Officers Roster (Accounts)</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Officers Roster (Accounts)</h1>
               <span className={`inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`}>
                 <CheckCircle2 className="h-4 w-4" /> Saved
               </span>
@@ -348,7 +348,7 @@ const AdminOfficersAccounts = () => {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {officerRoster.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-slate-500">
               No officer accounts found.
@@ -408,7 +408,7 @@ const AdminOfficersAccounts = () => {
               </div>
             </div>
 
-            <div className="space-y-6 px-6 py-6 overflow-y-auto flex-1">
+            <div className="space-y-6 px-4 py-6 overflow-y-auto flex-1 sm:px-6">
               <label className="space-y-2 text-sm text-slate-700">
                 <span>Profile Picture</span>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">

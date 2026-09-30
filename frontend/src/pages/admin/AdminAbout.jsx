@@ -9,24 +9,10 @@ import {
   Eye,
   Download,
   FileText,
-  Target,
-  ScrollText,
-  Gavel,
-  History,
-  FolderOpen,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-
-const SECTION_TYPES = [
-  { value: 'MISSION', label: 'Mission' },
-  { value: 'VISION', label: 'Vision' },
-  { value: 'GOALS', label: 'Goals' },
-  { value: 'HISTORY', label: 'History' },
-  { value: 'CONSTITUTION', label: 'Constitution & By-Laws' },
-  { value: 'RESOLUTION', label: 'Resolution' },
-  { value: 'CUSTOM', label: 'Custom' },
-]
+import { CATEGORY_DEFS, SECTION_TYPES, categoryFor, typeLabel } from '../../utils/aboutCategories'
 
 const emptyForm = {
   section_type: 'MISSION',
@@ -41,67 +27,6 @@ const ALLOWED_DOCUMENT_TYPES = ['pdf', 'png', 'jpg', 'jpeg']
 const isAllowedDocument = (file) => {
   const ext = (file?.name?.split('.').pop() || '').toLowerCase()
   return ALLOWED_DOCUMENT_TYPES.includes(ext)
-}
-
-const isCoreValues = (section) =>
-  section.section_type === 'CUSTOM' &&
-  (section.title || '').toLowerCase().includes('core value')
-
-const CATEGORY_DEFS = [
-  {
-    key: 'MVC',
-    label: 'MVC',
-    subtitle: 'Mission, Vision, Core Values & Goals',
-    icon: Target,
-    iconBox: 'bg-sky-50 text-sky-600',
-    chip: 'bg-sky-100 text-sky-700',
-    defaultType: 'MISSION',
-  },
-  {
-    key: 'CONSTITUTION',
-    label: 'Constitution',
-    subtitle: 'Constitution & By-Laws',
-    icon: ScrollText,
-    iconBox: 'bg-violet-50 text-violet-600',
-    chip: 'bg-violet-100 text-violet-700',
-    defaultType: 'CONSTITUTION',
-  },
-  {
-    key: 'HISTORY',
-    label: 'History',
-    subtitle: 'History of the organization',
-    icon: History,
-    iconBox: 'bg-amber-50 text-amber-600',
-    chip: 'bg-amber-100 text-amber-700',
-    defaultType: 'HISTORY',
-  },
-  {
-    key: 'RESOLUTION',
-    label: 'Resolution',
-    subtitle: 'Resolutions & decisions',
-    icon: Gavel,
-    iconBox: 'bg-rose-50 text-rose-600',
-    chip: 'bg-rose-100 text-rose-700',
-    defaultType: 'RESOLUTION',
-  },
-  {
-    key: 'CUSTOM',
-    label: 'Custom / Others',
-    subtitle: 'Other sections',
-    icon: FolderOpen,
-    iconBox: 'bg-slate-100 text-slate-600',
-    chip: 'bg-slate-100 text-slate-700',
-    defaultType: 'CUSTOM',
-  },
-]
-
-const categoryFor = (section) => {
-  if (isCoreValues(section)) return 'MVC'
-  if (['MISSION', 'VISION', 'GOALS'].includes(section.section_type)) return 'MVC'
-  if (section.section_type === 'CONSTITUTION') return 'CONSTITUTION'
-  if (section.section_type === 'HISTORY') return 'HISTORY'
-  if (section.section_type === 'RESOLUTION') return 'RESOLUTION'
-  return 'CUSTOM'
 }
 
 const AdminAbout = () => {
@@ -282,9 +207,6 @@ const AdminAbout = () => {
     if (!section.document_url) return
     window.open(section.document_url, '_blank', 'noopener,noreferrer')
   }
-
-  const typeLabel = (value) =>
-    SECTION_TYPES.find((t) => t.value === value)?.label || value
 
   const orderedSections = useMemo(() => {
     if (localOrderIds.length === 0) return sections

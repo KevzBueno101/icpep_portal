@@ -160,7 +160,7 @@ export default function OfficersCarousel() {
         <div
           className={`flex gap-6 ${shouldAnimate && !isPaused ? 'animate-scroll' : ''} ${!shouldAnimate ? 'justify-center' : ''}`}
           style={{
-            animationDuration: '30s',
+            animationDuration: '20s',
             animationIterationCount: 'infinite',
             animationTimingFunction: 'linear',
             animationDirection: 'normal',

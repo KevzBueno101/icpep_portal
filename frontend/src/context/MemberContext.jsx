@@ -17,6 +17,17 @@ const getLastSeenAt = (userId) => {
   }
 }
 
+const getAboutSeenKey = (userId) => `icpep_seen_about_${userId}`
+
+const getAboutLastSeenAt = (userId) => {
+  try {
+    const raw = localStorage.getItem(getAboutSeenKey(userId))
+    return raw ? Number(raw) || 0 : 0
+  } catch {
+    return 0
+  }
+}
+
 export const MemberProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState(null)
@@ -28,6 +39,9 @@ export const MemberProvider = ({ children }) => {
   const [annLoading, setAnnLoading] = useState(false)
   const [lastSeenAt, setLastSeenAt] = useState(() => getLastSeenAt(user?.id))
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
+  const [aboutSections, setAboutSections] = useState([])
+  const [aboutLastSeenAt, setAboutLastSeenAt] = useState(() => getAboutLastSeenAt(user?.id))
+  const [aboutUnread, setAboutUnread] = useState({ constitution: 0, resolution: 0 })
 
   const markAnnouncementsSeen = useCallback(() => {
     if (!user?.id) return
@@ -39,6 +53,18 @@ export const MemberProvider = ({ children }) => {
     }
     setLastSeenAt(now)
     setUnreadAnnouncements(0)
+  }, [user?.id])
+
+  const markAboutSeen = useCallback(() => {
+    if (!user?.id) return
+    const now = Date.now()
+    try {
+      localStorage.setItem(getAboutSeenKey(user.id), String(now))
+    } catch {
+      // localStorage unavailable — badge just stays visible
+    }
+    setAboutLastSeenAt(now)
+    setAboutUnread({ constitution: 0, resolution: 0 })
   }, [user?.id])
 
   useEffect(() => {
@@ -57,6 +83,21 @@ export const MemberProvider = ({ children }) => {
     }).length
     setUnreadAnnouncements(unread)
   }, [announcements, lastSeenAt])
+
+  useEffect(() => {
+    if (!aboutSections.length) {
+      setAboutUnread({ constitution: 0, resolution: 0 })
+      return
+    }
+    setAboutUnread({
+      constitution: aboutSections.filter(
+        (s) => s.section_type === 'CONSTITUTION' && new Date(s.updated_at || s.created_at || 0).getTime() > aboutLastSeenAt
+      ).length,
+      resolution: aboutSections.filter(
+        (s) => s.section_type === 'RESOLUTION' && new Date(s.updated_at || s.created_at || 0).getTime() > aboutLastSeenAt
+      ).length,
+    })
+  }, [aboutSections, aboutLastSeenAt])
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -108,12 +149,24 @@ export const MemberProvider = ({ children }) => {
     }
   }, [user?.id])
 
+  const fetchAboutSections = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const res = await api.get('/about/')
+      setAboutSections(res.data?.results || [])
+    } catch (err) {
+      console.error(err)
+      setAboutSections([])
+    }
+  }, [user?.id])
+
   useEffect(() => {
     if (authLoading) return
     if (!user) {
       setProfile(null)
       setPaymentSettings(null)
       setAnnouncements([])
+      setAboutSections([])
       setProfileLoading(false)
       return
     }
@@ -121,7 +174,8 @@ export const MemberProvider = ({ children }) => {
     fetchProfile()
     fetchPaymentSettings()
     fetchAnnouncements()
-  }, [user, authLoading, fetchProfile, fetchPaymentSettings, fetchAnnouncements])
+    fetchAboutSections()
+  }, [user, authLoading, fetchProfile, fetchPaymentSettings, fetchAnnouncements, fetchAboutSections])
 
   useEffect(() => {
     const onProfileUpdated = () => {
@@ -167,9 +221,12 @@ export const MemberProvider = ({ children }) => {
     annLoading,
     unreadAnnouncements,
     markAnnouncementsSeen,
+    aboutUnread,
+    markAboutSeen,
     refreshProfile: fetchProfile,
     refreshPaymentSettings: fetchPaymentSettings,
     refreshAnnouncements: fetchAnnouncements,
+    refreshAboutSections: fetchAboutSections,
   }
 
   return <MemberContext.Provider value={value}>{children}</MemberContext.Provider>

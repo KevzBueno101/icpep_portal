@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Info, Shield, Mail, MapPin, Eye, ChevronRight, ChevronDown, Code2 } from 'lucide-react'
+import { Info, Mail, MapPin, Eye, ChevronRight, ChevronDown, Code2, ChevronLeft } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
 import DevCommitteeModal from '../../components/DevCommitteeModal'
 import { OfficersProvider } from '../../context/OfficersContext'
 import api from '../../api/axios'
+import { CATEGORY_DEFS, categoryFor, FEED_COLORS, typeLabel } from '../../utils/aboutCategories'
 
 const FALLBACK_IDENTITY = [
   {
@@ -23,32 +24,11 @@ const FALLBACK_IDENTITY = [
   },
 ]
 
-const IDENTITY_TYPES = new Set(['MISSION', 'VISION', 'GOALS'])
-
-const isIdentity = (s) =>
-  IDENTITY_TYPES.has(s.section_type) ||
-  s.title?.toLowerCase().includes('core values')
-
-const FEED_COLORS = {
-  HISTORY: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
-  CONSTITUTION: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
-  RESOLUTION: { bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
-  CUSTOM: { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
-}
-
-const TYPE_LABELS = {
-  CONSTITUTION: 'Constitution & By-Laws',
-  RESOLUTION: 'Resolution',
-  HISTORY: 'History',
-  CUSTOM: 'Section',
-}
-
-const FEED_ORDER = { CONSTITUTION: 0, RESOLUTION: 1, HISTORY: 2 }
-
 export default function MemberAbout() {
   const [sections, setSections] = useState(null)
   const [devCommitteeOpen, setDevCommitteeOpen] = useState(false)
   const [expandedHistory, setExpandedHistory] = useState(() => new Set())
+  const [activeCategory, setActiveCategory] = useState(null)
 
   useEffect(() => {
     let mounted = true
@@ -73,13 +53,18 @@ export default function MemberAbout() {
   const allSections =
     sections && sections.length > 0 ? sections : sections === null ? null : FALLBACK_IDENTITY
 
-  const identitySections = allSections?.filter(isIdentity) ?? []
-  const feedSections = allSections?.filter((s) => !isIdentity(s)) ?? []
-  const orderedFeedSections = [...feedSections].sort((a, b) => {
-    const oa = FEED_ORDER[a.section_type] ?? 99
-    const ob = FEED_ORDER[b.section_type] ?? 99
-    return oa - ob
-  })
+  const groupedSections = (() => {
+    const map = new Map(CATEGORY_DEFS.map((c) => [c.key, []]))
+    ;(allSections || []).forEach((section) => {
+      const key = categoryFor(section)
+      if (map.has(key)) map.get(key).push(section)
+      else map.get('CUSTOM').push(section)
+    })
+    return map
+  })()
+
+  const activeDef = CATEGORY_DEFS.find((c) => c.key === activeCategory)
+  const activeItems = activeCategory ? (groupedSections.get(activeCategory) || []) : []
 
   const toggleHistory = (id) => {
     setExpandedHistory((prev) => {
@@ -91,6 +76,78 @@ export default function MemberAbout() {
       }
       return next
     })
+  }
+
+  const renderSectionCard = (section) => {
+    const colors = FEED_COLORS[section.section_type] || FEED_COLORS.CUSTOM
+    const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
+    const isHistory = section.section_type === 'HISTORY'
+    const isExpanded = expandedHistory.has(section.id)
+    const hasListBody = lines.length > 1 && !isHistory
+    const longBody = hasListBody || (section.body || '').length > 300
+    return (
+      <div
+        key={section.id || section.title}
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow transition-shadow duration-200"
+      >
+        <div className="flex items-start gap-4">
+          <div className={`mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full ${colors.dot}`} />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}>
+                {typeLabel(section.section_type)}
+              </span>
+              {section.document_url && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                  <Eye className="h-3 w-3" />
+                  PDF
+                </span>
+              )}
+            </div>
+            <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
+            {hasListBody ? (
+              <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
+                {lines.map((line, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p
+                className={`mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed transition-all duration-200 ${
+                  !isExpanded && (isHistory || longBody) ? 'line-clamp-4' : ''
+                }`}
+              >
+                {section.body}
+              </p>
+            )}
+            {(isHistory || longBody) && (
+              <button
+                type="button"
+                onClick={() => toggleHistory(section.id)}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
+              >
+                {isExpanded ? 'Show less' : 'Show more'}
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+            {section.document_url && (
+              <button
+                type="button"
+                onClick={() => openPreview(section)}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                See pdf
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -145,145 +202,84 @@ export default function MemberAbout() {
         </div>
       </div>
 
-      {/* Identity: Mission, Vision, Core Values, Goals */}
-      {identitySections.length > 0 && (
-        <div>
-          <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span className="h-1 w-5 rounded-full bg-sky-600" />
-            Our Mission, Vision & Goals
-          </h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            {identitySections.map((section) => {
-              const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
-              const isMission = section.section_type === 'MISSION'
-              const isVision = section.section_type === 'VISION'
-              const isGoals = section.section_type === 'GOALS'
-              const accent = isMission
-                ? 'from-sky-500 to-sky-600'
-                : isVision
-                  ? 'from-indigo-500 to-indigo-600'
-                  : isGoals
-                    ? 'from-emerald-500 to-emerald-600'
-                    : 'from-slate-500 to-slate-600'
-              const iconBg = isMission
-                ? 'bg-sky-50 text-sky-600'
-                : isVision
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : isGoals
-                    ? 'bg-emerald-50 text-emerald-600'
-                    : 'bg-slate-100 text-slate-600'
-              return (
-                <div
-                  key={section.id || section.title}
-                  className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col"
-                >
-                  <div className={`absolute inset-x-0 top-0 h-1 rounded-t-3xl bg-gradient-to-r ${accent}`} />
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-4 ${iconBg}`}>
-                    <Shield className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900">{section.title}</h3>
-                  {lines.length > 1 ? (
-                    <ul className="mt-4 space-y-2 text-sm text-slate-600 font-medium flex-1">
-                      {lines.map((line, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-sky-600 shrink-0" />
-                          {line}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-4 text-sm text-slate-600 leading-relaxed flex-1">{section.body}</p>
-                  )}
-                  {section.document_url && (
-                    <button
-                      type="button"
-                      onClick={() => openPreview(section)}
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 self-start"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      See pdf
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Organization Docs — categorized, admin-style */}
+      <div>
+        <h2 className="mb-1 text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span className="h-1 w-5 rounded-full bg-sky-600" />
+          About the Organization
+        </h2>
+        <p className="mb-6 text-sm text-slate-500">Browse the organization's documents and sections by category.</p>
 
-      {/* Feeds: Constitution, Resolutions, History, others */}
-      {orderedFeedSections.length > 0 && (
-        <div>
-          <h2 className="mb-6 text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span className="h-1 w-5 rounded-full bg-sky-600" />
-            About the Organization
-          </h2>
+        {allSections == null ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-36 animate-pulse rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+        ) : activeCategory ? (
           <div className="space-y-4">
-            {orderedFeedSections.map((section) => {
-              const colors = FEED_COLORS[section.section_type] || FEED_COLORS.CUSTOM
-              const label = TYPE_LABELS[section.section_type] || 'Section'
-              const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
-              const isHistory = section.section_type === 'HISTORY'
-              const isExpanded = expandedHistory.has(section.id)
+            {/* Category header */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveCategory(null)}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Categories
+              </button>
+              <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeDef.iconBox}`}>
+                <activeDef.icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-xl font-semibold text-slate-900">{activeDef.label}</h3>
+                <p className="text-xs text-slate-500">{activeDef.subtitle}</p>
+              </div>
+              <span className={`ml-auto rounded-full px-3 py-1 text-xs font-semibold ${activeDef.chip}`}>
+                {activeItems.length} {activeItems.length === 1 ? 'section' : 'sections'}
+              </span>
+            </div>
+
+            {activeItems.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
+                No {activeDef.label.toLowerCase()} sections yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {activeItems.map(renderSectionCard)}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CATEGORY_DEFS.map((def) => {
+              const count = groupedSections.get(def.key)?.length || 0
               return (
-                <div
-                  key={section.id || section.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow transition-shadow duration-200"
+                <button
+                  key={def.key}
+                  type="button"
+                  onClick={() => setActiveCategory(def.key)}
+                  className="group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-sky-300 hover:shadow-md"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className={`mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full ${colors.dot}`} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}>
-                          {label}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
-                      {lines.length > 1 && !isHistory ? (
-                        <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                          {lines.map((line, idx) => (
-                            <li key={idx} className="flex items-center gap-2">
-                              <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
-                              {line}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p
-                          className={`mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed transition-all duration-200 ${isHistory && !isExpanded ? 'line-clamp-4' : ''}`}
-                        >
-                          {section.body}
-                        </p>
-                      )}
-                      {isHistory && (
-                        <button
-                          type="button"
-                          onClick={() => toggleHistory(section.id)}
-                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
-                        >
-                          {isExpanded ? 'Show less' : 'Show more'}
-                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                        </button>
-                      )}
-                      {section.document_url && (
-                        <button
-                          type="button"
-                          onClick={() => openPreview(section)}
-                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          See pdf
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
+                  <div className="flex items-start justify-between">
+                    <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${def.iconBox}`}>
+                      <def.icon className="h-6 w-6" />
+                    </span>
+                    <ChevronRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-0.5" />
                   </div>
-                </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">{def.label}</h3>
+                    <p className="mt-0.5 text-xs text-slate-500">{def.subtitle}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${def.chip}`}>
+                    {count} {count === 1 ? 'section' : 'sections'}
+                  </span>
+                </button>
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Contact Section */}
       <div className="rounded-3xl border border-slate-200 bg-slate-900 text-white p-6 md:p-8 shadow-md relative overflow-hidden">

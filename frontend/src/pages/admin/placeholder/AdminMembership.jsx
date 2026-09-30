@@ -489,14 +489,14 @@ try {
       </div>
 
       {/* Analytics Cards Section */}
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {/* Total Members Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Total Members</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total}</p>
-              <p className="mt-1 text-xs text-slate-500">All registered profiles</p>
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Total Members</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.total}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">All registered profiles</p>
             </div>
             <div className="p-2 rounded-lg bg-blue-100">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -507,12 +507,12 @@ try {
         </div>
 
         {/* Pending Applications Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Pending</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{stats.pending}</p>
-              <p className="mt-1 text-xs text-slate-500">Awaiting approval</p>
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Pending</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.pending}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Awaiting approval</p>
             </div>
             <div className="p-2 rounded-lg bg-yellow-100">
               <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -523,12 +523,12 @@ try {
         </div>
 
         {/* Approved Members Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Approved</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{stats.approved}</p>
-              <p className="mt-1 text-xs text-slate-500">Active status members</p>
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Approved</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.approved}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Active status members</p>
             </div>
             <div className="p-2 rounded-lg bg-green-100">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,12 +539,12 @@ try {
         </div>
 
         {/* Expired Members Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-600 uppercase font-semibold tracking-wide">Expired / Inactive</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{stats.expired}</p>
-              <p className="mt-1 text-xs text-slate-500">Expired profiles</p>
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Expired / Inactive</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.expired}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Expired profiles</p>
             </div>
             <div className="p-2 rounded-lg bg-slate-100">
               <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
