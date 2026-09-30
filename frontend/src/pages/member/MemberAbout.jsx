@@ -106,14 +106,11 @@ export default function MemberAbout() {
             </div>
             <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
             {hasListBody ? (
-              <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
+              <div className="mt-3 space-y-1.5 text-sm text-slate-600">
                 {(isExpanded ? lines : lines.slice(0, 3)).map((line, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
-                    {line}
-                  </li>
+                  <p key={idx}>{line}</p>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p
                 className={`mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed transition-all duration-200 ${
