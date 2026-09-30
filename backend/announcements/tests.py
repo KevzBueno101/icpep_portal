@@ -12,6 +12,68 @@ from .models import Announcement, BlastLog
 User = get_user_model()
 
 
+class AnnouncementPushTests(APITestCase):
+    """Push is sent when an announcement is created published or later published."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email='officer@example.com',
+            username='officer',
+            password='Password123',
+            role='ADMIN',
+            position='Vice President',
+            registration_status='APPROVED',
+            is_active=True,
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    @patch('announcements.views.send_announcement_push')
+    def test_create_published_sends_push(self, mock_push):
+        response = self.client.post(
+            '/api/announcements/admin/',
+            {'title': 'Now Live', 'body': 'Body', 'category': 'event', 'is_published': True},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(mock_push.call_count, 1)
+
+    @patch('announcements.views.send_announcement_push')
+    def test_create_draft_does_not_send_push(self, mock_push):
+        response = self.client.post(
+            '/api/announcements/admin/',
+            {'title': 'Draft', 'body': 'Body', 'category': 'event', 'is_published': False},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        mock_push.assert_not_called()
+
+    @patch('announcements.views.send_announcement_push')
+    def test_publishing_draft_sends_push(self, mock_push):
+        announcement = Announcement.objects.create(
+            title='Draft', body='x', category='event', is_published=False
+        )
+        response = self.client.patch(
+            f'/api/announcements/admin/{announcement.id}/',
+            {'is_published': True},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(mock_push.call_count, 1)
+
+    @patch('announcements.views.send_announcement_push')
+    def test_editing_published_does_not_repush(self, mock_push):
+        announcement = Announcement.objects.create(
+            title='Live', body='x', category='event', is_published=True
+        )
+        response = self.client.patch(
+            f'/api/announcements/admin/{announcement.id}/',
+            {'body': 'updated'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        mock_push.assert_not_called()
+
+
 class AnnouncementEmailBlastTests(APITestCase):
     """Tests for POST /api/announcements/admin/<id>/email-blast/."""
 

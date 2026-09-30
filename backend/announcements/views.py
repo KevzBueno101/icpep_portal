@@ -14,6 +14,23 @@ from .blast import send_announcement_blast
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
 
+def broadcast_announcements_updated():
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "member_updates",
+                {
+                    "type": "announcements.updated",
+                    "payload": {},
+                },
+            )
+    except Exception:
+        pass
+
 
 class AnnouncementListAPIView(generics.ListAPIView):
     serializer_class = AnnouncementSerializer
@@ -73,6 +90,7 @@ class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
         # Push notification to subscribed devices
         if announcement.is_published:
             send_announcement_push(announcement)
+            broadcast_announcements_updated()
 
 
 class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -86,7 +104,17 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return [CanManageContent()]
 
     def perform_update(self, serializer):
+        was_published = serializer.instance.is_published
         announcement = serializer.save()
+
+        # Notify subscribers when a draft is published (the create path already
+        # pushes immediately-published announcements).
+        if announcement.is_published and not was_published:
+            send_announcement_push(announcement)
+            broadcast_announcements_updated()
+        elif announcement.is_published or was_published:
+            # If it was published or is currently published, broadcast the update
+            broadcast_announcements_updated()
 
         # Log announcement update
         log_action(
@@ -118,6 +146,8 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             details={'title': entity_name},
             request=self.request
         )
+
+        broadcast_announcements_updated()
 
 
 class AnnouncementImageUploadAPIView(APIView):

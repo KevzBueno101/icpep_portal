@@ -3,6 +3,7 @@ import api from '../api/axios'
 import { useAuth } from './useAuth'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../utils/events'
+import { setUnreadBadge, clearUnreadBadge } from '../utils/appBadge'
 
 const MemberContext = createContext(null)
 
@@ -53,6 +54,7 @@ export const MemberProvider = ({ children }) => {
     }
     setLastSeenAt(now)
     setUnreadAnnouncements(0)
+    clearUnreadBadge()
   }, [user?.id])
 
   const markAboutSeen = useCallback(() => {
@@ -83,6 +85,16 @@ export const MemberProvider = ({ children }) => {
     }).length
     setUnreadAnnouncements(unread)
   }, [announcements, lastSeenAt])
+
+  // Mirror the unread-announcement state onto the installed app's icon
+  // (iOS Badging API / Android persistent tray dot).
+  useEffect(() => {
+    if (!user?.id || !unreadAnnouncements) {
+      clearUnreadBadge()
+      return
+    }
+    setUnreadBadge()
+  }, [user?.id, unreadAnnouncements])
 
   useEffect(() => {
     if (!aboutSections.length) {
@@ -135,9 +147,9 @@ export const MemberProvider = ({ children }) => {
     }
   }, [user?.id])
 
-  const fetchAnnouncements = useCallback(async () => {
+  const fetchAnnouncements = useCallback(async (silent = false) => {
     if (!user?.id) return
-    setAnnLoading(true)
+    if (!silent) setAnnLoading(true)
     try {
       const res = await api.get('/announcements/?include_members_only=1')
       setAnnouncements(res.data?.results || [])
@@ -145,7 +157,7 @@ export const MemberProvider = ({ children }) => {
       console.error(err)
       setAnnouncements([])
     } finally {
-      setAnnLoading(false)
+      if (!silent) setAnnLoading(false)
     }
   }, [user?.id])
 
@@ -205,11 +217,81 @@ export const MemberProvider = ({ children }) => {
 
   useEffect(() => {
     const onFocus = () => {
-      document.visibilityState === 'visible' && fetchProfile()
+      if (document.visibilityState !== 'visible') return
+      fetchProfile()
+      // Silent refresh: picks up pushes that arrived while the app was
+      // suspended and re-syncs the app-icon badge accordingly.
+      fetchAnnouncements(true)
     }
     document.addEventListener('visibilitychange', onFocus)
     return () => document.removeEventListener('visibilitychange', onFocus)
-  }, [fetchProfile])
+  }, [fetchProfile, fetchAnnouncements])
+
+  // Real-time updates via WebSocket (Channels)
+  useEffect(() => {
+    if (!user?.id) return
+
+    const wsUrl = import.meta.env.VITE_WS_URL
+      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
+      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+
+    let ws
+    let isCancelled = false
+    let reconnectTimeout
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (e) {
+        console.warn('[MemberContext] WebSocket init failed:', e)
+        return
+      }
+
+      ws.onmessage = (event) => {
+        if (isCancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data?.type === 'announcements.updated') {
+            fetchAnnouncements(true)
+          } else if (data?.type === 'about.updated') {
+            fetchAboutSections()
+          }
+        } catch (e) {
+          console.warn('[MemberContext] ws message parse error')
+        }
+      }
+
+      ws.onerror = () => {
+        // avoid spamming console
+      }
+
+      ws.onclose = () => {
+        if (isCancelled) return
+        reconnectTimeout = setTimeout(() => {
+          if (!isCancelled) {
+            connect() // Reconnect
+            // Refresh data in case we missed anything while disconnected
+            fetchAnnouncements(true)
+            fetchAboutSections()
+          }
+        }, 3000) // Reconnect after 3 seconds
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(reconnectTimeout)
+      try {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close()
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [user?.id, fetchAnnouncements, fetchAboutSections])
 
   const value = {
     profile,
