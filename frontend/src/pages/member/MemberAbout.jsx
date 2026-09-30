@@ -83,8 +83,8 @@ export default function MemberAbout() {
     const lines = (section.body || '').split('\n').map((l) => l.trim()).filter(Boolean)
     const isHistory = section.section_type === 'HISTORY'
     const isExpanded = expandedHistory.has(section.id)
-    const hasListBody = lines.length > 1 && !isHistory
-    const longBody = hasListBody || (section.body || '').length > 300
+    const hasListBody = lines.length > 1 && !isHistory && section.section_type !== 'CUSTOM'
+    const longBody = (hasListBody && lines.length > 3) || (!hasListBody && (section.body || '').length > 150)
     return (
       <div
         key={section.id || section.title}
@@ -107,7 +107,7 @@ export default function MemberAbout() {
             <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
             {hasListBody ? (
               <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                {lines.map((line, idx) => (
+                {(isExpanded ? lines : lines.slice(0, 3)).map((line, idx) => (
                   <li key={idx} className="flex items-center gap-2">
                     <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
                     {line}
@@ -117,7 +117,7 @@ export default function MemberAbout() {
             ) : (
               <p
                 className={`mt-2 break-words whitespace-pre-wrap text-sm text-slate-600 leading-relaxed transition-all duration-200 ${
-                  !isExpanded && (isHistory || longBody) ? 'line-clamp-4' : ''
+                  !isExpanded && (isHistory || longBody) ? 'line-clamp-3' : ''
                 }`}
               >
                 {section.body}
@@ -129,7 +129,7 @@ export default function MemberAbout() {
                 onClick={() => toggleHistory(section.id)}
                 className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
               >
-                {isExpanded ? 'Show less' : 'Show more'}
+                {isExpanded ? 'Read less' : 'Read more'}
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
               </button>
             )}
