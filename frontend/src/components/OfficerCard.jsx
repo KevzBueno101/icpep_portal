@@ -33,24 +33,24 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
 
   return (
     <article
-      className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+      className={`relative rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md ${menuOpen ? 'z-20' : 'z-0'}`}
       aria-label={`${position} - ${fullName}`}
     >
       <div>
         {hasValidAvatar ? (
-          <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
+          <div className="flex h-40 w-full items-center justify-center rounded-t-lg bg-slate-100 pt-4 sm:h-48 sm:pt-6">
 
             <img
               src={avatarUrl}
               alt={fullName}
-              className="h-28 w-28 rounded-full bg-slate-200 object-cover sm:h-36 sm:w-36"
+              className="h-24 w-24 rounded-full bg-slate-200 object-cover sm:h-36 sm:w-36"
               onError={() => setImageError(true)}
               loading="lazy"
             />
           </div>
         ) : (
-          <div className="flex h-48 w-full items-center justify-center bg-slate-100 pt-6">
-            <span className="flex h-28 w-28 items-center justify-center rounded-full bg-sky-700 text-2xl font-bold text-white sm:h-36 sm:w-36 sm:text-4xl">
+          <div className="flex h-40 w-full items-center justify-center rounded-t-lg bg-slate-100 pt-4 sm:h-48 sm:pt-6">
+            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-sky-700 text-2xl font-bold text-white sm:h-36 sm:w-36 sm:text-4xl">
               {initials}
             </span>
           </div>
@@ -117,7 +117,7 @@ export default function OfficerCard({ officer, onEdit, onDelete, canEdit }) {
           {email || username ? (
             <a
               href={email ? `mailto:${email}` : undefined}
-              className="mt-2 inline-block text-[11px] text-slate-400 line-clamp-1 transition hover:text-slate-600 font-medium sm:text-xs"
+              className="mt-2 block max-w-full truncate text-[11px] text-slate-400 transition hover:text-slate-600 font-medium sm:text-xs"
             >
               {email || username}
             </a>

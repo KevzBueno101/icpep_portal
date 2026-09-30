@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, ChevronDown, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X, Pencil } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
 import RefreshButton from '../RefreshButton'
@@ -48,7 +48,6 @@ export default function AdminSidebar({ badges = {}, logout }) {
   const { user } = useAuth()
 
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const pendingBadge = badges?.pendingMembership
@@ -58,7 +57,6 @@ export default function AdminSidebar({ badges = {}, logout }) {
 
   const openLogoutConfirm = () => {
     setDrawerOpen(false)
-    setUserMenuOpen(false)
     setConfirmLogoutOpen(true)
   }
 
@@ -118,69 +116,15 @@ export default function AdminSidebar({ badges = {}, logout }) {
             <Menu size={20} />
           </button>
 
-          <div className="flex-1" />
-
-          {/* User */}
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen(s => !s)}
-              className="inline-flex items-center gap-2 rounded-xl px-1.5 py-1.5 transition hover:bg-white/10"
-              aria-label="Open admin user menu"
-            >
-              {user?.profile_picture ? (
-                <img
-                  src={profilePicSrc}
-                  alt={user.username}
-                  className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white/20 object-cover"
-                />
-              ) : (
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-500 to-sky-600 text-white">
-                  <User size={15} />
-                </span>
-              )}
-              <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-xs font-bold leading-tight">
-                  {userCard.username}
-                </span>
-                <span className="block text-[10px] font-semibold text-blue-100/70">
-                  {userCard.userPosition}
-                </span>
-              </span>
-              <ChevronDown size={14} className="text-blue-100" />
-            </button>
-
-            {userMenuOpen && (
-              <div className="absolute right-0 top-12 z-10 w-44 rounded-2xl border border-white/10 bg-[#001F4D] shadow-xl">
-                <NavLink
-                  to="/admin/profile"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
-                >
-                  View Profile
-                </NavLink>
-                <NavLink
-                  to="/admin/edit-profile"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="block px-4 py-3 text-sm text-blue-100 hover:bg-white/10"
-                >
-                  Edit Profile
-                </NavLink>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserMenuOpen(false)
-                    setConfirmLogoutOpen(true)
-                  }}
-                  className="w-full px-4 py-3 text-left text-sm text-red-200 hover:bg-white/10"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <LogOut size={16} /> Logout
-                  </span>
-                </button>
-              </div>
-            )}
+          <div className="flex min-w-0 items-center gap-2.5">
+            <img src="/icpep_logo.png" alt="ICpEP.SE" className="h-8 w-8 flex-shrink-0 rounded-full bg-white/10 object-contain" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold leading-tight">ICpEP.SE Portal</p>
+              <p className="truncate text-[11px] font-semibold text-blue-100/70">Admin Panel</p>
+            </div>
           </div>
+
+          <div className="flex-1" />
 
           {/* Theme toggle + sign out */}
           <div className="flex shrink-0 items-center gap-1">
@@ -217,7 +161,6 @@ export default function AdminSidebar({ badges = {}, logout }) {
               label={item.label}
               icon={item.icon}
               badge={item.badge}
-              onClick={() => setUserMenuOpen(false)}
             />
           ))}
         </nav>
@@ -331,6 +274,14 @@ export default function AdminSidebar({ badges = {}, logout }) {
                   <span className="block truncate text-sm font-bold leading-tight">{userCard.username}</span>
                   <span className="block truncate text-[11px] font-semibold text-blue-100/70">{userCard.userPosition}</span>
                 </span>
+              </NavLink>
+              <NavLink
+                to="/admin/edit-profile"
+                onClick={closeDrawer}
+                className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-blue-100 transition hover:bg-white/10 hover:text-white"
+              >
+                <Pencil size={16} />
+                Edit Profile
               </NavLink>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <ThemeToggle className="bg-white/0 text-blue-100 hover:bg-white/10 hover:text-white" />

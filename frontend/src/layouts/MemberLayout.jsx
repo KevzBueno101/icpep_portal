@@ -14,7 +14,7 @@ export default function MemberLayout({ children }) {
   const { user, logout, refreshUser, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const { profileLoading, profile, unreadAnnouncements, markAnnouncementsSeen } = useMember()
+  const { profileLoading, profile, unreadAnnouncements, markAnnouncementsSeen, aboutUnread, markAboutSeen } = useMember()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
 
@@ -24,6 +24,13 @@ export default function MemberLayout({ children }) {
       markAnnouncementsSeen()
     }
   }, [location.pathname, markAnnouncementsSeen])
+
+  // Visiting the About page marks its sections as read.
+  useEffect(() => {
+    if (location.pathname.startsWith('/member/about')) {
+      markAboutSeen()
+    }
+  }, [location.pathname, markAboutSeen])
 
   // Live membership-status guard: bounce the member to the pending page the
   // moment their status is no longer APPROVED (e.g. admin triggers Renew-All),
@@ -97,6 +104,7 @@ export default function MemberLayout({ children }) {
           onLogout={() => setShowLogoutConfirm(true)}
           onHelpClick={() => setShowHelpModal(true)}
           announcementsBadge={unreadAnnouncements}
+          aboutUnread={aboutUnread}
         />
 
       {/* Mobile Header (fixed top) */}
@@ -142,7 +150,7 @@ export default function MemberLayout({ children }) {
       </main>
 
       {/* Mobile Footer Navigation */}
-      <MobileMemberNavbar announcementsBadge={unreadAnnouncements} />
+      <MobileMemberNavbar announcementsBadge={unreadAnnouncements} aboutUnread={aboutUnread} />
 
       {/* Logout Confirmation Modal Overlay */}
       {showLogoutConfirm && (
