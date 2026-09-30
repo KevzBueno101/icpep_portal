@@ -227,6 +227,72 @@ export const MemberProvider = ({ children }) => {
     return () => document.removeEventListener('visibilitychange', onFocus)
   }, [fetchProfile, fetchAnnouncements])
 
+  // Real-time updates via WebSocket (Channels)
+  useEffect(() => {
+    if (!user?.id) return
+
+    const wsUrl = import.meta.env.VITE_WS_URL
+      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
+      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+
+    let ws
+    let isCancelled = false
+    let reconnectTimeout
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (e) {
+        console.warn('[MemberContext] WebSocket init failed:', e)
+        return
+      }
+
+      ws.onmessage = (event) => {
+        if (isCancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data?.type === 'announcements.updated') {
+            fetchAnnouncements(true)
+          } else if (data?.type === 'about.updated') {
+            fetchAboutSections()
+          }
+        } catch (e) {
+          console.warn('[MemberContext] ws message parse error')
+        }
+      }
+
+      ws.onerror = () => {
+        // avoid spamming console
+      }
+
+      ws.onclose = () => {
+        if (isCancelled) return
+        reconnectTimeout = setTimeout(() => {
+          if (!isCancelled) {
+            connect() // Reconnect
+            // Refresh data in case we missed anything while disconnected
+            fetchAnnouncements(true)
+            fetchAboutSections()
+          }
+        }, 3000) // Reconnect after 3 seconds
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(reconnectTimeout)
+      try {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close()
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [user?.id, fetchAnnouncements, fetchAboutSections])
+
   const value = {
     profile,
     profileCacheKey,

@@ -19,6 +19,23 @@ from permissions import CanManageContent, IsAdmin
 from .models import AboutSection
 from .serializers import AboutSectionSerializer
 
+def broadcast_about_updated():
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is not None:
+            async_to_sync(channel_layer.group_send)(
+                "member_updates",
+                {
+                    "type": "about.updated",
+                    "payload": {},
+                },
+            )
+    except Exception:
+        pass
+
 _CLOUDINARY_DOWNLOAD_URL = 'https://api.cloudinary.com/v1_1/{cloud}/{resource_type}/download'
 _DOCUMENT_FETCH_TIMEOUT = 90
 _DOCUMENT_CACHE_MAX = 32
@@ -108,6 +125,7 @@ class AboutSectionAdminListCreateAPIView(generics.ListCreateAPIView):
             },
             request=self.request
         )
+        broadcast_about_updated()
 
 
 class AboutSectionAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -140,6 +158,7 @@ class AboutSectionAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             },
             request=self.request
         )
+        broadcast_about_updated()
 
     def perform_destroy(self, instance):
         entity_id = instance.id
@@ -154,6 +173,7 @@ class AboutSectionAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             details={'title': entity_name},
             request=self.request
         )
+        broadcast_about_updated()
 
 
 class AboutSectionDocumentDeleteAPIView(APIView):
@@ -178,6 +198,7 @@ class AboutSectionDocumentDeleteAPIView(APIView):
             details={'title': entity_name, 'document_removed': True},
             request=request
         )
+        broadcast_about_updated()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -227,4 +248,5 @@ class AboutSectionReorderAPIView(ReorderAPIView):
                 details={'ordered_ids': request.data.get('ordered_ids')},
                 request=request
             )
+            broadcast_about_updated()
         return response
