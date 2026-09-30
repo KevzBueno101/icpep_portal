@@ -8,10 +8,20 @@ import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
 // Take control of currently-open tabs as soon as the fresh service worker activates
 clientsClaim()
 
-// Gain control via the "Refresh now" button in the UpdateNotice banner
+// Gain control via the "Refresh now" button in the UpdateNotice banner, and
+// apply/clear the app-icon unread badge on request from the page.
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  const type = event.data && event.data.type
+  if (type === 'SKIP_WAITING') {
     self.skipWaiting()
+    return
+  }
+  if (type === 'SET_UNREAD_BADGE') {
+    event.waitUntil(applyUnreadBadge())
+    return
+  }
+  if (type === 'CLEAR_UNREAD_BADGE') {
+    event.waitUntil(clearUnreadBadge())
   }
 })
 
@@ -110,6 +120,54 @@ registerRoute(
   })
 )
 
+// ── App-icon badge (unread flag) ─────────────────────────────────────────────
+
+const BADGE_TAG = 'icpep-unread'
+
+const IS_ANDROID = self.navigator && /Android/i.test(self.navigator.userAgent || '')
+
+async function applyUnreadBadge() {
+  // iOS/iPadOS 16.4+ and desktop installed PWAs: set the badge directly.
+  if (self.navigator && 'setAppBadge' in self.navigator) {
+    try {
+      await self.navigator.setAppBadge()
+    } catch {
+      // Permission not granted — no-op.
+    }
+  }
+  // Android has no Badging API: the launcher dot only shows while a
+  // notification stays in the tray, so keep a silent, tagged notification
+  // that outlives the "real" push notification (dismissing it won't clear
+  // the indicator until the app is opened).
+  if (IS_ANDROID && 'showNotification' in self.registration) {
+    await self.registration
+      .showNotification('ICpEP.SE', {
+        tag: BADGE_TAG,
+        renotify: false,
+        silent: true,
+        body: 'You have unread announcements.',
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png',
+        data: { url: '/member/announcements' },
+      })
+      .catch(() => {})
+  }
+}
+
+async function clearUnreadBadge() {
+  if (self.navigator && 'clearAppBadge' in self.navigator) {
+    try {
+      await self.navigator.clearAppBadge()
+    } catch {
+      // no-op
+    }
+  }
+  if ('getNotifications' in self.registration) {
+    const notifications = await self.registration.getNotifications({ tag: BADGE_TAG })
+    notifications.forEach((notification) => notification.close())
+  }
+}
+
 // ── Web Push ──────────────────────────────────────────────────────────────────
 
 const NOTIFICATION_DEFAULTS = {
@@ -131,14 +189,21 @@ self.addEventListener('push', (event) => {
   const notification = { ...NOTIFICATION_DEFAULTS, ...payload }
 
   event.waitUntil(
-    self.registration
-      .showNotification(notification.title, {
-        body: notification.body,
-        icon: notification.icon,
-        badge: notification.badge,
-        data: { url: notification.url },
-      })
-      .catch(() => {})
+    (async () => {
+      try {
+        await self.registration.showNotification(notification.title, {
+          body: notification.body,
+          icon: notification.icon,
+          badge: notification.badge,
+          data: { url: notification.url },
+        })
+      } catch {
+        // Notification display failed — the badge is still applied below.
+      }
+      // A new announcement means unread content exists: reflect it on the
+      // installed app's icon (iOS badge / Android persistent tray dot).
+      await applyUnreadBadge()
+    })()
   )
 })
 
