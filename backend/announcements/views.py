@@ -86,7 +86,13 @@ class AnnouncementAdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return [CanManageContent()]
 
     def perform_update(self, serializer):
+        was_published = serializer.instance.is_published
         announcement = serializer.save()
+
+        # Notify subscribers when a draft is published (the create path already
+        # pushes immediately-published announcements).
+        if announcement.is_published and not was_published:
+            send_announcement_push(announcement)
 
         # Log announcement update
         log_action(

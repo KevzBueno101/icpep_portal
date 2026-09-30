@@ -66,15 +66,11 @@ export default function MobileMemberNavbar({ announcementsBadge = 0, aboutUnread
                   </span>
                 )}
 
-                {/* Unread dots for About Org (blue = CBL, violet = Resolution) */}
-                {item.key === 'about' && (aboutUnread.constitution > 0 || aboutUnread.resolution > 0) && (
-                  <span className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                    {aboutUnread.constitution > 0 && (
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
-                    )}
-                    {aboutUnread.resolution > 0 && (
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet-500" />
-                    )}
+                {/* Unread dot for About Org (violet = Resolution) */}
+                {item.key === 'about' && aboutUnread.resolution > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet-500"></span>
                   </span>
                 )}
               </div>

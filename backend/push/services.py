@@ -22,6 +22,17 @@ def send_push(subscription, payload):
     service reports it is gone (HTTP 410). Swallows other errors so a
     single bad subscription never breaks a broadcast.
     """
+    ok, _ = send_push_reported(subscription, payload)
+    return ok
+
+
+def send_push_reported(subscription, payload):
+    """Deliver one push and report the outcome for diagnostics.
+
+    Returns (ok: bool, detail: str). Unlike send_push, the underlying
+    exception is not swallowed so CLI tooling (e.g. check_push) can say
+    exactly why a device did not receive a message.
+    """
     try:
         webpush(
             subscription_info={
@@ -37,14 +48,17 @@ def send_push(subscription, payload):
             ttl=86400,
             content_encoding='aes128gcm',
         )
-        return True
+        return True, 'delivered'
     except WebPushException as exc:
         if exc.response is not None and exc.response.status_code == 410:
             logger.info('Push subscription gone, removing: %s', subscription.endpoint)
             subscription.delete()
-        else:
-            logger.warning('Push send failed for %s: %s', subscription.endpoint, exc)
-        return False
+            return False, '410 Gone — subscription removed'
+        logger.warning('Push send failed for %s: %s', subscription.endpoint, exc)
+        return False, f'WebPushException: {exc}'
+    except Exception as exc:
+        logger.warning('Push send failed for %s: %s', subscription.endpoint, exc)
+        return False, f'{type(exc).__name__}: {exc}'
 
 
 def send_announcement_push(announcement):
