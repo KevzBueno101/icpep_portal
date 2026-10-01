@@ -52,7 +52,7 @@ export default function AdminProfile() {
 
         <div className="px-6 pb-8 relative">
           {/* Avatar Container */}
-          <div className="relative -mt-16 mb-6 flex justify-between items-end">
+          <div className="relative -mt-16 mb-4 flex justify-between items-end">
             <div className="rounded-full h-28 w-28 overflow-hidden border-4 border-white bg-slate-200 shadow-md">
               {profilePictureUrl ? (
                 <img src={profilePictureUrl} alt={fullName} className="h-full w-full object-cover" />
