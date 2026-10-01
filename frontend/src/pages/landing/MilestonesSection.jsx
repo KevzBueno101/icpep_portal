@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { Info } from 'lucide-react'
 import { publicApi } from '../../api/axios'
 
 function clamp01(n) {
@@ -327,6 +328,12 @@ export default function MilestonesSection() {
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
             A living record of the achievements, events, and landmarks that define our chapter's story.
           </p>
+          <div className="mx-auto mt-4 max-w-xl flex items-start gap-2 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <span>
+              <strong className="font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Note:</strong> This section is currently under development. Our Documentation Officer is in the process of compiling the previous achievements and milestones of the ICpEP CatSU Chapter.
+            </span>
+          </div>
         </div>
 
         {/* ── Empty state ── */}
