@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Info } from 'lucide-react'
 import { startHeroParticles } from './_heroParticles'
 import { publicApi } from '../../api/axios'
 import { registerLogoTap } from '../../utils/logoSecretTaps'
@@ -210,14 +211,20 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-16">
-          <a
-            href="/register"
-            className="group inline-flex items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-8 py-3.5 text-[15px] font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 opacity-50 cursor-not-allowed pointer-events-none"
-          >
-            <span className="mr-2">▣</span>
-            Join ICPEP.SE
-            <span className="ml-2 opacity-0 transition group-hover:opacity-100">↗</span>
-          </a>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-cyan-200/70 font-medium">
+              <Info className="h-3.5 w-3.5" />
+              <span>The Membership Feature Will Be Available Soon</span>
+            </div>
+            <a
+              href="/register"
+              className="group inline-flex items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-8 py-3.5 text-[15px] font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 opacity-50 cursor-not-allowed pointer-events-none"
+            >
+              <span className="mr-2">▣</span>
+              Join ICPEP.SE
+              <span className="ml-2 opacity-0 transition group-hover:opacity-100">↗</span>
+            </a>
+          </div>
           <a
             href="/login"
             className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-[15px] font-semibold text-white/90 backdrop-blur transition hover:border-cyan-400/40 hover:bg-white/10 opacity-50 cursor-not-allowed pointer-events-none"
