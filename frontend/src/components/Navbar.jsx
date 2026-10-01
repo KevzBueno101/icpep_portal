@@ -107,6 +107,7 @@ export default function Navbar() {
                   <span>Install App</span>
                 </button>
               )}
+              {/* Temporarily disabled Login/Register buttons
               <Link
                 to="/login"
                 className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
@@ -119,6 +120,7 @@ export default function Navbar() {
               >
                 Register
               </Link>
+              */}
             </div>
           </div>
 
@@ -209,6 +211,7 @@ export default function Navbar() {
                 <span>Install App</span>
               </button>
             )}
+            {/* Temporarily disabled Login/Register buttons
             <Link
               to="/login"
               onClick={closeMobileMenu}
@@ -223,6 +226,7 @@ export default function Navbar() {
             >
               Register
             </Link>
+            */}
             <button
               type="button"
               onClick={() => { closeMobileMenu(); window.location.reload() }}
