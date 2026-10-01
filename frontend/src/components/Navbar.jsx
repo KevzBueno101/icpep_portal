@@ -109,13 +109,13 @@ export default function Navbar() {
               )}
               <Link
                 to="/login"
-                className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400"
+                className="rounded-md px-4 py-2 text-sm font-semibold text-slate-700/90 transition hover:bg-sky-100/40 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400 opacity-50 cursor-not-allowed pointer-events-none"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500/90"
+                className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500/90 opacity-50 cursor-not-allowed pointer-events-none"
               >
                 Register
               </Link>
@@ -212,14 +212,14 @@ export default function Navbar() {
             <Link
               to="/login"
               onClick={closeMobileMenu}
-              className="block rounded-md bg-sky-600 px-3 py-2 text-center text-base font-medium text-white"
+              className="block rounded-md bg-sky-600 px-3 py-2 text-center text-base font-medium text-white opacity-50 cursor-not-allowed pointer-events-none"
             >
               Login
             </Link>
             <Link
               to="/register"
               onClick={closeMobileMenu}
-              className="block rounded-md border border-sky-600 px-3 py-2 text-center text-base font-medium text-sky-600"
+              className="block rounded-md border border-sky-600 px-3 py-2 text-center text-base font-medium text-sky-600 opacity-50 cursor-not-allowed pointer-events-none"
             >
               Register
             </Link>
