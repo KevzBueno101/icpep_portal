@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useRefresh } from '../context/RefreshContext'
+import { clearUnreadBadge } from '../utils/appBadge'
 
 export default function RefreshButton({ className = '' }) {
-  const { needRefresh, clearRefresh } = useRefresh()
+  const { needRefresh, clearRefresh, needContentRefresh, clearContentRefresh } = useRefresh()
   const [spinning, setSpinning] = useState(false)
 
   const handleRefresh = () => {
     if (spinning) return
     setSpinning(true)
     clearRefresh()
+    clearContentRefresh()
+    clearUnreadBadge()
     try {
       localStorage.setItem('icpep_update_acknowledged_at', String(Date.now()))
     } catch {
@@ -44,7 +47,7 @@ export default function RefreshButton({ className = '' }) {
       aria-label="Refresh page"
     >
       <RefreshCw className={`h-5 w-5 ${spinning ? 'animate-spin' : ''}`} />
-      {needRefresh && (
+      {(needRefresh || needContentRefresh) && (
         <>
           <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
           <span className="sr-only">New updates available</span>
