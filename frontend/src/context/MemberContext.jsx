@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
 import { useAuth } from './useAuth'
+import { useRefresh } from './RefreshContext'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../utils/events'
 import { setUnreadBadge, clearUnreadBadge } from '../utils/appBadge'
@@ -31,6 +32,7 @@ const getAboutLastSeenAt = (userId) => {
 
 export const MemberProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth()
+  const { triggerContentRefresh, needContentRefresh } = useRefresh()
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [profileCacheKey, setProfileCacheKey] = useState(0)
@@ -89,12 +91,24 @@ export const MemberProvider = ({ children }) => {
   // Mirror the unread-announcement state onto the installed app's icon
   // (iOS Badging API / Android persistent tray dot).
   useEffect(() => {
-    if (!user?.id || !unreadAnnouncements) {
+    if (!user?.id) {
       clearUnreadBadge()
       return
     }
-    setUnreadBadge()
-  }, [user?.id, unreadAnnouncements])
+    if (unreadAnnouncements > 0 || needContentRefresh) {
+      setUnreadBadge()
+    } else {
+      clearUnreadBadge()
+    }
+  }, [user?.id, unreadAnnouncements, needContentRefresh])
+
+  // Clear app badge when content refresh is cleared (user clicked refresh)
+  useEffect(() => {
+    if (!user?.id) return
+    if (!needContentRefresh && unreadAnnouncements === 0) {
+      clearUnreadBadge()
+    }
+  }, [user?.id, needContentRefresh, unreadAnnouncements])
 
   useEffect(() => {
     if (!aboutSections.length) {
@@ -193,10 +207,20 @@ export const MemberProvider = ({ children }) => {
     const onProfileUpdated = () => {
       fetchProfile()
       fetchPaymentSettings()
+      triggerContentRefresh()
     }
-    const onAnnouncementsUpdated = () => fetchAnnouncements()
-    const onPaymentSettingsUpdated = () => fetchPaymentSettings()
-    const onMemberListUpdated = () => fetchProfile()
+    const onAnnouncementsUpdated = () => {
+      fetchAnnouncements()
+      triggerContentRefresh()
+    }
+    const onPaymentSettingsUpdated = () => {
+      fetchPaymentSettings()
+      triggerContentRefresh()
+    }
+    const onMemberListUpdated = () => {
+      fetchProfile()
+      triggerContentRefresh()
+    }
 
     window.addEventListener(EVENTS.PROFILE_UPDATED, onProfileUpdated)
     window.addEventListener(EVENTS.ANNOUNCEMENTS_UPDATED, onAnnouncementsUpdated)
@@ -213,7 +237,7 @@ export const MemberProvider = ({ children }) => {
       window.removeEventListener('announcementUpdated', onAnnouncementsUpdated)
       window.removeEventListener('announcementDeleted', onAnnouncementsUpdated)
     }
-  }, [fetchProfile, fetchPaymentSettings, fetchAnnouncements])
+  }, [fetchProfile, fetchPaymentSettings, fetchAnnouncements, triggerContentRefresh])
 
   useEffect(() => {
     const onFocus = () => {
@@ -253,8 +277,10 @@ export const MemberProvider = ({ children }) => {
           const data = JSON.parse(event.data)
           if (data?.type === 'announcements.updated') {
             fetchAnnouncements(true)
+            triggerContentRefresh()
           } else if (data?.type === 'about.updated') {
             fetchAboutSections()
+            triggerContentRefresh()
           }
         } catch (e) {
           console.warn('[MemberContext] ws message parse error')
@@ -273,6 +299,7 @@ export const MemberProvider = ({ children }) => {
             // Refresh data in case we missed anything while disconnected
             fetchAnnouncements(true)
             fetchAboutSections()
+            triggerContentRefresh()
           }
         }, 3000) // Reconnect after 3 seconds
       }
@@ -291,7 +318,7 @@ export const MemberProvider = ({ children }) => {
         // ignore
       }
     }
-  }, [user?.id, fetchAnnouncements, fetchAboutSections])
+  }, [user?.id, fetchAnnouncements, fetchAboutSections, triggerContentRefresh])
 
   const value = {
     profile,
