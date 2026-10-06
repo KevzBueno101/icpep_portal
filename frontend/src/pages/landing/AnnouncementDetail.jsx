@@ -5,6 +5,8 @@ import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
+import toast from 'react-hot-toast'
+import { Copy, ExternalLink } from 'lucide-react'
 
 const CATEGORY_COLORS = {
   announcement: {
@@ -116,6 +118,15 @@ export default function AnnouncementDetail() {
   const handleCloseModal = () => {
     setModalImages(null)
     setModalInitialIndex(0)
+  }
+
+  const handleCopyToClipboard = async (url) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copied to clipboard')
+    } catch (err) {
+      toast.error('Failed to copy link')
+    }
   }
 
   const handleBackToAnnouncements = () => {
@@ -305,6 +316,58 @@ export default function AnnouncementDetail() {
                       className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Links/URLs */}
+          {announcement.links && announcement.links.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-6">Links ({announcement.links.length})</h2>
+              <div className="space-y-3">
+                {announcement.links.map((link, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-4 rounded-xl p-4"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${cat.border}`,
+                    }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base font-semibold text-white truncate">
+                          {link.label || link.url}
+                        </span>
+                      </div>
+                      {link.description && (
+                        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleCopyToClipboard(link.url)}
+                        className="rounded-lg p-2 transition-colors hover:bg-white/10"
+                        style={{ color: cat.accent }}
+                        title="Copy link"
+                      >
+                        <Copy size={18} />
+                      </button>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-lg p-2 transition-colors hover:bg-white/10"
+                        style={{ color: cat.accent }}
+                        title="Open link"
+                      >
+                        <ExternalLink size={18} />
+                      </a>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

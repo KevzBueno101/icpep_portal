@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class Announcement(models.Model):
@@ -23,6 +24,11 @@ class Announcement(models.Model):
     is_published = models.BooleanField(default=True)
     members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
     email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement')
+    links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of URL attachments with structure: [{url, label, description, order}]'
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
