@@ -140,7 +140,7 @@ export default function MemberAnnouncements() {
                   />
                 </div>
               )}
-              <div className="flex flex-col p-6">
+              <div className="flex flex-col p-6 overflow-hidden">
                 <div className="flex items-center justify-between gap-4">
                   <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
                     {formatCategory(ann.category)}
@@ -156,8 +156,10 @@ export default function MemberAnnouncements() {
                 <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
                   {ann.title}
                 </h2>
-                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1" dangerouslySetInnerHTML={{ __html: parseUrlsInText(ann.body) }}>
-                </p>
+                <div className="mt-3 flex-1 overflow-hidden">
+                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 break-words" dangerouslySetInnerHTML={{ __html: parseUrlsInText(ann.body) }}>
+                  </p>
+                </div>
                 <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
                   <span>Read announcement</span>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">

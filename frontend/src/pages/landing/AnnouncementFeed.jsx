@@ -86,11 +86,11 @@ export default function AnnouncementFeed() {
             </div>
           </div>
         ) : featuredAnnouncement ? (
-          <div className="grid gap-8 lg:grid-cols-12">
+          <div className="grid gap-8 lg:grid-cols-12 overflow-hidden">
             <div className="lg:col-span-6 lg:col-start-1">
               <AnnouncementCard announcement={featuredAnnouncement} variant="featured" />
             </div>
-            
+
             <div className="lg:col-span-6 lg:col-start-7 flex flex-col relative">
               <h3 className="mb-6 text-xl font-bold text-slate-900 shrink-0">Recent Updates</h3>
               <div className="relative">

@@ -3,6 +3,6 @@ export function parseUrlsInText(text) {
 
   const urlRegex = /(https?:\/\/[^\s]+)/g
   return text.replace(urlRegex, (url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline font-medium">${url}</a>`
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:text-sky-700 underline font-medium break-all" style="word-break: break-all;">${url}</a>`
   })
 }
