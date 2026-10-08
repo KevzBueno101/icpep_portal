@@ -5,7 +5,7 @@ import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
-import { parseUrlsInText } from '../../utils/urlParser'
+import { parseUrlsInText } from '../../utils/urlParser.jsx'
 
 const CATEGORY_COLORS = {
   announcement: {
@@ -283,7 +283,8 @@ export default function AnnouncementDetail() {
             }}
           >
             <h2 className="text-2xl font-bold text-white mb-4">Announcement</h2>
-            <p className="text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden" style={{ color: 'rgba(255,255,255,0.7)' }} dangerouslySetInnerHTML={{ __html: parseUrlsInText(announcement.body) }}>
+            <p className="text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {parseUrlsInText(announcement.body)}
             </p>
           </div>
 

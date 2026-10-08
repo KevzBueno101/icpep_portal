@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ImageModal from './ImageModal'
-import { parseUrlsInText } from '../utils/urlParser'
+import { parseUrlsInText } from '../utils/urlParser.jsx'
 
 import { Pin, Calendar, User, ArrowRight } from 'lucide-react'
 
@@ -98,7 +98,8 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
               {title}
             </h3>
 
-            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3 break-words overflow-hidden" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
+            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3 break-words overflow-hidden">
+              {parseUrlsInText(body)}
             </p>
 
             <div className="mt-auto flex flex-wrap items-center gap-y-3 gap-x-6 border-t border-slate-100 pt-5 text-sm text-slate-500">
@@ -207,7 +208,8 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
         </div>
 
         <h3 className="mb-2 text-lg font-bold text-slate-900">{title}</h3>
-        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600 break-words overflow-hidden" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
+        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600 break-words overflow-hidden">
+          {parseUrlsInText(body)}
         </p>
 
         <div className="flex items-center justify-between text-xs text-slate-500">

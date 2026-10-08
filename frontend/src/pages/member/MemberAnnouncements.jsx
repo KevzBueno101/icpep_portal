@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMember } from '../../context/MemberContext'
 import NotificationToggle from '../../components/NotificationToggle'
 import { formatCategory } from '../../utils/announcementCategories'
-import { parseUrlsInText } from '../../utils/urlParser'
+import { parseUrlsInText } from '../../utils/urlParser.jsx'
 import { Search, Bell, Filter } from 'lucide-react'
 
 export default function MemberAnnouncements() {
@@ -157,7 +157,8 @@ export default function MemberAnnouncements() {
                   {ann.title}
                 </h2>
                 <div className="mt-3 overflow-hidden">
-                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 break-words" dangerouslySetInnerHTML={{ __html: parseUrlsInText(ann.body) }}>
+                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 break-words">
+                    {parseUrlsInText(ann.body)}
                   </p>
                 </div>
                 <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
