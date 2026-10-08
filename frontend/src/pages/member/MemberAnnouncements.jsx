@@ -43,7 +43,7 @@ export default function MemberAnnouncements() {
   }, [announcements, selectedCategory, searchQuery])
 
   return (
-    <div className="space-y-6 overflow-hidden">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -122,7 +122,7 @@ export default function MemberAnnouncements() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4 overflow-hidden">
+        <div className="space-y-4">
           {filteredAnnouncements.map((ann) => (
             <button
               key={ann.id}
@@ -141,7 +141,7 @@ export default function MemberAnnouncements() {
                 </div>
               )}
               <div className="flex flex-col p-6 overflow-hidden">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4 shrink-0">
                   <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-xs font-bold text-sky-700">
                     {formatCategory(ann.category)}
                   </span>
@@ -153,15 +153,15 @@ export default function MemberAnnouncements() {
                     }) : ''}
                   </span>
                 </div>
-                <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150 truncate">
+                <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150 truncate shrink-0">
                   {ann.title}
                 </h2>
-                <div className="mt-3 overflow-hidden">
-                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600 break-words">
+                <div className="mt-3 overflow-hidden min-h-0">
+                  <p className="text-sm leading-relaxed text-slate-600 break-words overflow-hidden max-h-[60px]">
                     {parseUrlsInText(ann.body)}
                   </p>
                 </div>
-                <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
+                <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600 shrink-0">
                   <span>Read announcement</span>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
