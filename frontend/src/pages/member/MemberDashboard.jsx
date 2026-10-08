@@ -91,17 +91,17 @@ export default function MemberDashboard() {
       </div>
 
       {/* Recent Announcements */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
               <Bell className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Recent Announcements</h2>
+            <h2 className="min-w-0 text-base font-bold text-slate-900 sm:text-xl">Recent Announcements</h2>
           </div>
           <Link
             to="/member/announcements"
-            className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1.5"
+            className="flex shrink-0 items-center gap-1.5 text-xs font-bold text-sky-600 hover:text-sky-700"
           >
             <span>See all</span>
             <ArrowRight className="h-3 w-3" />
@@ -147,27 +147,27 @@ export default function MemberDashboard() {
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2 my-2">
+        <div className="my-2 grid gap-4 md:grid-cols-2">
           {!annLoading &&
             recentAnnouncements.map((ann) => (
               <button
                 key={ann.id}
                 type="button"
                 onClick={() => navigate(`/announcement/${ann.id}`)}
-                className="w-full text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300 group flex flex-col"
+                className="group flex min-w-0 w-full max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-slate-300 hover:shadow-md"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 border border-sky-100">
+                <div className="flex shrink-0 items-center justify-between gap-3">
+                  <span className="inline-flex shrink-0 rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
                     {formatCategory(ann.category)}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="shrink-0 text-xs text-slate-400">
                     {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}
                   </span>
                 </div>
-                <h3 className="mt-3 text-base font-bold text-slate-900 group-hover:text-sky-600 transition">
+                <h3 className="mt-3 line-clamp-2 break-words text-base font-bold text-slate-900 transition group-hover:text-sky-600">
                   {ann.title}
                 </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                <p className="mt-2 line-clamp-2 break-words text-sm text-slate-600">
                   {ann.body}
                 </p>
               </button>
