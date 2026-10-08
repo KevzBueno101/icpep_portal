@@ -74,7 +74,7 @@ export default function MemberDashboard() {
               Welcome, {memberFirstName}!
             </h1>
             <p className="mt-2 text-slate-300 max-w-xl text-sm md:text-base">
-              You are an active student member of the Institute of Computer Engineers of the Philippines Student Edition (ICPEP.SE).
+              You're now wired into a community of future computer engineers. Stay in the loop with our announcements and opportunities.
             </p>
           </div>
           <div className="flex items-center gap-3 self-start md:self-auto">
