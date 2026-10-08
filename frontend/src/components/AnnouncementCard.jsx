@@ -150,8 +150,6 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
           <h4 className="truncate text-base font-semibold text-slate-900 group-hover:text-sky-600 transition-colors">
             {title}
           </h4>
-          <p className="mt-1 line-clamp-2 text-xs text-slate-600" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
-          </p>
           <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
             <Calendar size={12} />
             <span>{formattedDate}</span>
