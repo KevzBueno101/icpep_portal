@@ -1,9 +1,10 @@
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from authentication.models import LoginEvent
 from members.models import MemberProfile
 
 User = get_user_model()
@@ -98,3 +99,54 @@ class MemberStatsTests(APITestCase):
         self.assertEqual(months[2]['month'], '2025-03')
         self.assertEqual([m['count'] for m in months[:3]], [1, 0, 1])
         self.assertEqual(months[-1]['month'], date.today().replace(day=1).strftime('%Y-%m'))
+
+    def _login_event(self, user, on_date):
+        event = LoginEvent.objects.create(user=user)
+        aware = timezone.make_aware(datetime.combine(on_date, time.min), UTC)
+        LoginEvent.objects.filter(pk=event.pk).update(created_at=aware)
+        return event
+
+    def test_login_daily_is_thirty_days_zero_filled_and_chronological(self):
+        res = self.client.get('/api/members/stats/')
+
+        daily = res.data['login_daily']
+        self.assertEqual(len(daily), 30)
+        self.assertEqual(daily[-1]['date'], timezone.localdate().isoformat())
+        self.assertEqual(
+            daily[0]['date'],
+            (timezone.localdate() - timedelta(days=29)).isoformat(),
+        )
+        self.assertTrue(all(row['count'] == 0 for row in daily))
+
+        expected_dates = [
+            (timezone.localdate() - timedelta(days=29 - i)).isoformat()
+            for i in range(30)
+        ]
+        self.assertEqual([row['date'] for row in daily], expected_dates)
+
+    def test_login_daily_counts_distinct_users_per_day(self):
+        today = timezone.localdate()
+        m1 = _make_user('m1@example.com')
+        m2 = _make_user('m2@example.com')
+
+        # Same member logging in twice in one day counts once.
+        self._login_event(m1, today)
+        self._login_event(m1, today)
+        self._login_event(m2, today)
+
+        res = self.client.get('/api/members/stats/')
+
+        daily = res.data['login_daily']
+        self.assertEqual(daily[-1]['count'], 2)
+
+    def test_login_daily_excludes_events_outside_the_window(self):
+        today = timezone.localdate()
+        m1 = _make_user('m1@example.com')
+        self._login_event(m1, today - timedelta(days=29))
+        self._login_event(m1, today - timedelta(days=30))
+
+        res = self.client.get('/api/members/stats/')
+
+        daily = res.data['login_daily']
+        self.assertEqual(daily[0]['count'], 1)
+        self.assertEqual(sum(row['count'] for row in daily), 1)

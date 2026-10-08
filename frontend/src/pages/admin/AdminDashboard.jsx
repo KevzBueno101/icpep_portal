@@ -95,18 +95,19 @@ const AdminDashboard = () => {
   const totalExpired = statusCounts.EXPIRED ?? 0
   const totalMembers = memberStats?.total ?? 0
 
-  const formatMonthLabel = (monthKey) => {
-    const [year, month] = String(monthKey || '').split('-').map(Number)
-    if (!year || !month) return monthKey
-    const d = new Date(year, month - 1, 1)
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+  const formatDayLabel = (dayKey) => {
+    const [year, month, day] = String(dayKey || '').split('-').map(Number)
+    if (!year || !month || !day) return dayKey
+    const d = new Date(year, month - 1, day)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  // Monthly growth is computed server-side, chronologically sorted and zero-filled.
-  const memberGrowth = (memberStats?.monthly_growth || []).map((row) => ({
+  // Distinct members who logged in per day — server-side, last 30 days, zero-filled.
+  const loginDaily = (memberStats?.login_daily || []).map((row) => ({
     ...row,
-    label: formatMonthLabel(row.month),
+    label: formatDayLabel(row.date),
   }))
+  const hasLoginActivity = loginDaily.some((row) => row.count > 0)
 
   const handleRoleChange = (id, value) => {
     setSelectedRole((prev) => ({ ...prev, [id]: value }))
@@ -328,13 +329,13 @@ const AdminDashboard = () => {
         {/* Membership Analytics (Executive Redesign) */}
 
         <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">Membership Growth Trend</h3>
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Member Logins — Last 30 Days</h3>
 
           <div className="h-[320px]">
             <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={memberGrowth} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
+              <LineChart data={loginDaily} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="4 4" stroke={isDark ? '#334155' : '#e2e8f0'} />
-                <XAxis dataKey="label" tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                 <YAxis tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
@@ -343,14 +344,14 @@ const AdminDashboard = () => {
                     borderRadius: 12,
                   }}
                   labelStyle={{ color: isDark ? '#f1f5f9' : '#0f172a' }}
-                  formatter={(value) => [value, 'New Members']}
+                  formatter={(value) => [value, 'Members Logged In']}
                 />
                 <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#475569' }} />
 
                 <Line
                   type="monotone"
                   dataKey="count"
-                  name="New Members"
+                  name="Members Logged In"
                   stroke={isDark ? '#38bdf8' : '#0284c7'}
                   strokeWidth={3}
                   dot={false}
@@ -360,7 +361,9 @@ const AdminDashboard = () => {
           </div>
 
           <p className="mt-3 text-xs text-slate-500">
-            New member registrations per month (by sign-up date).
+            {hasLoginActivity
+              ? 'Distinct members who logged in per day (last 30 days).'
+              : 'Distinct members who logged in per day (last 30 days). Login tracking starts from the feature launch date — earlier activity is not recorded.'}
           </p>
         </div>
 

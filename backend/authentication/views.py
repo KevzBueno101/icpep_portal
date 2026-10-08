@@ -16,7 +16,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import PasswordResetToken
+from .models import LoginEvent, PasswordResetToken
 from .serializers import (
     AdminLoginSerializer,
     AdminRegistrationSerializer,
@@ -89,6 +89,10 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         if api_settings.UPDATE_LAST_LOGIN:
             user.last_login = timezone.now()
             user.save(update_fields=['last_login'])
+        # Track member logins for the admin dashboard chart.
+        # Non-critical — must never break login.
+        with contextlib.suppress(Exception):
+            LoginEvent.objects.create(user=user)
         return data
 
     @classmethod
