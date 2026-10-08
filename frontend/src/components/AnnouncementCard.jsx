@@ -178,10 +178,10 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
     return (
       <Link
         to={`/announcement/${id}`}
-        className="group relative flex h-[100px] shrink-0 items-center gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
+        className="group relative flex shrink-0 items-start gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
       >
         <div className="absolute left-0 top-0 h-full w-1 bg-sky-500 opacity-0 transition-opacity group-hover:opacity-100" />
-        
+
         {firstImageUrl && (
           <div className="h-[60px] w-[100px] shrink-0 overflow-hidden rounded-lg bg-slate-100">
             <img
@@ -194,7 +194,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="mb-1 flex items-center gap-2">
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryColor}`}>
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -208,6 +208,50 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             <Calendar size={12} />
             <span>{formattedDate}</span>
           </div>
+
+          {links && links.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {links.map((link, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-medium text-slate-900 truncate">
+                        {link.label || link.url}
+                      </span>
+                    </div>
+                    {link.description && (
+                      <p className="text-[10px] text-slate-500 truncate">{link.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleCopyToClipboard(link.url)
+                      }}
+                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                      title="Copy link"
+                    >
+                      <Copy size={12} />
+                    </button>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                      title="Open link"
+                    >
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Link>
     )
