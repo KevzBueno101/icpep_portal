@@ -6,7 +6,7 @@ import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
-import { CheckCircle2, Copy, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -24,7 +24,6 @@ const emptyForm = {
   pinned: false,
   is_published: true,
   members_only: false,
-  links: [],
 }
 
 const AdminAnnouncement = () => {
@@ -118,7 +117,6 @@ const AdminAnnouncement = () => {
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
       members_only: !!announcement.members_only,
-      links: announcement.links || [],
     })
     setSelectedImages([])
   }
@@ -200,58 +198,6 @@ const AdminAnnouncement = () => {
     } finally {
       setSaving(false)
     }
-  }
-
-  // URL management functions
-  const handleAddLink = () => {
-    setFormData({
-      ...formData,
-      links: [
-        ...(formData.links || []),
-        { url: '', label: '', description: '', order: (formData.links?.length || 0) }
-      ]
-    })
-  }
-
-  const handleAddMultipleLinks = (count) => {
-    const newLinks = Array.from({ length: count }, (_, i) => ({
-      url: '',
-      label: '',
-      description: '',
-      order: (formData.links?.length || 0) + i
-    }))
-    setFormData({
-      ...formData,
-      links: [...(formData.links || []), ...newLinks]
-    })
-  }
-
-  const handleRemoveLink = (index) => {
-    setFormData({
-      ...formData,
-      links: formData.links.filter((_, i) => i !== index).map((link, i) => ({ ...link, order: i }))
-    })
-  }
-
-  const handleLinkChange = (index, field, value) => {
-    setFormData({
-      ...formData,
-      links: formData.links.map((link, i) =>
-        i === index ? { ...link, [field]: value } : link
-      )
-    })
-  }
-
-  const handleMoveLink = (index, direction) => {
-    const newLinks = [...formData.links]
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= newLinks.length) return
-    
-    [newLinks[index], newLinks[targetIndex]] = [newLinks[targetIndex], newLinks[index]]
-    setFormData({
-      ...formData,
-      links: newLinks.map((link, i) => ({ ...link, order: i }))
-    })
   }
 
   const handleDelete = async () => {
@@ -610,118 +556,6 @@ const AdminAnnouncement = () => {
               )}
             </div>
 
-            {/* Links/URLs */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Links/URLs (optional)
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAddLink}
-                    className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    + Add URL
-                  </button>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      defaultValue="1"
-                      id="multiple-links-count"
-                      className="w-12 rounded-lg border border-slate-300 px-2 py-1.5 text-xs text-center focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const count = parseInt(document.getElementById('multiple-links-count').value) || 1
-                        handleAddMultipleLinks(Math.min(Math.max(count, 1), 10))
-                      }}
-                      className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Add Multiple
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {formData.links && formData.links.length > 0 && (
-                <div className="space-y-3">
-                  {formData.links.map((link, index) => (
-                    <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-600">URL #{index + 1}</span>
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleMoveLink(index, 'up')}
-                            disabled={index === 0}
-                            className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                          >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveLink(index, 'down')}
-                            disabled={index === formData.links.length - 1}
-                            className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                          >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveLink(index)}
-                            className="rounded-full border border-red-300 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-slate-600">URL *</label>
-                          <input
-                            type="url"
-                            required
-                            value={link.url}
-                            onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="https://example.com"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-slate-600">Label (optional)</label>
-                          <input
-                            type="text"
-                            value={link.label}
-                            onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="e.g., Register here, More info"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-slate-600">Description (optional)</label>
-                          <input
-                            type="text"
-                            value={link.description}
-                            onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="Brief description of the link"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="submit"
@@ -925,118 +759,6 @@ const AdminAnnouncement = () => {
                         {imageUploading && (
                           <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
                             Uploading images...
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Links/URLs */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Links/URLs (optional)
-                          </label>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={handleAddLink}
-                              className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              + Add URL
-                            </button>
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                min="1"
-                                max="10"
-                                defaultValue="1"
-                                id="inline-multiple-links-count"
-                                className="w-12 rounded-lg border border-slate-300 px-2 py-1.5 text-xs text-center focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const count = parseInt(document.getElementById('inline-multiple-links-count').value) || 1
-                                  handleAddMultipleLinks(Math.min(Math.max(count, 1), 10))
-                                }}
-                                className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                              >
-                                Add Multiple
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {formData.links && formData.links.length > 0 && (
-                          <div className="space-y-3">
-                            {formData.links.map((link, index) => (
-                              <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <span className="text-xs font-semibold text-slate-600">URL #{index + 1}</span>
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleMoveLink(index, 'up')}
-                                      disabled={index === 0}
-                                      className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                                    >
-                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleMoveLink(index, 'down')}
-                                      disabled={index === formData.links.length - 1}
-                                      className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                                    >
-                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveLink(index)}
-                                      className="rounded-full border border-red-300 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <div>
-                                    <label className="mb-1 block text-xs font-medium text-slate-600">URL *</label>
-                                    <input
-                                      type="url"
-                                      required
-                                      value={link.url}
-                                      onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                                      placeholder="https://example.com"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="mb-1 block text-xs font-medium text-slate-600">Label (optional)</label>
-                                    <input
-                                      type="text"
-                                      value={link.label}
-                                      onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                                      placeholder="e.g., Register here, More info"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="mb-1 block text-xs font-medium text-slate-600">Description (optional)</label>
-                                    <input
-                                      type="text"
-                                      value={link.description}
-                                      onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
-                                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                                      placeholder="Brief description of the link"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
                           </div>
                         )}
                       </div>

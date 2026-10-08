@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useMember } from '../../context/MemberContext'
 import NotificationToggle from '../../components/NotificationToggle'
 import { formatCategory } from '../../utils/announcementCategories'
-import { Search, Bell, Filter, Copy, ExternalLink } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { parseUrlsInText } from '../../utils/urlParser'
+import { Search, Bell, Filter } from 'lucide-react'
 
 export default function MemberAnnouncements() {
   const navigate = useNavigate()
@@ -19,15 +19,6 @@ export default function MemberAnnouncements() {
     })
     return Array.from(list)
   }, [announcements])
-
-  const handleCopyToClipboard = async (url) => {
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success('Link copied to clipboard')
-    } catch (err) {
-      toast.error('Failed to copy link')
-    }
-  }
 
   const filteredAnnouncements = useMemo(() => {
     let list = [...announcements].sort(
@@ -165,52 +156,8 @@ export default function MemberAnnouncements() {
                 <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150">
                   {ann.title}
                 </h2>
-                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1">
-                  {ann.body}
+                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600 flex-1" dangerouslySetInnerHTML={{ __html: parseUrlsInText(ann.body) }}>
                 </p>
-                {ann.links && ann.links.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {ann.links.map((link, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-slate-900 truncate">
-                              {link.label || link.url}
-                            </span>
-                          </div>
-                          {link.description && (
-                            <p className="text-xs text-slate-500 truncate">{link.description}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleCopyToClipboard(link.url)
-                            }}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                            title="Copy link"
-                          >
-                            <Copy size={14} />
-                          </button>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                            title="Open link"
-                          >
-                            <ExternalLink size={14} />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between items-center text-xs font-bold text-sky-600">
                   <span>Read announcement</span>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-4 h-4 transform group-hover:translate-x-1 transition-transform">

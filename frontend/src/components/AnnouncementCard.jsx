@@ -1,25 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ImageModal from './ImageModal'
-import toast from 'react-hot-toast'
+import { parseUrlsInText } from '../utils/urlParser'
 
-import { Pin, Calendar, User, ArrowRight, Copy, ExternalLink } from 'lucide-react'
+import { Pin, Calendar, User, ArrowRight } from 'lucide-react'
 
 export default function AnnouncementCard({ announcement, variant = 'default' }) {
-  const { id, title, body, category, created_at, author, pinned, first_image, images, links } =
+  const { id, title, body, category, created_at, author, pinned, first_image, images } =
     announcement
 
   const [modalImages, setModalImages] = useState(null)
   const [modalInitialIndex, setModalInitialIndex] = useState(0)
-
-  const handleCopyToClipboard = async (url) => {
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success('Link copied to clipboard')
-    } catch (err) {
-      toast.error('Failed to copy link')
-    }
-  }
 
   const firstImageUrl = first_image || images?.[0]?.image
 
@@ -107,53 +98,8 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
               {title}
             </h3>
             
-            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3">
-              {body}
+            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
             </p>
-
-            {links && links.length > 0 && (
-              <div className="mb-6 space-y-2">
-                {links.map((link, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-900 truncate">
-                          {link.label || link.url}
-                        </span>
-                      </div>
-                      {link.description && (
-                        <p className="text-xs text-slate-500 truncate">{link.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleCopyToClipboard(link.url)
-                        }}
-                        className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                        title="Copy link"
-                      >
-                        <Copy size={14} />
-                      </button>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                        title="Open link"
-                      >
-                        <ExternalLink size={14} />
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div className="mt-auto flex flex-wrap items-center gap-y-3 gap-x-6 border-t border-slate-100 pt-5 text-sm text-slate-500">
               <div className="flex items-center gap-2">
@@ -204,54 +150,12 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
           <h4 className="truncate text-base font-semibold text-slate-900 group-hover:text-sky-600 transition-colors">
             {title}
           </h4>
+          <p className="mt-1 line-clamp-2 text-xs text-slate-600" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
+          </p>
           <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
             <Calendar size={12} />
             <span>{formattedDate}</span>
           </div>
-
-          {links && links.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {links.map((link, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-medium text-slate-900 truncate">
-                        {link.label || link.url}
-                      </span>
-                    </div>
-                    {link.description && (
-                      <p className="text-[10px] text-slate-500 truncate">{link.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleCopyToClipboard(link.url)
-                      }}
-                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                      title="Copy link"
-                    >
-                      <Copy size={12} />
-                    </button>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                      title="Open link"
-                    >
-                      <ExternalLink size={12} />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </Link>
     )
@@ -305,51 +209,8 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
         </div>
 
         <h3 className="mb-2 text-lg font-bold text-slate-900">{title}</h3>
-        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600">{body}</p>
-
-        {links && links.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {links.map((link, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900 truncate">
-                      {link.label || link.url}
-                    </span>
-                  </div>
-                  {link.description && (
-                    <p className="text-xs text-slate-500 truncate">{link.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      handleCopyToClipboard(link.url)
-                    }}
-                    className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                    title="Copy link"
-                  >
-                    <Copy size={14} />
-                  </button>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                    title="Open link"
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600" dangerouslySetInnerHTML={{ __html: parseUrlsInText(body) }}>
+        </p>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>{author || 'Admin'}</span>

@@ -27,7 +27,6 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             'is_published',
             'members_only',
             'email_blast_sent_at',
-            'links',
             'images',
             'first_image',
             'created_at',
