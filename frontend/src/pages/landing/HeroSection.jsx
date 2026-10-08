@@ -420,9 +420,17 @@ export default function HeroSection() {
 
         {/* Tagline */}
 
+        <p className="max-w-xl text-base sm:text-lg text-white/70 leading-relaxed mb-2">
+
+          The official website/web-app of ICpEP.SE CatSU Chapter
+
+        </p>
+
+
+
         <p className="max-w-xl text-base sm:text-lg text-white/70 leading-relaxed mb-10">
 
-          Innovating, Building, and Leading the Future of Technology.
+          Code Blooded Engineers; Wired for the future
 
         </p>
 
