@@ -122,13 +122,13 @@ export default function MemberAnnouncements() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 w-full min-w-0">
           {filteredAnnouncements.map((ann) => (
             <button
               key={ann.id}
               type="button"
               onClick={() => navigate(`/announcement/${ann.id}`)}
-              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full overflow-hidden max-w-full"
+              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full overflow-hidden max-w-full min-h-0"
             >
               {ann.first_image && (
                 <div className="relative w-full overflow-hidden bg-slate-100 shrink-0">
@@ -140,7 +140,7 @@ export default function MemberAnnouncements() {
                   />
                 </div>
               )}
-              <div className="flex flex-col p-4 sm:p-6 overflow-hidden">
+              <div className="flex flex-col p-4 sm:p-6 overflow-hidden min-h-0">
                 <div className="flex items-center justify-between gap-2 shrink-0">
                   <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-sky-700">
                     {formatCategory(ann.category)}
@@ -157,7 +157,7 @@ export default function MemberAnnouncements() {
                   {ann.title}
                 </h2>
                 <div className="mt-2 sm:mt-3 overflow-hidden min-h-0">
-                  <p className="text-xs sm:text-sm leading-relaxed text-slate-600 break-words overflow-hidden max-h-[48px] sm:max-h-[60px]">
+                  <p className="text-xs sm:text-sm leading-relaxed text-slate-600 break-words overflow-hidden line-clamp-2 sm:line-clamp-3">
                     {parseUrlsInText(ann.body)}
                   </p>
                 </div>
