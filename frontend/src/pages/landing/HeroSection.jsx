@@ -428,7 +428,7 @@ export default function HeroSection() {
 
 
 
-        <p className="max-w-xl text-base sm:text-lg text-white/70 leading-relaxed mb-10">
+        <p className="max-w-xl text-base sm:text-lg text-cyan-400 leading-relaxed mb-10">
 
           Code Blooded Engineers; Wired for the future
 
