@@ -6,7 +6,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase
 
-from authentication.models import FailedLoginAttempt
+from authentication.models import FailedLoginAttempt, LoginEvent
 from authentication.utils import build_password_reset_url
 from config.urlutils import clean_origin_url
 
@@ -285,3 +285,70 @@ class LoginRateLimitTests(APITestCase):
             FailedLoginAttempt.objects.filter(email__iexact='member@example.com').count(),
             0,
         )
+
+
+class LoginEventTests(APITestCase):
+    def _make_member(self, **kwargs):
+        fields = {
+            'email': 'member@example.com',
+            'username': 'member',
+            'password': 'Password123',
+            'role': 'OFFICER',
+            'registration_status': 'APPROVED',
+            'is_active': True,
+        }
+        fields.update(kwargs)
+        return User.objects.create_user(**fields)
+
+    def _make_admin(self):
+        return User.objects.create_user(
+            email='president@example.com',
+            username='president',
+            password='Password123',
+            role='ADMIN',
+            position='President',
+            registration_status='APPROVED',
+            is_active=True,
+        )
+
+    def test_successful_member_login_records_event(self):
+        member = self._make_member()
+
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(LoginEvent.objects.filter(user=member).count(), 1)
+
+    def test_repeated_member_logins_record_each_event(self):
+        self._make_member()
+        for _ in range(2):
+            response = self.client.post('/api/auth/login/', {
+                'email': 'member@example.com',
+                'password': 'Password123',
+            }, format='json')
+            self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(LoginEvent.objects.count(), 2)
+
+    def test_failed_member_login_does_not_record_event(self):
+        self._make_member()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'WrongPass123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(LoginEvent.objects.count(), 0)
+
+    def test_admin_login_does_not_record_event(self):
+        self._make_admin()
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(LoginEvent.objects.count(), 0)

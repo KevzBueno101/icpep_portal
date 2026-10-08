@@ -10,6 +10,10 @@ export default function MovingLogoText() {
       },
       { img: '/cea-logo.png', label: ' College of Engineering and Architecture ' },
       { img: '/catsu.png', label: ' Catanduanes State University ' },
+      {
+        logos: ['/icpep-bc-nbg.png', '/ntl-nbg.png'],
+        label: ' Affiliated with ICPEP.SE Bicol Chapter & ICPEP.SE National ',
+      },
     ],
     []
   )
@@ -48,11 +52,24 @@ export default function MovingLogoText() {
               <div key={blockIdx} className="flex items-center gap-6">
                 {loopItems.map((item, idx) => (
                   <div key={`${blockIdx}-${idx}`} className="flex items-center gap-2">
-                    <img
-                      src={item.img}
-                      alt={item.label}
-                      className="h-7 w-auto max-w-none shrink-0 opacity-80 object-contain align-middle"
-                    />
+                    {item.logos ? (
+                      <div className="flex items-center gap-1">
+                        {item.logos.map((logo, logoIdx) => (
+                          <img
+                            key={logoIdx}
+                            src={logo}
+                            alt={item.label}
+                            className="h-7 w-auto max-w-none shrink-0 opacity-80 object-contain align-middle"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <img
+                        src={item.img}
+                        alt={item.label}
+                        className="h-7 w-auto max-w-none shrink-0 opacity-80 object-contain align-middle"
+                      />
+                    )}
                     <span className="text-sm font-semibold tracking-wide text-slate-400/50 leading-none">
                       {item.label}
                     </span>

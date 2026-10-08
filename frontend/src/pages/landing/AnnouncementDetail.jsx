@@ -5,6 +5,7 @@ import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
+import { parseUrlsInText } from '../../utils/urlParser.jsx'
 
 const CATEGORY_COLORS = {
   announcement: {
@@ -274,7 +275,7 @@ export default function AnnouncementDetail() {
         <div className="space-y-12">
           {/* Body */}
           <div
-            className="rounded-2xl p-6 sm:p-8"
+            className="rounded-2xl p-6 sm:p-8 overflow-hidden"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: `1px solid ${cat.border}`,
@@ -282,8 +283,8 @@ export default function AnnouncementDetail() {
             }}
           >
             <h2 className="text-2xl font-bold text-white mb-4">Announcement</h2>
-            <p className="text-base leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {announcement.body}
+            <p className="text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {parseUrlsInText(announcement.body)}
             </p>
           </div>
 

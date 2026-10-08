@@ -1,16 +1,18 @@
 import contextlib
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.files.base import ContentFile
 from django.db.models import Count
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncDate, TruncMonth
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from authentication.models import LoginEvent
 from permissions import (
     CanManageMembership,
     IsOwnerOrCanManageMembership,
@@ -114,8 +116,12 @@ class MemberStatsAPIView(APIView):
     - ``status_counts``: number of members per ``membership_status``.
     - ``monthly_growth``: new members per month (by ``created_at``),
       zero-filled from the earliest member month through the current month.
+    - ``login_daily``: distinct members who logged in per day over the last
+      30 days, zero-filled and chronological (oldest first).
     """
     permission_classes = [CanManageMembership]
+
+    LOGIN_WINDOW_DAYS = 30
 
     def get(self, request):
         profiles = MemberProfile.objects.all()
@@ -155,10 +161,34 @@ class MemberStatsAPIView(APIView):
                 next_month = 1 if cursor.month == 12 else cursor.month + 1
                 cursor = date(next_year, next_month, 1)
 
+        login_start = timezone.localdate() - timedelta(days=self.LOGIN_WINDOW_DAYS - 1)
+        login_counts = {}
+        for row in (
+            LoginEvent.objects.filter(created_at__date__gte=login_start)
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(count=Count('user', distinct=True))
+        ):
+            day = row.get('day')
+            if day is None:
+                continue
+            # Some backends return a datetime for date truncation.
+            if hasattr(day, 'date'):
+                day = day.date()
+            login_counts[day] = row['count']
+        login_daily = []
+        for offset in range(self.LOGIN_WINDOW_DAYS):
+            day = login_start + timedelta(days=offset)
+            login_daily.append({
+                'date': day.isoformat(),
+                'count': login_counts.get(day, 0),
+            })
+
         return Response({
             'total': profiles.count(),
             'status_counts': status_counts,
             'monthly_growth': monthly_growth,
+            'login_daily': login_daily,
         })
 
 

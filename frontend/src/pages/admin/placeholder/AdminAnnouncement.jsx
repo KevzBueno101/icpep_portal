@@ -129,6 +129,13 @@ const AdminAnnouncement = () => {
     setSelectedImages([])
   }
 
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setEditingAnnouncement(null)
+    setFormData(emptyForm)
+    setSelectedImages([])
+  }
+
   const uploadImages = async (announcementId, files) => {
     if (!files?.length) return
     setImageUploading(true)
@@ -264,13 +271,6 @@ const AdminAnnouncement = () => {
     } catch (err) {
       toast.error('Failed to remove image.')
     }
-  }
-
-  const handleCloseForm = () => {
-    setShowForm(false)
-    setEditingAnnouncement(null)
-    setFormData(emptyForm)
-    setSelectedImages([])
   }
 
   const filteredAnnouncements = announcements.filter((announcement) => {

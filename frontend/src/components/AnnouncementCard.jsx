@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ImageModal from './ImageModal'
+import { parseUrlsInText } from '../utils/urlParser.jsx'
 
 import { Pin, Calendar, User, ArrowRight } from 'lucide-react'
 
@@ -86,7 +87,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             )}
           </div>
 
-          <div className="flex flex-1 flex-col p-6 sm:p-8">
+          <div className="flex flex-1 flex-col p-6 sm:p-8 overflow-hidden">
             <div className="mb-4">
               <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -96,9 +97,9 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             <h3 className="mb-3 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl line-clamp-2">
               {title}
             </h3>
-            
-            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3">
-              {body}
+
+            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3 break-words overflow-hidden">
+              {parseUrlsInText(body)}
             </p>
 
             <div className="mt-auto flex flex-wrap items-center gap-y-3 gap-x-6 border-t border-slate-100 pt-5 text-sm text-slate-500">
@@ -124,10 +125,10 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
     return (
       <Link
         to={`/announcement/${id}`}
-        className="group relative flex h-[100px] shrink-0 items-center gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
+        className="group relative flex shrink-0 items-start gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
       >
         <div className="absolute left-0 top-0 h-full w-1 bg-sky-500 opacity-0 transition-opacity group-hover:opacity-100" />
-        
+
         {firstImageUrl && (
           <div className="h-[60px] w-[100px] shrink-0 overflow-hidden rounded-lg bg-slate-100">
             <img
@@ -140,7 +141,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <div className="mb-1 flex items-center gap-2">
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryColor}`}>
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -197,7 +198,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
           </div>
         )}
 
-      <article className={firstImageUrl ? 'p-6' : 'p-6'}>
+      <article className={firstImageUrl ? 'p-6 overflow-hidden' : 'p-6 overflow-hidden'}>
         <div className="mb-3 flex items-start justify-between">
           <span
             className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}
@@ -207,7 +208,9 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
         </div>
 
         <h3 className="mb-2 text-lg font-bold text-slate-900">{title}</h3>
-        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600">{body}</p>
+        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600 break-words overflow-hidden">
+          {parseUrlsInText(body)}
+        </p>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>{author || 'Admin'}</span>

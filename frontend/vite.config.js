@@ -48,6 +48,7 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB limit to accommodate large images
       },
       devOptions: {
         enabled: false, // PWA hindi mag-aactivate sa dev mode
