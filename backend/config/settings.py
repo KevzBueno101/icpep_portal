@@ -37,7 +37,7 @@ if not SECRET_KEY:
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 
@@ -73,8 +73,6 @@ INSTALLED_APPS = [
     'feedback',
     'partnership',
     'chatbot',
-    'featured',
-    'events',
 ]
 
 # Channels
@@ -234,8 +232,6 @@ _cors_default_origins = [
     'https://icpepcatsu.app',
     'https://icpep-catsu.vercel.app',
     'https://icpep-portal-test.vercel.app',
-    'https://icpep-api.icpep-se-catsuchapter.workers.dev',
-    'https://icpep-api-main.icpep-se-catsuchapter.workers.dev',
 ]
 _cors_env_origins = [
     o.strip()

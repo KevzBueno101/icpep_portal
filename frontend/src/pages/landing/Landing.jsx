@@ -10,9 +10,6 @@ import MovingLogoText from './MovingLogoText'
 import { OfficersProvider } from '../../context/OfficersContext'
 import OfficersRoster from './OfficersRoster'
 import SponsorshipSection from './SponsorshipSection'
-import FeaturedSection from './FeaturedSection'
-import FeaturedEventsSection from './FeaturedEventsSection'
-
 
 
 export default function Landing() {
@@ -41,11 +38,9 @@ export default function Landing() {
         <Navbar />
         <main className="flex-grow">
           <HeroSection />
-          <FeaturedSection />
           <AnnouncementFeed />
           <FeatureSection />
           <MilestonesSection />
-          <FeaturedEventsSection />
           <OfficersRoster />
           <SponsorshipSection />
           <MovingLogoText />
