@@ -27,6 +27,8 @@ import EditAdminProfile from './pages/admin/EditAdminProfile'
 import OfficerIdCardPage from './pages/admin/OfficerIdCardPage'
 import AdminOfficersAccounts from './pages/admin/AdminOfficersAccounts'
 import AdminAbout from './pages/admin/AdminAbout'
+import AdminFeaturedContent from './pages/admin/AdminFeaturedContent'
+import AdminEvents from './pages/admin/AdminEvents'
 
 
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
@@ -234,6 +236,26 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <AdminLogs />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/featured-content"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminFeaturedContent />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/events"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <AdminEvents />
                 </AdminLayout>
               </AdminProtectedRoute>
             }

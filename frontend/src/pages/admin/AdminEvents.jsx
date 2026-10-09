@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api } from '../../api/axios'
+import api from '../../api/axios'
 
 export default function AdminEvents() {
   const [events, setEvents] = useState([])
@@ -22,7 +22,6 @@ export default function AdminEvents() {
   })
   const [bannerImage, setBannerImage] = useState(null)
   const [organizerLogo, setOrganizerLogo] = useState(null)
-  const [galleryImages, setGalleryImages] = useState([])
 
   useEffect(() => {
     fetchEvents()
@@ -51,9 +50,6 @@ export default function AdminEvents() {
     if (organizerLogo) {
       formDataToSend.append('organizer_logo', organizerLogo)
     }
-    galleryImages.forEach((img, idx) => {
-      formDataToSend.append('gallery_images', img)
-    })
     // Handle tags as JSON array
     const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t)
     formDataToSend.set('tags', JSON.stringify(tagsArray))
@@ -94,7 +90,6 @@ export default function AdminEvents() {
     })
     setBannerImage(null)
     setOrganizerLogo(null)
-    setGalleryImages([])
   }
 
   const handleEdit = (event) => {
@@ -287,16 +282,6 @@ export default function AdminEvents() {
                 accept="image/*"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Gallery Images</label>
-              <input
-                type="file"
-                onChange={(e) => setGalleryImages(Array.from(e.target.files))}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white"
-                accept="image/*"
-                multiple
-              />
-            </div>
             <div className="flex gap-2">
               <button
                 type="submit"
@@ -357,6 +342,13 @@ export default function AdminEvents() {
                 </button>
               </div>
             </div>
+            {event.gallery_images && event.gallery_images.length > 0 && (
+              <div className="mt-4 flex gap-2 overflow-x-auto">
+                {event.gallery_images.map((img) => (
+                  <img key={img.id} src={img.image} alt="Gallery" className="h-16 w-16 object-cover rounded" />
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

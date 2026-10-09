@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework import filters
-from .models import Event
-from .serializers import EventSerializer
+from .models import Event, EventImage
+from .serializers import EventSerializer, EventImageSerializer
 
 
 class EventListView(generics.ListCreateAPIView):
@@ -21,3 +21,16 @@ class FeaturedEventsListView(generics.ListAPIView):
 class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+
+class EventImageListView(generics.ListCreateAPIView):
+    serializer_class = EventImageSerializer
+
+    def get_queryset(self):
+        event_id = self.kwargs['event_id']
+        return EventImage.objects.filter(event_id=event_id).order_by('order')
+
+    def perform_create(self, serializer):
+        event_id = self.kwargs['event_id']
+        event = Event.objects.get(id=event_id)
+        serializer.save(event=event)

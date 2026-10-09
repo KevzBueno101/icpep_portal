@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X, Pencil } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X, Pencil, Star, Calendar } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
 import RefreshButton from '../RefreshButton'
@@ -14,6 +14,8 @@ const NAV_ITEMS = [
   { label: 'Members',           to: '/admin/membership',         icon: Users },
   { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
   { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },
+  { label: 'Featured Content',  to: '/admin/featured-content',   icon: Star },
+  { label: 'Events',            to: '/admin/events',             icon: Calendar },
   { label: 'Achievements',      to: '/admin/achievements',       icon: Trophy },
   { label: 'Profile',           to: '/admin/profile',            icon: User },
   { label: 'Logs / Audit Trails', to: '/admin/logs',            icon: ClipboardList },
