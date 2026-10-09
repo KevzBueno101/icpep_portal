@@ -89,6 +89,12 @@ const AdminAnnouncement = () => {
     }
   }, [announcements])
 
+  // Extract unique categories for filter dropdown
+  const uniqueCategories = useMemo(() => {
+    const categories = [...new Set(announcements.map(a => a.category).filter(Boolean))]
+    return categories.sort((a, b) => a.localeCompare(b))
+  }, [announcements])
+
   const handleReorder = useCallback(async (orderedIds) => {
     setLocalOrderIds(orderedIds)
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
@@ -368,9 +374,9 @@ const AdminAnnouncement = () => {
             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-48"
           >
             <option value="all">All Categories</option>
-            {CATEGORY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {uniqueCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
               </option>
             ))}
           </select>
