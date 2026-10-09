@@ -25,9 +25,10 @@ const membershipPlans = [
   {
     title: 'Regular Member',
     price: 'P25/semester',
-    description: 'Perfect for students starting their journey in computer engineering.',
+    description: 'This regular membership is required for all BSCpE students.',
     benefits: [
       'Access to chapter events and activities',
+      'Discounted rates for events, booths and merch.',
       'Basic member resources and materials',
       'Community networking opportunities',
       'Membership ID card'
@@ -37,13 +38,15 @@ const membershipPlans = [
   },
   {
     title: 'Membership Plus',
-    price: 'P290/year',
+    price: 'P60/semester',
     description: 'The complete package for the dedicated student.',
     benefits: [
-      'Includes ALL Student and National benefits',
-      'Significant savings over separate memberships',
+      'Laminated ID card with Documentary stamped',
       'Highest priority for limited-slot events',
-      'Exclusive members-only networking channels'
+      'Early access to exclusive events',
+      'Exclusive members-only networking channels',
+      'Badge Pin',
+      'Stickers'
     ],
     tagline: 'The Ultimate Value Package',
     actionLink: '/register',

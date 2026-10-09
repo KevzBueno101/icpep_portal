@@ -73,6 +73,8 @@ INSTALLED_APPS = [
     'feedback',
     'partnership',
     'chatbot',
+    'featured',
+    'events',
 ]
 
 # Channels
