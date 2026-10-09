@@ -28,7 +28,7 @@ class Announcement(models.Model):
     event_time_start = models.TimeField(null=True, blank=True, help_text='Event start time (optional)')
     event_time_end = models.TimeField(null=True, blank=True, help_text='Event end time (optional)')
     location = models.CharField(max_length=200, null=True, blank=True, help_text='Event location (optional)')
-    email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement')
+    email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement (any published announcement)')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

@@ -1120,7 +1120,7 @@ const AdminAnnouncement = () => {
                       >
                         {announcement.pinned ? 'Unpin' : 'Pin'}
                       </button>
-                      {announcement.members_only && announcement.is_published && (
+                      {announcement.is_published && (
                         announcement.email_blast_sent_at ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
                             <CheckCircle2 className="h-4 w-4" />
