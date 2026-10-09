@@ -209,7 +209,7 @@ export default function MemberDashboard() {
             </div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-slate-900">Digital ID Card</h2>
-              {profile?.membership_fee === 'ANNUAL' && (
+              {profile?.membership_fee === 'PLUS' && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-700">
                   <Plus className="h-3 w-3" />
                   Membership Plus

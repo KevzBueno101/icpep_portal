@@ -156,7 +156,7 @@ const AdminMembership = () => {
     return mapping[level] || `${level} Year`
   }
 
-  const formatFee = (fee) => (fee === 'ANNUAL' ? '₱60' : '₱25')
+  const formatFee = (fee) => (fee === 'PLUS' ? '₱60' : '₱25')
 
   const getMemberName = (member) =>
     `${member?.first_name || ''} ${member?.middle_name || ''} ${member?.last_name || ''}`.replace(/\s+/g, ' ').trim()
@@ -650,7 +650,7 @@ try {
               >
                 <option value="ALL">All Fees</option>
                 <option value="SEMESTER">₱25 — Regular Membership</option>
-                <option value="ANNUAL">₱60 — Membership Plus</option>
+                <option value="PLUS">₱60 — Membership Plus</option>
               </select>
             </div>
 
@@ -847,7 +847,7 @@ try {
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{formatYearLevel(member.year_level)}</td>
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{member.course || 'Unassigned'}</td>
                       <td className="px-3 py-3">
-                        <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${member.membership_fee === 'ANNUAL' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`}>
+                        <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${member.membership_fee === 'PLUS' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`}>
                           {formatFee(member.membership_fee)}
                         </span>
                       </td>
@@ -1191,7 +1191,7 @@ try {
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
                     >
                       <option value="SEMESTER">₱25 — Regular Membership</option>
-                      <option value="ANNUAL">₱60 — Membership Plus</option>
+                      <option value="PLUS">₱60 — Membership Plus</option>
                     </select>
                   </div>
 
@@ -1299,7 +1299,7 @@ try {
             window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success(renewFee === 'ALL'
               ? 'All approved memberships set to Pending.'
-              : `${renewFee === 'ANNUAL' ? '₱60' : '₱25'} memberships set to Pending.`)
+              : `${renewFee === 'PLUS' ? '₱60' : '₱25'} memberships set to Pending.`)
             await fetchMembers()
             setIsRenewConfirmOpen(false)
           } catch (err) {
@@ -1316,7 +1316,7 @@ try {
             {[
               { value: 'ALL', label: 'All fee plans', desc: 'Everyone currently approved' },
               { value: 'SEMESTER', label: '₱25 — Regular Membership', desc: 'Only ₱25 members' },
-              { value: 'ANNUAL', label: '₱60 — Membership Plus', desc: 'Only ₱60 members' },
+              { value: 'PLUS', label: '₱60 — Membership Plus', desc: 'Only ₱60 members' },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -1501,7 +1501,7 @@ try {
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     >
                       <option value="SEMESTER">₱25 — Regular Membership</option>
-                      <option value="ANNUAL">₱60 — Membership Plus</option>
+                      <option value="PLUS">₱60 — Membership Plus</option>
                     </select>
                   </div>
                 </div>

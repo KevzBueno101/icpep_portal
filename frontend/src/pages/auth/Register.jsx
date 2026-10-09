@@ -1026,7 +1026,7 @@ const Register = () => {
                       </label>
                       <label
                         className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
-                          form.membership_fee === 'ANNUAL'
+                          form.membership_fee === 'PLUS'
                             ? 'border-green-500 bg-green-50'
                             : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
@@ -1034,8 +1034,8 @@ const Register = () => {
                         <input
                           type="radio"
                           name="membership_fee"
-                          value="ANNUAL"
-                          checked={form.membership_fee === 'ANNUAL'}
+                          value="PLUS"
+                          checked={form.membership_fee === 'PLUS'}
                           onChange={handleChange}
                           className="h-4 w-4 text-green-600 accent-green-600"
                         />

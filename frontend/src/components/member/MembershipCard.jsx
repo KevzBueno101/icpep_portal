@@ -70,7 +70,7 @@ function CardFront({ onFlip }) {
 
 /* ─── Card Back (Display) ─────────────────────────────────────────────────── */
 
-function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0 }) {
+function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0, membershipFee }) {
   return (
     <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
       {/* Background columns */}
@@ -150,7 +150,12 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
         </div>
 
         <div className="w-[38%] flex flex-col items-end justify-between pl-1">
-          <div className="h-5 flex items-start">
+          <div className="h-5 flex items-start justify-between w-full">
+            {membershipFee === 'PLUS' && (
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-[8px] font-bold">
+                +
+              </div>
+            )}
             {onFlip && (
               <button
                 type="button"
@@ -224,7 +229,7 @@ function ExportCardFront() {
 
 /* ─── Export Card Back (fully inline styled, no Tailwind) ─────────────────── */
 
-function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0 }) {
+function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0, membershipFee }) {
   // Match display card exactly:
   // Left navy block: 58% = ~223px, right white block: 42% = ~161px
   // Diagonal: top at x=215, bottom at x=250 (35px shift over 224px height)
@@ -335,6 +340,16 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
           alignItems: 'center', justifyContent: 'center',
           paddingLeft: 20,
         }}>
+          {membershipFee === 'PLUS' && (
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: '#22C55E', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 900, marginBottom: 6,
+            }}>
+              +
+            </div>
+          )}
           <div style={{
             width: 76, height: 76, borderRadius: '50%', overflow: 'hidden',
             border: '1px solid #CBD5E1', background: '#fff', marginBottom: 6,
@@ -357,7 +372,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
-const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0 }, ref) {
+const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0, membershipFee }, ref) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -449,6 +464,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
               avatarInitial={avatarInitial}
               onFlip={() => setFlipped(false)}
               cacheKey={cacheKey}
+              membershipFee={membershipFee}
             />
           </div>
         </div>
@@ -479,6 +495,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
               profile={profile}
               avatarInitial={avatarInitial}
               cacheKey={cacheKey}
+              membershipFee={membershipFee}
             />
           </div>
         </div>
