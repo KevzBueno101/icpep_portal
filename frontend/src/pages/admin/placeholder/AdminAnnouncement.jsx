@@ -6,7 +6,7 @@ import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, GripVertical } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
   { value: 'announcement', label: 'Announcement' },
@@ -20,10 +20,16 @@ const emptyForm = {
   title: '',
   body: '',
   category: 'announcement',
+  tags: '',
   author: '',
   pinned: false,
   is_published: true,
   members_only: false,
+  event_date_start: '',
+  event_date_end: '',
+  event_time_start: '',
+  event_time_end: '',
+  location: '',
 }
 
 const AdminAnnouncement = () => {
@@ -51,6 +57,8 @@ const AdminAnnouncement = () => {
   // Image upload UI (client-side only; actual upload happens after save)
   const [selectedImages, setSelectedImages] = useState([]) // File[]
   const [imageUploading, setImageUploading] = useState(false)
+  const [draggedImageIndex, setDraggedImageIndex] = useState(null)
+  const [draggedExistingImageIndex, setDraggedExistingImageIndex] = useState(null)
 
   // Pagination, search, and filters
   const [currentPage, setCurrentPage] = useState(1)
@@ -113,10 +121,16 @@ const AdminAnnouncement = () => {
       title: announcement.title || '',
       body: announcement.body || '',
       category: announcement.category || 'announcement',
+      tags: announcement.tags || '',
       author: announcement.author || '',
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
       members_only: !!announcement.members_only,
+      event_date_start: announcement.event_date_start || '',
+      event_date_end: announcement.event_date_end || '',
+      event_time_start: announcement.event_time_start || '',
+      event_time_end: announcement.event_time_end || '',
+      location: announcement.location || '',
     })
     setSelectedImages([])
   }
@@ -141,16 +155,91 @@ const AdminAnnouncement = () => {
     setImageUploading(true)
     try {
       // Upload in sequence to keep backend consistent
-      for (const file of files) {
-        const form = new FormData()
-        form.append('image', file)
-        await api.post(`/announcements/admin/${announcementId}/images/`, form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+      let successCount = 0
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        try {
+          const form = new FormData()
+          form.append('image', file)
+          form.append('order', index) // Use array index as order
+          await api.post(`/announcements/admin/${announcementId}/images/`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+          successCount++
+        } catch (err) {
+          console.error(`Failed to upload image ${file.name}:`, err)
+          toast.error(`Failed to upload image: ${file.name}`)
+        }
+      }
+      if (successCount > 0) {
+        toast.success(`${successCount} image(s) uploaded successfully.`)
       }
     } finally {
       setImageUploading(false)
     }
+  }
+
+  const handleDragStart = (index) => {
+    setDraggedImageIndex(index)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault()
+    if (draggedImageIndex === null || draggedImageIndex === dropIndex) return
+
+    const newImages = [...selectedImages]
+    const [draggedImage] = newImages.splice(draggedImageIndex, 1)
+    newImages.splice(dropIndex, 0, draggedImage)
+    setSelectedImages(newImages)
+    setDraggedImageIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedImageIndex(null)
+    setDraggedExistingImageIndex(null)
+  }
+
+  const handleDragStartExisting = (index) => {
+    setDraggedExistingImageIndex(index)
+  }
+
+  const handleDragOverExisting = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDropExisting = async (e, dropIndex) => {
+    e.preventDefault()
+    if (draggedExistingImageIndex === null || draggedExistingImageIndex === dropIndex) return
+
+    const newImages = [...existingImages]
+    const [draggedImage] = newImages.splice(draggedExistingImageIndex, 1)
+    newImages.splice(dropIndex, 0, draggedImage)
+
+    // Update the order in the backend
+    try {
+      for (let i = 0; i < newImages.length; i++) {
+        await api.patch(`/announcements/admin/images/${newImages[i].id}/`, { order: i })
+      }
+      toast.success('Image order updated.')
+      
+      // Force refresh to get updated data from backend
+      await fetchAnnouncements()
+      
+      // Update local editing state with refreshed data
+      const refreshedAnnouncement = announcements.find(a => a.id === editingAnnouncement?.id)
+      if (refreshedAnnouncement) {
+        setEditingAnnouncement(refreshedAnnouncement)
+      }
+    } catch (err) {
+      console.error('Failed to update image order:', err)
+      toast.error('Failed to update image order.')
+    }
+
+    setDraggedExistingImageIndex(null)
   }
 
   const handleSubmit = async (e) => {
@@ -161,6 +250,9 @@ const AdminAnnouncement = () => {
       const payload = {
         ...formData,
         author: formData.author.trim(),
+        // Format time fields to include seconds (Django TimeField expects hh:mm:ss)
+        event_time_start: formData.event_time_start ? `${formData.event_time_start}:00` : null,
+        event_time_end: formData.event_time_end ? `${formData.event_time_end}:00` : null,
       }
 
       if (editingAnnouncement) {
@@ -424,6 +516,17 @@ const AdminAnnouncement = () => {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Tags (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  placeholder="e.g., urgent, scholarship, competition (comma-separated)"
+                />
+              </div>
             </div>
 
             <div>
@@ -438,6 +541,59 @@ const AdminAnnouncement = () => {
               />
             </div>
 
+            {/* Event Details (Optional) */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="mb-4 text-sm font-semibold text-slate-700">Event Details (Optional)</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Date Start</label>
+                  <input
+                    type="date"
+                    value={formData.event_date_start}
+                    onChange={(e) => setFormData({ ...formData, event_date_start: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Date End</label>
+                  <input
+                    type="date"
+                    value={formData.event_date_end}
+                    onChange={(e) => setFormData({ ...formData, event_date_end: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Time Start</label>
+                  <input
+                    type="time"
+                    value={formData.event_time_start}
+                    onChange={(e) => setFormData({ ...formData, event_time_start: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Time End</label>
+                  <input
+                    type="time"
+                    value={formData.event_time_end}
+                    onChange={(e) => setFormData({ ...formData, event_time_end: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                    placeholder="e.g., ICpEP.SE Office, Main Building, Room 301"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Author</label>
@@ -446,7 +602,7 @@ const AdminAnnouncement = () => {
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                  placeholder="Defaults to current admin"
+                  placeholder="e.g., Juan Dela Cruz, President"
                 />
               </div>
 
@@ -515,14 +671,24 @@ const AdminAnnouncement = () => {
 
                 {selectedImages.length > 0 && (
                   <div className="mt-2 space-y-2 text-xs text-slate-500">
-                    <div>{selectedImages.length} file(s) selected.</div>
+                    <div>{selectedImages.length} file(s) selected. Drag the grip icon to reorder (top is first).</div>
                     <div className="grid gap-2 text-slate-700">
                       {selectedImages.map((file, idx) => (
                         <div
                           key={`${file.name}-${file.size}-${idx}`}
-                          className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
+                          draggable
+                          onDragStart={() => handleDragStart(idx)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, idx)}
+                          onDragEnd={handleDragEnd}
+                          className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 cursor-move ${
+                            draggedImageIndex === idx ? 'bg-slate-200 ring-2 ring-sky-500' : 'bg-slate-50'
+                          }`}
                         >
-                          <span className="truncate">{file.name}</span>
+                          <div className="flex items-center gap-3">
+                            <GripVertical className="w-4 h-4 text-slate-400" />
+                            <span className="truncate">{file.name}</span>
+                          </div>
                           <button
                             type="button"
                             onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
@@ -540,11 +706,24 @@ const AdminAnnouncement = () => {
               {isEditMode && existingImages?.length > 0 && (
                 <div>
                   <div className="mb-2 text-sm font-semibold text-slate-900">
-                    Existing images
+                    Existing images (drag to reorder)
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {existingImages.map((img) => (
-                      <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                    {existingImages.map((img, idx) => (
+                      <div
+                        key={img.id}
+                        draggable
+                        onDragStart={() => handleDragStartExisting(idx)}
+                        onDragOver={handleDragOverExisting}
+                        onDrop={(e) => handleDropExisting(e, idx)}
+                        className={`rounded-xl border p-2 cursor-move ${
+                          draggedExistingImageIndex === idx ? 'border-sky-500 ring-2 ring-sky-500' : 'border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <GripVertical className="w-4 h-4 text-slate-400" />
+                          <span className="text-xs text-slate-500">#{idx + 1}</span>
+                        </div>
                         <img
                           src={img.image}
                           alt={formData.title || 'Announcement image'}
@@ -648,6 +827,16 @@ const AdminAnnouncement = () => {
                             ))}
                           </select>
                         </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Tags (Optional)</label>
+                          <input
+                            type="text"
+                            value={formData.tags}
+                            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="e.g., urgent, scholarship, competition (comma-separated)"
+                          />
+                        </div>
                       </div>
 
                       <div>
@@ -662,6 +851,59 @@ const AdminAnnouncement = () => {
                         />
                       </div>
 
+                      {/* Event Details (Optional) */}
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <h3 className="mb-4 text-sm font-semibold text-slate-700">Event Details (Optional)</h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Date Start</label>
+                            <input
+                              type="date"
+                              value={formData.event_date_start}
+                              onChange={(e) => setFormData({ ...formData, event_date_start: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Date End</label>
+                            <input
+                              type="date"
+                              value={formData.event_date_end}
+                              onChange={(e) => setFormData({ ...formData, event_date_end: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Time Start</label>
+                            <input
+                              type="time"
+                              value={formData.event_time_start}
+                              onChange={(e) => setFormData({ ...formData, event_time_start: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Time End</label>
+                            <input
+                              type="time"
+                              value={formData.event_time_end}
+                              onChange={(e) => setFormData({ ...formData, event_time_end: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                            <input
+                              type="text"
+                              value={formData.location}
+                              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                              placeholder="e.g., ICpEP.SE Office, Main Building, Room 301"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Author</label>
@@ -670,7 +912,7 @@ const AdminAnnouncement = () => {
                             value={formData.author}
                             onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="Defaults to current admin"
+                            placeholder="e.g., Juan Dela Cruz, President"
                           />
                         </div>
                         <div className="flex items-center gap-5 pt-6">
@@ -737,14 +979,23 @@ const AdminAnnouncement = () => {
 
                           {selectedImages.length > 0 && (
                             <div className="mt-2 space-y-2 text-xs text-slate-500">
-                              <div>{selectedImages.length} file(s) selected.</div>
+                              <div>{selectedImages.length} file(s) selected. Drag the grip icon to reorder (top is first).</div>
                               <div className="grid gap-2 text-slate-700">
                                 {selectedImages.map((file, idx) => (
                                   <div
                                     key={`${file.name}-${file.size}-${idx}`}
-                                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
+                                    draggable
+                                    onDragStart={() => handleDragStart(idx)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, idx)}
+                                    className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 cursor-move ${
+                                      draggedImageIndex === idx ? 'bg-slate-200 ring-2 ring-sky-500' : 'bg-slate-50'
+                                    }`}
                                   >
-                                    <span className="truncate">{file.name}</span>
+                                    <div className="flex items-center gap-3">
+                                      <GripVertical className="w-4 h-4 text-slate-400" />
+                                      <span className="truncate">{file.name}</span>
+                                    </div>
                                     <button
                                       type="button"
                                       onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
@@ -762,11 +1013,25 @@ const AdminAnnouncement = () => {
                         {isEditMode && existingImages?.length > 0 && (
                           <div>
                             <div className="mb-2 text-sm font-semibold text-slate-900">
-                              Existing images
+                              Existing images (drag to reorder)
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                              {existingImages.map((img) => (
-                                <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                              {existingImages.map((img, idx) => (
+                                <div
+                                  key={img.id}
+                                  draggable
+                                  onDragStart={() => handleDragStartExisting(idx)}
+                                  onDragOver={handleDragOverExisting}
+                                  onDrop={(e) => handleDropExisting(e, idx)}
+                                  onDragEnd={handleDragEnd}
+                                  className={`rounded-xl border p-2 cursor-move ${
+                                    draggedExistingImageIndex === idx ? 'border-sky-500 ring-2 ring-sky-500' : 'border-slate-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <GripVertical className="w-4 h-4 text-slate-400" />
+                                    <span className="text-xs text-slate-500">#{idx + 1}</span>
+                                  </div>
                                   <img
                                     src={img.image}
                                     alt={formData.title || 'Announcement image'}
@@ -837,7 +1102,18 @@ const AdminAnnouncement = () => {
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold text-slate-900">{announcement.title}</h3>
-                      <p className="mt-1 text-sm text-slate-500">By {announcement.author || 'Admin'}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        By {announcement.author && announcement.author.includes(',') ? (
+                          <>
+                            {announcement.author.split(',')[0].trim()}
+                            {announcement.author.split(',')[1] && (
+                              <>, <em className="opacity-80">{announcement.author.split(',')[1].trim()}</em></>
+                            )}
+                          </>
+                        ) : (
+                          announcement.author || 'Admin'
+                        )}
+                      </p>
                       <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                         {announcement.body}
                       </p>
@@ -851,7 +1127,7 @@ const AdminAnnouncement = () => {
                       >
                         {announcement.pinned ? 'Unpin' : 'Pin'}
                       </button>
-                      {announcement.members_only && announcement.is_published && (
+                      {announcement.is_published && (
                         announcement.email_blast_sent_at ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
                             <CheckCircle2 className="h-4 w-4" />

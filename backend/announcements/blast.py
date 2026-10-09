@@ -1,4 +1,4 @@
-"""Email blast for members-only announcements (Brevo, quota-aware)."""
+"""Email blast for announcements (Brevo, quota-aware)."""
 
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -44,8 +44,7 @@ def _email_html(announcement, first_name):
         f'<p><a href="{link}" style="display:inline-block;background:#1e3a5f;color:#ffffff;'
         'padding:10px 18px;border-radius:6px;text-decoration:none;">View Announcement</a></p>'
         '<p style="color:#94a3b8;font-size:12px;margin-top:20px;">'
-        'You are receiving this email because you are a member of ICpEP.SE CatSU Chapter. '
-        'This announcement is exclusive only for the members.</p>'
+        'You are receiving this email because you are a member of ICpEP.SE CatSU Chapter.'
         '</div></div>'
     )
 

@@ -180,6 +180,16 @@ class AnnouncementImageUploadAPIView(APIView):
 
         return Response(AnnouncementImageSerializer(image, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
+    def patch(self, request, image_id):
+        image = get_object_or_404(AnnouncementImage, id=image_id)
+        order = request.data.get('order')
+        
+        if order is not None:
+            image.order = order
+            image.save(update_fields=['order'])
+        
+        return Response(AnnouncementImageSerializer(image, context={'request': request}).data)
+
     def delete(self, request, image_id):
         image = get_object_or_404(AnnouncementImage, id=image_id)
         announcement_id = image.announcement.id
@@ -206,20 +216,20 @@ class AnnouncementReorderAPIView(ReorderAPIView):
 
 
 class AnnouncementEmailBlastAPIView(APIView):
-    """Manually trigger the email blast for a members-only announcement.
+    """Manually trigger the email blast for an announcement.
 
-    Only published members-only announcements are eligible. Each
-    announcement can only be triggered once; the remainder above the daily
-    Brevo quota is queued for the flush_announcement_emails command.
+    Only published announcements are eligible. Each announcement can only
+    be triggered once; the remainder above the daily Brevo quota is queued
+    for the flush_announcement_emails command.
     """
     permission_classes = [CanManageContent]
 
     def post(self, request, id):
         announcement = get_object_or_404(Announcement, id=id)
 
-        if not announcement.members_only or not announcement.is_published:
+        if not announcement.is_published:
             return Response(
-                {'detail': 'Email blast is only available for published, members-only announcements.'},
+                {'detail': 'Email blast is only available for published announcements.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

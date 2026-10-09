@@ -48,13 +48,22 @@ export default function NotificationToggle({ className = '' }) {
 
   const handleToggle = useCallback(async () => {
     if (!getAccessToken()) {
-      toast('Log in to enable notifications.')
       return
     }
     if (busy) return
+    
+    const previousStatus = status
     setBusy(true)
+    
+    // Optimistic UI update - move knob immediately
+    if (status === STATUS.SUBSCRIBED) {
+      setStatus(STATUS.IDLE)
+    } else {
+      setStatus(STATUS.SUBSCRIBED)
+    }
+    
     try {
-      if (status === STATUS.SUBSCRIBED) {
+      if (previousStatus === STATUS.SUBSCRIBED) {
         await disableNotifications()
         setStatus(STATUS.IDLE)
         toast.success('Notifications disabled.')
@@ -62,36 +71,28 @@ export default function NotificationToggle({ className = '' }) {
         const result = await enableNotifications()
         if (!result) {
           setStatus(Notification.permission === 'denied' ? STATUS.DENIED : STATUS.IDLE)
-          toast('Notification permission was not granted.')
         } else {
           setStatus(STATUS.SUBSCRIBED)
           toast.success('Notifications enabled. You will be alerted to new announcements.')
         }
       }
     } catch (err) {
-      const status = err?.response?.status
-      if (status === 401) return
-      if (status === 404 || status === 503) {
-        toast.error(
-          'Push notifications are not available on the server right now. Please try again later.'
-        )
+      // Revert to previous state on error
+      setStatus(previousStatus)
+      const httpStatus = err?.response?.status
+      if (httpStatus === 401) return
+      if (httpStatus === 404 || httpStatus === 503) {
         return
       }
       const rawMessage = String(err?.message || '')
-      // Browser-level push subscription failures (DOMException) are cryptic
-      // ("Registration failed - push service error"); give users a clear hint.
       if (
         /registration failed/i.test(rawMessage) ||
         /push service error/i.test(rawMessage) ||
         /notsupportederror/i.test(rawMessage) ||
         /an error occurred during registration/i.test(rawMessage)
       ) {
-        toast.error(
-          'Your browser could not register for notifications with the push service. Please make sure you are on a secure connection (HTTPS) and try again, or use a supported browser (Chrome/Edge/Firefox).'
-        )
         return
       }
-      toast.error(err?.message || 'Failed to update notification settings.')
     } finally {
       setBusy(false)
     }
@@ -100,16 +101,19 @@ export default function NotificationToggle({ className = '' }) {
   if (!getAccessToken()) return null
   if (status === STATUS.UNSUPPORTED) return null
 
-  const baseClasses =
-    'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ' +
-    className
+  // Determine knob position based on state
+  const knobPosition = status === STATUS.SUBSCRIBED ? 'translate-x-8' : 'translate-x-0'
+  const loadingPosition = busy ? 'translate-x-4' : knobPosition
 
   if (busy || status === STATUS.UNKNOWN) {
     return (
-      <span className={`${baseClasses} border-slate-200 bg-white text-slate-500`}>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Checking...</span>
-      </span>
+      <div className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 ${className}`}>
+        <span className="absolute left-2 text-xs font-medium text-gray-500">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${loadingPosition}`}>
+          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+        </div>
+      </div>
     )
   }
 
@@ -118,24 +122,30 @@ export default function NotificationToggle({ className = '' }) {
       <button
         type="button"
         onClick={handleToggle}
-        className={`${baseClasses} border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}
+        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-green-500 transition-colors ${className}`}
         title="Turn off announcement notifications"
       >
-        <BellRing className="h-4 w-4" />
-        <span>Notifications On</span>
+        <span className="absolute left-2 text-xs font-medium text-white/50">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-white">On</span>
+        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-8'}`}>
+          <BellRing className="h-4 w-4 text-green-500" />
+        </div>
       </button>
     )
   }
 
   if (status === STATUS.DENIED) {
     return (
-      <span
-        className={`${baseClasses} cursor-not-allowed border-slate-200 bg-white text-slate-400`}
+      <div
+        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 cursor-not-allowed ${className}`}
         title="Notifications are blocked in your browser settings"
       >
-        <BellOff className="h-4 w-4" />
-        <span>Notifications Blocked</span>
-      </span>
+        <span className="absolute left-2 text-xs font-medium text-white">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 translate-x-0">
+          <BellOff className="h-4 w-4 text-gray-400" />
+        </div>
+      </div>
     )
   }
 
@@ -143,11 +153,14 @@ export default function NotificationToggle({ className = '' }) {
     <button
       type="button"
       onClick={handleToggle}
-      className={`${baseClasses} border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100`}
+      className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 transition-colors hover:bg-gray-300 ${className}`}
       title="Get notified when a new announcement is posted"
     >
-      <Bell className="h-4 w-4" />
-      <span>Enable Notifications</span>
+      <span className="absolute left-2 text-xs font-medium text-white">Off</span>
+      <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+      <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-0'}`}>
+        <Bell className="h-4 w-4 text-gray-500" />
+      </div>
     </button>
   )
 }

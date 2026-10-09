@@ -17,12 +17,18 @@ class Announcement(models.Model):
         choices=Category.choices,
         default=Category.ANNOUNCEMENT,
     )
+    tags = models.CharField(max_length=500, null=True, blank=True, help_text='Comma-separated tags for badges (e.g., urgent, scholarship, competition)')
     author = models.CharField(max_length=150, blank=True, default='Admin')
     pinned = models.BooleanField(default=False)
     display_order = models.PositiveIntegerField(default=0, db_index=True)
     is_published = models.BooleanField(default=True)
     members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
-    email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement')
+    event_date_start = models.DateField(null=True, blank=True, help_text='Event start date (optional)')
+    event_date_end = models.DateField(null=True, blank=True, help_text='Event end date (optional)')
+    event_time_start = models.TimeField(null=True, blank=True, help_text='Event start time (optional)')
+    event_time_end = models.TimeField(null=True, blank=True, help_text='Event end time (optional)')
+    location = models.CharField(max_length=200, null=True, blank=True, help_text='Event location (optional)')
+    email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement (any published announcement)')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

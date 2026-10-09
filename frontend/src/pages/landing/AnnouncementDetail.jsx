@@ -3,9 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
+import ImageCarousel from '../../components/ImageCarousel'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { useAuth } from '../../context/useAuth'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
+import { Calendar, Clock, MapPin, User, Link as LinkIcon } from 'lucide-react'
 
 const CATEGORY_COLORS = {
   announcement: {
@@ -216,6 +218,48 @@ export default function AnnouncementDetail() {
   }
 
   const formattedDate = formatDate(announcement.created_at)
+  
+  // Format event date range
+  const formatDateRange = (start, end) => {
+    if (!start && !end) return null
+    const startDate = start ? formatDate(start) : ''
+    const endDate = end ? formatDate(end) : ''
+    if (startDate && endDate && startDate !== endDate) {
+      return `${startDate} - ${endDate}`
+    }
+    return startDate || endDate
+  }
+  
+  // Format time range
+  const formatTimeRange = (start, end) => {
+    if (!start && !end) return null
+    const formatTime = (time) => {
+      if (!time) return ''
+      const [hours, minutes] = time.split(':')
+      const hour = parseInt(hours, 10)
+      const ampm = hour >= 12 ? 'PM' : 'AM'
+      const hour12 = hour % 12 || 12
+      return `${hour12}:${minutes} ${ampm}`
+    }
+    const startTime = formatTime(start)
+    const endTime = formatTime(end)
+    if (startTime && endTime && startTime !== endTime) {
+      return `${startTime} - ${endTime}`
+    }
+    return startTime || endTime
+  }
+  
+  // Extract URLs from body for links section
+  const extractUrls = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const matches = text.match(urlRegex)
+    return matches || []
+  }
+  
+  const urls = extractUrls(announcement.body || '')
+  
+  // Parse tags
+  const tags = announcement.tags ? announcement.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
@@ -233,7 +277,7 @@ export default function AnnouncementDetail() {
       />
 
       <div className="relative pt-20 pb-12">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={handleBackToAnnouncements}
@@ -245,71 +289,187 @@ export default function AnnouncementDetail() {
             </svg>
             Back to announcements
           </button>
-
-          <div className="mt-8">
-            <div
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-5"
-              style={{ background: cat.dimAccent, borderColor: cat.border }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
-              <span className="text-xs font-semibold tracking-wide" style={{ color: cat.accent }}>
-                {cat.label}
-              </span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">{announcement.title}</h1>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
-              <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                {formattedDate || '—'}
-              </p>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                By <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>{announcement.author || 'Admin'}</span>
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="space-y-12">
-          {/* Body */}
-          <div
-            className="rounded-2xl p-6 sm:p-8 overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: `1px solid ${cat.border}`,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <h2 className="text-2xl font-bold text-white mb-4">Announcement</h2>
-            <p className="text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {parseUrlsInText(announcement.body)}
-            </p>
-          </div>
-
-          {/* Images */}
-          {images.length > 0 && (
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Image Carousel */}
+            {images.length > 0 && (
+              <ImageCarousel 
+                images={images} 
+                className="w-full"
+                onImageClick={handleImageClick}
+              />
+            )}
+            
+            {/* Headline */}
             <div>
-              <h2 className="text-2xl font-bold text-white mb-6">Gallery ({images.length} photo{images.length > 1 ? 's' : ''})</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {images.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    type="button"
-                    onClick={() => handleImageClick(idx)}
-                    className="rounded-xl overflow-hidden group cursor-pointer text-left"
-                  >
-                    <img
-                      src={img.image}
-                      alt={announcement.title}
-                      className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </button>
-                ))}
+              <div
+                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-4"
+                style={{ background: cat.dimAccent, borderColor: cat.border }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
+                <span className="text-xs font-semibold tracking-wide" style={{ color: cat.accent }}>
+                  {cat.label}
+                </span>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+                      style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        color: 'rgba(255,255,255,0.9)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">{announcement.title}</h1>
+              <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                {formattedDate || '—'}
+              </p>
+            </div>
+            
+            {/* Body */}
+            <div
+              className="rounded-2xl p-6 sm:p-8 overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${cat.border}`,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <p className="text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {parseUrlsInText(announcement.body)}
+              </p>
+            </div>
+          </div>
+          
+          {/* Right Column - Details Sidebar */}
+          <div className="lg:col-span-1">
+            <div
+              className="rounded-2xl p-6 sticky top-24"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${cat.border}`,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <h2 className="text-lg font-bold text-white mb-6">Details</h2>
+              
+              <div className="space-y-4">
+                {/* Event Date Range */}
+                {formatDateRange(announcement.event_date_start, announcement.event_date_end) && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Event Date
+                      </p>
+                      <p className="text-sm text-white">
+                        {formatDateRange(announcement.event_date_start, announcement.event_date_end)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Event Time Range */}
+                {formatTimeRange(announcement.event_time_start, announcement.event_time_end) && (
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Event Time
+                      </p>
+                      <p className="text-sm text-white">
+                        {formatTimeRange(announcement.event_time_start, announcement.event_time_end)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Location */}
+                {announcement.location && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Location
+                      </p>
+                      <p className="text-sm text-white">{announcement.location}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Author */}
+                <div className="flex items-start gap-3">
+                  <User className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      Author
+                    </p>
+                    {announcement.author && announcement.author.includes(',') ? (
+                      <p className="text-sm text-white">
+                        {announcement.author.split(',')[0].trim()}
+                        {announcement.author.split(',')[1] && (
+                          <>, <em className="opacity-80">{announcement.author.split(',')[1].trim()}</em></>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-white">{announcement.author || 'Admin'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Links */}
+                {urls.length > 0 && (
+                  <div className="pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                    <div className="flex items-start gap-3 mb-3">
+                      <LinkIcon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Links
+                      </p>
+                    </div>
+                    <div className="space-y-2 pl-8">
+                      {urls.map((url, index) => (
+                        <a
+                          key={index}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-sm text-sky-400 hover:text-sky-300 transition-colors break-all"
+                        >
+                          {url}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Created Date */}
+                <div className="pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Posted
+                      </p>
+                      <p className="text-sm text-white">{formattedDate || '—'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
