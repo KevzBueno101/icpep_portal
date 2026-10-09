@@ -56,7 +56,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
         )}
         <Link
           to={`/announcement/${id}`}
-          className="group relative flex h-full flex-col overflow-hidden rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_-4px_rgba(14,165,233,0.15)] hover:ring-sky-200"
+          className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_-4px_rgba(14,165,233,0.15)] hover:ring-sky-200"
         >
           {pinned && (
             <div className="absolute left-3 top-3 z-10 flex items-center rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md">
@@ -78,7 +78,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
                   loading="lazy"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/20 to-transparent" />
               </>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-slate-100">
@@ -87,29 +87,28 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             )}
           </div>
 
-          <div className="flex flex-1 flex-col p-6 sm:p-8 overflow-hidden relative -mt-20">
-            <div className="relative z-10">
+          <div className="flex flex-1 flex-col p-6 sm:p-8 overflow-hidden">
             <div className="mb-4">
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </span>
             </div>
 
-            <h3 className="mb-3 text-xl font-bold tracking-tight text-white sm:text-2xl line-clamp-2">
+            <h3 className="mb-3 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl line-clamp-2">
               {title}
             </h3>
 
-            <p className="mb-6 flex-1 text-base leading-relaxed text-white/90 line-clamp-3 break-words overflow-hidden">
+            <p className="mb-6 flex-1 text-base leading-relaxed text-slate-600 line-clamp-3 break-words overflow-hidden">
               {parseUrlsInText(body)}
             </p>
 
-            <div className="mt-auto flex flex-wrap items-center gap-y-3 gap-x-6 border-t border-white/20 pt-5 text-sm text-white/80">
+            <div className="mt-auto flex flex-wrap items-center gap-y-3 gap-x-6 border-t border-slate-100 pt-5 text-sm text-slate-500">
               <div className="flex items-center gap-2">
-                <Calendar size={16} className="text-white/60" />
+                <Calendar size={16} className="text-slate-400" />
                 <span>{formattedDate}</span>
               </div>
               <div className="flex items-center gap-2">
-                <User size={16} className="text-white/60" />
+                <User size={16} className="text-slate-400" />
                 <span>
                   {author && author.includes(',') ? (
                     <>
@@ -123,10 +122,9 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
                   )}
                 </span>
               </div>
-              <div className="flex items-center gap-2 ml-auto text-sky-300 font-medium group-hover:text-sky-200">
+              <div className="flex items-center gap-2 ml-auto text-sky-600 font-medium group-hover:text-sky-700">
                 Read Full Announcement <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </div>
-            </div>
             </div>
           </div>
         </Link>
@@ -138,7 +136,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
     return (
       <Link
         to={`/announcement/${id}`}
-        className="group relative flex shrink-0 items-start gap-4 overflow-hidden rounded-2xl shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
+        className="group relative flex shrink-0 items-start gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:shadow-md hover:ring-slate-300 hover:-translate-y-0.5"
       >
         <div className="absolute left-0 top-0 h-full w-1 bg-sky-500 opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -184,18 +182,18 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
       )}
       <Link
         to={`/announcement/${id}`}
-        className="block overflow-hidden rounded-lg shadow-sm transition-shadow hover:shadow-md"
+        className="block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
       >
         {pinned && (
-          <div className="absolute left-3 top-3 z-10 flex items-center rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md">
-            <Pin size={12} className="mr-1" />
+          <div className="flex items-center bg-amber-100 px-4 py-1 text-xs font-semibold text-amber-800">
+            <Pin size={14} className="mr-1 inline" />
             Pinned
           </div>
         )}
 
         {firstImageUrl && (
           <div 
-            className="relative h-64 w-full overflow-hidden bg-slate-50 cursor-pointer group"
+            className="relative h-40 w-full overflow-hidden bg-slate-50 cursor-pointer group"
             onClick={(e) => handleImageClick(e, 0)}
           >
             <img
@@ -207,40 +205,38 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/40 to-transparent" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
           </div>
         )}
 
-      <article className={firstImageUrl ? 'p-6 overflow-hidden relative -mt-20' : 'p-6 overflow-hidden'}>
-        <div className="relative z-10">
-          <div className="mb-3 flex items-start justify-between">
-            <span
-              className="inline-block rounded-full px-3 py-1 text-xs font-semibold bg-white/20 text-white backdrop-blur-sm"
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </span>
-          </div>
+      <article className={firstImageUrl ? 'p-6 overflow-hidden' : 'p-6 overflow-hidden'}>
+        <div className="mb-3 flex items-start justify-between">
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${categoryColor}`}
+          >
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </span>
+        </div>
 
-          <h3 className="mb-2 text-lg font-bold text-white">{title}</h3>
-          <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-white/90 break-words overflow-hidden">
-            {parseUrlsInText(body)}
-          </p>
+        <h3 className="mb-2 text-lg font-bold text-slate-900">{title}</h3>
+        <p className="mb-4 whitespace-pre-wrap text-sm leading-6 text-slate-600 break-words overflow-hidden">
+          {parseUrlsInText(body)}
+        </p>
 
-          <div className="flex items-center justify-between text-xs text-white/80">
-            <span>
-              {author && author.includes(',') ? (
-                <>
-                  {author.split(',')[0].trim()}
-                  {author.split(',')[1] && (
-                    <>, <em className="opacity-80">{author.split(',')[1].trim()}</em></>
-                  )}
-                </>
-              ) : (
-                author || 'Admin'
-              )}
-            </span>
-            <span>{formattedDate}</span>
-          </div>
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>
+            {author && author.includes(',') ? (
+              <>
+                {author.split(',')[0].trim()}
+                {author.split(',')[1] && (
+                  <>, <em className="opacity-80">{author.split(',')[1].trim()}</em></>
+                )}
+              </>
+            ) : (
+              author || 'Admin'
+            )}
+          </span>
+          <span>{formattedDate}</span>
         </div>
       </article>
     </Link>
