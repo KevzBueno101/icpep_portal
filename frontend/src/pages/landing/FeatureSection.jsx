@@ -21,6 +21,35 @@ const features = [
   },
 ]
 
+const membershipPlans = [
+  {
+    title: 'Regular Member',
+    price: 'P25/semester',
+    description: 'Perfect for students starting their journey in computer engineering.',
+    benefits: [
+      'Access to chapter events and activities',
+      'Basic member resources and materials',
+      'Community networking opportunities',
+      'Membership ID card'
+    ],
+    tagline: 'Start Your Journey',
+    actionLink: '/register',
+  },
+  {
+    title: 'Membership Plus',
+    price: 'P290/year',
+    description: 'The complete package for the dedicated student.',
+    benefits: [
+      'Includes ALL Student and National benefits',
+      'Significant savings over separate memberships',
+      'Highest priority for limited-slot events',
+      'Exclusive members-only networking channels'
+    ],
+    tagline: 'The Ultimate Value Package',
+    actionLink: '/register',
+  },
+]
+
 
 export default function FeatureSection() {
   return (
@@ -65,6 +94,52 @@ export default function FeatureSection() {
               )}
               <p className="leading-relaxed text-slate-400">
                 {feature.description}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Membership Cards */}
+        <div className="mt-16 grid gap-8 sm:grid-cols-2">
+          {membershipPlans.map((plan) => (
+            <div
+              key={plan.title}
+              className="group rounded-2xl border border-white/10 bg-slate-900/40 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:bg-slate-800/60 hover:shadow-[0_8px_30px_-4px_rgba(6,182,212,0.15)] hover:border-cyan-500/30"
+            >
+              <div className="mb-4">
+                <h3 className="text-2xl font-bold text-white tracking-wide">
+                  {plan.title}
+                </h3>
+                <p className="mt-2 text-3xl font-bold text-cyan-400">
+                  {plan.price}
+                </p>
+              </div>
+              
+              <p className="mb-6 text-slate-300 leading-relaxed">
+                {plan.description}
+              </p>
+
+              <ul className="mb-8 space-y-3">
+                {plan.benefits.map((benefit, idx) => (
+                  <li key={idx} className="flex items-start text-slate-400">
+                    <span className="mr-3 text-cyan-400">✓</span>
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mb-4">
+                <Link
+                  to={plan.actionLink}
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white"
+                >
+                  Get Started
+                  <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+              </div>
+
+              <p className="text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+                {plan.tagline}
               </p>
             </div>
           ))}
