@@ -100,16 +100,15 @@ export default function NotificationToggle({ className = '' }) {
   if (!getAccessToken()) return null
   if (status === STATUS.UNSUPPORTED) return null
 
-  const baseClasses =
-    'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ' +
-    className
-
   if (busy || status === STATUS.UNKNOWN) {
     return (
-      <span className={`${baseClasses} border-slate-200 bg-white text-slate-500`}>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Checking...</span>
-      </span>
+      <div className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 ${className}`}>
+        <span className="absolute left-2 text-xs font-medium text-gray-500">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+        </div>
+      </div>
     )
   }
 
@@ -118,24 +117,30 @@ export default function NotificationToggle({ className = '' }) {
       <button
         type="button"
         onClick={handleToggle}
-        className={`${baseClasses} border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}
+        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-green-500 transition-colors ${className}`}
         title="Turn off announcement notifications"
       >
-        <BellRing className="h-4 w-4" />
-        <span>Notifications On</span>
+        <span className="absolute left-2 text-xs font-medium text-white/50">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-white">On</span>
+        <div className="absolute right-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+          <BellRing className="h-4 w-4 text-green-500" />
+        </div>
       </button>
     )
   }
 
   if (status === STATUS.DENIED) {
     return (
-      <span
-        className={`${baseClasses} cursor-not-allowed border-slate-200 bg-white text-slate-400`}
+      <div
+        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 cursor-not-allowed ${className}`}
         title="Notifications are blocked in your browser settings"
       >
-        <BellOff className="h-4 w-4" />
-        <span>Notifications Blocked</span>
-      </span>
+        <span className="absolute left-2 text-xs font-medium text-white">Off</span>
+        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+          <BellOff className="h-4 w-4 text-gray-400" />
+        </div>
+      </div>
     )
   }
 
@@ -143,11 +148,14 @@ export default function NotificationToggle({ className = '' }) {
     <button
       type="button"
       onClick={handleToggle}
-      className={`${baseClasses} border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100`}
+      className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 transition-colors hover:bg-gray-300 ${className}`}
       title="Get notified when a new announcement is posted"
     >
-      <Bell className="h-4 w-4" />
-      <span>Enable Notifications</span>
+      <span className="absolute left-2 text-xs font-medium text-white">Off</span>
+      <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
+      <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+        <Bell className="h-4 w-4 text-gray-500" />
+      </div>
     </button>
   )
 }
