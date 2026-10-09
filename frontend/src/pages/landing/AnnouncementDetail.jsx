@@ -9,30 +9,37 @@ import { useAuth } from '../../context/useAuth'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
 import { Calendar, Clock, MapPin, User, Link as LinkIcon } from 'lucide-react'
 
-// Generate a consistent color based on category name
-function getCategoryColor(category) {
-  const categoryLower = (category || 'announcement').toLowerCase()
-  const colors = {
-    announcement: { label: 'Announcement', accent: '#38bdf8', dimAccent: 'rgba(56,189,248,0.15)', border: 'rgba(56,189,248,0.35)' },
-    achievement: { label: 'Achievement', accent: '#34d399', dimAccent: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.35)' },
-    update: { label: 'Update', accent: '#60a5fa', dimAccent: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.35)' },
-    opportunity: { label: 'Opportunity', accent: '#fbbf24', dimAccent: 'rgba(251,191,36,0.15)', border: 'rgba(251,191,36,0.35)' },
-    event: { label: 'Event', accent: '#a78bfa', dimAccent: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)' },
-  }
-  
-  if (colors[categoryLower]) {
-    return colors[categoryLower]
-  }
-  
-  // Generate color for custom categories
-  const hash = categoryLower.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  const hue = hash % 360
-  return {
-    label: category || 'Announcement',
-    accent: `hsl(${hue}, 70%, 60%)`,
-    dimAccent: `hsla(${hue}, 70%, 60%, 0.15)`,
-    border: `hsla(${hue}, 70%, 60%, 0.35)`,
-  }
+const CATEGORY_COLORS = {
+  announcement: {
+    label: 'Announcement',
+    accent: '#38bdf8',
+    dimAccent: 'rgba(56,189,248,0.15)',
+    border: 'rgba(56,189,248,0.35)',
+  },
+  achievement: {
+    label: 'Achievement',
+    accent: '#34d399',
+    dimAccent: 'rgba(52,211,153,0.15)',
+    border: 'rgba(52,211,153,0.35)',
+  },
+  update: {
+    label: 'Update',
+    accent: '#60a5fa',
+    dimAccent: 'rgba(96,165,250,0.15)',
+    border: 'rgba(96,165,250,0.35)',
+  },
+  opportunity: {
+    label: 'Opportunity',
+    accent: '#fbbf24',
+    dimAccent: 'rgba(251,191,36,0.15)',
+    border: 'rgba(251,191,36,0.35)',
+  },
+  event: {
+    label: 'Event',
+    accent: '#a78bfa',
+    dimAccent: 'rgba(167,139,250,0.15)',
+    border: 'rgba(167,139,250,0.35)',
+  },
 }
 
 function formatDate(value) {
@@ -97,7 +104,8 @@ export default function AnnouncementDetail() {
   }, [id])
 
   const cat = useMemo(() => {
-    return getCategoryColor(announcement?.category)
+    const key = announcement?.category
+    return CATEGORY_COLORS[key] || CATEGORY_COLORS.announcement
   }, [announcement])
 
   const images = announcement?.images || []
@@ -249,6 +257,9 @@ export default function AnnouncementDetail() {
   }
   
   const urls = extractUrls(announcement.body || '')
+  
+  // Parse tags
+  const tags = announcement.tags ? announcement.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070E1B 0%, #030817 100%)' }}>
@@ -305,6 +316,23 @@ export default function AnnouncementDetail() {
                   {cat.label}
                 </span>
               </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+                      style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        color: 'rgba(255,255,255,0.9)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">{announcement.title}</h1>
               <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 {formattedDate || '—'}

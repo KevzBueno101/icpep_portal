@@ -22,6 +22,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             'title',
             'body',
             'category',
+            'tags',
             'author',
             'pinned',
             'is_published',

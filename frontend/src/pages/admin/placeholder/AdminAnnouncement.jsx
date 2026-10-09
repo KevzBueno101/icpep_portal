@@ -8,18 +8,19 @@ import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
 import { CheckCircle2 } from 'lucide-react'
 
-const CATEGORY_SUGGESTIONS = [
-  'Announcement',
-  'Achievement',
-  'Update',
-  'Opportunity',
-  'Event',
+const CATEGORY_OPTIONS = [
+  { value: 'announcement', label: 'Announcement' },
+  { value: 'achievement', label: 'Achievement' },
+  { value: 'update', label: 'Update' },
+  { value: 'opportunity', label: 'Opportunity' },
+  { value: 'event', label: 'Event' },
 ]
 
 const emptyForm = {
   title: '',
   body: '',
-  category: 'Announcement',
+  category: 'announcement',
+  tags: '',
   author: '',
   pinned: false,
   is_published: true,
@@ -89,12 +90,6 @@ const AdminAnnouncement = () => {
     }
   }, [announcements])
 
-  // Extract unique categories for filter dropdown
-  const uniqueCategories = useMemo(() => {
-    const categories = [...new Set(announcements.map(a => a.category).filter(Boolean))]
-    return categories.sort((a, b) => a.localeCompare(b))
-  }, [announcements])
-
   const handleReorder = useCallback(async (orderedIds) => {
     setLocalOrderIds(orderedIds)
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
@@ -123,7 +118,8 @@ const AdminAnnouncement = () => {
     setFormData({
       title: announcement.title || '',
       body: announcement.body || '',
-      category: announcement.category || 'Announcement',
+      category: announcement.category || 'announcement',
+      tags: announcement.tags || '',
       author: announcement.author || '',
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
@@ -374,9 +370,9 @@ const AdminAnnouncement = () => {
             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-48"
           >
             <option value="all">All Categories</option>
-            {uniqueCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -427,20 +423,29 @@ const AdminAnnouncement = () => {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
-                <input
-                  type="text"
+                <select
                   required
-                  list="category-suggestions"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                  placeholder="e.g., Announcement, Event, Achievement"
-                />
-                <datalist id="category-suggestions">
-                  {CATEGORY_SUGGESTIONS.map((suggestion) => (
-                    <option key={suggestion} value={suggestion} />
+                >
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
-                </datalist>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Tags (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  placeholder="e.g., urgent, scholarship, competition (comma-separated)"
+                />
               </div>
             </div>
 
@@ -706,20 +711,28 @@ const AdminAnnouncement = () => {
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
-                          <input
-                            type="text"
+                          <select
                             required
-                            list="category-suggestions-edit"
                             value={formData.category}
                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="e.g., Announcement, Event, Achievement"
-                          />
-                          <datalist id="category-suggestions-edit">
-                            {CATEGORY_SUGGESTIONS.map((suggestion) => (
-                              <option key={suggestion} value={suggestion} />
+                          >
+                            {CATEGORY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
                             ))}
-                          </datalist>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-slate-700">Tags (Optional)</label>
+                          <input
+                            type="text"
+                            value={formData.tags}
+                            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            placeholder="e.g., urgent, scholarship, competition (comma-separated)"
+                          />
                         </div>
                       </div>
 

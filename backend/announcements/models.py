@@ -3,9 +3,21 @@ from django.db import models
 
 
 class Announcement(models.Model):
+    class Category(models.TextChoices):
+        ANNOUNCEMENT = 'announcement', 'Announcement'
+        ACHIEVEMENT = 'achievement', 'Achievement'
+        UPDATE = 'update', 'Update'
+        OPPORTUNITY = 'opportunity', 'Opportunity'
+        EVENT = 'event', 'Event'
+
     title = models.CharField(max_length=200)
     body = models.TextField()
-    category = models.CharField(max_length=50, default='Announcement', help_text='Category for the announcement (e.g., Announcement, Event, Achievement, etc.)')
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        default=Category.ANNOUNCEMENT,
+    )
+    tags = models.CharField(max_length=500, null=True, blank=True, help_text='Comma-separated tags for badges (e.g., urgent, scholarship, competition)')
     author = models.CharField(max_length=150, blank=True, default='Admin')
     pinned = models.BooleanField(default=False)
     display_order = models.PositiveIntegerField(default=0, db_index=True)
