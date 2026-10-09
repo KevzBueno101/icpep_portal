@@ -460,24 +460,39 @@ const AdminAnnouncement = () => {
                   />
                   Pinned
                 </label>
-                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_published}
-                    onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  Published
-                </label>
-                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={formData.members_only}
-                    onChange={(e) => setFormData({ ...formData, members_only: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  Members Only
-                </label>
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-sm font-medium text-slate-700">Visibility:</span>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input
+                      type="radio"
+                      name="visibility-create"
+                      checked={!formData.is_published}
+                      onChange={() => setFormData({ ...formData, is_published: false, members_only: false })}
+                      className="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    Draft
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input
+                      type="radio"
+                      name="visibility-create"
+                      checked={formData.is_published && !formData.members_only}
+                      onChange={() => setFormData({ ...formData, is_published: true, members_only: false })}
+                      className="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    Published
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input
+                      type="radio"
+                      name="visibility-create"
+                      checked={formData.is_published && formData.members_only}
+                      onChange={() => setFormData({ ...formData, is_published: true, members_only: true })}
+                      className="h-4 w-4 border-indigo-500 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    Members Only
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -668,24 +683,39 @@ const AdminAnnouncement = () => {
                             />
                             Pinned
                           </label>
-                          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                            <input
-                              type="checkbox"
-                              checked={formData.is_published}
-                              onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                            />
-                            Published
-                          </label>
-                          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                            <input
-                              type="checkbox"
-                              checked={formData.members_only}
-                              onChange={(e) => setFormData({ ...formData, members_only: e.target.checked })}
-                              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            Members Only
-                          </label>
+                          <div className="flex flex-wrap items-center gap-4">
+                            <span className="text-sm font-medium text-slate-700">Visibility:</span>
+                            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                              <input
+                                type="radio"
+                                name={`visibility-edit-${editingAnnouncement?.id}`}
+                                checked={!formData.is_published}
+                                onChange={() => setFormData({ ...formData, is_published: false, members_only: false })}
+                                className="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                              />
+                              Draft
+                            </label>
+                            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                              <input
+                                type="radio"
+                                name={`visibility-edit-${editingAnnouncement?.id}`}
+                                checked={formData.is_published && !formData.members_only}
+                                onChange={() => setFormData({ ...formData, is_published: true, members_only: false })}
+                                className="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                              />
+                              Published
+                            </label>
+                            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                              <input
+                                type="radio"
+                                name={`visibility-edit-${editingAnnouncement?.id}`}
+                                checked={formData.is_published && formData.members_only}
+                                onChange={() => setFormData({ ...formData, is_published: true, members_only: true })}
+                                className="h-4 w-4 border-indigo-500 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              Members Only
+                            </label>
+                          </div>
                         </div>
                       </div>
 
