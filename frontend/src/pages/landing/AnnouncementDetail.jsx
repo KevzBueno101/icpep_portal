@@ -287,7 +287,11 @@ export default function AnnouncementDetail() {
           <div className="lg:col-span-2 space-y-8">
             {/* Image Carousel */}
             {images.length > 0 && (
-              <ImageCarousel images={images} className="w-full" />
+              <ImageCarousel 
+                images={images} 
+                className="w-full"
+                onImageClick={handleImageClick}
+              />
             )}
             
             {/* Headline */}

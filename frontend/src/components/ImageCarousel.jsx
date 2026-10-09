@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-export default function ImageCarousel({ images, className = '' }) {
+export default function ImageCarousel({ images, className = '', onImageClick }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
@@ -16,6 +16,12 @@ export default function ImageCarousel({ images, className = '' }) {
   const goToImage = useCallback((index) => {
     setCurrentIndex(index)
   }, [])
+
+  const handleImageClick = () => {
+    if (onImageClick) {
+      onImageClick(currentIndex)
+    }
+  }
 
   // Auto-play functionality
   useEffect(() => {
@@ -42,7 +48,8 @@ export default function ImageCarousel({ images, className = '' }) {
         <img
           src={images[0].image}
           alt="Announcement image"
-          className="w-full h-96 object-cover"
+          className="w-full h-96 object-cover cursor-pointer transition-transform hover:scale-105"
+          onClick={handleImageClick}
         />
       </div>
     )
@@ -58,7 +65,8 @@ export default function ImageCarousel({ images, className = '' }) {
       <img
         src={images[currentIndex].image}
         alt={`Slide ${currentIndex + 1}`}
-        className="w-full h-96 object-cover transition-opacity duration-300"
+        className="w-full h-96 object-cover transition-opacity duration-300 cursor-pointer"
+        onClick={handleImageClick}
       />
 
       {/* Left Arrow */}
