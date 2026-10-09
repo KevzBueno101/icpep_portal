@@ -28,7 +28,11 @@ For the **dev project** (icpep-catsu.vercel.app), update these environment varia
    - Added worker domains to `CORS_ALLOWED_ORIGINS` as backup
    - This ensures requests work even if using the worker proxy
 
-2. **Local .env updated** (`frontend/.env`)
+2. **Backend permissions updated** (`backend/featured/views.py`, `backend/events/views.py`)
+   - Added `AllowAny` permission to public API views (landing page access)
+   - Admin operations still require authentication
+
+3. **Local .env updated** (`frontend/.env`)
    - Added comment explaining the direct backend URL usage
    - Already pointing to direct Render backend
 
@@ -39,6 +43,7 @@ After updating Vercel dashboard:
 2. Test creating an event in admin panel
 3. Test creating featured content
 4. Verify no ERR_BLOCKED_BY_CLIENT error
+5. Verify landing page loads featured content and events without authentication
 
 ## Production Note
 

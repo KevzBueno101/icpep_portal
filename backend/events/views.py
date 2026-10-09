@@ -1,5 +1,4 @@
-from rest_framework import generics
-from rest_framework import filters
+from rest_framework import generics, permissions, filters
 from .models import Event, EventImage
 from .serializers import EventSerializer, EventImageSerializer
 
@@ -11,10 +10,16 @@ class EventListView(generics.ListCreateAPIView):
     search_fields = ['title', 'description', 'organizer_name']
     ordering = ['display_order', '-date']
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
 
 class FeaturedEventsListView(generics.ListAPIView):
     queryset = Event.objects.filter(is_featured=True)
     serializer_class = EventSerializer
+    permission_classes = [permissions.AllowAny]
     ordering = ['display_order', '-date']
 
 
