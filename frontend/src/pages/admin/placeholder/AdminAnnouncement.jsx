@@ -56,6 +56,7 @@ const AdminAnnouncement = () => {
 
   // Image upload UI (client-side only; actual upload happens after save)
   const [selectedImages, setSelectedImages] = useState([]) // File[]
+  const [primaryImageIndex, setPrimaryImageIndex] = useState(0) // Index of the image to be first
   const [imageUploading, setImageUploading] = useState(false)
 
   // Pagination, search, and filters
@@ -108,6 +109,7 @@ const AdminAnnouncement = () => {
     setExpandedAnnouncementId(null)
     setFormData(emptyForm)
     setSelectedImages([])
+    setPrimaryImageIndex(0)
     setShowForm(true)
   }
 
@@ -131,6 +133,7 @@ const AdminAnnouncement = () => {
       location: announcement.location || '',
     })
     setSelectedImages([])
+    setPrimaryImageIndex(0)
   }
 
   const handleCancelEdit = () => {
@@ -139,6 +142,7 @@ const AdminAnnouncement = () => {
     setExpandedAnnouncementId(null)
     setFormData(emptyForm)
     setSelectedImages([])
+    setPrimaryImageIndex(0)
   }
 
   const handleCloseForm = () => {
@@ -146,6 +150,7 @@ const AdminAnnouncement = () => {
     setEditingAnnouncement(null)
     setFormData(emptyForm)
     setSelectedImages([])
+    setPrimaryImageIndex(0)
   }
 
   const uploadImages = async (announcementId, files) => {
@@ -159,7 +164,16 @@ const AdminAnnouncement = () => {
         try {
           const form = new FormData()
           form.append('image', file)
-          form.append('order', index) // Use array index as order
+          // Primary image gets order 0, others follow selection order
+          let order
+          if (index === primaryImageIndex) {
+            order = 0
+          } else if (index < primaryImageIndex) {
+            order = index + 1
+          } else {
+            order = index
+          }
+          form.append('order', order)
           await api.post(`/announcements/admin/${announcementId}/images/`, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
@@ -205,6 +219,10 @@ const AdminAnnouncement = () => {
         setEditingAnnouncement(null)
         setFormData(emptyForm)
         setSelectedImages([])
+      setPrimaryImageIndex(0)
+        setPrimaryImageIndex(0)
+        setPrimaryImageIndex(0)
+        setPrimaryImageIndex(0)
         fetchAnnouncements()
         return
       }
@@ -219,6 +237,8 @@ const AdminAnnouncement = () => {
       setEditingAnnouncement(null)
       setFormData(emptyForm)
       setSelectedImages([])
+      setPrimaryImageIndex(0)
+      setPrimaryImageIndex(0)
       fetchAnnouncements()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to save announcement.')
@@ -606,17 +626,33 @@ const AdminAnnouncement = () => {
 
                 {selectedImages.length > 0 && (
                   <div className="mt-2 space-y-2 text-xs text-slate-500">
-                    <div>{selectedImages.length} file(s) selected.</div>
+                    <div>{selectedImages.length} file(s) selected. Check the box to set as primary image (first to display).</div>
                     <div className="grid gap-2 text-slate-700">
                       {selectedImages.map((file, idx) => (
                         <div
                           key={`${file.name}-${file.size}-${idx}`}
                           className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
                         >
-                          <span className="truncate">{file.name}</span>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="primary-image"
+                              checked={primaryImageIndex === idx}
+                              onChange={() => setPrimaryImageIndex(idx)}
+                              className="h-4 w-4 text-sky-600"
+                            />
+                            <span className="truncate">{file.name}</span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
+                            onClick={() => {
+                              setSelectedImages((prev) => prev.filter((_, index) => index !== idx))
+                              if (primaryImageIndex === idx) {
+                                setPrimaryImageIndex(0)
+                              } else if (primaryImageIndex > idx) {
+                                setPrimaryImageIndex(primaryImageIndex - 1)
+                              }
+                            }}
                             className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
                           >
                             Remove
@@ -891,17 +927,33 @@ const AdminAnnouncement = () => {
 
                           {selectedImages.length > 0 && (
                             <div className="mt-2 space-y-2 text-xs text-slate-500">
-                              <div>{selectedImages.length} file(s) selected.</div>
+                              <div>{selectedImages.length} file(s) selected. Check the box to set as primary image (first to display).</div>
                               <div className="grid gap-2 text-slate-700">
                                 {selectedImages.map((file, idx) => (
                                   <div
                                     key={`${file.name}-${file.size}-${idx}`}
                                     className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"
                                   >
-                                    <span className="truncate">{file.name}</span>
+                                    <div className="flex items-center gap-3">
+                                      <input
+                                        type="radio"
+                                        name="primary-image-edit"
+                                        checked={primaryImageIndex === idx}
+                                        onChange={() => setPrimaryImageIndex(idx)}
+                                        className="h-4 w-4 text-sky-600"
+                                      />
+                                      <span className="truncate">{file.name}</span>
+                                    </div>
                                     <button
                                       type="button"
-                                      onClick={() => setSelectedImages((prev) => prev.filter((_, index) => index !== idx))}
+                                      onClick={() => {
+                                        setSelectedImages((prev) => prev.filter((_, index) => index !== idx))
+                                        if (primaryImageIndex === idx) {
+                                          setPrimaryImageIndex(0)
+                                        } else if (primaryImageIndex > idx) {
+                                          setPrimaryImageIndex(primaryImageIndex - 1)
+                                        }
+                                      }}
                                       className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
                                     >
                                       Remove
