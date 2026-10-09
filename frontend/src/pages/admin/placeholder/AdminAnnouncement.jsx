@@ -198,6 +198,11 @@ const AdminAnnouncement = () => {
     setDraggedImageIndex(null)
   }
 
+  const handleDragEnd = () => {
+    setDraggedImageIndex(null)
+    setDraggedExistingImageIndex(null)
+  }
+
   const handleDragStartExisting = (index) => {
     setDraggedExistingImageIndex(index)
   }
@@ -221,16 +226,16 @@ const AdminAnnouncement = () => {
       }
       toast.success('Image order updated.')
       
-      // Update local state
-      setEditingAnnouncement((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          images: newImages,
-        }
-      })
-      fetchAnnouncements()
+      // Force refresh to get updated data from backend
+      await fetchAnnouncements()
+      
+      // Update local editing state with refreshed data
+      const refreshedAnnouncement = announcements.find(a => a.id === editingAnnouncement?.id)
+      if (refreshedAnnouncement) {
+        setEditingAnnouncement(refreshedAnnouncement)
+      }
     } catch (err) {
+      console.error('Failed to update image order:', err)
       toast.error('Failed to update image order.')
     }
 
@@ -675,6 +680,7 @@ const AdminAnnouncement = () => {
                           onDragStart={() => handleDragStart(idx)}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleDrop(e, idx)}
+                          onDragEnd={handleDragEnd}
                           className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 cursor-move ${
                             draggedImageIndex === idx ? 'bg-slate-200 ring-2 ring-sky-500' : 'bg-slate-50'
                           }`}
@@ -1017,6 +1023,7 @@ const AdminAnnouncement = () => {
                                   onDragStart={() => handleDragStartExisting(idx)}
                                   onDragOver={handleDragOverExisting}
                                   onDrop={(e) => handleDropExisting(e, idx)}
+                                  onDragEnd={handleDragEnd}
                                   className={`rounded-xl border p-2 cursor-move ${
                                     draggedExistingImageIndex === idx ? 'border-sky-500 ring-2 ring-sky-500' : 'border-slate-200'
                                   }`}
