@@ -9,9 +9,10 @@ export default function FeaturedEvents() {
     const fetchFeaturedEvents = async () => {
       try {
         const res = await publicApi.get('/events/featured/')
-        setEvents(res.data)
+        setEvents(res.data?.results || res.data || [])
       } catch (err) {
         console.error('Failed to fetch featured events:', err)
+        setEvents([])
       } finally {
         setLoading(false)
       }

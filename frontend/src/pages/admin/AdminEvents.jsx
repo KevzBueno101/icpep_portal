@@ -30,9 +30,10 @@ export default function AdminEvents() {
   const fetchEvents = async () => {
     try {
       const res = await api.get('/events/')
-      setEvents(res.data)
+      setEvents(res.data?.results || res.data || [])
     } catch (err) {
       console.error('Failed to fetch events:', err)
+      setEvents([])
     } finally {
       setLoading(false)
     }

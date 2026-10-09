@@ -9,9 +9,10 @@ export default function FeaturedContent() {
     const fetchFeaturedContent = async () => {
       try {
         const res = await publicApi.get('/featured/')
-        setFeaturedItems(res.data)
+        setFeaturedItems(res.data?.results || res.data || [])
       } catch (err) {
         console.error('Failed to fetch featured content:', err)
+        setFeaturedItems([])
       } finally {
         setLoading(false)
       }
