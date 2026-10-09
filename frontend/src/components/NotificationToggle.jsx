@@ -51,9 +51,19 @@ export default function NotificationToggle({ className = '' }) {
       return
     }
     if (busy) return
+    
+    const previousStatus = status
     setBusy(true)
+    
+    // Optimistic UI update - move knob immediately
+    if (status === STATUS.SUBSCRIBED) {
+      setStatus(STATUS.IDLE)
+    } else {
+      setStatus(STATUS.SUBSCRIBED)
+    }
+    
     try {
-      if (status === STATUS.SUBSCRIBED) {
+      if (previousStatus === STATUS.SUBSCRIBED) {
         await disableNotifications()
         setStatus(STATUS.IDLE)
         toast.success('Notifications disabled.')
@@ -67,9 +77,11 @@ export default function NotificationToggle({ className = '' }) {
         }
       }
     } catch (err) {
-      const status = err?.response?.status
-      if (status === 401) return
-      if (status === 404 || status === 503) {
+      // Revert to previous state on error
+      setStatus(previousStatus)
+      const httpStatus = err?.response?.status
+      if (httpStatus === 401) return
+      if (httpStatus === 404 || httpStatus === 503) {
         return
       }
       const rawMessage = String(err?.message || '')
@@ -89,12 +101,16 @@ export default function NotificationToggle({ className = '' }) {
   if (!getAccessToken()) return null
   if (status === STATUS.UNSUPPORTED) return null
 
+  // Determine knob position based on state
+  const knobPosition = status === STATUS.SUBSCRIBED ? 'translate-x-8' : 'translate-x-0'
+  const loadingPosition = busy ? 'translate-x-4' : knobPosition
+
   if (busy || status === STATUS.UNKNOWN) {
     return (
       <div className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 ${className}`}>
         <span className="absolute left-2 text-xs font-medium text-gray-500">Off</span>
         <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${loadingPosition}`}>
           <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
         </div>
       </div>
@@ -111,7 +127,7 @@ export default function NotificationToggle({ className = '' }) {
       >
         <span className="absolute left-2 text-xs font-medium text-white/50">Off</span>
         <span className="absolute right-2 text-xs font-medium text-white">On</span>
-        <div className="absolute right-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-8'}`}>
           <BellRing className="h-4 w-4 text-green-500" />
         </div>
       </button>
@@ -126,7 +142,7 @@ export default function NotificationToggle({ className = '' }) {
       >
         <span className="absolute left-2 text-xs font-medium text-white">Off</span>
         <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 translate-x-0">
           <BellOff className="h-4 w-4 text-gray-400" />
         </div>
       </div>
@@ -142,7 +158,7 @@ export default function NotificationToggle({ className = '' }) {
     >
       <span className="absolute left-2 text-xs font-medium text-white">Off</span>
       <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-      <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform">
+      <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-0'}`}>
         <Bell className="h-4 w-4 text-gray-500" />
       </div>
     </button>
