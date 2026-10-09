@@ -234,6 +234,8 @@ _cors_default_origins = [
     'https://icpepcatsu.app',
     'https://icpep-catsu.vercel.app',
     'https://icpep-portal-test.vercel.app',
+    'https://icpep-api.icpep-se-catsuchapter.workers.dev',
+    'https://icpep-api-main.icpep-se-catsuchapter.workers.dev',
 ]
 _cors_env_origins = [
     o.strip()
