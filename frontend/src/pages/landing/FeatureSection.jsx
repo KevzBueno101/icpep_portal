@@ -39,16 +39,16 @@ const membershipPlans = [
   {
     title: 'Membership Plus',
     price: 'P60/semester',
-    description: 'The complete package for the dedicated student.',
+    description: 'This package is optional and available for those who want to be more involved in the chapter.',
     benefits: [
-      'Laminated ID card with Documentary stamped',
+      'Laminated ID card with documentary stamped',
       'Highest priority for limited-slot events',
       'Early access to exclusive events',
       'Exclusive members-only networking channels',
       'Badge Pin',
       'Stickers'
     ],
-    tagline: 'The Ultimate Value Package',
+    tagline: 'Enjoy more benefits',
     actionLink: '/register',
   },
 ]
