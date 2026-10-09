@@ -73,6 +73,13 @@ function CardFront({ onFlip }) {
 function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0, membershipFee }) {
   return (
     <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
+      {/* Membership Plus badge */}
+      {membershipFee === 'PLUS' && (
+        <div className="absolute top-2 right-2 text-green-500 text-[12px] font-bold leading-none z-20">
+          +
+        </div>
+      )}
+
       {/* Background columns */}
       <div className="absolute inset-0 flex">
         <div className="w-[58%] h-full relative overflow-hidden" style={{ backgroundColor: COLORS.navyDark }}>
@@ -150,12 +157,7 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
         </div>
 
         <div className="w-[38%] flex flex-col items-end justify-between pl-1">
-          <div className="h-5 flex items-start justify-between w-full">
-            {membershipFee === 'PLUS' && (
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-[8px] font-bold">
-                +
-              </div>
-            )}
+          <div className="h-5 flex items-start justify-end w-full">
             {onFlip && (
               <button
                 type="button"
@@ -242,6 +244,17 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
       background: COLORS.navyDark,
       fontFamily: 'Arial, sans-serif',
     }}>
+      {/* Membership Plus badge */}
+      {membershipFee === 'PLUS' && (
+        <div style={{
+          position: 'absolute', top: 8, right: 8,
+          color: '#22C55E',
+          fontSize: 10, fontWeight: 900, zIndex: 20,
+        }}>
+          +
+        </div>
+      )}
+
       {/* SVG background — full card size, exact polygon match to display card */}
       <svg
         style={{ position: 'absolute', top: 0, left: 0, width: W, height: H }}
@@ -340,16 +353,6 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
           alignItems: 'center', justifyContent: 'center',
           paddingLeft: 20,
         }}>
-          {membershipFee === 'PLUS' && (
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%',
-              background: '#22C55E', color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 900, marginBottom: 6,
-            }}>
-              +
-            </div>
-          )}
           <div style={{
             width: 76, height: 76, borderRadius: '50%', overflow: 'hidden',
             border: '1px solid #CBD5E1', background: '#fff', marginBottom: 6,
