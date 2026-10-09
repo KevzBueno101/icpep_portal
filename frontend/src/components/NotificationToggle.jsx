@@ -48,7 +48,6 @@ export default function NotificationToggle({ className = '' }) {
 
   const handleToggle = useCallback(async () => {
     if (!getAccessToken()) {
-      toast('Log in to enable notifications.')
       return
     }
     if (busy) return
@@ -62,7 +61,6 @@ export default function NotificationToggle({ className = '' }) {
         const result = await enableNotifications()
         if (!result) {
           setStatus(Notification.permission === 'denied' ? STATUS.DENIED : STATUS.IDLE)
-          toast('Notification permission was not granted.')
         } else {
           setStatus(STATUS.SUBSCRIBED)
           toast.success('Notifications enabled. You will be alerted to new announcements.')
@@ -72,26 +70,17 @@ export default function NotificationToggle({ className = '' }) {
       const status = err?.response?.status
       if (status === 401) return
       if (status === 404 || status === 503) {
-        toast.error(
-          'Push notifications are not available on the server right now. Please try again later.'
-        )
         return
       }
       const rawMessage = String(err?.message || '')
-      // Browser-level push subscription failures (DOMException) are cryptic
-      // ("Registration failed - push service error"); give users a clear hint.
       if (
         /registration failed/i.test(rawMessage) ||
         /push service error/i.test(rawMessage) ||
         /notsupportederror/i.test(rawMessage) ||
         /an error occurred during registration/i.test(rawMessage)
       ) {
-        toast.error(
-          'Your browser could not register for notifications with the push service. Please make sure you are on a secure connection (HTTPS) and try again, or use a supported browser (Chrome/Edge/Firefox).'
-        )
         return
       }
-      toast.error(err?.message || 'Failed to update notification settings.')
     } finally {
       setBusy(false)
     }
