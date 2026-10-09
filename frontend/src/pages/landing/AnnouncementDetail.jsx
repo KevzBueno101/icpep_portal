@@ -302,6 +302,9 @@ export default function AnnouncementDetail() {
                 </span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">{announcement.title}</h1>
+              <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                {formattedDate || '—'}
+              </p>
             </div>
             
             {/* Body */}
@@ -332,17 +335,6 @@ export default function AnnouncementDetail() {
               <h2 className="text-lg font-bold text-white mb-6">Details</h2>
               
               <div className="space-y-4">
-                {/* Created Date */}
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      Posted
-                    </p>
-                    <p className="text-sm text-white">{formattedDate || '—'}</p>
-                  </div>
-                </div>
-                
                 {/* Event Date Range */}
                 {formatDateRange(announcement.event_date_start, announcement.event_date_end) && (
                   <div className="flex items-start gap-3">
@@ -421,6 +413,19 @@ export default function AnnouncementDetail() {
                     </div>
                   </div>
                 )}
+                
+                {/* Created Date */}
+                <div className="pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cat.accent }} />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Posted
+                      </p>
+                      <p className="text-sm text-white">{formattedDate || '—'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

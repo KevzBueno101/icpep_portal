@@ -42,7 +42,7 @@ export default function ImageCarousel({ images, className = '' }) {
         <img
           src={images[0].image}
           alt="Announcement image"
-          className="w-full h-auto object-cover"
+          className="w-full h-96 object-cover"
         />
       </div>
     )
@@ -58,7 +58,7 @@ export default function ImageCarousel({ images, className = '' }) {
       <img
         src={images[currentIndex].image}
         alt={`Slide ${currentIndex + 1}`}
-        className="w-full h-auto object-cover transition-opacity duration-300"
+        className="w-full h-96 object-cover transition-opacity duration-300"
       />
 
       {/* Left Arrow */}
