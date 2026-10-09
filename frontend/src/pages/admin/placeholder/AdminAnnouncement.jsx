@@ -153,12 +153,24 @@ const AdminAnnouncement = () => {
     setImageUploading(true)
     try {
       // Upload in sequence to keep backend consistent
-      for (const file of files) {
-        const form = new FormData()
-        form.append('image', file)
-        await api.post(`/announcements/admin/${announcementId}/images/`, form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+      let successCount = 0
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        try {
+          const form = new FormData()
+          form.append('image', file)
+          form.append('order', index) // Use array index as order
+          await api.post(`/announcements/admin/${announcementId}/images/`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+          successCount++
+        } catch (err) {
+          console.error(`Failed to upload image ${file.name}:`, err)
+          toast.error(`Failed to upload image: ${file.name}`)
+        }
+      }
+      if (successCount > 0) {
+        toast.success(`${successCount} image(s) uploaded successfully.`)
       }
     } finally {
       setImageUploading(false)
