@@ -8,22 +8,27 @@ import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
 import { CheckCircle2 } from 'lucide-react'
 
-const CATEGORY_OPTIONS = [
-  { value: 'announcement', label: 'Announcement' },
-  { value: 'achievement', label: 'Achievement' },
-  { value: 'update', label: 'Update' },
-  { value: 'opportunity', label: 'Opportunity' },
-  { value: 'event', label: 'Event' },
+const CATEGORY_SUGGESTIONS = [
+  'Announcement',
+  'Achievement',
+  'Update',
+  'Opportunity',
+  'Event',
 ]
 
 const emptyForm = {
   title: '',
   body: '',
-  category: 'announcement',
+  category: 'Announcement',
   author: '',
   pinned: false,
   is_published: true,
   members_only: false,
+  event_date_start: '',
+  event_date_end: '',
+  event_time_start: '',
+  event_time_end: '',
+  location: '',
 }
 
 const AdminAnnouncement = () => {
@@ -112,11 +117,16 @@ const AdminAnnouncement = () => {
     setFormData({
       title: announcement.title || '',
       body: announcement.body || '',
-      category: announcement.category || 'announcement',
+      category: announcement.category || 'Announcement',
       author: announcement.author || '',
       pinned: !!announcement.pinned,
       is_published: announcement.is_published !== false,
       members_only: !!announcement.members_only,
+      event_date_start: announcement.event_date_start || '',
+      event_date_end: announcement.event_date_end || '',
+      event_time_start: announcement.event_time_start || '',
+      event_time_end: announcement.event_time_end || '',
+      location: announcement.location || '',
     })
     setSelectedImages([])
   }
@@ -411,18 +421,20 @@ const AdminAnnouncement = () => {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
-                <select
+                <input
+                  type="text"
                   required
+                  list="category-suggestions"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                >
-                  {CATEGORY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                  placeholder="e.g., Announcement, Event, Achievement"
+                />
+                <datalist id="category-suggestions">
+                  {CATEGORY_SUGGESTIONS.map((suggestion) => (
+                    <option key={suggestion} value={suggestion} />
                   ))}
-                </select>
+                </datalist>
               </div>
             </div>
 
@@ -436,6 +448,59 @@ const AdminAnnouncement = () => {
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 placeholder="Write the announcement details"
               />
+            </div>
+
+            {/* Event Details (Optional) */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="mb-4 text-sm font-semibold text-slate-700">Event Details (Optional)</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Date Start</label>
+                  <input
+                    type="date"
+                    value={formData.event_date_start}
+                    onChange={(e) => setFormData({ ...formData, event_date_start: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Date End</label>
+                  <input
+                    type="date"
+                    value={formData.event_date_end}
+                    onChange={(e) => setFormData({ ...formData, event_date_end: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Time Start</label>
+                  <input
+                    type="time"
+                    value={formData.event_time_start}
+                    onChange={(e) => setFormData({ ...formData, event_time_start: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Event Time End</label>
+                  <input
+                    type="time"
+                    value={formData.event_time_end}
+                    onChange={(e) => setFormData({ ...formData, event_time_end: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                    placeholder="e.g., ICpEP.SE Office, Main Building, Room 301"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -635,18 +700,20 @@ const AdminAnnouncement = () => {
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
-                          <select
+                          <input
+                            type="text"
                             required
+                            list="category-suggestions-edit"
                             value={formData.category}
                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                          >
-                            {CATEGORY_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
+                            placeholder="e.g., Announcement, Event, Achievement"
+                          />
+                          <datalist id="category-suggestions-edit">
+                            {CATEGORY_SUGGESTIONS.map((suggestion) => (
+                              <option key={suggestion} value={suggestion} />
                             ))}
-                          </select>
+                          </datalist>
                         </div>
                       </div>
 
@@ -660,6 +727,59 @@ const AdminAnnouncement = () => {
                           className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                           placeholder="Write the announcement details"
                         />
+                      </div>
+
+                      {/* Event Details (Optional) */}
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <h3 className="mb-4 text-sm font-semibold text-slate-700">Event Details (Optional)</h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Date Start</label>
+                            <input
+                              type="date"
+                              value={formData.event_date_start}
+                              onChange={(e) => setFormData({ ...formData, event_date_start: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Date End</label>
+                            <input
+                              type="date"
+                              value={formData.event_date_end}
+                              onChange={(e) => setFormData({ ...formData, event_date_end: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Time Start</label>
+                            <input
+                              type="time"
+                              value={formData.event_time_start}
+                              onChange={(e) => setFormData({ ...formData, event_time_start: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Event Time End</label>
+                            <input
+                              type="time"
+                              value={formData.event_time_end}
+                              onChange={(e) => setFormData({ ...formData, event_time_end: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                            />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+                            <input
+                              type="text"
+                              value={formData.location}
+                              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                              placeholder="e.g., ICpEP.SE Office, Main Building, Room 301"
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid gap-4 sm:grid-cols-2">

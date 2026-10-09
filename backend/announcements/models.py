@@ -3,25 +3,19 @@ from django.db import models
 
 
 class Announcement(models.Model):
-    class Category(models.TextChoices):
-        ANNOUNCEMENT = 'announcement', 'Announcement'
-        ACHIEVEMENT = 'achievement', 'Achievement'
-        UPDATE = 'update', 'Update'
-        OPPORTUNITY = 'opportunity', 'Opportunity'
-        EVENT = 'event', 'Event'
-
     title = models.CharField(max_length=200)
     body = models.TextField()
-    category = models.CharField(
-        max_length=20,
-        choices=Category.choices,
-        default=Category.ANNOUNCEMENT,
-    )
+    category = models.CharField(max_length=50, default='Announcement', help_text='Category for the announcement (e.g., Announcement, Event, Achievement, etc.)')
     author = models.CharField(max_length=150, blank=True, default='Admin')
     pinned = models.BooleanField(default=False)
     display_order = models.PositiveIntegerField(default=0, db_index=True)
     is_published = models.BooleanField(default=True)
     members_only = models.BooleanField(default=False, help_text='If checked, only visible to authenticated members')
+    event_date_start = models.DateField(null=True, blank=True, help_text='Event start date (optional)')
+    event_date_end = models.DateField(null=True, blank=True, help_text='Event end date (optional)')
+    event_time_start = models.TimeField(null=True, blank=True, help_text='Event start time (optional)')
+    event_time_end = models.TimeField(null=True, blank=True, help_text='Event end time (optional)')
+    location = models.CharField(max_length=200, null=True, blank=True, help_text='Event location (optional)')
     email_blast_sent_at = models.DateTimeField(null=True, blank=True, help_text='When an email blast was last triggered for this announcement')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
