@@ -109,7 +109,18 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
               </div>
               <div className="flex items-center gap-2">
                 <User size={16} className="text-slate-400" />
-                <span>{author || 'Admin'}</span>
+                <span>
+                  {author && author.includes(',') ? (
+                    <>
+                      {author.split(',')[0].trim()}
+                      {author.split(',')[1] && (
+                        <>, <em className="opacity-80">{author.split(',')[1].trim()}</em></>
+                      )}
+                    </>
+                  ) : (
+                    author || 'Admin'
+                  )}
+                </span>
               </div>
               <div className="flex items-center gap-2 ml-auto text-sky-600 font-medium group-hover:text-sky-700">
                 Read Full Announcement <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -213,7 +224,18 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
         </p>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>{author || 'Admin'}</span>
+          <span>
+            {author && author.includes(',') ? (
+              <>
+                {author.split(',')[0].trim()}
+                {author.split(',')[1] && (
+                  <>, <em className="opacity-80">{author.split(',')[1].trim()}</em></>
+                )}
+              </>
+            ) : (
+              author || 'Admin'
+            )}
+          </span>
           <span>{formattedDate}</span>
         </div>
       </article>

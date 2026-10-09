@@ -417,7 +417,16 @@ export default function AnnouncementDetail() {
                     <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       Author
                     </p>
-                    <p className="text-sm text-white">{announcement.author || 'Admin'}</p>
+                    {announcement.author && announcement.author.includes(',') ? (
+                      <p className="text-sm text-white">
+                        {announcement.author.split(',')[0].trim()}
+                        {announcement.author.split(',')[1] && (
+                          <>, <em className="opacity-80">{announcement.author.split(',')[1].trim()}</em></>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-white">{announcement.author || 'Admin'}</p>
+                    )}
                   </div>
                 </div>
                 

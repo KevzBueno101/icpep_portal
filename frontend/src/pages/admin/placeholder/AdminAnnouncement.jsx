@@ -557,7 +557,7 @@ const AdminAnnouncement = () => {
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                  placeholder="Defaults to current admin"
+                  placeholder="e.g., Juan Dela Cruz, President"
                 />
               </div>
 
@@ -853,7 +853,7 @@ const AdminAnnouncement = () => {
                             value={formData.author}
                             onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                             className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                            placeholder="Defaults to current admin"
+                            placeholder="e.g., Juan Dela Cruz, President"
                           />
                         </div>
                         <div className="flex items-center gap-5 pt-6">
@@ -1029,7 +1029,18 @@ const AdminAnnouncement = () => {
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold text-slate-900">{announcement.title}</h3>
-                      <p className="mt-1 text-sm text-slate-500">By {announcement.author || 'Admin'}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        By {announcement.author && announcement.author.includes(',') ? (
+                          <>
+                            {announcement.author.split(',')[0].trim()}
+                            {announcement.author.split(',')[1] && (
+                              <>, <em className="opacity-80">{announcement.author.split(',')[1].trim()}</em></>
+                            )}
+                          </>
+                        ) : (
+                          announcement.author || 'Admin'
+                        )}
+                      </p>
                       <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                         {announcement.body}
                       </p>
