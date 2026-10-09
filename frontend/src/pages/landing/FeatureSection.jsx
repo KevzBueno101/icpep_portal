@@ -134,10 +134,10 @@ export default function FeatureSection() {
               <div className="mb-4">
                 <Link
                   to={plan.actionLink}
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-400 backdrop-blur transition pointer-events-none opacity-50"
                 >
                   Get Started
-                  <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                  <span className="ml-2">→</span>
                 </Link>
               </div>
 
