@@ -58,6 +58,7 @@ const AdminAnnouncement = () => {
   const [selectedImages, setSelectedImages] = useState([]) // File[]
   const [imageUploading, setImageUploading] = useState(false)
   const [draggedImageIndex, setDraggedImageIndex] = useState(null)
+  const [draggedExistingImageIndex, setDraggedExistingImageIndex] = useState(null)
 
   // Pagination, search, and filters
   const [currentPage, setCurrentPage] = useState(1)
@@ -195,6 +196,45 @@ const AdminAnnouncement = () => {
     newImages.splice(dropIndex, 0, draggedImage)
     setSelectedImages(newImages)
     setDraggedImageIndex(null)
+  }
+
+  const handleDragStartExisting = (index) => {
+    setDraggedExistingImageIndex(index)
+  }
+
+  const handleDragOverExisting = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDropExisting = async (e, dropIndex) => {
+    e.preventDefault()
+    if (draggedExistingImageIndex === null || draggedExistingImageIndex === dropIndex) return
+
+    const newImages = [...existingImages]
+    const [draggedImage] = newImages.splice(draggedExistingImageIndex, 1)
+    newImages.splice(dropIndex, 0, draggedImage)
+
+    // Update the order in the backend
+    try {
+      for (let i = 0; i < newImages.length; i++) {
+        await api.patch(`/announcements/admin/images/${newImages[i].id}/`, { order: i })
+      }
+      toast.success('Image order updated.')
+      
+      // Update local state
+      setEditingAnnouncement((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          images: newImages,
+        }
+      })
+      fetchAnnouncements()
+    } catch (err) {
+      toast.error('Failed to update image order.')
+    }
+
+    setDraggedExistingImageIndex(null)
   }
 
   const handleSubmit = async (e) => {
@@ -660,11 +700,24 @@ const AdminAnnouncement = () => {
               {isEditMode && existingImages?.length > 0 && (
                 <div>
                   <div className="mb-2 text-sm font-semibold text-slate-900">
-                    Existing images
+                    Existing images (drag to reorder)
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {existingImages.map((img) => (
-                      <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                    {existingImages.map((img, idx) => (
+                      <div
+                        key={img.id}
+                        draggable
+                        onDragStart={() => handleDragStartExisting(idx)}
+                        onDragOver={handleDragOverExisting}
+                        onDrop={(e) => handleDropExisting(e, idx)}
+                        className={`rounded-xl border p-2 cursor-move ${
+                          draggedExistingImageIndex === idx ? 'border-sky-500 ring-2 ring-sky-500' : 'border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <GripVertical className="w-4 h-4 text-slate-400" />
+                          <span className="text-xs text-slate-500">#{idx + 1}</span>
+                        </div>
                         <img
                           src={img.image}
                           alt={formData.title || 'Announcement image'}
@@ -954,11 +1007,24 @@ const AdminAnnouncement = () => {
                         {isEditMode && existingImages?.length > 0 && (
                           <div>
                             <div className="mb-2 text-sm font-semibold text-slate-900">
-                              Existing images
+                              Existing images (drag to reorder)
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                              {existingImages.map((img) => (
-                                <div key={img.id} className="rounded-xl border border-slate-200 p-2">
+                              {existingImages.map((img, idx) => (
+                                <div
+                                  key={img.id}
+                                  draggable
+                                  onDragStart={() => handleDragStartExisting(idx)}
+                                  onDragOver={handleDragOverExisting}
+                                  onDrop={(e) => handleDropExisting(e, idx)}
+                                  className={`rounded-xl border p-2 cursor-move ${
+                                    draggedExistingImageIndex === idx ? 'border-sky-500 ring-2 ring-sky-500' : 'border-slate-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <GripVertical className="w-4 h-4 text-slate-400" />
+                                    <span className="text-xs text-slate-500">#{idx + 1}</span>
+                                  </div>
                                   <img
                                     src={img.image}
                                     alt={formData.title || 'Announcement image'}

@@ -180,6 +180,16 @@ class AnnouncementImageUploadAPIView(APIView):
 
         return Response(AnnouncementImageSerializer(image, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
+    def patch(self, request, image_id):
+        image = get_object_or_404(AnnouncementImage, id=image_id)
+        order = request.data.get('order')
+        
+        if order is not None:
+            image.order = order
+            image.save(update_fields=['order'])
+        
+        return Response(AnnouncementImageSerializer(image, context={'request': request}).data)
+
     def delete(self, request, image_id):
         image = get_object_or_404(AnnouncementImage, id=image_id)
         announcement_id = image.announcement.id
