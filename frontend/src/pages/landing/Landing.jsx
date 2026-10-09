@@ -12,7 +12,6 @@ import OfficersRoster from './OfficersRoster'
 import SponsorshipSection from './SponsorshipSection'
 
 
-
 export default function Landing() {
   const location = useLocation()
 

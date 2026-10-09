@@ -365,7 +365,7 @@ class MemberRenewAllAPIView(APIView):
     proof of payment, and COE/ID document. After renewal submission, their status
     becomes PENDING and they wait for admin approval.
 
-    Accepts an optional body: ``{"fee": "SEMESTER" | "ANNUAL" | "ALL"}`` to renew
+    Accepts an optional body: ``{"fee": "SEMESTER" | "PLUS" | "ALL"}`` to renew
     only members of a specific membership fee plan (defaults to ``ALL``).
     """
     permission_classes = [CanManageMembership]
@@ -374,7 +374,7 @@ class MemberRenewAllAPIView(APIView):
         approved_qs = MemberProfile.objects.filter(membership_status=MemberProfile.Status.APPROVED)
 
         fee = str(request.data.get('fee') or 'ALL').upper()
-        if fee in (MemberProfile.MembershipFee.SEMESTER, MemberProfile.MembershipFee.ANNUAL):
+        if fee in (MemberProfile.MembershipFee.SEMESTER, MemberProfile.MembershipFee.PLUS):
             approved_qs = approved_qs.filter(membership_fee=fee)
 
         renewed_count = approved_qs.update(membership_status=MemberProfile.Status.EXPIRED)

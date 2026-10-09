@@ -44,7 +44,7 @@ export default function MemberIdCard() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-3">
           <CreditCard className="h-8 w-8 text-sky-600" />
           Digital ID Card
-          {profile?.membership_fee === 'ANNUAL' && (
+          {profile?.membership_fee === 'PLUS' && (
             <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-700">
               <Plus className="h-3 w-3" />
               Membership Plus
@@ -64,6 +64,7 @@ export default function MemberIdCard() {
             userId={user?.id}
             paymentMethod={profile?.payment_method}
             cacheKey={profileCacheKey}
+            membershipFee={profile?.membership_fee}
           />
         </div>
 

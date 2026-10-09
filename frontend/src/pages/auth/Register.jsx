@@ -1026,7 +1026,7 @@ const Register = () => {
                       </label>
                       <label
                         className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
-                          form.membership_fee === 'ANNUAL'
+                          form.membership_fee === 'PLUS'
                             ? 'border-green-500 bg-green-50'
                             : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
@@ -1034,8 +1034,8 @@ const Register = () => {
                         <input
                           type="radio"
                           name="membership_fee"
-                          value="ANNUAL"
-                          checked={form.membership_fee === 'ANNUAL'}
+                          value="PLUS"
+                          checked={form.membership_fee === 'PLUS'}
                           onChange={handleChange}
                           className="h-4 w-4 text-green-600 accent-green-600"
                         />
@@ -1101,7 +1101,7 @@ const Register = () => {
                   ) : (
                     <div className="flex items-start gap-3 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
                       <Info className="h-5 w-5 shrink-0 mt-0.5" />
-                      <p>Please take a picture with the designated officer as proof of on-hand payment. You may visit at ICpEP.se Office and look for available officers for membership registration.</p>
+                      <p>Please take a picture of the acknowledgement receipt as proof of on-hand payment. You may visit at ICpEP.se Office and look for available officers for membership registration.</p>
                     </div>
                   )}
 

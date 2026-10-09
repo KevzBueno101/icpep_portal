@@ -37,7 +37,7 @@ if not SECRET_KEY:
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 

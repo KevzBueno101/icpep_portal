@@ -70,9 +70,16 @@ function CardFront({ onFlip }) {
 
 /* ─── Card Back (Display) ─────────────────────────────────────────────────── */
 
-function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0 }) {
+function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0, membershipFee }) {
   return (
     <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
+      {/* Membership Plus badge */}
+      {membershipFee === 'PLUS' && (
+        <div className="absolute top-2 right-2 text-green-500 text-[12px] font-bold leading-none z-20">
+          +
+        </div>
+      )}
+
       {/* Background columns */}
       <div className="absolute inset-0 flex">
         <div className="w-[58%] h-full relative overflow-hidden" style={{ backgroundColor: COLORS.navyDark }}>
@@ -150,7 +157,7 @@ function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFli
         </div>
 
         <div className="w-[38%] flex flex-col items-end justify-between pl-1">
-          <div className="h-5 flex items-start">
+          <div className="h-5 flex items-start justify-end w-full">
             {onFlip && (
               <button
                 type="button"
@@ -224,7 +231,7 @@ function ExportCardFront() {
 
 /* ─── Export Card Back (fully inline styled, no Tailwind) ─────────────────── */
 
-function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0 }) {
+function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0, membershipFee }) {
   // Match display card exactly:
   // Left navy block: 58% = ~223px, right white block: 42% = ~161px
   // Diagonal: top at x=215, bottom at x=250 (35px shift over 224px height)
@@ -237,6 +244,17 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
       background: COLORS.navyDark,
       fontFamily: 'Arial, sans-serif',
     }}>
+      {/* Membership Plus badge */}
+      {membershipFee === 'PLUS' && (
+        <div style={{
+          position: 'absolute', top: 8, right: 8,
+          color: '#22C55E',
+          fontSize: 10, fontWeight: 900, zIndex: 20,
+        }}>
+          +
+        </div>
+      )}
+
       {/* SVG background — full card size, exact polygon match to display card */}
       <svg
         style={{ position: 'absolute', top: 0, left: 0, width: W, height: H }}
@@ -357,7 +375,7 @@ function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial,
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
-const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0 }, ref) {
+const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0, membershipFee }, ref) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -449,6 +467,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
               avatarInitial={avatarInitial}
               onFlip={() => setFlipped(false)}
               cacheKey={cacheKey}
+              membershipFee={membershipFee}
             />
           </div>
         </div>
@@ -479,6 +498,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
               profile={profile}
               avatarInitial={avatarInitial}
               cacheKey={cacheKey}
+              membershipFee={membershipFee}
             />
           </div>
         </div>
