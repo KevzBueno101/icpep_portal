@@ -175,46 +175,48 @@ export default function HeroSection() {
           {/* PCB Circuit Traces - Static Background Pattern */}
           <svg className="absolute inset-0 opacity-[0.4]" viewBox="0 0 1200 800" preserveAspectRatio="none">
             <defs>
-              <pattern id="pcb-pattern" width="250" height="250" patternUnits="userSpaceOnUse">
-                {/* Primary traces - Muted blue */}
-                <line x1="0" y1="30" x2="100" y2="30" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="100" y1="30" x2="130" y2="60" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="130" y1="60" x2="130" y2="150" stroke="#1B4D80" strokeWidth="1.5" />
+              <pattern id="pcb-pattern" width="300" height="300" patternUnits="userSpaceOnUse">
+                {/* Continuous primary traces - Muted blue */}
+                <path d="M0,30 L100,30 L130,60 L130,150 L180,150 L180,250" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M150,0 L150,80 L180,110 L250,110 L250,180" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M50,50 L200,50 L220,70 L220,200" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
                 
-                <line x1="150" y1="0" x2="150" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="150" y1="80" x2="180" y2="110" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="180" y1="110" x2="250" y2="110" stroke="#1B4D80" strokeWidth="1.5" />
+                {/* Continuous secondary traces - Dark cyan */}
+                <path d="M0,180 L70,180 L100,210 L200,210 L230,240 L300,240" stroke="#126E82" strokeWidth="1.2" fill="none" />
+                <path d="M50,0 L50,120 L80,150 L80,250 L120,290 L300,290" stroke="#126E82" strokeWidth="1.2" fill="none" />
+                <path d="M100,0 L100,100 L130,130 L250,130 L280,160 L300,160" stroke="#126E82" strokeWidth="1.2" fill="none" />
                 
-                {/* Secondary traces - Dark cyan */}
-                <line x1="0" y1="180" x2="70" y2="180" stroke="#126E82" strokeWidth="1.2" />
-                <line x1="70" y1="180" x2="100" y2="210" stroke="#126E82" strokeWidth="1.2" />
-                <line x1="100" y1="210" x2="200" y2="210" stroke="#126E82" strokeWidth="1.2" />
+                {/* Parallel bus traces - continuous */}
+                <path d="M0,220 L120,220 L150,250 L300,250" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M0,226 L120,226 L150,256 L300,256" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M0,232 L120,232 L150,262 L300,262" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
                 
-                <line x1="50" y1="0" x2="50" y2="120" stroke="#126E82" strokeWidth="1.2" />
-                <line x1="50" y1="120" x2="80" y2="150" stroke="#126E82" strokeWidth="1.2" />
-                <line x1="80" y1="150" x2="80" y2="250" stroke="#126E82" strokeWidth="1.2" />
+                {/* T-junction with continuous path */}
+                <path d="M50,80 L110,80 L140,110 L140,200" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M80,30 L80,80" stroke="#1B4D80" strokeWidth="1.5" />
                 
-                {/* Parallel bus traces */}
-                <line x1="0" y1="220" x2="120" y2="220" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="0" y1="226" x2="120" y2="226" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="0" y1="232" x2="120" y2="232" stroke="#1B4D80" strokeWidth="1.5" />
+                {/* Additional continuous traces */}
+                <path d="M200,0 L200,60 L230,90 L300,90" stroke="#126E82" strokeWidth="1.2" fill="none" />
+                <path d="M250,0 L250,50 L280,80 L300,80" stroke="#1B4D80" strokeWidth="1.5" fill="none" />
+                <path d="M0,270 L80,270 L110,300 L300,300" stroke="#126E82" strokeWidth="1.2" fill="none" />
                 
-                {/* T-junctions */}
-                <line x1="80" y1="30" x2="80" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
-                <line x1="50" y1="80" x2="110" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
-                
-                {/* Solder pads */}
+                {/* Solder pads at junctions */}
                 <circle cx="100" cy="30" r="3" fill="#126E82" />
                 <circle cx="130" cy="60" r="3" fill="#126E82" />
+                <circle cx="130" cy="150" r="3" fill="#126E82" />
                 <circle cx="70" cy="180" r="3" fill="#126E82" />
                 <circle cx="100" cy="210" r="3" fill="#126E82" />
-                <circle cx="80" cy="30" r="3" fill="#126E82" />
                 <circle cx="80" cy="80" r="3" fill="#126E82" />
-                <circle cx="50" cy="80" r="3" fill="#126E82" />
                 <circle cx="110" cy="80" r="3" fill="#126E82" />
+                <circle cx="140" cy="110" r="3" fill="#126E82" />
                 <circle cx="120" cy="220" r="3" fill="#126E82" />
                 <circle cx="120" cy="226" r="3" fill="#126E82" />
                 <circle cx="120" cy="232" r="3" fill="#126E82" />
+                <circle cx="150" cy="250" r="3" fill="#126E82" />
+                <circle cx="200" cy="50" r="3" fill="#126E82" />
+                <circle cx="220" cy="70" r="3" fill="#126E82" />
+                <circle cx="180" cy="110" r="3" fill="#126E82" />
+                <circle cx="250" cy="110" r="3" fill="#126E82" />
               </pattern>
             </defs>
             <rect x="0" y="0" width="1200" height="800" fill="url(#pcb-pattern)" />
@@ -234,18 +236,18 @@ export default function HeroSection() {
 
             {/* Animated Signal Routes (invisible paths for animation) */}
             <g id="pcb-traces" stroke="none" fill="none">
-              {/* Route 1: Top-left to center */}
-              <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300" />
-              {/* Route 2: Right edge to center */}
-              <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400" />
-              {/* Route 3: Bottom-left to center */}
-              <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500" />
-              {/* Route 4: Right-bottom to center */}
-              <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450" />
-              {/* Route 5: Horizontal top */}
-              <path id="route5" d="M100,50 L500,50 L550,100 L550,200" />
-              {/* Route 6: Horizontal bottom */}
-              <path id="route6" d="M200,750 L600,750 L650,700 L650,600" />
+              {/* Route 1: Top-left to center - continuous path */}
+              <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300 L450,350 L450,450" />
+              {/* Route 2: Right edge to center - continuous path */}
+              <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400 L750,450 L750,550" />
+              {/* Route 3: Bottom-left to center - continuous path */}
+              <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500 L400,450 L400,350" />
+              {/* Route 4: Right-bottom to center - continuous path */}
+              <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450 L800,400 L800,300" />
+              {/* Route 5: Horizontal top - continuous path */}
+              <path id="route5" d="M100,50 L500,50 L550,100 L550,200 L600,250 L600,350" />
+              {/* Route 6: Horizontal bottom - continuous path */}
+              <path id="route6" d="M200,750 L600,750 L650,700 L650,600 L700,550 L700,450" />
             </g>
 
             {/* Animated Electrical Signals */}
