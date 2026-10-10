@@ -70,6 +70,19 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
         p.vy += dy * influence * 0.00002;
       }
 
+      // Circuit trace alignment - align to 90/45 degree angles
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      if (speed > 0.1) {
+        const angle = Math.atan2(p.vy, p.vx);
+        // Snap to nearest 45 degrees: 0, 45, 90, 135, 180, 225, 270, 315
+        const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+        // Blend between current angle and snapped angle (70% alignment)
+        const targetVx = Math.cos(snappedAngle) * speed;
+        const targetVy = Math.sin(snappedAngle) * speed;
+        p.vx = p.vx * 0.3 + targetVx * 0.7;
+        p.vy = p.vy * 0.3 + targetVy * 0.7;
+      }
+
       p.x += p.vx;
       p.y += p.vy;
 
