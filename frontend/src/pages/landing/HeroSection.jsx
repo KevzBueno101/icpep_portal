@@ -259,6 +259,13 @@ export default function HeroSection() {
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
+              <filter id="pulseGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
             </defs>
             
             {/* Chip 1 - Top Left */}
@@ -317,56 +324,65 @@ export default function HeroSection() {
               ))}
               <text x="0" y="5" textAnchor="middle" fill="rgba(124,58,237,0.8)" fontSize="9" fontWeight="bold">IC-02</text>
             </g>
+
+            {/* Data pulses traveling along traces */}
+            <g filter="url(#pulseGlow)">
+              {/* Pulse 1 - Horizontal trace */}
+              <circle r="6" fill="rgba(6,182,212,0.9)">
+                <animateMotion dur="4s" repeatCount="indefinite" path="M0,40 L200,40" />
+                <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite" />
+              </circle>
+              
+              {/* Pulse 2 - Vertical trace */}
+              <circle r="5" fill="rgba(124,58,237,0.9)">
+                <animateMotion dur="5s" repeatCount="indefinite" path="M40,0 L40,200" begin="1s" />
+                <animate attributeName="opacity" values="0;1;1;0" dur="5s" repeatCount="indefinite" begin="1s" />
+              </circle>
+              
+              {/* Pulse 3 - Diagonal trace */}
+              <circle r="5" fill="rgba(6,182,212,0.9)">
+                <animateMotion dur="3.5s" repeatCount="indefinite" path="M80,40 L120,80" begin="2s" />
+                <animate attributeName="opacity" values="0;1;1;0" dur="3.5s" repeatCount="indefinite" begin="2s" />
+              </circle>
+              
+              {/* Pulse 4 - Horizontal trace */}
+              <circle r="6" fill="rgba(124,58,237,0.9)">
+                <animateMotion dur="4.5s" repeatCount="indefinite" path="M0,120 L200,120" begin="0.5s" />
+                <animate attributeName="opacity" values="0;1;1;0" dur="4.5s" repeatCount="indefinite" begin="0.5s" />
+              </circle>
+              
+              {/* Pulse 5 - Vertical trace */}
+              <circle r="5" fill="rgba(6,182,212,0.9)">
+                <animateMotion dur="6s" repeatCount="indefinite" path="M120,0 L120,200" begin="1.5s" />
+                <animate attributeName="opacity" values="0;1;1;0" dur="6s" repeatCount="indefinite" begin="1.5s" />
+              </circle>
+            </g>
           </svg>
 
-
-
+          {/* Animated curved data flow lines */}
           <svg className="absolute inset-0" viewBox="0 0 1200 800" preserveAspectRatio="none">
-
             <defs>
-
               <linearGradient id="trace" x1="0" y1="0" x2="1" y2="1">
-
                 <stop offset="0" stopColor="rgba(37, 99, 235, 0.75)" />
-
                 <stop offset="1" stopColor="rgba(124, 58, 237, 0.75)" />
-
               </linearGradient>
-
             </defs>
-
             <g fill="none" stroke="url(#trace)" strokeWidth="1.2">
-
               <path d="M80 620 C 170 520, 250 520, 330 450 S 520 330, 640 380 S 820 520, 980 420" opacity="0.35" />
-
               <path d="M110 260 C 220 310, 280 280, 350 240 S 520 120, 650 180 S 860 270, 1050 210" opacity="0.22" />
-
               <path d="M190 720 C 260 660, 320 620, 410 610 S 620 630, 740 580 S 980 460, 1130 520" opacity="0.16" />
-
             </g>
-
             <g opacity="0.65">
-
               <circle cx="330" cy="450" r="4" fill="#06B6D4">
-
                 <animate attributeName="r" values="3;9" dur="2.4s" repeatCount="indefinite" />
-
                 <animate attributeName="opacity" values="0.85;0" dur="2.4s" repeatCount="indefinite" />
-
               </circle>
-
               <circle cx="650" cy="180" r="3" fill="#7C3AED">
-
                 <animate attributeName="r" values="2;8" dur="3.2s" repeatCount="indefinite" />
-
                 <animate attributeName="opacity" values="0.75;0" dur="3.2s" repeatCount="indefinite" />
-
               </circle>
-
             </g>
-
           </svg>
-
         </div>
 
       </div>
