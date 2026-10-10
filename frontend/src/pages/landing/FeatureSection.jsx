@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { User, Plus } from 'lucide-react'
 
 const features = [
   {
@@ -72,43 +73,24 @@ export default function FeatureSection() {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="group rounded-2xl border border-white/10 bg-slate-900/40 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:bg-slate-800/60 hover:shadow-[0_8px_30px_-4px_rgba(6,182,212,0.15)] hover:border-cyan-500/30"
-            >
-              <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-lg font-bold text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                {feature.accent}
-              </div>
-              <h3 className="mb-3 text-xl font-bold text-white tracking-wide">
-                {feature.title}
-              </h3>
-              {feature.actionLink && (
-                <div className="mt-5">
-                  <Link
-                    to={feature.actionLink}
-                    className="inline-flex items-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-5 py-2.5 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white"
-                  >
-                    {feature.actionText}
-                    <span className="ml-2 transition-transform group-hover:translate-x-1">↗</span>
-                  </Link>
-                </div>
-              )}
-              <p className="leading-relaxed text-slate-400">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-
         {/* Membership Cards */}
-        <div className="mt-16 grid gap-8 sm:grid-cols-2">
+        <div className="grid gap-8 sm:grid-cols-2 mb-16">
           {membershipPlans.map((plan) => (
             <div
               key={plan.title}
               className="group rounded-2xl border border-white/10 bg-slate-900/40 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:bg-slate-800/60 hover:shadow-[0_8px_30px_-4px_rgba(6,182,212,0.15)] hover:border-cyan-500/30"
             >
+              {/* Icon at top-center */}
+              <div className="mb-4 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                  {plan.title === 'Regular Member' ? (
+                    <User className="h-8 w-8 text-cyan-400" />
+                  ) : (
+                    <Plus className="h-8 w-8 text-cyan-400" />
+                  )}
+                </div>
+              </div>
+
               <div className="mb-4">
                 <h3 className="text-2xl font-bold text-white tracking-wide">
                   {plan.title}
@@ -143,6 +125,37 @@ export default function FeatureSection() {
 
               <p className="text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
                 {plan.tagline}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Steps Cards */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="group rounded-2xl border border-white/10 bg-slate-900/40 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:bg-slate-800/60 hover:shadow-[0_8px_30px_-4px_rgba(6,182,212,0.15)] hover:border-cyan-500/30"
+            >
+              <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-lg font-bold text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                {feature.accent}
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-white tracking-wide">
+                {feature.title}
+              </h3>
+              {feature.actionLink && (
+                <div className="mt-5">
+                  <Link
+                    to={feature.actionLink}
+                    className="inline-flex items-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-5 py-2.5 text-sm font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 hover:text-white"
+                  >
+                    {feature.actionText}
+                    <span className="ml-2 transition-transform group-hover:translate-x-1">↗</span>
+                  </Link>
+                </div>
+              )}
+              <p className="leading-relaxed text-slate-400">
+                {feature.description}
               </p>
             </div>
           ))}
