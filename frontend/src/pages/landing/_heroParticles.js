@@ -111,36 +111,32 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
       }
     }
 
-    // Connect close particles.
-    // Keep it cheap: only check a subset.
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-
-    const maxLinks = 340;
-    let links = 0;
-
-    for (let i = 0; i < state.particles.length; i++) {
-      if (links >= maxLinks) break;
-      const a = state.particles[i];
-      for (let j = i + 1; j < state.particles.length && j < i + 18; j++) {
-        const b = state.particles[j];
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < 110 * 110) {
-          const alpha = 0.22 * (1 - d2 / (110 * 110));
-          ctx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-          links++;
-        }
-      }
-    }
-
-    ctx.restore();
+    // Connect close particles - REMOVED as per request
+    // ctx.save();
+    // ctx.globalCompositeOperation = 'lighter';
+    // const maxLinks = 340;
+    // let links = 0;
+    // for (let i = 0; i < state.particles.length; i++) {
+    //   if (links >= maxLinks) break;
+    //   const a = state.particles[i];
+    //   for (let j = i + 1; j < state.particles.length && j < i + 18; j++) {
+    //     const b = state.particles[j];
+    //     const dx = a.x - b.x;
+    //     const dy = a.y - b.y;
+    //     const d2 = dx * dx + dy * dy;
+    //     if (d2 < 110 * 110) {
+    //       const alpha = 0.22 * (1 - d2 / (110 * 110));
+    //       ctx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
+    //       ctx.lineWidth = 1;
+    //       ctx.beginPath();
+    //       ctx.moveTo(a.x, a.y);
+    //       ctx.lineTo(b.x, b.y);
+    //       ctx.stroke();
+    //       links++;
+    //     }
+    //   }
+    // }
+    // ctx.restore();
 
     rafId = requestAnimationFrame(draw);
   };
