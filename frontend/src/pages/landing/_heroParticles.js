@@ -160,4 +160,3 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
     canvas.removeEventListener('mouseleave', onMouseLeave);
   };
 }
-
