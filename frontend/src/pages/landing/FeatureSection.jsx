@@ -82,7 +82,7 @@ export default function FeatureSection() {
             >
               {/* Icon at top-center */}
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                   {plan.title === 'Regular Member' ? (
                     <User className="h-8 w-8 text-cyan-400" />
                   ) : (
