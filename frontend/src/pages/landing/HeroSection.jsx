@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Info } from 'lucide-react'
 import { startHeroParticles } from './_heroParticles'
 import { publicApi } from '../../api/axios'
 import { registerLogoTap } from '../../utils/logoSecretTaps'
