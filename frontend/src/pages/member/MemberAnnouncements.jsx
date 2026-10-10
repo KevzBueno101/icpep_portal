@@ -4,7 +4,7 @@ import { useMember } from '../../context/MemberContext'
 import NotificationToggle from '../../components/NotificationToggle'
 import { formatCategory } from '../../utils/announcementCategories'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
-import { Search, Bell, Filter, ArrowRight } from 'lucide-react'
+import { Search, Bell, Filter, ArrowRight, User } from 'lucide-react'
 
 export default function MemberAnnouncements() {
   const navigate = useNavigate()
@@ -156,6 +156,23 @@ export default function MemberAnnouncements() {
                 <h2 className="mt-3 sm:mt-4 text-base sm:text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150 truncate shrink-0">
                   {ann.title}
                 </h2>
+                {ann.author && (
+                  <div className="mt-2 flex items-center gap-2 text-[10px] sm:text-xs text-slate-500">
+                    <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span>
+                      {ann.author.includes(',') ? (
+                        <>
+                          {ann.author.split(',')[0].trim()}
+                          {ann.author.split(',')[1] && (
+                            <>, <em className="opacity-80">{ann.author.split(',')[1].trim()}</em></>
+                          )}
+                        </>
+                      ) : (
+                        ann.author
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="mt-2 sm:mt-3 overflow-hidden min-h-0">
                   <p className="text-xs sm:text-sm leading-relaxed text-slate-600 break-words overflow-hidden line-clamp-2 sm:line-clamp-3">
                     {parseUrlsInText(ann.body)}

@@ -31,7 +31,7 @@ const membershipPlans = [
       'Discounted rates for events, booths and merch.',
       'Basic member resources and materials',
       'Community networking opportunities',
-      'Membership ID card'
+      'Membership Digital ID card'
     ],
     tagline: 'Start Your Journey',
     actionLink: '/register',
