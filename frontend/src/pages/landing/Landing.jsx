@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
-import PCBBackground from '../../components/PCBBackground'
+import SimpleGridBackground from '../../components/SimpleGridBackground'
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
 import AnnouncementFeed from './AnnouncementFeed'
@@ -36,7 +36,7 @@ export default function Landing() {
   return (
     <OfficersProvider>
       <div className="min-h-screen flex flex-col">
-        <PCBBackground />
+        <SimpleGridBackground />
         <Navbar />
         <main className="flex-grow">
           <HeroSection />
