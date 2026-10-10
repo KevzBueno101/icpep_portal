@@ -212,20 +212,111 @@ export default function HeroSection() {
 
         <div className="absolute inset-0 -z-7 pointer-events-none">
 
-          <svg className="absolute inset-0 opacity-[0.14]" viewBox="0 0 1200 800" preserveAspectRatio="none">
-
+          {/* Circuit trace pattern */}
+          <svg className="absolute inset-0 opacity-[0.12]" viewBox="0 0 1200 800" preserveAspectRatio="none">
             <defs>
-
-              <pattern id="hex" width="64" height="56" patternUnits="userSpaceOnUse" patternTransform="skewX(-20)">
-
-                <polygon points="32,0 64,14 64,42 32,56 0,42 0,14" fill="none" stroke="rgba(6,182,212,0.85)" strokeWidth="1" />
-
+              <pattern id="circuit" width="200" height="200" patternUnits="userSpaceOnUse">
+                {/* Horizontal traces */}
+                <line x1="0" y1="40" x2="80" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="120" y1="40" x2="200" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="0" y1="120" x2="60" y2="120" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="100" y1="120" x2="200" y2="120" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="0" y1="160" x2="200" y2="160" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                
+                {/* Vertical traces */}
+                <line x1="40" y1="0" x2="40" y2="60" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="40" y1="100" x2="40" y2="200" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="120" y1="0" x2="120" y2="80" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="120" y1="140" x2="120" y2="200" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                <line x1="160" y1="20" x2="160" y2="180" stroke="rgba(6,182,212,0.6)" strokeWidth="1.5" />
+                
+                {/* Diagonal traces */}
+                <line x1="80" y1="40" x2="120" y2="80" stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+                <line x1="60" y1="120" x2="100" y2="160" stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+                <line x1="120" y1="80" x2="160" y2="40" stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+                
+                {/* Vias (connection points) */}
+                <circle cx="40" cy="40" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="120" cy="40" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="80" cy="80" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="120" cy="120" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="160" cy="120" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="40" cy="120" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="100" cy="160" r="3" fill="rgba(6,182,212,0.8)" />
+                <circle cx="160" cy="40" r="3" fill="rgba(6,182,212,0.8)" />
               </pattern>
-
             </defs>
+            <rect x="0" y="0" width="1200" height="800" fill="url(#circuit)" />
+          </svg>
 
-            <rect x="0" y="0" width="1200" height="800" fill="url(#hex)" />
+          {/* IC Chips with pulse animation */}
+          <svg className="absolute inset-0" viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <defs>
+              <filter id="chipGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            {/* Chip 1 - Top Left */}
+            <g transform="translate(150, 200)">
+              <rect x="-25" y="-25" width="50" height="50" fill="rgba(15,23,42,0.8)" stroke="rgba(6,182,212,0.6)" strokeWidth="2" filter="url(#chipGlow)">
+                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
+              </rect>
+              {/* Pins */}
+              {[...Array(6)].map((_, i) => (
+                <line key={`l-${i}`} x1="-25" y1={-20 + i * 8} x2="-30" y2={-20 + i * 8} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+              ))}
+              {[...Array(6)].map((_, i) => (
+                <line key={`r-${i}`} x1="25" y1={-20 + i * 8} x2="30" y2={-20 + i * 8} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+              ))}
+              <text x="0" y="5" textAnchor="middle" fill="rgba(6,182,212,0.8)" fontSize="10" fontWeight="bold">MCU</text>
+            </g>
 
+            {/* Chip 2 - Right Side */}
+            <g transform="translate(950, 300)">
+              <rect x="-30" y="-20" width="60" height="40" fill="rgba(15,23,42,0.8)" stroke="rgba(124,58,237,0.6)" strokeWidth="2" filter="url(#chipGlow)">
+                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="4s" repeatCount="indefinite" />
+              </rect>
+              {[...Array(5)].map((_, i) => (
+                <line key={`l-${i}`} x1="-30" y1={-15 + i * 7.5} x2="-35" y2={-15 + i * 7.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
+              ))}
+              {[...Array(5)].map((_, i) => (
+                <line key={`r-${i}`} x1="30" y1={-15 + i * 7.5} x2="35" y2={-15 + i * 7.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
+              ))}
+              <text x="0" y="5" textAnchor="middle" fill="rgba(124,58,237,0.8)" fontSize="10" fontWeight="bold">IC-01</text>
+            </g>
+
+            {/* Chip 3 - Bottom Left */}
+            <g transform="translate(200, 600)">
+              <rect x="-20" y="-20" width="40" height="40" fill="rgba(15,23,42,0.8)" stroke="rgba(6,182,212,0.6)" strokeWidth="2" filter="url(#chipGlow)">
+                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="2.5s" repeatCount="indefinite" />
+              </rect>
+              {[...Array(5)].map((_, i) => (
+                <line key={`l-${i}`} x1="-20" y1={-15 + i * 7.5} x2="-25" y2={-15 + i * 7.5} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+              ))}
+              {[...Array(5)].map((_, i) => (
+                <line key={`r-${i}`} x1="20" y1={-15 + i * 7.5} x2="25" y2={-15 + i * 7.5} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
+              ))}
+              <text x="0" y="5" textAnchor="middle" fill="rgba(6,182,212,0.8)" fontSize="9" fontWeight="bold">CPU</text>
+            </g>
+
+            {/* Chip 4 - Top Right */}
+            <g transform="translate(800, 150)">
+              <rect x="-22" y="-22" width="44" height="44" fill="rgba(15,23,42,0.8)" stroke="rgba(124,58,237,0.6)" strokeWidth="2" filter="url(#chipGlow)">
+                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="3.5s" repeatCount="indefinite" />
+              </rect>
+              {[...Array(5)].map((_, i) => (
+                <line key={`l-${i}`} x1="-22" y1={-17 + i * 8.5} x2="-27" y2={-17 + i * 8.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
+              ))}
+              {[...Array(5)].map((_, i) => (
+                <line key={`r-${i}`} x1="22" y1={-17 + i * 8.5} x2="27" y2={-17 + i * 8.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
+              ))}
+              <text x="0" y="5" textAnchor="middle" fill="rgba(124,58,237,0.8)" fontSize="9" fontWeight="bold">IC-02</text>
+            </g>
           </svg>
 
 
