@@ -6,17 +6,14 @@ export function startPCBSignals(svgId, isMobile = false) {
   if (!svg) return () => {};
 
   // Fewer routes for mobile to reduce complexity
+  // 3-second gap (3000ms) between each signal
   const routes = isMobile ? [
     { pathId: 'route1', signalId: 'signal1', duration: 5000, delay: 0 },
-    { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 2000 },
-    { pathId: 'route3', signalId: 'signal3', duration: 5500, delay: 4000 },
+    { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 3000 },
   ] : [
     { pathId: 'route1', signalId: 'signal1', duration: 5000, delay: 0 },
-    { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 1500 },
-    { pathId: 'route3', signalId: 'signal3', duration: 5500, delay: 3000 },
-    { pathId: 'route4', signalId: 'signal4', duration: 6500, delay: 750 },
-    { pathId: 'route5', signalId: 'signal5', duration: 4500, delay: 2250 },
-    { pathId: 'route6', signalId: 'signal6', duration: 5000, delay: 3750 },
+    { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 3000 },
+    { pathId: 'route3', signalId: 'signal3', duration: 5500, delay: 6000 },
   ];
 
   const signals = routes.map(route => {

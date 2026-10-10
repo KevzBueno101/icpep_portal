@@ -124,7 +124,7 @@ export default function PCBBackground() {
 
         {/* Animated Signal Routes (invisible paths for animation) */}
         <g id="pcb-traces" stroke="none" fill="none">
-          {/* Desktop routes */}
+          {/* Desktop routes - reduced to 3 */}
           <g className="hidden md:block">
             {/* Route 1: Top-left to center - continuous path */}
             <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300 L450,350 L450,450" />
@@ -132,41 +132,29 @@ export default function PCBBackground() {
             <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400 L750,450 L750,550" />
             {/* Route 3: Bottom-left to center - continuous path */}
             <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500 L400,450 L400,350" />
-            {/* Route 4: Right-bottom to center - continuous path */}
-            <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450 L800,400 L800,300" />
-            {/* Route 5: Horizontal top - continuous path */}
-            <path id="route5" d="M100,50 L500,50 L550,100 L550,200 L600,250 L600,350" />
-            {/* Route 6: Horizontal bottom - continuous path */}
-            <path id="route6" d="M200,750 L600,750 L650,700 L650,600 L700,550 L700,450" />
           </g>
 
-          {/* Mobile routes - simpler, fewer */}
+          {/* Mobile routes - reduced to 2 */}
           <g className="block md:hidden">
             {/* Route 1 mobile: Top to center */}
             <path id="route1" d="M0,80 L150,80 L180,110 L180,300 L220,340 L400,340" />
             {/* Route 2 mobile: Right to center */}
             <path id="route2" d="M800,100 L650,100 L600,150 L600,350 L550,400 L400,400" />
-            {/* Route 3 mobile: Bottom to center */}
-            <path id="route3" d="M0,650 L100,650 L130,680 L400,680 L450,630 L450,500" />
           </g>
         </g>
 
         {/* Animated Electrical Signals */}
         <g id="signals" filter="url(#signalGlow)">
-          {/* Desktop signals */}
+          {/* Desktop signals - reduced to 3 */}
           <g className="hidden md:block">
             <circle id="signal1" r="3" fill="#64FFDA" opacity="0" />
             <circle id="signal2" r="3" fill="#64FFDA" opacity="0" />
             <circle id="signal3" r="3" fill="#64FFDA" opacity="0" />
-            <circle id="signal4" r="3" fill="#64FFDA" opacity="0" />
-            <circle id="signal5" r="3" fill="#64FFDA" opacity="0" />
-            <circle id="signal6" r="3" fill="#64FFDA" opacity="0" />
           </g>
-          {/* Mobile signals - fewer */}
+          {/* Mobile signals - reduced to 2 */}
           <g className="block md:hidden">
             <circle id="signal1" r="4" fill="#64FFDA" opacity="0" />
             <circle id="signal2" r="4" fill="#64FFDA" opacity="0" />
-            <circle id="signal3" r="4" fill="#64FFDA" opacity="0" />
           </g>
         </g>
       </svg>
