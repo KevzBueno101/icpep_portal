@@ -79,10 +79,26 @@ export default function HeroSection() {
   //   return () => stop && stop()
   // }, [])
 
-  // PCB Signal Animation
+  // PCB Signal Animation with responsive routes
   useEffect(() => {
-    const stopPCBSignals = startPCBSignals('pcb-svg')
-    return () => stopPCBSignals && stopPCBSignals()
+    const checkMobile = () => window.innerWidth < 768
+    let isMobile = checkMobile()
+    let stopPCBSignals = startPCBSignals('pcb-svg', isMobile)
+
+    const handleResize = () => {
+      const newIsMobile = checkMobile()
+      if (newIsMobile !== isMobile) {
+        isMobile = newIsMobile
+        if (stopPCBSignals) stopPCBSignals()
+        stopPCBSignals = startPCBSignals('pcb-svg', isMobile)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (stopPCBSignals) stopPCBSignals()
+    }
   }, [])
 
 
@@ -173,7 +189,8 @@ export default function HeroSection() {
         <div className="absolute inset-0 -z-7 pointer-events-none">
 
           {/* PCB Circuit Traces - Static Background Pattern */}
-          <svg className="absolute inset-0 opacity-[0.4]" viewBox="0 0 1200 800" preserveAspectRatio="none">
+          {/* Desktop pattern - more complex */}
+          <svg className="absolute inset-0 opacity-[0.4] hidden md:block" viewBox="0 0 1200 800" preserveAspectRatio="none">
             <defs>
               <pattern id="pcb-pattern" width="300" height="300" patternUnits="userSpaceOnUse">
                 {/* Continuous primary traces - Muted blue */}
@@ -222,6 +239,31 @@ export default function HeroSection() {
             <rect x="0" y="0" width="1200" height="800" fill="url(#pcb-pattern)" />
           </svg>
 
+          {/* Mobile pattern - simpler, larger spacing */}
+          <svg className="absolute inset-0 opacity-[0.25] block md:hidden" viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <defs>
+              <pattern id="pcb-pattern-mobile-v2" width="400" height="400" patternUnits="userSpaceOnUse">
+                {/* Fewer, simpler traces for mobile */}
+                <path d="M0,50 L150,50 L180,80 L180,200 L220,240 L400,240" stroke="#1B4D80" strokeWidth="2" fill="none" />
+                <path d="M50,0 L50,120 L80,150 L80,300 L120,340 L400,340" stroke="#126E82" strokeWidth="1.5" fill="none" />
+                <path d="M150,0 L150,100 L180,130 L350,130 L380,160 L400,160" stroke="#1B4D80" strokeWidth="2" fill="none" />
+                <path d="M0,300 L100,300 L130,330 L400,330" stroke="#126E82" strokeWidth="1.5" fill="none" />
+                <path d="M250,0 L250,80 L280,110 L400,110" stroke="#1B4D80" strokeWidth="2" fill="none" />
+                
+                {/* Fewer solder pads */}
+                <circle cx="150" cy="50" r="4" fill="#126E82" />
+                <circle cx="180" cy="80" r="4" fill="#126E82" />
+                <circle cx="50" cy="120" r="4" fill="#126E82" />
+                <circle cx="80" cy="150" r="4" fill="#126E82" />
+                <circle cx="180" cy="130" r="4" fill="#126E82" />
+                <circle cx="130" cy="330" r="4" fill="#126E82" />
+                <circle cx="250" cy="80" r="4" fill="#126E82" />
+                <circle cx="280" cy="110" r="4" fill="#126E82" />
+              </pattern>
+            </defs>
+            <rect x="0" y="0" width="1200" height="800" fill="url(#pcb-pattern-mobile-v2)" />
+          </svg>
+
           {/* PCB Circuit Traces with Animated Signals */}
           <svg className="absolute inset-0" viewBox="0 0 1200 800" preserveAspectRatio="none" id="pcb-svg">
             <defs>
@@ -236,28 +278,50 @@ export default function HeroSection() {
 
             {/* Animated Signal Routes (invisible paths for animation) */}
             <g id="pcb-traces" stroke="none" fill="none">
-              {/* Route 1: Top-left to center - continuous path */}
-              <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300 L450,350 L450,450" />
-              {/* Route 2: Right edge to center - continuous path */}
-              <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400 L750,450 L750,550" />
-              {/* Route 3: Bottom-left to center - continuous path */}
-              <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500 L400,450 L400,350" />
-              {/* Route 4: Right-bottom to center - continuous path */}
-              <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450 L800,400 L800,300" />
-              {/* Route 5: Horizontal top - continuous path */}
-              <path id="route5" d="M100,50 L500,50 L550,100 L550,200 L600,250 L600,350" />
-              {/* Route 6: Horizontal bottom - continuous path */}
-              <path id="route6" d="M200,750 L600,750 L650,700 L650,600 L700,550 L700,450" />
+              {/* Desktop routes */}
+              <g className="hidden md:block">
+                {/* Route 1: Top-left to center - continuous path */}
+                <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300 L450,350 L450,450" />
+                {/* Route 2: Right edge to center - continuous path */}
+                <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400 L750,450 L750,550" />
+                {/* Route 3: Bottom-left to center - continuous path */}
+                <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500 L400,450 L400,350" />
+                {/* Route 4: Right-bottom to center - continuous path */}
+                <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450 L800,400 L800,300" />
+                {/* Route 5: Horizontal top - continuous path */}
+                <path id="route5" d="M100,50 L500,50 L550,100 L550,200 L600,250 L600,350" />
+                {/* Route 6: Horizontal bottom - continuous path */}
+                <path id="route6" d="M200,750 L600,750 L650,700 L650,600 L700,550 L700,450" />
+              </g>
+
+              {/* Mobile routes - simpler, fewer */}
+              <g className="block md:hidden">
+                {/* Route 1 mobile: Top to center */}
+                <path id="route1" d="M0,80 L150,80 L180,110 L180,300 L220,340 L400,340" />
+                {/* Route 2 mobile: Right to center */}
+                <path id="route2" d="M800,100 L650,100 L600,150 L600,350 L550,400 L400,400" />
+                {/* Route 3 mobile: Bottom to center */}
+                <path id="route3" d="M0,650 L100,650 L130,680 L400,680 L450,630 L450,500" />
+              </g>
             </g>
 
             {/* Animated Electrical Signals */}
             <g id="signals" filter="url(#signalGlow)">
-              <circle id="signal1" r="3" fill="#64FFDA" opacity="0" />
-              <circle id="signal2" r="3" fill="#64FFDA" opacity="0" />
-              <circle id="signal3" r="3" fill="#64FFDA" opacity="0" />
-              <circle id="signal4" r="3" fill="#64FFDA" opacity="0" />
-              <circle id="signal5" r="3" fill="#64FFDA" opacity="0" />
-              <circle id="signal6" r="3" fill="#64FFDA" opacity="0" />
+              {/* Desktop signals */}
+              <g className="hidden md:block">
+                <circle id="signal1" r="3" fill="#64FFDA" opacity="0" />
+                <circle id="signal2" r="3" fill="#64FFDA" opacity="0" />
+                <circle id="signal3" r="3" fill="#64FFDA" opacity="0" />
+                <circle id="signal4" r="3" fill="#64FFDA" opacity="0" />
+                <circle id="signal5" r="3" fill="#64FFDA" opacity="0" />
+                <circle id="signal6" r="3" fill="#64FFDA" opacity="0" />
+              </g>
+              {/* Mobile signals - fewer */}
+              <g className="block md:hidden">
+                <circle id="signal1" r="4" fill="#64FFDA" opacity="0" />
+                <circle id="signal2" r="4" fill="#64FFDA" opacity="0" />
+                <circle id="signal3" r="4" fill="#64FFDA" opacity="0" />
+              </g>
             </g>
           </svg>
         </div>

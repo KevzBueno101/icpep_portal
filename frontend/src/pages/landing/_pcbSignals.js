@@ -1,11 +1,16 @@
 // PCB Signal Animation System
 // Animates electrical signals along predefined SVG circuit paths
 
-export function startPCBSignals(svgId) {
+export function startPCBSignals(svgId, isMobile = false) {
   const svg = document.getElementById(svgId);
   if (!svg) return () => {};
 
-  const routes = [
+  // Fewer routes for mobile to reduce complexity
+  const routes = isMobile ? [
+    { pathId: 'route1', signalId: 'signal1', duration: 5000, delay: 0 },
+    { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 2000 },
+    { pathId: 'route3', signalId: 'signal3', duration: 5500, delay: 4000 },
+  ] : [
     { pathId: 'route1', signalId: 'signal1', duration: 5000, delay: 0 },
     { pathId: 'route2', signalId: 'signal2', duration: 6000, delay: 1500 },
     { pathId: 'route3', signalId: 'signal3', duration: 5500, delay: 3000 },
