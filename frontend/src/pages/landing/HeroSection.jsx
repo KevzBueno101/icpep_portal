@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Info } from 'lucide-react'
 
 import { startHeroParticles } from './_heroParticles'
+import { startPCBSignals } from './_pcbSignals'
 
 import { publicApi } from '../../api/axios'
 
@@ -70,16 +71,18 @@ export default function HeroSection() {
 
 
 
+  // Particles disabled as per requirements - using PCB signals instead
+  // useEffect(() => {
+  //   const canvas = canvasRef.current
+  //   if (!canvas) return
+  //   const stop = startHeroParticles(canvas, { accent: '#06B6D4' })
+  //   return () => stop && stop()
+  // }, [])
+
+  // PCB Signal Animation
   useEffect(() => {
-
-    const canvas = canvasRef.current
-
-    if (!canvas) return
-
-    const stop = startHeroParticles(canvas, { accent: '#06B6D4' })
-
-    return () => stop && stop()
-
+    const stopPCBSignals = startPCBSignals('pcb-svg')
+    return () => stopPCBSignals && stopPCBSignals()
   }, [])
 
 
@@ -142,7 +145,7 @@ export default function HeroSection() {
 
       <div className="fixed inset-0 -z-10 h-screen w-full overflow-hidden">
 
-        {/* Base Gradients */}
+        {/* Base Gradients - Updated to PCB color scheme */}
 
         <div
 
@@ -152,7 +155,7 @@ export default function HeroSection() {
 
             background:
 
-              'radial-gradient(800px 400px at 15% 10%, rgba(37, 99, 235, 0.35), transparent 60%), radial-gradient(700px 360px at 85% 20%, rgba(124, 58, 237, 0.25), transparent 55%), linear-gradient(135deg, #070E1B 0%, #061226 45%, #030817 100%)',
+              'linear-gradient(135deg, #050B18 0%, #0A192F 45%, #050B18 100%)',
 
           }}
 
@@ -160,261 +163,99 @@ export default function HeroSection() {
 
 
 
-        {/* Glowing grid */}
+        {/* Glowing grid removed - using PCB traces instead */}
 
-        <div className="absolute inset-0 -z-9 opacity-80">
-
-          <div
-
-            className="absolute inset-0"
-
-            style={{
-
-              backgroundImage:
-
-                'linear-gradient(rgba(6,182,212,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.08) 1px, transparent 1px)',
-
-              backgroundSize: '48px 48px',
-
-              maskImage:
-
-                'radial-gradient(600px 320px at 50% 10%, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 70%)',
-
-            }}
-
-          />
-
-          <div
-
-            className="absolute left-1/2 -translate-x-1/2 top-0 h-[520px] w-[920px]"
-
-            style={{
-
-              background:
-
-                'radial-gradient(circle at 50% 20%, rgba(6,182,212,0.20), transparent 55%)',
-
-            }}
-
-          />
-
-        </div>
-
-
-
-        {/* Particles canvas */}
-
-        <canvas ref={canvasRef} className="absolute inset-0 -z-8 h-full w-full" />
-
-
+        {/* Particles canvas disabled - using PCB signals instead */}
+        {/* <canvas ref={canvasRef} className="absolute inset-0 -z-8 h-full w-full" /> */}
 
         {/* SVG overlays */}
 
         <div className="absolute inset-0 -z-7 pointer-events-none">
 
-          {/* Circuit trace pattern */}
-          <svg className="absolute inset-0 opacity-[0.12]" viewBox="0 0 1200 800" preserveAspectRatio="none">
+          {/* PCB Circuit Traces - Static Background Pattern */}
+          <svg className="absolute inset-0 opacity-[0.4]" viewBox="0 0 1200 800" preserveAspectRatio="none">
             <defs>
-              <pattern id="circuit" width="200" height="200" patternUnits="userSpaceOnUse">
-                {/* Bus-style parallel traces (thicker) */}
-                <line x1="0" y1="20" x2="120" y2="20" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="0" y1="26" x2="120" y2="26" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="0" y1="32" x2="120" y2="32" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
+              <pattern id="pcb-pattern" width="250" height="250" patternUnits="userSpaceOnUse">
+                {/* Primary traces - Muted blue */}
+                <line x1="0" y1="30" x2="100" y2="30" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="100" y1="30" x2="130" y2="60" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="130" y1="60" x2="130" y2="150" stroke="#1B4D80" strokeWidth="1.5" />
                 
-                <line x1="80" y1="170" x2="200" y2="170" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="80" y1="176" x2="200" y2="176" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="80" y1="182" x2="200" y2="182" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
+                <line x1="150" y1="0" x2="150" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="150" y1="80" x2="180" y2="110" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="180" y1="110" x2="250" y2="110" stroke="#1B4D80" strokeWidth="1.5" />
                 
-                {/* Vertical bus traces */}
-                <line x1="170" y1="0" x2="170" y2="100" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="176" y1="0" x2="176" y2="100" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
-                <line x1="182" y1="0" x2="182" y2="100" stroke="rgba(6,182,212,0.7)" strokeWidth="2" />
+                {/* Secondary traces - Dark cyan */}
+                <line x1="0" y1="180" x2="70" y2="180" stroke="#126E82" strokeWidth="1.2" />
+                <line x1="70" y1="180" x2="100" y2="210" stroke="#126E82" strokeWidth="1.2" />
+                <line x1="100" y1="210" x2="200" y2="210" stroke="#126E82" strokeWidth="1.2" />
                 
-                {/* Horizontal signal traces (thinner) */}
-                <line x1="0" y1="60" x2="70" y2="60" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="130" y1="60" x2="200" y2="60" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="0" y1="100" x2="50" y2="100" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="150" y1="100" x2="200" y2="100" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="0" y1="140" x2="200" y2="140" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
+                <line x1="50" y1="0" x2="50" y2="120" stroke="#126E82" strokeWidth="1.2" />
+                <line x1="50" y1="120" x2="80" y2="150" stroke="#126E82" strokeWidth="1.2" />
+                <line x1="80" y1="150" x2="80" y2="250" stroke="#126E82" strokeWidth="1.2" />
                 
-                {/* Vertical signal traces */}
-                <line x1="30" y1="0" x2="30" y2="80" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="30" y1="120" x2="30" y2="200" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="90" y1="0" x2="90" y2="60" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="90" y1="140" x2="90" y2="200" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="140" y1="40" x2="140" y2="160" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                
-                {/* Diagonal traces at various angles */}
-                <line x1="50" y1="50" x2="90" y2="90" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="110" y1="110" x2="150" y2="150" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="150" y1="50" x2="110" y2="90" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="50" y1="150" x2="90" y2="110" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
+                {/* Parallel bus traces */}
+                <line x1="0" y1="220" x2="120" y2="220" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="0" y1="226" x2="120" y2="226" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="0" y1="232" x2="120" y2="232" stroke="#1B4D80" strokeWidth="1.5" />
                 
                 {/* T-junctions */}
-                <line x1="70" y1="60" x2="70" y2="90" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="50" y1="90" x2="90" y2="90" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
+                <line x1="80" y1="30" x2="80" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
+                <line x1="50" y1="80" x2="110" y2="80" stroke="#1B4D80" strokeWidth="1.5" />
                 
-                <line x1="130" y1="100" x2="130" y2="130" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                <line x1="110" y1="130" x2="150" y2="130" stroke="rgba(6,182,212,0.5)" strokeWidth="1" />
-                
-                {/* Vias (connection points) */}
-                <circle cx="30" cy="60" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="70" cy="60" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="130" cy="60" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="170" cy="60" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="70" cy="90" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="90" cy="90" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="130" cy="100" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="130" cy="130" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="150" cy="130" r="2.5" fill="rgba(6,182,212,0.8)" />
-                <circle cx="140" cy="140" r="2.5" fill="rgba(6,182,212,0.8)" />
+                {/* Solder pads */}
+                <circle cx="100" cy="30" r="3" fill="#126E82" />
+                <circle cx="130" cy="60" r="3" fill="#126E82" />
+                <circle cx="70" cy="180" r="3" fill="#126E82" />
+                <circle cx="100" cy="210" r="3" fill="#126E82" />
+                <circle cx="80" cy="30" r="3" fill="#126E82" />
+                <circle cx="80" cy="80" r="3" fill="#126E82" />
+                <circle cx="50" cy="80" r="3" fill="#126E82" />
+                <circle cx="110" cy="80" r="3" fill="#126E82" />
+                <circle cx="120" cy="220" r="3" fill="#126E82" />
+                <circle cx="120" cy="226" r="3" fill="#126E82" />
+                <circle cx="120" cy="232" r="3" fill="#126E82" />
               </pattern>
             </defs>
-            <rect x="0" y="0" width="1200" height="800" fill="url(#circuit)" />
+            <rect x="0" y="0" width="1200" height="800" fill="url(#pcb-pattern)" />
           </svg>
 
-          {/* IC Chips with pulse animation */}
-          <svg className="absolute inset-0" viewBox="0 0 1200 800" preserveAspectRatio="none">
+          {/* PCB Circuit Traces with Animated Signals */}
+          <svg className="absolute inset-0" viewBox="0 0 1200 800" preserveAspectRatio="none" id="pcb-svg">
             <defs>
-              <filter id="chipGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <filter id="pulseGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <filter id="signalGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
             </defs>
-            
-            {/* Chip 1 - Left Side Top */}
-            <g transform="translate(80, 250)">
-              <rect x="-25" y="-25" width="50" height="50" fill="rgba(15,23,42,0.8)" stroke="rgba(6,182,212,0.6)" strokeWidth="2" filter="url(#chipGlow)">
-                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
-              </rect>
-              {/* Pins */}
-              {[...Array(6)].map((_, i) => (
-                <line key={`l-${i}`} x1="-25" y1={-20 + i * 8} x2="-30" y2={-20 + i * 8} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-              ))}
-              {[...Array(6)].map((_, i) => (
-                <line key={`r-${i}`} x1="25" y1={-20 + i * 8} x2="30" y2={-20 + i * 8} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-              ))}
-              <text x="0" y="5" textAnchor="middle" fill="rgba(6,182,212,0.8)" fontSize="10" fontWeight="bold">MCU</text>
+
+            {/* Animated Signal Routes (invisible paths for animation) */}
+            <g id="pcb-traces" stroke="none" fill="none">
+              {/* Route 1: Top-left to center */}
+              <path id="route1" d="M0,100 L200,100 L250,150 L250,300 L400,300" />
+              {/* Route 2: Right edge to center */}
+              <path id="route2" d="M1200,200 L1000,200 L950,250 L950,400 L800,400" />
+              {/* Route 3: Bottom-left to center */}
+              <path id="route3" d="M0,700 L150,700 L200,650 L200,500 L350,500" />
+              {/* Route 4: Right-bottom to center */}
+              <path id="route4" d="M1200,600 L1050,600 L1000,550 L1000,450 L850,450" />
+              {/* Route 5: Horizontal top */}
+              <path id="route5" d="M100,50 L500,50 L550,100 L550,200" />
+              {/* Route 6: Horizontal bottom */}
+              <path id="route6" d="M200,750 L600,750 L650,700 L650,600" />
             </g>
 
-            {/* Chip 2 - Left Side Bottom */}
-            <g transform="translate(80, 550)">
-              <rect x="-20" y="-20" width="40" height="40" fill="rgba(15,23,42,0.8)" stroke="rgba(6,182,212,0.6)" strokeWidth="2" filter="url(#chipGlow)">
-                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="2.5s" repeatCount="indefinite" />
-              </rect>
-              {[...Array(5)].map((_, i) => (
-                <line key={`l-${i}`} x1="-20" y1={-15 + i * 7.5} x2="-25" y2={-15 + i * 7.5} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-              ))}
-              {[...Array(5)].map((_, i) => (
-                <line key={`r-${i}`} x1="20" y1={-15 + i * 7.5} x2="25" y2={-15 + i * 7.5} stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-              ))}
-              <text x="0" y="5" textAnchor="middle" fill="rgba(6,182,212,0.8)" fontSize="9" fontWeight="bold">CPU</text>
-            </g>
-
-            {/* Chip 3 - Right Side Top */}
-            <g transform="translate(1120, 280)">
-              <rect x="-30" y="-20" width="60" height="40" fill="rgba(15,23,42,0.8)" stroke="rgba(124,58,237,0.6)" strokeWidth="2" filter="url(#chipGlow)">
-                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="4s" repeatCount="indefinite" />
-              </rect>
-              {[...Array(5)].map((_, i) => (
-                <line key={`l-${i}`} x1="-30" y1={-15 + i * 7.5} x2="-35" y2={-15 + i * 7.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
-              ))}
-              {[...Array(5)].map((_, i) => (
-                <line key={`r-${i}`} x1="30" y1={-15 + i * 7.5} x2="35" y2={-15 + i * 7.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
-              ))}
-              <text x="0" y="5" textAnchor="middle" fill="rgba(124,58,237,0.8)" fontSize="10" fontWeight="bold">IC-01</text>
-            </g>
-
-            {/* Chip 4 - Right Side Bottom */}
-            <g transform="translate(1120, 520)">
-              <rect x="-22" y="-22" width="44" height="44" fill="rgba(15,23,42,0.8)" stroke="rgba(124,58,237,0.6)" strokeWidth="2" filter="url(#chipGlow)">
-                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="3.5s" repeatCount="indefinite" />
-              </rect>
-              {[...Array(5)].map((_, i) => (
-                <line key={`l-${i}`} x1="-22" y1={-17 + i * 8.5} x2="-27" y2={-17 + i * 8.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
-              ))}
-              {[...Array(5)].map((_, i) => (
-                <line key={`r-${i}`} x1="22" y1={-17 + i * 8.5} x2="27" y2={-17 + i * 8.5} stroke="rgba(124,58,237,0.5)" strokeWidth="1.5" />
-              ))}
-              <text x="0" y="5" textAnchor="middle" fill="rgba(124,58,237,0.8)" fontSize="9" fontWeight="bold">IC-02</text>
-            </g>
-
-            {/* Programming Language Logos - Low Opacity */}
-            <g opacity="0.08">
-              {/* Python Logo (simplified snakes) */}
-              <g transform="translate(400, 350)">
-                <path d="M-20,-15 Q-35,-15 -35,0 Q-35,15 -20,15 L-10,15 L-10,5 L-20,5 Q-25,5 -25,0 Q-25,-5 -20,-5 L10,-5 L10,-15 Z" fill="rgba(59,130,246,0.8)" />
-                <path d="M20,15 Q35,15 35,0 Q35,-15 20,-15 L10,-15 L10,-5 L20,-5 Q25,-5 25,0 Q25,5 20,5 L-10,5 L-10,15 Z" fill="rgba(251,146,60,0.8)" />
-                <circle cx="-15" cy="-10" r="3" fill="rgba(59,130,246,0.8)" />
-                <circle cx="15" cy="10" r="3" fill="rgba(251,146,60,0.8)" />
-              </g>
-
-              {/* C++ Logo */}
-              <g transform="translate(800, 350)">
-                <text x="0" y="0" textAnchor="middle" fill="rgba(59,130,246,0.8)" fontSize="48" fontWeight="bold" fontFamily="monospace">C++</text>
-              </g>
-            </g>
-
-            {/* Networking Elements - Cables and Connectors */}
-            <g opacity="0.15">
-              {/* Network cable traces at bottom */}
-              <g transform="translate(0, 720)">
-                {/* Cable bundle 1 - Left */}
-                <line x1="100" y1="0" x2="100" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="3" />
-                <line x1="108" y1="0" x2="108" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="3" />
-                <line x1="116" y1="0" x2="116" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="3" />
-                <line x1="124" y1="0" x2="124" y2="40" stroke="rgba(6,182,212,0.6)" strokeWidth="3" />
-                {/* RJ45 connector */}
-                <rect x="90" y="40" width="44" height="25" fill="rgba(15,23,42,0.9)" stroke="rgba(6,182,212,0.6)" strokeWidth="2" rx="3" />
-                <line x1="98" y1="50" x2="98" y2="60" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="106" y1="50" x2="106" y2="60" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="114" y1="50" x2="114" y2="60" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-                <line x1="122" y1="50" x2="122" y2="60" stroke="rgba(6,182,212,0.4)" strokeWidth="1" />
-              </g>
-
-              {/* Cable bundle 2 - Right */}
-              <g transform="translate(0, 720)">
-                <line x1="1050" y1="0" x2="1050" y2="40" stroke="rgba(124,58,237,0.6)" strokeWidth="3" />
-                <line x1="1058" y1="0" x2="1058" y2="40" stroke="rgba(124,58,237,0.6)" strokeWidth="3" />
-                <line x1="1066" y1="0" x2="1066" y2="40" stroke="rgba(124,58,237,0.6)" strokeWidth="3" />
-                <line x1="1074" y1="0" x2="1074" y2="40" stroke="rgba(124,58,237,0.6)" strokeWidth="3" />
-                {/* RJ45 connector */}
-                <rect x="1040" y="40" width="44" height="25" fill="rgba(15,23,42,0.9)" stroke="rgba(124,58,237,0.6)" strokeWidth="2" rx="3" />
-                <line x1="1048" y1="50" x2="1048" y2="60" stroke="rgba(124,58,237,0.4)" strokeWidth="1" />
-                <line x1="1056" y1="50" x2="1056" y2="60" stroke="rgba(124,58,237,0.4)" strokeWidth="1" />
-                <line x1="1064" y1="50" x2="1064" y2="60" stroke="rgba(124,58,237,0.4)" strokeWidth="1" />
-                <line x1="1072" y1="50" x2="1072" y2="60" stroke="rgba(124,58,237,0.4)" strokeWidth="1" />
-              </g>
-
-              {/* Network topology nodes */}
-              <g transform="translate(300, 680)">
-                <circle cx="0" cy="0" r="8" fill="rgba(6,182,212,0.6)" />
-                <circle cx="100" cy="-30" r="6" fill="rgba(6,182,212,0.5)" />
-                <circle cx="100" cy="30" r="6" fill="rgba(6,182,212,0.5)" />
-                <circle cx="200" cy="0" r="8" fill="rgba(6,182,212,0.6)" />
-                <line x1="0" y1="0" x2="100" y2="-30" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" />
-                <line x1="0" y1="0" x2="100" y2="30" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" />
-                <line x1="100" y1="-30" x2="200" y2="0" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" />
-                <line x1="100" y1="30" x2="200" y2="0" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" />
-              </g>
-
-              <g transform="translate(900, 680)">
-                <circle cx="0" cy="0" r="8" fill="rgba(124,58,237,0.6)" />
-                <circle cx="-80" cy="-20" r="6" fill="rgba(124,58,237,0.5)" />
-                <circle cx="-80" cy="20" r="6" fill="rgba(124,58,237,0.5)" />
-                <line x1="0" y1="0" x2="-80" y2="-20" stroke="rgba(124,58,237,0.4)" strokeWidth="1.5" />
-                <line x1="0" y1="0" x2="-80" y2="20" stroke="rgba(124,58,237,0.4)" strokeWidth="1.5" />
-              </g>
+            {/* Animated Electrical Signals */}
+            <g id="signals" filter="url(#signalGlow)">
+              <circle id="signal1" r="3" fill="#64FFDA" opacity="0" />
+              <circle id="signal2" r="3" fill="#64FFDA" opacity="0" />
+              <circle id="signal3" r="3" fill="#64FFDA" opacity="0" />
+              <circle id="signal4" r="3" fill="#64FFDA" opacity="0" />
+              <circle id="signal5" r="3" fill="#64FFDA" opacity="0" />
+              <circle id="signal6" r="3" fill="#64FFDA" opacity="0" />
             </g>
           </svg>
         </div>
