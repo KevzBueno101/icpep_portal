@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-
 import { useNavigate } from 'react-router-dom'
-
-import { Info } from 'lucide-react'
-
 import { startHeroParticles } from './_heroParticles'
-
 import { publicApi } from '../../api/axios'
-
 import { registerLogoTap } from '../../utils/logoSecretTaps'
 
 
@@ -59,33 +53,22 @@ function ValueCard({ title, text, accent }) {
 
 
 export default function HeroSection() {
-
   const navigate = useNavigate()
-
+  const canvasRef = useRef(null)
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState([])
-
   const [loading, setLoading] = useState(true)
 
-
-
-  // Particles disabled as per requirements - using PCB signals instead
-  // useEffect(() => {
-  //   const canvas = canvasRef.current
-  //   if (!canvas) return
-  //   const stop = startHeroParticles(canvas, { accent: '#06B6D4' })
-  //   return () => stop && stop()
-  // }, [])
-
-
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const stop = startHeroParticles(canvas)
+    return () => stop && stop()
+  }, [])
 
   const handleLogoTap = () => {
-
     if (registerLogoTap()) {
-
       navigate('/admin-portal/login')
-
     }
-
   }
 
 
@@ -127,8 +110,43 @@ export default function HeroSection() {
 
 
   return (
-
     <section className="relative isolate min-h-screen pt-16 text-white flex flex-col">
+
+      {/* ── Background Parallax Wrapper ── */}
+      <div className="fixed inset-0 -z-10 h-screen w-full overflow-hidden">
+        {/* Base Gradients */}
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(800px 400px at 15% 10%, rgba(37, 99, 235, 0.35), transparent 60%), radial-gradient(700px 360px at 85% 20%, rgba(124, 58, 237, 0.25), transparent 55%), linear-gradient(135deg, #070E1B 0%, #061226 45%, #030817 100%)',
+          }}
+        />
+
+        {/* Glowing grid */}
+        <div className="absolute inset-0 -z-9 opacity-80">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(6,182,212,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.08) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+              maskImage:
+                'radial-gradient(600px 320px at 50% 10%, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 70%)',
+            }}
+          />
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-0 h-[520px] w-[920px]"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 20%, rgba(6,182,212,0.20), transparent 55%)',
+            }}
+          />
+        </div>
+
+        {/* Particles canvas */}
+        <canvas ref={canvasRef} className="absolute inset-0 -z-8 h-full w-full" />
+      </div>
 
       {/* ── Main Content ── */}
 

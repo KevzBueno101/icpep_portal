@@ -70,19 +70,6 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
         p.vy += dy * influence * 0.00002;
       }
 
-      // Circuit trace alignment - align to 90/45 degree angles
-      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-      if (speed > 0.1) {
-        const angle = Math.atan2(p.vy, p.vx);
-        // Snap to nearest 45 degrees: 0, 45, 90, 135, 180, 225, 270, 315
-        const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
-        // Blend between current angle and snapped angle (70% alignment)
-        const targetVx = Math.cos(snappedAngle) * speed;
-        const targetVy = Math.sin(snappedAngle) * speed;
-        p.vx = p.vx * 0.3 + targetVx * 0.7;
-        p.vy = p.vy * 0.3 + targetVy * 0.7;
-      }
-
       p.x += p.vx;
       p.y += p.vy;
 
@@ -111,32 +98,36 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
       }
     }
 
-    // Connect close particles - REMOVED as per request
-    // ctx.save();
-    // ctx.globalCompositeOperation = 'lighter';
-    // const maxLinks = 340;
-    // let links = 0;
-    // for (let i = 0; i < state.particles.length; i++) {
-    //   if (links >= maxLinks) break;
-    //   const a = state.particles[i];
-    //   for (let j = i + 1; j < state.particles.length && j < i + 18; j++) {
-    //     const b = state.particles[j];
-    //     const dx = a.x - b.x;
-    //     const dy = a.y - b.y;
-    //     const d2 = dx * dx + dy * dy;
-    //     if (d2 < 110 * 110) {
-    //       const alpha = 0.22 * (1 - d2 / (110 * 110));
-    //       ctx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
-    //       ctx.lineWidth = 1;
-    //       ctx.beginPath();
-    //       ctx.moveTo(a.x, a.y);
-    //       ctx.lineTo(b.x, b.y);
-    //       ctx.stroke();
-    //       links++;
-    //     }
-    //   }
-    // }
-    // ctx.restore();
+    // Connect close particles.
+    // Keep it cheap: only check a subset.
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    const maxLinks = 340;
+    let links = 0;
+
+    for (let i = 0; i < state.particles.length; i++) {
+      if (links >= maxLinks) break;
+      const a = state.particles[i];
+      for (let j = i + 1; j < state.particles.length && j < i + 18; j++) {
+        const b = state.particles[j];
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 110 * 110) {
+          const alpha = 0.22 * (1 - d2 / (110 * 110));
+          ctx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+          links++;
+        }
+      }
+    }
+
+    ctx.restore();
 
     rafId = requestAnimationFrame(draw);
   };
@@ -169,4 +160,3 @@ export function startHeroParticles(canvas) { /* opts intentionally removed */
     canvas.removeEventListener('mouseleave', onMouseLeave);
   };
 }
-
