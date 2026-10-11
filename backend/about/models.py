@@ -27,10 +27,12 @@ class AboutSection(models.Model):
         HISTORY = 'HISTORY', 'History'
         CONSTITUTION = 'CONSTITUTION', 'Constitution & By-Laws'
         RESOLUTION = 'RESOLUTION', 'Resolution'
+        BUDGET_PROPOSAL = 'BUDGET_PROPOSAL', 'Budget Proposal'
+        ACCOMPLISHMENT_REPORT = 'ACCOMPLISHMENT_REPORT', 'Accomplishment Report'
         CUSTOM = 'CUSTOM', 'Custom'
 
     section_type = models.CharField(
-        max_length=20,
+        max_length=25,
         choices=SectionType.choices,
         default=SectionType.CUSTOM,
     )
