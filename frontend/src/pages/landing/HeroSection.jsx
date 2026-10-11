@@ -15,7 +15,7 @@ function ValueCard({ title, text, accent }) {
 
     <div
 
-      className="flex-1 min-w-[200px] rounded-2xl border border-white/10 bg-white/8 backdrop-blur-sm p-6 shadow-lg"
+      className="flex-1 min-w-[200px] w-full rounded-2xl border border-white/10 bg-white/8 backdrop-blur-sm p-6 shadow-lg"
 
       style={{ background: 'rgba(255,255,255,0.07)' }}
 
@@ -111,7 +111,7 @@ export default function HeroSection() {
 
 
   return (
-    <section className="relative isolate min-h-screen pt-16 text-white flex flex-col">
+    <section className="relative isolate min-h-screen pt-16 text-white flex flex-col overflow-x-hidden">
 
       {/* ── Background Parallax Wrapper ── */}
       <div className="fixed inset-0 -z-10 h-screen w-full overflow-hidden">

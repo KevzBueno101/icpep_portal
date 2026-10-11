@@ -37,7 +37,7 @@ export default function MovingLogoText() {
   }, [])
 
   return (
-    <div className="w-full bg-slate-50">
+    <div className="w-full bg-slate-50 overflow-x-hidden">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 py-3">
         <div className="flex items-center overflow-hidden">
           <div
