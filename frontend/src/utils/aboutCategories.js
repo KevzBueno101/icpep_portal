@@ -1,4 +1,4 @@
-import { Target, ScrollText, History, Gavel, FolderOpen } from 'lucide-react'
+import { Target, ScrollText, History, Gavel, FolderOpen, Wallet, Flag } from 'lucide-react'
 
 export const SECTION_TYPES = [
   { value: 'MISSION', label: 'Mission' },
@@ -7,6 +7,8 @@ export const SECTION_TYPES = [
   { value: 'HISTORY', label: 'History' },
   { value: 'CONSTITUTION', label: 'Constitution & By-Laws' },
   { value: 'RESOLUTION', label: 'Resolution' },
+  { value: 'BUDGET_PROPOSAL', label: 'Budget Proposal' },
+  { value: 'ACCOMPLISHMENT_REPORT', label: 'Accomplishment Report' },
   { value: 'CUSTOM', label: 'Custom' },
 ]
 
@@ -39,6 +41,24 @@ export const CATEGORY_DEFS = [
     defaultType: 'RESOLUTION',
   },
   {
+    key: 'BUDGET',
+    label: 'Budget',
+    subtitle: 'Budget proposals & financial documents',
+    icon: Wallet,
+    iconBox: 'bg-emerald-50 text-emerald-600',
+    chip: 'bg-emerald-100 text-emerald-700',
+    defaultType: 'BUDGET_PROPOSAL',
+  },
+  {
+    key: 'ACCOMPLISHMENT',
+    label: 'Accomplishments',
+    subtitle: 'Accomplishment reports & achievements',
+    icon: Flag,
+    iconBox: 'bg-orange-50 text-orange-600',
+    chip: 'bg-orange-100 text-orange-700',
+    defaultType: 'ACCOMPLISHMENT_REPORT',
+  },
+  {
     key: 'CUSTOM',
     label: 'Other Documents',
     subtitle: 'Other sections',
@@ -65,6 +85,8 @@ export const TYPE_LABELS = {
   HISTORY: 'History',
   CONSTITUTION: 'Constitution & By-Laws',
   RESOLUTION: 'Resolution',
+  BUDGET_PROPOSAL: 'Budget Proposal',
+  ACCOMPLISHMENT_REPORT: 'Accomplishment Report',
   CUSTOM: 'Section',
 }
 
@@ -74,6 +96,8 @@ export const FEED_COLORS = {
   HISTORY: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
   CONSTITUTION: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
   RESOLUTION: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
+  BUDGET_PROPOSAL: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  ACCCOMPLISHMENT_REPORT: { bg: 'bg-orange-50', text: 'text-orange-700', dot: 'bg-orange-500' },
   CUSTOM: { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
 }
 
@@ -88,5 +112,7 @@ export const categoryFor = (section) => {
   if (section.section_type === 'CONSTITUTION') return 'CONSTITUTION'
   if (section.section_type === 'HISTORY') return 'HISTORY'
   if (section.section_type === 'RESOLUTION') return 'RESOLUTION'
+  if (section.section_type === 'BUDGET_PROPOSAL') return 'BUDGET'
+  if (section.section_type === 'ACCOMPLISHMENT_REPORT') return 'ACCOMPLISHMENT'
   return 'CUSTOM'
 }
