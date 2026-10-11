@@ -41,15 +41,6 @@ export const CATEGORY_DEFS = [
     defaultType: 'RESOLUTION',
   },
   {
-    key: 'HISTORY',
-    label: 'History',
-    subtitle: 'History of the organization',
-    icon: History,
-    iconBox: 'bg-amber-50 text-amber-600',
-    chip: 'bg-amber-100 text-amber-700',
-    defaultType: 'HISTORY',
-  },
-  {
     key: 'BUDGET',
     label: 'Budget',
     subtitle: 'Budget proposals & financial documents',
@@ -76,6 +67,15 @@ export const CATEGORY_DEFS = [
     chip: 'bg-slate-100 text-slate-700',
     defaultType: 'CUSTOM',
   },
+  {
+    key: 'HISTORY',
+    label: 'History',
+    subtitle: 'History of the organization',
+    icon: History,
+    iconBox: 'bg-amber-50 text-amber-600',
+    chip: 'bg-amber-100 text-amber-700',
+    defaultType: 'HISTORY',
+  },
 ]
 
 export const TYPE_LABELS = {
@@ -97,7 +97,7 @@ export const FEED_COLORS = {
   CONSTITUTION: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
   RESOLUTION: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
   BUDGET_PROPOSAL: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  ACCCOMPLISHMENT_REPORT: { bg: 'bg-orange-50', text: 'text-orange-700', dot: 'bg-orange-500' },
+  ACCOMPLISHMENT_REPORT: { bg: 'bg-orange-50', text: 'text-orange-700', dot: 'bg-orange-500' },
   CUSTOM: { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
 }
 
