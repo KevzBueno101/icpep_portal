@@ -253,6 +253,9 @@ const AdminAnnouncement = () => {
         // Format time fields to include seconds (Django TimeField expects hh:mm:ss)
         event_time_start: formData.event_time_start ? `${formData.event_time_start}:00` : null,
         event_time_end: formData.event_time_end ? `${formData.event_time_end}:00` : null,
+        // Ensure date fields are in YYYY-MM-DD format or null
+        event_date_start: formData.event_date_start || null,
+        event_date_end: formData.event_date_end || null,
       }
 
       if (editingAnnouncement) {

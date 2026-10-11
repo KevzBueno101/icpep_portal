@@ -50,11 +50,6 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         return None
 
     def validate(self, attrs):
-        # Log incoming data for debugging
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Announcement validation data: {attrs}")
-
         # Check for empty strings in optional fields and convert to None
         optional_fields = ['tags', 'author', 'location']
         for field in optional_fields:

@@ -64,28 +64,6 @@ class AnnouncementAdminListCreateAPIView(generics.ListCreateAPIView):
             return [IsAdmin()]
         return [CanManageContent()]
 
-    def create(self, request, *args, **kwargs):
-        import logging
-        logger = logging.getLogger(__name__)
-        
-        logger.info(f"POST /api/announcements/admin/ - User: {request.user}")
-        logger.info(f"POST /api/announcements/admin/ - Authenticated: {request.user.is_authenticated}")
-        logger.info(f"POST /api/announcements/admin/ - Request data: {request.data}")
-        logger.info(f"POST /api/announcements/admin/ - Content-Type: {request.content_type}")
-        
-        try:
-            response = super().create(request, *args, **kwargs)
-            logger.info(f"POST /api/announcements/admin/ - Success")
-            return response
-        except Exception as e:
-            logger.error(f"POST /api/announcements/admin/ - Error: {str(e)}")
-            logger.error(f"POST /api/announcements/admin/ - Error type: {type(e).__name__}")
-            if hasattr(e, 'detail'):
-                logger.error(f"POST /api/announcements/admin/ - Error detail: {e.detail}")
-            if hasattr(e, '__dict__'):
-                logger.error(f"POST /api/announcements/admin/ - Error dict: {e.__dict__}")
-            raise
-
     def perform_create(self, serializer):
         author = serializer.validated_data.get('author')
         fallback_author = getattr(self.request.user, 'username', '') or getattr(self.request.user, 'email', '') or 'Admin'
