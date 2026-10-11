@@ -48,3 +48,12 @@ class AnnouncementSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(first_image.image.url)
             return first_image.image.url
         return None
+
+    def validate(self, attrs):
+        # Check for empty strings in optional fields and convert to None
+        optional_fields = ['tags', 'author', 'location']
+        for field in optional_fields:
+            if field in attrs and attrs[field] == '':
+                attrs[field] = None
+
+        return attrs
