@@ -75,13 +75,33 @@ INSTALLED_APPS = [
     'chatbot',
 ]
 
-# Channels
+# Channels - Redis for production, InMemory for local dev
 ASGI_APPLICATION = 'config.asgi.application'
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
+REDIS_URL = os.getenv('UPSTASH_REDIS_URL')
+REDIS_TOKEN = os.getenv('UPSTASH_REDIS_TOKEN')
+
+if REDIS_URL and REDIS_TOKEN:
+    # Production: Use Upstash Redis
+    # Upstash provides REST URL format: https://<host>
+    # Convert to Redis connection URL: rediss://:<token>@<host>
+    from urllib.parse import urlparse
+    parsed = urlparse(REDIS_URL)
+    redis_host = parsed.netloc  # Extracts host from https://host
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [f"rediss://:{REDIS_TOKEN}@{redis_host}"],
+            },
+        },
+    }
+else:
+    # Development: Use InMemoryChannelLayer
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
