@@ -36,11 +36,11 @@ export default function Landing() {
 
   return (
     <OfficersProvider>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col overflow-x-hidden">
         <Navbar />
         <DevEnvironmentBanner />
         <MemberOnlyAnnouncementInfo />
-        <main className="flex-grow">
+        <main className="flex-grow overflow-x-hidden">
           <HeroSection />
           <AnnouncementFeed />
           <FeatureSection />

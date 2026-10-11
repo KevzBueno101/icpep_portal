@@ -57,6 +57,7 @@ function App() {
       <ThemeProvider>
       <AuthProvider>
       <RefreshProvider>
+        <div className="min-h-screen w-full overflow-x-hidden">
         <Toaster
           position="top-right"
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}
@@ -245,6 +246,7 @@ function App() {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </div>
       </RefreshProvider>
       </AuthProvider>
       </ThemeProvider>

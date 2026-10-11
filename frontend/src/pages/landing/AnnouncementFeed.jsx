@@ -49,7 +49,7 @@ export default function AnnouncementFeed() {
   const recentAnnouncements = sortedAnnouncements.filter(a => a?.id !== featuredAnnouncement?.id)
 
   return (
-    <section id="announcements" className="relative bg-[#F5F7FA] py-16 sm:py-20 overflow-hidden">
+    <section id="announcements" className="relative bg-[#F5F7FA] py-16 sm:py-20 overflow-hidden overflow-x-hidden">
       {/* Subtle Background Enhancements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
