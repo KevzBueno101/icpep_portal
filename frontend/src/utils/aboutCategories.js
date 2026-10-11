@@ -39,15 +39,6 @@ export const CATEGORY_DEFS = [
     defaultType: 'RESOLUTION',
   },
   {
-    key: 'HISTORY',
-    label: 'History',
-    subtitle: 'History of the organization',
-    icon: History,
-    iconBox: 'bg-amber-50 text-amber-600',
-    chip: 'bg-amber-100 text-amber-700',
-    defaultType: 'HISTORY',
-  },
-  {
     key: 'CUSTOM',
     label: 'Other Documents',
     subtitle: 'Other sections',
@@ -55,6 +46,15 @@ export const CATEGORY_DEFS = [
     iconBox: 'bg-slate-100 text-slate-600',
     chip: 'bg-slate-100 text-slate-700',
     defaultType: 'CUSTOM',
+  },
+  {
+    key: 'HISTORY',
+    label: 'History',
+    subtitle: 'History of the organization',
+    icon: History,
+    iconBox: 'bg-amber-50 text-amber-600',
+    chip: 'bg-amber-100 text-amber-700',
+    defaultType: 'HISTORY',
   },
 ]
 
