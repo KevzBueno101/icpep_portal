@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import NetworkStatus from './components/NetworkStatus'
-import DevEnvironmentBanner from './components/DevEnvironmentBanner'
 import { AuthProvider } from './context/AuthContext'
 import { RefreshProvider } from './context/RefreshContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -58,7 +57,6 @@ function App() {
       <ThemeProvider>
       <AuthProvider>
       <RefreshProvider>
-        <DevEnvironmentBanner />
         <Toaster
           position="top-right"
           toastOptions={{ style: { background: '#0f0f18', color: '#e5e7eb', border: '1px solid #1f2937' } }}

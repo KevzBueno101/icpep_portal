@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import DevEnvironmentBanner from '../../components/DevEnvironmentBanner'
 import MemberOnlyAnnouncementInfo from '../../components/MemberOnlyAnnouncementInfo'
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
@@ -37,6 +38,7 @@ export default function Landing() {
     <OfficersProvider>
       <div className="min-h-screen flex flex-col">
         <Navbar />
+        <DevEnvironmentBanner />
         <MemberOnlyAnnouncementInfo />
         <main className="flex-grow">
           <HeroSection />
