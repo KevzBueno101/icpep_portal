@@ -150,7 +150,7 @@ export default function AnnouncementCard({ announcement, variant = 'default', is
     return (
       <Link
         to={`/announcement/${id}`}
-        className="group relative flex items-start gap-3 sm:gap-4 w-full min-w-0 rounded-2xl bg-white p-3 sm:p-4 shadow-sm ring-1 ring-slate-200/80 transition-all duration-300 hover:shadow-md hover:ring-sky-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-sky-500"
+        className="group relative flex items-start gap-3 sm:gap-4 w-full min-w-0 rounded-2xl bg-white p-3 sm:p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-sky-500"
       >
         <div className="absolute left-0 top-0 h-full w-1 bg-sky-500 opacity-0 transition-opacity group-hover:opacity-100 rounded-l-2xl" />
 

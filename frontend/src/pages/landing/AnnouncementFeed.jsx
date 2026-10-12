@@ -167,7 +167,7 @@ export default function AnnouncementFeed() {
               <div className="mb-4 sm:mb-6 flex items-center justify-between shrink-0">
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900">Recent Updates</h3>
                 {recentAnnouncements.length > 0 && (
-                  <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 dark:bg-slate-700 px-2.5 py-0.5 rounded-full">
                     {recentAnnouncements.length} {recentAnnouncements.length === 1 ? 'update' : 'updates'}
                   </span>
                 )}

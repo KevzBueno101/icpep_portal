@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, BellOff, BellRing, Loader2 } from 'lucide-react'
+import { BellOff, BellRing, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getAccessToken } from '../api/axios'
 import {
@@ -101,19 +101,33 @@ export default function NotificationToggle({ className = '' }) {
   if (!getAccessToken()) return null
   if (status === STATUS.UNSUPPORTED) return null
 
-  // Determine knob position based on state
-  const knobPosition = status === STATUS.SUBSCRIBED ? 'translate-x-8' : 'translate-x-0'
-  const loadingPosition = busy ? 'translate-x-4' : knobPosition
+  const base =
+    'relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/60'
 
   if (busy || status === STATUS.UNKNOWN) {
     return (
-      <div className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 ${className}`}>
-        <span className="absolute left-2 text-xs font-medium text-gray-500">Off</span>
-        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${loadingPosition}`}>
-          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-        </div>
-      </div>
+      <button
+        type="button"
+        disabled
+        aria-label="Updating notification settings"
+        className={`${base} cursor-wait text-slate-400 dark:text-slate-500 ${className}`}
+      >
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </button>
+    )
+  }
+
+  if (status === STATUS.DENIED) {
+    return (
+      <button
+        type="button"
+        disabled
+        title="Notifications are blocked in your browser settings"
+        aria-label="Notifications are blocked in your browser settings"
+        className={`${base} cursor-not-allowed text-slate-300 dark:text-slate-600 ${className}`}
+      >
+        <BellOff className="h-5 w-5" />
+      </button>
     )
   }
 
@@ -122,30 +136,12 @@ export default function NotificationToggle({ className = '' }) {
       <button
         type="button"
         onClick={handleToggle}
-        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-green-500 transition-colors ${className}`}
         title="Turn off announcement notifications"
+        aria-label="Turn off announcement notifications"
+        className={`${base} bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 ${className}`}
       >
-        <span className="absolute left-2 text-xs font-medium text-white/50">Off</span>
-        <span className="absolute right-2 text-xs font-medium text-white">On</span>
-        <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-8'}`}>
-          <BellRing className="h-4 w-4 text-green-500" />
-        </div>
+        <BellRing className="h-5 w-5 animate-bell-vibrate" />
       </button>
-    )
-  }
-
-  if (status === STATUS.DENIED) {
-    return (
-      <div
-        className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 cursor-not-allowed ${className}`}
-        title="Notifications are blocked in your browser settings"
-      >
-        <span className="absolute left-2 text-xs font-medium text-white">Off</span>
-        <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-        <div className="absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 translate-x-0">
-          <BellOff className="h-4 w-4 text-gray-400" />
-        </div>
-      </div>
     )
   }
 
@@ -153,14 +149,11 @@ export default function NotificationToggle({ className = '' }) {
     <button
       type="button"
       onClick={handleToggle}
-      className={`relative inline-flex items-center w-16 h-8 rounded-full bg-gray-200 transition-colors hover:bg-gray-300 ${className}`}
       title="Get notified when a new announcement is posted"
+      aria-label="Enable announcement notifications"
+      className={`${base} text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 ${className}`}
     >
-      <span className="absolute left-2 text-xs font-medium text-white">Off</span>
-      <span className="absolute right-2 text-xs font-medium text-gray-500">On</span>
-      <div className={`absolute left-1 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center transition-transform duration-300 ${busy ? 'translate-x-4' : 'translate-x-0'}`}>
-        <Bell className="h-4 w-4 text-gray-500" />
-      </div>
+      <BellOff className="h-5 w-5" />
     </button>
   )
 }
