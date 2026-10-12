@@ -1,9 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import api from '../api/axios'
 import { useAuth } from './useAuth'
 import { useRefresh } from './RefreshContext'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../utils/events'
+import { getNewestAnnouncementId } from '../utils/announcementCategories'
+import { getMemberUpdatesWsUrl } from '../utils/ws'
 import { setUnreadBadge, clearUnreadBadge } from '../utils/appBadge'
 
 const MemberContext = createContext(null)
@@ -45,6 +47,7 @@ export const MemberProvider = ({ children }) => {
   const [aboutSections, setAboutSections] = useState([])
   const [aboutLastSeenAt, setAboutLastSeenAt] = useState(() => getAboutLastSeenAt(user?.id))
   const [aboutUnread, setAboutUnread] = useState({ constitution: 0, resolution: 0 })
+  const newestAnnouncementIdRef = useRef(null)
 
   const markAnnouncementsSeen = useCallback(() => {
     if (!user?.id) return
@@ -87,6 +90,10 @@ export const MemberProvider = ({ children }) => {
     }).length
     setUnreadAnnouncements(unread)
   }, [announcements, lastSeenAt])
+
+  useEffect(() => {
+    newestAnnouncementIdRef.current = getNewestAnnouncementId(announcements)
+  }, [announcements])
 
   // Mirror the unread-announcement state onto the installed app's icon
   // (iOS Badging API / Android persistent tray dot).
@@ -162,14 +169,17 @@ export const MemberProvider = ({ children }) => {
   }, [user?.id])
 
   const fetchAnnouncements = useCallback(async (silent = false) => {
-    if (!user?.id) return
+    if (!user?.id) return []
     if (!silent) setAnnLoading(true)
     try {
       const res = await api.get('/announcements/?include_members_only=1')
-      setAnnouncements(res.data?.results || [])
+      const results = res.data?.results || []
+      setAnnouncements(results)
+      return results
     } catch (err) {
       console.error(err)
       setAnnouncements([])
+      return []
     } finally {
       if (!silent) setAnnLoading(false)
     }
@@ -255,9 +265,7 @@ export const MemberProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return
 
-    const wsUrl = import.meta.env.VITE_WS_URL
-      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
-      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+    const wsUrl = getMemberUpdatesWsUrl()
 
     let ws
     let isCancelled = false
@@ -271,12 +279,25 @@ export const MemberProvider = ({ children }) => {
         return
       }
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         if (isCancelled) return
         try {
           const data = JSON.parse(event.data)
           if (data?.type === 'announcements.updated') {
-            fetchAnnouncements(true)
+            const prevNewestId = newestAnnouncementIdRef.current
+            const results = await fetchAnnouncements(true)
+            if (isCancelled) return
+            const nextNewestId = getNewestAnnouncementId(results)
+            if (
+              prevNewestId != null &&
+              nextNewestId != null &&
+              nextNewestId !== prevNewestId
+            ) {
+              const newest = results.find((a) => a.id === nextNewestId)
+              window.dispatchEvent(
+                new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: newest?.title } })
+              )
+            }
             triggerContentRefresh()
           } else if (data?.type === 'about.updated') {
             fetchAboutSections()

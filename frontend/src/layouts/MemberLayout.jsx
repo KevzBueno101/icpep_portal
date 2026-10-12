@@ -8,6 +8,7 @@ import PageSkeleton from '../components/skeletons/PageSkeleton'
 import { LogOut, HelpCircle, X, Shield, Award, Calendar, PhilippinePeso } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 import RefreshButton from '../components/RefreshButton'
+import UpdateBanner from '../components/UpdateBanner'
 import ChatWidget from '../components/chatbot/ChatWidget'
 
 export default function MemberLayout({ children }) {
@@ -146,6 +147,9 @@ export default function MemberLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="mx-auto max-w-6xl px-3 sm:px-4 py-6 sm:py-8 pb-24 md:pb-8 overflow-x-hidden">
+        <div className="mb-4">
+          <UpdateBanner />
+        </div>
         {children}
       </main>
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
 export default function ConfirmModal({
   isOpen,
@@ -16,12 +17,12 @@ export default function ConfirmModal({
     if (!isOpen) return
 
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') onCancel?.()
+      if (e.key === 'Escape' && !busy) onCancel?.()
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, onCancel])
+  }, [isOpen, busy, onCancel])
 
   if (!isOpen) return null
 
@@ -78,10 +79,11 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={busy}
             className={
-              'rounded-full px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ' +
+              'inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ' +
               variantStyles.confirmBg
             }
           >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
             {busy ? 'Please wait…' : confirmText}
           </button>
         </div>

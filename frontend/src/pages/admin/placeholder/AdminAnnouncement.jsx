@@ -5,7 +5,10 @@ import ConfirmModal from '../../../components/common/ConfirmModal'
 import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
+import { getMemberUpdatesWsUrl } from '../../../utils/ws'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
+import NewBadge from '../../../components/NewBadge'
+import { formatCategory, getNewestAnnouncementId } from '../../../utils/announcementCategories'
 import { CheckCircle2, GripVertical } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
@@ -14,6 +17,8 @@ const CATEGORY_OPTIONS = [
   { value: 'update', label: 'Update' },
   { value: 'opportunity', label: 'Opportunity' },
   { value: 'event', label: 'Event' },
+  { value: 'news', label: 'News' },
+  { value: 'opinion', label: 'Opinion' },
 ]
 
 const emptyForm = {
@@ -48,6 +53,7 @@ const AdminAnnouncement = () => {
   const [expandedAnnouncementId, setExpandedAnnouncementId] = useState(null)
 
   const [deletingAnnouncement, setDeletingAnnouncement] = useState(null)
+  const [deletingBusy, setDeletingBusy] = useState(false)
 
   const [emailBlastingAnnouncement, setEmailBlastingAnnouncement] = useState(null)
   const [emailBlastLoading, setEmailBlastLoading] = useState(false)
@@ -69,22 +75,73 @@ const AdminAnnouncement = () => {
 
   const isEditMode = !!editingAnnouncement
 
-  useEffect(() => {
-    fetchAnnouncements()
-  }, [])
-
-  const fetchAnnouncements = async () => {
-    setLoading(true)
+  const fetchAnnouncements = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/announcements/admin/')
       setAnnouncements(res.data.results)
-      setCurrentPage(1)
+      if (!silent) setCurrentPage(1)
     } catch (err) {
       toast.error('Failed to load announcements.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchAnnouncements()
+  }, [fetchAnnouncements])
+
+  // Real-time updates: reflect changes made from any tab/admin without a manual refresh.
+  useEffect(() => {
+    let ws
+    let isCancelled = false
+    let reconnectTimeout
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(getMemberUpdatesWsUrl())
+      } catch (e) {
+        console.warn('[AdminAnnouncement] WebSocket init failed:', e)
+        return
+      }
+
+      ws.onmessage = (event) => {
+        if (isCancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data?.type === 'announcements.updated') {
+            fetchAnnouncements({ silent: true })
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      }
+
+      ws.onerror = () => {
+        // avoid spamming the console
+      }
+
+      ws.onclose = () => {
+        if (isCancelled) return
+        reconnectTimeout = setTimeout(() => {
+          if (!isCancelled) connect()
+        }, 3000)
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(reconnectTimeout)
+      try {
+        ws?.close()
+      } catch {
+        // ignore
+      }
+    }
+  }, [fetchAnnouncements])
 
   useEffect(() => {
     if (announcements.length > 0) {
@@ -227,7 +284,7 @@ const AdminAnnouncement = () => {
       toast.success('Image order updated.')
       
       // Force refresh to get updated data from backend
-      await fetchAnnouncements()
+      await fetchAnnouncements({ silent: true })
       
       // Update local editing state with refreshed data
       const refreshedAnnouncement = announcements.find(a => a.id === editingAnnouncement?.id)
@@ -269,11 +326,14 @@ const AdminAnnouncement = () => {
         await uploadImages(created.id, selectedImages)
         notifyAnnouncementUpdated(created.id)
         window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
+        window.dispatchEvent(new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: created.title } }))
+        // Show immediately (realtime), then reconcile silently.
+        setAnnouncements((prev) => [created, ...prev.filter((a) => a.id !== created.id)])
         setShowForm(false)
         setEditingAnnouncement(null)
         setFormData(emptyForm)
         setSelectedImages([])
-        fetchAnnouncements()
+        fetchAnnouncements({ silent: true })
         return
       }
 
@@ -287,7 +347,7 @@ const AdminAnnouncement = () => {
       setEditingAnnouncement(null)
       setFormData(emptyForm)
       setSelectedImages([])
-      fetchAnnouncements()
+      fetchAnnouncements({ silent: true })
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to save announcement.')
     } finally {
@@ -296,17 +356,23 @@ const AdminAnnouncement = () => {
   }
 
   const handleDelete = async () => {
-    if (!deletingAnnouncement) return
+    if (!deletingAnnouncement || deletingBusy) return
 
+    const deletedId = deletingAnnouncement.id
+    setDeletingBusy(true)
     try {
-      await api.delete(`/announcements/admin/${deletingAnnouncement.id}/`)
+      await api.delete(`/announcements/admin/${deletedId}/`)
       toast.success('Announcement deleted.')
-      notifyAnnouncementDeleted(deletingAnnouncement.id)
+      notifyAnnouncementDeleted(deletedId)
       window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
+      // Remove immediately (realtime), then reconcile silently.
+      setAnnouncements((prev) => prev.filter((a) => a.id !== deletedId))
       setDeletingAnnouncement(null)
-      fetchAnnouncements()
+      fetchAnnouncements({ silent: true })
     } catch (err) {
       toast.error('Failed to delete announcement.')
+    } finally {
+      setDeletingBusy(false)
     }
   }
 
@@ -324,7 +390,7 @@ const AdminAnnouncement = () => {
         toast.success(`Email sent to ${sent} members${failed ? `, ${failed} failed` : ''}.`)
       }
       setEmailBlastingAnnouncement(null)
-      fetchAnnouncements()
+      fetchAnnouncements({ silent: true })
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to send email blast.')
       setEmailBlastingAnnouncement(null)
@@ -339,7 +405,7 @@ const AdminAnnouncement = () => {
         pinned: !announcement.pinned,
       })
       window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
-      fetchAnnouncements()
+      fetchAnnouncements({ silent: true })
     } catch (err) {
       toast.error('Failed to update pinned status.')
     }
@@ -362,7 +428,7 @@ const AdminAnnouncement = () => {
         notifyAnnouncementUpdated(updated.id)
         return updated
       })
-      fetchAnnouncements()
+      fetchAnnouncements({ silent: true })
     } catch (err) {
       toast.error('Failed to remove image.')
     }
@@ -386,6 +452,7 @@ const AdminAnnouncement = () => {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const displayedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex)
+  const newestAnnouncementId = useMemo(() => getNewestAnnouncementId(announcements), [announcements])
 
   const orderedDisplayedAnnouncements = useMemo(() => {
     if (localOrderIds.length === 0) return displayedAnnouncements
@@ -1082,27 +1149,32 @@ const AdminAnnouncement = () => {
                 ) : (
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                          {announcement.category}
-                        </span>
-                        {announcement.pinned && (
-                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                            Pinned
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                            {formatCategory(announcement.category)}
                           </span>
-                        )}
-                        {!announcement.is_published && (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                            Draft
+                          {announcement.pinned && (
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                              Pinned
+                            </span>
+                          )}
+                          {!announcement.is_published && (
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                              Draft
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {announcement.id === newestAnnouncementId && <NewBadge />}
+                          <span className="text-xs text-slate-500">
+                            {new Date(announcement.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
                           </span>
-                        )}
-                        <span className="text-xs text-slate-500">
-                          {new Date(announcement.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
+                        </div>
                       </div>
                       <h3 className="text-lg font-semibold text-slate-900">{announcement.title}</h3>
                       <p className="mt-1 text-sm text-slate-500">
@@ -1214,7 +1286,7 @@ const AdminAnnouncement = () => {
         description="This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
-        busy={false}
+        busy={deletingBusy}
         onConfirm={handleDelete}
         onCancel={() => setDeletingAnnouncement(null)}
       />

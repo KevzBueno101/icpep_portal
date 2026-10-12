@@ -1,23 +1,41 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AnnouncementCard from '../../components/AnnouncementCard'
 import NotificationToggle from '../../components/NotificationToggle'
 import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
+import { getNewestAnnouncementId } from '../../utils/announcementCategories'
+import { EVENTS } from '../../utils/events'
+import { getMemberUpdatesWsUrl } from '../../utils/ws'
 
 export default function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
+  const newestIdRef = useRef(null)
 
-  const fetchAnnouncements = async () => {
-    setLoading(true)
+  const fetchAnnouncements = async ({ announceNew = false, silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await publicApi.get('/announcements/')
-      setAnnouncements(res.data.results)
+      const results = res.data.results || []
+      const nextNewestId = getNewestAnnouncementId(results)
+      if (
+        announceNew &&
+        newestIdRef.current != null &&
+        nextNewestId != null &&
+        nextNewestId !== newestIdRef.current
+      ) {
+        const newest = results.find((a) => a.id === nextNewestId)
+        window.dispatchEvent(
+          new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: newest?.title } })
+        )
+      }
+      newestIdRef.current = nextNewestId
+      setAnnouncements(results)
     } catch (err) {
       console.error('Failed to fetch announcements:', err)
       setAnnouncements([])
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -37,6 +55,59 @@ export default function AnnouncementFeed() {
     }
   }, [])
 
+  // Live updates for anonymous visitors via the public WebSocket.
+  useEffect(() => {
+    const wsUrl = getMemberUpdatesWsUrl()
+
+    let ws
+    let isCancelled = false
+    let reconnectTimeout
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (e) {
+        console.warn('[AnnouncementFeed] WebSocket init failed:', e)
+        return
+      }
+
+      ws.onmessage = (event) => {
+        if (isCancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data?.type === 'announcements.updated') {
+            fetchAnnouncements({ announceNew: true, silent: true })
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      }
+
+      ws.onerror = () => {
+        // avoid spamming the console
+      }
+
+      ws.onclose = () => {
+        if (isCancelled) return
+        reconnectTimeout = setTimeout(() => {
+          if (!isCancelled) connect()
+        }, 3000)
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(reconnectTimeout)
+      try {
+        ws?.close()
+      } catch {
+        // ignore
+      }
+    }
+  }, [])
+
   const sortedAnnouncements = useMemo(
     () =>
       [...announcements].sort(
@@ -47,9 +118,10 @@ export default function AnnouncementFeed() {
 
   const featuredAnnouncement = sortedAnnouncements.find(a => a.pinned) || sortedAnnouncements[0]
   const recentAnnouncements = sortedAnnouncements.filter(a => a?.id !== featuredAnnouncement?.id)
+  const newestId = getNewestAnnouncementId(sortedAnnouncements)
 
   return (
-    <section id="announcements" className="relative bg-[#F5F7FA] py-16 sm:py-20 overflow-hidden overflow-x-hidden">
+    <section id="announcements" className="relative bg-[#F5F7FA] py-12 sm:py-16 md:py-20 overflow-hidden overflow-x-hidden">
       {/* Subtle Background Enhancements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -58,45 +130,54 @@ export default function AnnouncementFeed() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 flex flex-wrap items-start justify-between gap-4">
+        <div className="mb-8 sm:mb-12 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-sky-600">
+            <p className="mb-2 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-sky-600">
               Community Highlights
             </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900">
               Latest Announcements
             </h2>
-            <p className="mt-4 max-w-2xl text-lg text-slate-600">
+            <p className="mt-2 sm:mt-4 max-w-2xl text-sm sm:text-base md:text-lg text-slate-600">
               Stay updated with the latest news, events, and opportunities from our community.
             </p>
           </div>
-          <NotificationToggle className="mt-2" />
+          <NotificationToggle className="mt-1 sm:mt-2" />
         </div>
 
         {loading ? (
-          <div className="grid gap-8 lg:grid-cols-12">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
             <div className="lg:col-span-6 flex flex-col gap-4">
-              <div className="h-64 md:h-[400px] w-full animate-pulse rounded-2xl bg-slate-200"></div>
+              <div className="h-72 sm:h-96 md:h-[460px] w-full animate-pulse rounded-2xl bg-slate-200"></div>
             </div>
-            <div className="lg:col-span-6 flex flex-col gap-4">
-              <div className="mb-2 h-8 w-1/2 animate-pulse rounded bg-slate-200"></div>
+            <div className="lg:col-span-6 flex flex-col gap-3 sm:gap-4">
+              <div className="mb-2 h-7 w-1/3 animate-pulse rounded bg-slate-200"></div>
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 w-full animate-pulse rounded-xl bg-slate-200"></div>
+                <div key={i} className="h-20 sm:h-24 w-full animate-pulse rounded-xl bg-slate-200"></div>
               ))}
             </div>
           </div>
         ) : featuredAnnouncement ? (
-          <div className="grid gap-8 lg:grid-cols-12 overflow-hidden">
-            <div className="lg:col-span-6 lg:col-start-1">
-              <AnnouncementCard announcement={featuredAnnouncement} variant="featured" />
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-6 lg:col-start-1 flex flex-col">
+              <AnnouncementCard announcement={featuredAnnouncement} variant="featured" isNew={featuredAnnouncement?.id === newestId} />
             </div>
 
-            <div className="lg:col-span-6 lg:col-start-7 flex flex-col relative">
-              <h3 className="mb-6 text-xl font-bold text-slate-900 shrink-0">Recent Updates</h3>
+            <div className="lg:col-span-6 lg:col-start-7 flex flex-col min-w-0">
+              <div className="mb-4 sm:mb-6 flex items-center justify-between shrink-0">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900">Recent Updates</h3>
+                {recentAnnouncements.length > 0 && (
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 dark:bg-slate-700 px-2.5 py-0.5 rounded-full">
+                    {recentAnnouncements.length} {recentAnnouncements.length === 1 ? 'update' : 'updates'}
+                  </span>
+                )}
+              </div>
               <div className="relative">
-                <div className="flex flex-col gap-4 max-h-[300px] sm:max-h-[400px] md:max-h-[448px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
+                <div className="flex flex-col gap-3 sm:gap-4 max-h-[460px] sm:max-h-[520px] lg:max-h-[580px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
                   {recentAnnouncements.map((announcement) => (
-                    <AnnouncementCard key={announcement.id} announcement={announcement} variant="compact" />
+                    <div key={announcement.id} className="block">
+                      <AnnouncementCard announcement={announcement} variant="compact" isNew={announcement?.id === newestId} />
+                    </div>
                   ))}
                   {recentAnnouncements.length === 0 && (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-white/50 p-6 text-center text-sm text-slate-500 backdrop-blur-sm">
@@ -104,9 +185,10 @@ export default function AnnouncementFeed() {
                     </div>
                   )}
                 </div>
-                {/* Subtle bottom fade indicator for scrolling */}
+
+                {/* Subtle bottom fade indicator for scrolling when the list overflows */}
                 {recentAnnouncements.length > 4 && (
-                  <div className="absolute bottom-0 left-0 right-2 h-12 bg-gradient-to-t from-[#F5F7FA] to-transparent pointer-events-none"></div>
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-2 h-10 bg-gradient-to-t from-[#F5F7FA] to-transparent"></div>
                 )}
               </div>
             </div>

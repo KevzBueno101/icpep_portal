@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMember } from '../../context/MemberContext'
 import NotificationToggle from '../../components/NotificationToggle'
-import { formatCategory } from '../../utils/announcementCategories'
+import NewBadge from '../../components/NewBadge'
+import { formatCategory, getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
 import { Search, Bell, Filter, ArrowRight, User } from 'lucide-react'
 
@@ -19,6 +20,8 @@ export default function MemberAnnouncements() {
     })
     return Array.from(list)
   }, [announcements])
+
+  const newestAnnouncementId = useMemo(() => getNewestAnnouncementId(announcements), [announcements])
 
   const filteredAnnouncements = useMemo(() => {
     let list = [...announcements].sort(
@@ -142,16 +145,19 @@ export default function MemberAnnouncements() {
               )}
               <div className="flex flex-col p-4 sm:p-6 overflow-hidden min-h-0">
                 <div className="flex items-center justify-between gap-2 shrink-0">
-                  <span className="inline-flex rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-sky-700">
+                  <span className="inline-flex min-w-0 truncate rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-sky-700">
                     {formatCategory(ann.category)}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-slate-400">
-                    {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }) : ''}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {ann.id === newestAnnouncementId && <NewBadge />}
+                    <span className="text-[10px] sm:text-xs text-slate-400 shrink-0">
+                      {ann.created_at ? new Date(ann.created_at).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }) : ''}
+                    </span>
+                  </div>
                 </div>
                 <h2 className="mt-3 sm:mt-4 text-base sm:text-lg font-bold text-slate-900 group-hover:text-sky-600 transition duration-150 truncate shrink-0">
                   {ann.title}

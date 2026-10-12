@@ -9,6 +9,8 @@ class Announcement(models.Model):
         UPDATE = 'update', 'Update'
         OPPORTUNITY = 'opportunity', 'Opportunity'
         EVENT = 'event', 'Event'
+        NEWS = 'news', 'News'
+        OPINION = 'opinion', 'Opinion'
 
     title = models.CharField(max_length=200)
     body = models.TextField()

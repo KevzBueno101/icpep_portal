@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth'
 import AdminSidebar from '../components/admin/AdminSidebar'
 import api from '../api/axios'
 import PageSkeleton from '../components/skeletons/PageSkeleton'
+import UpdateBanner from '../components/UpdateBanner'
 
 const AdminLayout = ({ children, badges = {} }) => {
   const { user, loading, logout } = useAuth()
@@ -64,6 +65,9 @@ const AdminLayout = ({ children, badges = {} }) => {
 
       <main className="px-4 pb-6 pt-14 sm:px-6 lg:pl-72 lg:pt-6">
         <div className="mx-auto max-w-[1440px]">
+          <div className="mb-4">
+            <UpdateBanner />
+          </div>
           <div className="pb-8">{childrenWithProps}</div>
         </div>
       </main>

@@ -4,8 +4,9 @@ import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import api from '../../api/axios'
 import { downloadFile } from '../../utils/download'
-import { formatCategory } from '../../utils/announcementCategories'
+import { formatCategory, getNewestAnnouncementId } from '../../utils/announcementCategories'
 import ImageModal from '../../components/ImageModal'
+import NewBadge from '../../components/NewBadge'
 import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 
@@ -57,6 +58,8 @@ export default function MemberDashboard() {
     )
     return sorted.slice(0, 2)
   }, [announcements])
+
+  const newestAnnouncementId = useMemo(() => getNewestAnnouncementId(announcements), [announcements])
 
   const latestReceipt = useMemo(() => {
     return [...transactions]
@@ -160,9 +163,12 @@ export default function MemberDashboard() {
                   <span className="inline-flex shrink-0 rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
                     {formatCategory(ann.category)}
                   </span>
-                  <span className="shrink-0 text-xs text-slate-400">
-                    {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {ann.id === newestAnnouncementId && <NewBadge />}
+                    <span className="shrink-0 text-xs text-slate-400">
+                      {ann.created_at ? new Date(ann.created_at).toLocaleDateString() : ''}
+                    </span>
+                  </div>
                 </div>
                 <h3 className="mt-3 line-clamp-2 break-words text-base font-bold text-slate-900 transition group-hover:text-sky-600">
                   {ann.title}

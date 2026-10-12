@@ -4,7 +4,9 @@ import { publicApi } from '../../api/axios'
 import api from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
 import ImageCarousel from '../../components/ImageCarousel'
+import NewBadge from '../../components/NewBadge'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
+import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { useAuth } from '../../context/useAuth'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
 import { Calendar, Clock, MapPin, User, Link as LinkIcon } from 'lucide-react'
@@ -40,6 +42,18 @@ const CATEGORY_COLORS = {
     dimAccent: 'rgba(167,139,250,0.15)',
     border: 'rgba(167,139,250,0.35)',
   },
+  news: {
+    label: 'News',
+    accent: '#3b82f6',
+    dimAccent: 'rgba(59,130,246,0.15)',
+    border: 'rgba(59,130,246,0.35)',
+  },
+  opinion: {
+    label: 'Opinion',
+    accent: '#8b5cf6',
+    dimAccent: 'rgba(139,92,246,0.15)',
+    border: 'rgba(139,92,246,0.35)',
+  },
 }
 
 function formatDate(value) {
@@ -59,6 +73,7 @@ export default function AnnouncementDetail() {
   const [requiresLogin, setRequiresLogin] = useState(false)
   const [modalImages, setModalImages] = useState(null)
   const [modalInitialIndex, setModalInitialIndex] = useState(0)
+  const [newestId, setNewestId] = useState(null)
 
   const fetchAnnouncement = async () => {
     setLoading(true)
@@ -102,6 +117,19 @@ export default function AnnouncementDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  useEffect(() => {
+    let cancelled = false
+    publicApi
+      .get('/announcements/')
+      .then((res) => {
+        if (!cancelled) setNewestId(getNewestAnnouncementId(res.data.results || []))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const cat = useMemo(() => {
     const key = announcement?.category
@@ -307,14 +335,17 @@ export default function AnnouncementDetail() {
             
             {/* Headline */}
             <div>
-              <div
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 mb-4"
-                style={{ background: cat.dimAccent, borderColor: cat.border }}
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: cat.accent }}>
-                  {cat.label}
-                </span>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5"
+                  style={{ background: cat.dimAccent, borderColor: cat.border }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent }} />
+                  <span className="text-xs font-semibold tracking-wide" style={{ color: cat.accent }}>
+                    {cat.label}
+                  </span>
+                </div>
+                {announcement?.id === newestId && <NewBadge />}
               </div>
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
