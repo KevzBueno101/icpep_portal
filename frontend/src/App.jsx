@@ -48,6 +48,7 @@ import UpdateNotice from './components/UpdateNotice'
 import NewAnnouncementToast from './components/NewAnnouncementToast'
 import FeedbackButton from './components/FeedbackButton'
 import ReportBugButton from './components/ReportBugButton'
+import ScrollToTopButton from './components/ScrollToTopButton'
 
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
         <NewAnnouncementToast />
         <ReportBugButton />
         <FeedbackButton />
+        <ScrollToTopButton />
         <NetworkStatus />
         <Routes>
           {/* Public */}

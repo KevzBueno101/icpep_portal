@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Bug, ImagePlus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { publicApi } from '../api/axios'
+import { isMemberView, MEMBER_FLOAT_OPACITY } from '../utils/floatingButtons'
 
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical']
 const MAX_SCREENSHOT_MB = 5
 
 export default function ReportBugButton() {
+  const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [sending, setSending] = useState(false)
   const [form, setForm] = useState({
@@ -122,7 +125,7 @@ return (
       <button
         type="button"
         onClick={openModal}
-        className="group fixed bottom-[10.5rem] right-6 z-50 flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl"
+        className={`group fixed bottom-[10.5rem] right-6 z-50 flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500 hover:shadow-xl ${isMemberView(location.pathname) ? MEMBER_FLOAT_OPACITY : ''}`}
         aria-label="Report a bug"
       >
         <Bug className="h-4 w-4" />
