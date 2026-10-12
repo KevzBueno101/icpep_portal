@@ -3,6 +3,7 @@ import AnnouncementCard from '../../components/AnnouncementCard'
 import NotificationToggle from '../../components/NotificationToggle'
 import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
+import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function AnnouncementFeed() {
@@ -49,6 +50,7 @@ export default function AnnouncementFeed() {
 
   const featuredAnnouncement = sortedAnnouncements.find(a => a.pinned) || sortedAnnouncements[0]
   const recentAnnouncements = sortedAnnouncements.filter(a => a?.id !== featuredAnnouncement?.id)
+  const newestId = getNewestAnnouncementId(sortedAnnouncements)
 
   return (
     <section id="announcements" className="relative bg-[#F5F7FA] py-12 sm:py-16 md:py-20 overflow-hidden overflow-x-hidden">
@@ -90,7 +92,7 @@ export default function AnnouncementFeed() {
         ) : featuredAnnouncement ? (
           <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
             <div className="lg:col-span-6 lg:col-start-1 flex flex-col">
-              <AnnouncementCard announcement={featuredAnnouncement} variant="featured" />
+              <AnnouncementCard announcement={featuredAnnouncement} variant="featured" isNew={featuredAnnouncement?.id === newestId} />
             </div>
 
             <div className="lg:col-span-6 lg:col-start-7 flex flex-col min-w-0">
@@ -111,7 +113,7 @@ export default function AnnouncementFeed() {
                         key={announcement.id}
                         className={isHiddenOnMobile ? 'hidden lg:block' : 'block'}
                       >
-                        <AnnouncementCard announcement={announcement} variant="compact" />
+                        <AnnouncementCard announcement={announcement} variant="compact" isNew={announcement?.id === newestId} />
                       </div>
                     )
                   })}

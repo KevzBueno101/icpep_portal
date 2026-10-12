@@ -6,6 +6,8 @@ import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
+import NewBadge from '../../../components/NewBadge'
+import { formatCategory, getNewestAnnouncementId } from '../../../utils/announcementCategories'
 import { CheckCircle2, GripVertical } from 'lucide-react'
 
 const CATEGORY_OPTIONS = [
@@ -14,6 +16,8 @@ const CATEGORY_OPTIONS = [
   { value: 'update', label: 'Update' },
   { value: 'opportunity', label: 'Opportunity' },
   { value: 'event', label: 'Event' },
+  { value: 'news', label: 'News' },
+  { value: 'opinion', label: 'Opinion' },
 ]
 
 const emptyForm = {
@@ -269,6 +273,7 @@ const AdminAnnouncement = () => {
         await uploadImages(created.id, selectedImages)
         notifyAnnouncementUpdated(created.id)
         window.dispatchEvent(new CustomEvent(EVENTS.ANNOUNCEMENTS_UPDATED))
+        window.dispatchEvent(new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: created.title } }))
         setShowForm(false)
         setEditingAnnouncement(null)
         setFormData(emptyForm)
@@ -386,6 +391,7 @@ const AdminAnnouncement = () => {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const displayedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex)
+  const newestAnnouncementId = useMemo(() => getNewestAnnouncementId(announcements), [announcements])
 
   const orderedDisplayedAnnouncements = useMemo(() => {
     if (localOrderIds.length === 0) return displayedAnnouncements
@@ -1084,8 +1090,9 @@ const AdminAnnouncement = () => {
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                          {announcement.category}
+                          {formatCategory(announcement.category)}
                         </span>
+                        {announcement.id === newestAnnouncementId && <NewBadge />}
                         {announcement.pinned && (
                           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                             Pinned

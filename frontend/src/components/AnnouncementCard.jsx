@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ImageModal from './ImageModal'
+import NewBadge from './NewBadge'
 import { parseUrlsInText } from '../utils/urlParser.jsx'
 import { Pin, Calendar, User, ArrowRight, Megaphone } from 'lucide-react'
 
-export default function AnnouncementCard({ announcement, variant = 'default' }) {
+export default function AnnouncementCard({ announcement, variant = 'default', isNew = false }) {
   const { id, title, body, category, created_at, author, pinned, first_image, images } =
     announcement || {}
 
@@ -36,6 +37,8 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
     opportunity: 'bg-amber-100 text-amber-800',
     event: 'bg-teal-100 text-teal-700',
     deadline: 'bg-rose-100 text-rose-700',
+    news: 'bg-blue-100 text-blue-700',
+    opinion: 'bg-violet-100 text-violet-700',
   }
 
   const catKey = (category || 'announcement').toLowerCase()
@@ -63,6 +66,12 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             <div className="absolute left-3 top-3 z-10 flex items-center rounded-full bg-slate-900/85 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur-md">
               <Pin size={12} className="mr-1 text-amber-400" />
               Pinned
+            </div>
+          )}
+
+          {isNew && (
+            <div className="absolute right-3 top-3 z-10">
+              <NewBadge />
             </div>
           )}
           
@@ -162,6 +171,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold ${categoryColor}`}>
               {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
             </span>
+            {isNew && <NewBadge />}
             {pinned && (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                 <Pin size={10} className="text-amber-500" />
@@ -232,6 +242,7 @@ export default function AnnouncementCard({ announcement, variant = 'default' }) 
             <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${categoryColor}`}>
               {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
             </span>
+            {isNew && <NewBadge />}
           </div>
 
           <h3 className="mb-2 text-base sm:text-lg font-bold text-slate-900 line-clamp-2 break-words">{title}</h3>

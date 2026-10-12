@@ -278,6 +278,7 @@ export const MemberProvider = ({ children }) => {
           if (data?.type === 'announcements.updated') {
             fetchAnnouncements(true)
             triggerContentRefresh()
+            window.dispatchEvent(new CustomEvent(EVENTS.NEW_ANNOUNCEMENT))
           } else if (data?.type === 'about.updated') {
             fetchAboutSections()
             triggerContentRefresh()
