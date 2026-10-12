@@ -5,6 +5,7 @@ import { useRefresh } from './RefreshContext'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../utils/events'
 import { getNewestAnnouncementId } from '../utils/announcementCategories'
+import { getMemberUpdatesWsUrl } from '../utils/ws'
 import { setUnreadBadge, clearUnreadBadge } from '../utils/appBadge'
 
 const MemberContext = createContext(null)
@@ -264,9 +265,7 @@ export const MemberProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.id) return
 
-    const wsUrl = import.meta.env.VITE_WS_URL
-      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
-      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+    const wsUrl = getMemberUpdatesWsUrl()
 
     let ws
     let isCancelled = false

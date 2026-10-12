@@ -5,6 +5,7 @@ import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { EVENTS } from '../../utils/events'
+import { getMemberUpdatesWsUrl } from '../../utils/ws'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function AnnouncementFeed() {
@@ -58,9 +59,7 @@ export default function AnnouncementFeed() {
 
   // Live updates for anonymous visitors via the public WebSocket.
   useEffect(() => {
-    const wsUrl = import.meta.env.VITE_WS_URL
-      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
-      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+    const wsUrl = getMemberUpdatesWsUrl()
 
     let ws
     let isCancelled = false
