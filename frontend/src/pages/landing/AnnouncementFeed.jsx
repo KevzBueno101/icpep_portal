@@ -6,12 +6,10 @@ import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../ut
 import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { EVENTS } from '../../utils/events'
 import { getMemberUpdatesWsUrl } from '../../utils/ws'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showAllMobile, setShowAllMobile] = useState(false)
   const newestIdRef = useRef(null)
 
   const fetchAnnouncements = async ({ announceNew = false, silent = false } = {}) => {
@@ -175,18 +173,12 @@ export default function AnnouncementFeed() {
                 )}
               </div>
               <div className="relative">
-                <div className="flex flex-col gap-3 sm:gap-4 lg:max-h-[580px] lg:overflow-y-auto lg:pr-2 lg:pb-2 custom-scrollbar lg:overscroll-contain">
-                  {recentAnnouncements.map((announcement, index) => {
-                    const isHiddenOnMobile = !showAllMobile && index >= 4
-                    return (
-                      <div
-                        key={announcement.id}
-                        className={isHiddenOnMobile ? 'hidden lg:block' : 'block'}
-                      >
-                        <AnnouncementCard announcement={announcement} variant="compact" isNew={announcement?.id === newestId} />
-                      </div>
-                    )
-                  })}
+                <div className="flex flex-col gap-3 sm:gap-4 max-h-[460px] sm:max-h-[520px] lg:max-h-[580px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
+                  {recentAnnouncements.map((announcement) => (
+                    <div key={announcement.id} className="block">
+                      <AnnouncementCard announcement={announcement} variant="compact" isNew={announcement?.id === newestId} />
+                    </div>
+                  ))}
                   {recentAnnouncements.length === 0 && (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-white/50 p-6 text-center text-sm text-slate-500 backdrop-blur-sm">
                       No other updates available.
@@ -194,25 +186,9 @@ export default function AnnouncementFeed() {
                   )}
                 </div>
 
-                {/* Mobile "Show More / Show Less" button when there are > 4 announcements */}
+                {/* Subtle bottom fade indicator for scrolling when the list overflows */}
                 {recentAnnouncements.length > 4 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllMobile(!showAllMobile)}
-                    className="mt-3.5 flex lg:hidden w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-sky-600 active:scale-[0.99]"
-                  >
-                    <span>
-                      {showAllMobile
-                        ? 'Show Fewer Updates'
-                        : `View All ${recentAnnouncements.length} Updates`}
-                    </span>
-                    {showAllMobile ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
-                )}
-
-                {/* Subtle bottom fade indicator for scrolling on desktop only */}
-                {recentAnnouncements.length > 4 && (
-                  <div className="hidden lg:block absolute bottom-0 left-0 right-2 h-10 bg-gradient-to-t from-[#F5F7FA] to-transparent pointer-events-none"></div>
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-2 h-10 bg-gradient-to-t from-[#F5F7FA] to-transparent"></div>
                 )}
               </div>
             </div>
