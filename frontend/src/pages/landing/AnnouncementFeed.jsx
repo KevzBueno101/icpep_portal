@@ -1,26 +1,42 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AnnouncementCard from '../../components/AnnouncementCard'
 import NotificationToggle from '../../components/NotificationToggle'
 import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { getNewestAnnouncementId } from '../../utils/announcementCategories'
+import { EVENTS } from '../../utils/events'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAllMobile, setShowAllMobile] = useState(false)
+  const newestIdRef = useRef(null)
 
-  const fetchAnnouncements = async () => {
-    setLoading(true)
+  const fetchAnnouncements = async ({ announceNew = false, silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await publicApi.get('/announcements/')
-      setAnnouncements(res.data.results || [])
+      const results = res.data.results || []
+      const nextNewestId = getNewestAnnouncementId(results)
+      if (
+        announceNew &&
+        newestIdRef.current != null &&
+        nextNewestId != null &&
+        nextNewestId !== newestIdRef.current
+      ) {
+        const newest = results.find((a) => a.id === nextNewestId)
+        window.dispatchEvent(
+          new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: newest?.title } })
+        )
+      }
+      newestIdRef.current = nextNewestId
+      setAnnouncements(results)
     } catch (err) {
       console.error('Failed to fetch announcements:', err)
       setAnnouncements([])
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -37,6 +53,61 @@ export default function AnnouncementFeed() {
     return () => {
       window.removeEventListener(ANNOUNCEMENT_UPDATED_EVENT, handleAnnouncementChange)
       window.removeEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementChange)
+    }
+  }, [])
+
+  // Live updates for anonymous visitors via the public WebSocket.
+  useEffect(() => {
+    const wsUrl = import.meta.env.VITE_WS_URL
+      ? `${import.meta.env.VITE_WS_URL.replace(/\/$/, '')}/ws/member_updates/`
+      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/member_updates/`
+
+    let ws
+    let isCancelled = false
+    let reconnectTimeout
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (e) {
+        console.warn('[AnnouncementFeed] WebSocket init failed:', e)
+        return
+      }
+
+      ws.onmessage = (event) => {
+        if (isCancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data?.type === 'announcements.updated') {
+            fetchAnnouncements({ announceNew: true, silent: true })
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      }
+
+      ws.onerror = () => {
+        // avoid spamming the console
+      }
+
+      ws.onclose = () => {
+        if (isCancelled) return
+        reconnectTimeout = setTimeout(() => {
+          if (!isCancelled) connect()
+        }, 3000)
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(reconnectTimeout)
+      try {
+        ws?.close()
+      } catch {
+        // ignore
+      }
     }
   }, [])
 

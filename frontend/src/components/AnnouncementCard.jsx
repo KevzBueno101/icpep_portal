@@ -167,17 +167,19 @@ export default function AnnouncementCard({ announcement, variant = 'default', is
         )}
 
         <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
-          <div className="mb-1 flex flex-wrap items-center gap-1.5">
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold ${categoryColor}`}>
-              {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
-            </span>
-            {isNew && <NewBadge />}
-            {pinned && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                <Pin size={10} className="text-amber-500" />
-                Pinned
+          <div className="mb-1 flex items-center justify-between gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold ${categoryColor}`}>
+                {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
               </span>
-            )}
+              {pinned && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                  <Pin size={10} className="text-amber-500" />
+                  Pinned
+                </span>
+              )}
+            </div>
+            {isNew && <NewBadge className="shrink-0" />}
           </div>
           <h4 className="text-xs sm:text-sm md:text-base font-semibold text-slate-900 line-clamp-2 break-words leading-snug group-hover:text-sky-600 transition-colors">
             {title}
