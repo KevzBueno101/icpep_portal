@@ -23,7 +23,7 @@ export default function UpdateNotice() {
     let cancelled = false
 
     const markUpdateAvailable = () => {
-      if (!cancelled) triggerRefresh()
+      if (!cancelled) triggerRefresh('A new app version is available')
     }
 
     const watchRegistration = (registration) => {
