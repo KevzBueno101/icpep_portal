@@ -301,7 +301,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Admin Management</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Admin Accounts</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">Admin Accounts</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
               Manage administrator accounts, roles, and status from one place. Click on any card to edit officer details.
             </p>
@@ -382,7 +382,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
               Loading admin accounts...
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {canEdit && (
                 <button
                   type="button"
@@ -405,7 +405,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
                   <div
                     key={admin.id}
                     onClick={() => openEditModal(admin)}
-                    className="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer"
+                    className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer sm:p-6"
                   >
                     <div className="flex items-start gap-4">
                       <div className="relative h-16 w-16 flex-shrink-0">
@@ -423,29 +423,29 @@ const AdminAdmins = ({ refreshTrigger }) => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{admin.username}</p>
-                        <p className="text-sm text-slate-500 truncate">{admin.email}</p>
+                        <p className="truncate text-[13px] font-semibold text-slate-900 sm:text-sm">{admin.username}</p>
+                        <p className="truncate text-[13px] text-slate-500 sm:text-sm">{admin.email}</p>
                       </div>
                     </div>
 
                     <div className="mt-4 space-y-2">
-                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                        <span className="text-xs text-slate-600">Role</span>
-                        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
+                      <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Role</span>
+                        <span className="min-w-0 flex-1 break-words text-right text-[11px] font-semibold uppercase tracking-wide text-slate-700 sm:text-xs">
                           {admin.role}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                        <span className="text-xs text-slate-600">Position</span>
-                        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                      <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Position</span>
+                        <span className={`min-w-0 flex-1 break-words text-right text-[11px] font-semibold uppercase tracking-wide sm:text-xs ${
                           admin.position ? 'text-sky-700' : 'text-slate-500'
                         }`}>
                           {admin.position || 'No position'}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                        <span className="text-xs text-slate-600">Access</span>
-                        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                      <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Access</span>
+                        <span className={`min-w-0 flex-1 break-words text-right text-[11px] font-semibold uppercase tracking-wide sm:text-xs ${
                           admin.access_level === 'FULL_CONTROL' ? 'text-purple-700' :
                           admin.access_level === 'MEMBERSHIP' ? 'text-emerald-700' :
                           'text-slate-500'
@@ -456,35 +456,35 @@ const AdminAdmins = ({ refreshTrigger }) => {
                         </span>
                       </div>
                       {admin.department && (
-                        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                          <span className="text-xs text-slate-600">Department</span>
-                          <span className="text-xs font-semibold text-slate-700">{admin.department}</span>
+                        <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                          <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Department</span>
+                          <span className="min-w-0 flex-1 break-words text-right text-[11px] font-semibold text-slate-700 sm:text-xs">{admin.department}</span>
                         </div>
                       )}
                       {admin.academic_year && (
-                        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                          <span className="text-xs text-slate-600">Academic Year</span>
-                          <span className="text-xs font-semibold text-slate-700">AY {admin.academic_year}</span>
+                        <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                          <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Academic Year</span>
+                          <span className="min-w-0 flex-1 break-words text-right text-[11px] font-semibold text-slate-700 sm:text-xs">AY {admin.academic_year}</span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                        <span className="text-xs text-slate-600">Status</span>
-                        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                      <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Status</span>
+                        <span className={`min-w-0 flex-1 break-words text-right text-[11px] font-semibold uppercase tracking-wide sm:text-xs ${
                           admin.is_active ? 'text-emerald-700' : 'text-slate-600'
                         }`}>
                           {STATUS_LABELS[String(admin.is_active)] || (admin.is_active ? 'Active' : 'Inactive')}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-                        <span className="text-xs text-slate-600">Created</span>
-                        <span className="text-xs text-slate-700">
+                      <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2">
+                        <span className="shrink-0 text-[11px] text-slate-600 sm:text-xs">Created</span>
+                        <span className="min-w-0 flex-1 break-words text-right text-[11px] text-slate-700 sm:text-xs">
                           {formatDate(admin.created_at)}
                         </span>
                       </div>
                     </div>
 
                     {canEdit && (
-                      <div className="mt-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                      <div className="mt-4 flex gap-2 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                         <button
                           type="button"
                           onClick={(e) => {
