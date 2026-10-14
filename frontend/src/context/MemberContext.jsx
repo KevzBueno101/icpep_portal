@@ -5,7 +5,8 @@ import { useRefresh } from './RefreshContext'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../utils/events'
 import { getNewestAnnouncementId } from '../utils/announcementCategories'
-import { getMemberUpdatesWsUrl } from '../utils/ws'
+import { RESOURCES } from '../utils/realtime'
+import { useRealtimeContent } from './RealtimeContext'
 import { setUnreadBadge, clearUnreadBadge } from '../utils/appBadge'
 
 const MemberContext = createContext(null)
@@ -261,85 +262,34 @@ export const MemberProvider = ({ children }) => {
     return () => document.removeEventListener('visibilitychange', onFocus)
   }, [fetchProfile, fetchAnnouncements])
 
-  // Real-time updates via WebSocket (Channels)
-  useEffect(() => {
-    if (!user?.id) return
-
-    const wsUrl = getMemberUpdatesWsUrl()
-
-    let ws
-    let isCancelled = false
-    let reconnectTimeout
-
-    const connect = () => {
-      try {
-        ws = new WebSocket(wsUrl)
-      } catch (e) {
-        console.warn('[MemberContext] WebSocket init failed:', e)
-        return
-      }
-
-      ws.onmessage = async (event) => {
-        if (isCancelled) return
-        try {
-          const data = JSON.parse(event.data)
-          if (data?.type === 'announcements.updated') {
-            const prevNewestId = newestAnnouncementIdRef.current
-            const results = await fetchAnnouncements(true)
-            if (isCancelled) return
-            const nextNewestId = getNewestAnnouncementId(results)
-            if (
-              prevNewestId != null &&
-              nextNewestId != null &&
-              nextNewestId !== prevNewestId
-            ) {
-              const newest = results.find((a) => a.id === nextNewestId)
-              window.dispatchEvent(
-                new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: newest?.title } })
-              )
-            }
-            triggerContentRefresh()
-          } else if (data?.type === 'about.updated') {
-            fetchAboutSections()
-            triggerContentRefresh()
-          }
-        } catch (e) {
-          console.warn('[MemberContext] ws message parse error')
-        }
-      }
-
-      ws.onerror = () => {
-        // avoid spamming console
-      }
-
-      ws.onclose = () => {
-        if (isCancelled) return
-        reconnectTimeout = setTimeout(() => {
-          if (!isCancelled) {
-            connect() // Reconnect
-            // Refresh data in case we missed anything while disconnected
-            fetchAnnouncements(true)
-            fetchAboutSections()
-            triggerContentRefresh()
-          }
-        }, 3000) // Reconnect after 3 seconds
-      }
+  // Real-time updates via the shared realtime provider (single WebSocket).
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, async () => {
+    const prevNewestId = newestAnnouncementIdRef.current
+    const results = await fetchAnnouncements(true)
+    const nextNewestId = getNewestAnnouncementId(results)
+    if (
+      prevNewestId != null &&
+      nextNewestId != null &&
+      nextNewestId !== prevNewestId
+    ) {
+      const newest = results.find((a) => a.id === nextNewestId)
+      window.dispatchEvent(
+        new CustomEvent(EVENTS.NEW_ANNOUNCEMENT, { detail: { title: newest?.title } })
+      )
     }
+  })
 
-    connect()
+  useRealtimeContent(RESOURCES.ABOUT, () => {
+    fetchAboutSections()
+  })
 
-    return () => {
-      isCancelled = true
-      clearTimeout(reconnectTimeout)
-      try {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.close()
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }, [user?.id, fetchAnnouncements, fetchAboutSections, triggerContentRefresh])
+  useRealtimeContent(RESOURCES.PAYMENT_SETTINGS, () => {
+    fetchPaymentSettings()
+  })
+
+  useRealtimeContent(RESOURCES.MEMBERS, () => {
+    fetchProfile()
+  })
 
   const value = {
     profile,

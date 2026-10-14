@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { publicApi } from '../../api/axios'
 import ImageModal from '../../components/ImageModal'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 
 const CATEGORIES = {
   founding:    { label: 'Founding',     accent: '#38bdf8', dimAccent: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.35)'  },
@@ -30,19 +32,24 @@ export default function MilestoneDetail() {
     navigate('/landing#milestones', { state: { scrollTo: 'milestones' } })
   }
 
-  useEffect(() => {
-    const fetchMilestone = async () => {
-      try {
-        const res = await publicApi.get(`/milestones/${id}/`)
-        setMilestone(res.data)
-      } catch (err) {
-        console.error('Failed to fetch milestone:', err)
-      } finally {
-        setLoading(false)
-      }
+  const fetchMilestone = useCallback(async () => {
+    try {
+      const res = await publicApi.get(`/milestones/${id}/`)
+      setMilestone(res.data)
+    } catch (err) {
+      console.error('Failed to fetch milestone:', err)
+    } finally {
+      setLoading(false)
     }
-    fetchMilestone()
   }, [id])
+
+  useEffect(() => {
+    fetchMilestone()
+  }, [fetchMilestone])
+
+  useRealtimeContent(RESOURCES.MILESTONES, () => {
+    fetchMilestone()
+  })
 
   if (loading) {
     return (

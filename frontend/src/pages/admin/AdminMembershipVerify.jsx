@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import api from '../../api/axios'
 import { EVENTS } from '../../utils/events'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../context/RealtimeContext'
 import Skeleton from '../../components/Skeleton'
 
 const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
@@ -34,21 +36,30 @@ const MemberMembershipVerify = () => {
       : []),
   ]
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      try {
-        const res = await api.get(`/members/${id}/`)
-        setMember(res.data)
-      } catch {
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
+    try {
+      const res = await api.get(`/members/${id}/`)
+      setMember(res.data)
+    } catch {
+      if (!silent) {
         toast.error('Unable to load member details.')
         setMember(null)
-      } finally {
-        setLoading(false)
       }
+    } finally {
+      if (!silent) setLoading(false)
     }
-    load()
   }, [id])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  useRealtimeContent(RESOURCES.MEMBERS, () => {
+    load({ silent: true })
+  })
+
+  useRealtimeGuard(decisionModalOpen)
 
   const applyDecision = async (decision) => {
     if (!member) return

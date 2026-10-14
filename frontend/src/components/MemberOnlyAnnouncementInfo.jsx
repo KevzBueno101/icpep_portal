@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/useAuth'
 import { Lock, X, ArrowRight } from 'lucide-react'
 import api from '../api/axios'
+import { RESOURCES } from '../utils/realtime'
+import { useRealtimeContent } from '../context/RealtimeContext'
 
 const DISMISSAL_KEY = 'icpep_members_only_info_dismissed'
 
@@ -9,6 +11,20 @@ export default function MemberOnlyAnnouncementInfo() {
   const { user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
   const [membersOnlyCount, setMembersOnlyCount] = useState(0)
+
+  const fetchMembersOnlyCount = async () => {
+    try {
+      const res = await api.get('/announcements/')
+      const announcements = res.data?.results || []
+      const count = announcements.filter((a) => a.members_only).length
+      setMembersOnlyCount(count)
+      if (count > 0) {
+        setIsVisible((prev) => (localStorage.getItem(DISMISSAL_KEY) ? prev : true))
+      }
+    } catch {
+      // Silently fail - info box is optional
+    }
+  }
 
   useEffect(() => {
     // Check if user is authenticated
@@ -24,23 +40,14 @@ export default function MemberOnlyAnnouncementInfo() {
       return
     }
 
-    // Fetch members-only announcements count
-    const fetchMembersOnlyCount = async () => {
-      try {
-        const res = await api.get('/announcements/')
-        const announcements = res.data?.results || []
-        const count = announcements.filter((a) => a.members_only).length
-        setMembersOnlyCount(count)
-        if (count > 0) {
-          setIsVisible(true)
-        }
-      } catch {
-        // Silently fail - info box is optional
-      }
-    }
-
     fetchMembersOnlyCount()
   }, [user])
+
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
+    if (user) return
+    if (localStorage.getItem(DISMISSAL_KEY)) return
+    fetchMembersOnlyCount()
+  })
 
   const handleDismiss = () => {
     setIsVisible(false)

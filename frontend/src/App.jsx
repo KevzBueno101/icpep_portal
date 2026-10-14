@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import NetworkStatus from './components/NetworkStatus'
 import { AuthProvider } from './context/AuthContext'
 import { RefreshProvider } from './context/RefreshContext'
+import { RealtimeProvider } from './context/RealtimeContext'
 import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import AdminProtectedRoute from './routes/AdminProtectedRoute'
@@ -59,6 +60,7 @@ function App() {
       <ThemeProvider>
       <AuthProvider>
       <RefreshProvider>
+        <RealtimeProvider>
         <div className="min-h-screen w-full overflow-x-hidden">
         <Toaster
           position="top-right"
@@ -251,6 +253,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         </div>
+        </RealtimeProvider>
       </RefreshProvider>
       </AuthProvider>
       </ThemeProvider>

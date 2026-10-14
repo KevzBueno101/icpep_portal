@@ -9,9 +9,13 @@ class ReorderAPIView(APIView):
     Subclasses must set ``model`` and ``permission_classes``.
     Accepts POST with ``{ "ordered_ids": [1, 3, 2] }`` and sets
     ``display_order`` = 0, 1, 2, … based on array index.
+
+    Set ``realtime_resource`` to a resource name to broadcast a
+    ``content.updated`` event after a successful reorder.
     """
 
     model = None
+    realtime_resource = None
 
     def post(self, request):
         ordered_ids = request.data.get('ordered_ids')
@@ -40,5 +44,10 @@ class ReorderAPIView(APIView):
             for idx, pk in enumerate(ordered_ids)
         ]
         self.model.objects.bulk_update(updates, ['display_order'])
+
+        if self.realtime_resource:
+            from common.realtime import broadcast_member_update
+
+            broadcast_member_update(self.realtime_resource)
 
         return Response({'detail': 'Order updated.'}, status=status.HTTP_200_OK)

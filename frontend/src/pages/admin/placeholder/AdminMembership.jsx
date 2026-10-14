@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Search, FileDown, Plus, CheckCircle, XCircle, Archive, AlertCircle, RefreshCw, X, PencilLine, Trash2, ScrollText, Download, Upload } from 'lucide-react'
 
 import api from '../../../api/axios'
@@ -8,6 +8,8 @@ import ConfirmModal from '../../../components/common/ConfirmModal'
 import MembershipCard from '../../../components/member/MembershipCard'
 import { useAuth } from '../../../context/useAuth'
 import { EVENTS } from '../../../utils/events'
+import { RESOURCES } from '../../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../../context/RealtimeContext'
 import { downloadFile } from '../../../utils/download'
 
 const AdminMembership = () => {
@@ -72,9 +74,9 @@ const AdminMembership = () => {
   const [isRenewing, setIsRenewing] = useState(false)
 
   // Fetch members from Django REST API
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async ({ silent = false } = {}) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const response = await api.get('/members/')
       setMembers(response.data.results)
       setError(null)
@@ -83,15 +85,22 @@ const AdminMembership = () => {
       setError('Failed to fetch membership records. Please try again.')
       toast.error('Error fetching members')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    ;(async () => {
-      await fetchMembers()
-    })()
-  }, [])
+    fetchMembers()
+  }, [fetchMembers])
+
+  // Live updates from any admin/tab.
+  useRealtimeContent(RESOURCES.MEMBERS, () => {
+    fetchMembers({ silent: true })
+  })
+
+  useRealtimeGuard(
+    editTarget != null || deleteTarget != null || historyTarget != null || isAddModalOpen || isRenewConfirmOpen
+  )
 
 
   const toggleMobileCard = (memberId) => {

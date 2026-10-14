@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
 from authentication.models import LoginEvent
+from common.realtime import broadcast_member_update
 from permissions import (
     CanManageMembership,
     IsOwnerOrCanManageMembership,
@@ -104,6 +105,8 @@ class MemberListAPIView(generics.ListCreateAPIView):
                 details={'email': profile.user.email},
                 request=request
             )
+
+        broadcast_member_update("members")
 
         # Return full profile in GET format
         response_serializer = MemberProfileSerializer(profile)
@@ -223,6 +226,8 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
                 request=self.request
             )
 
+        broadcast_member_update("members")
+
     def perform_destroy(self, instance):
         entity_name = f"{instance.first_name} {instance.last_name}"
         entity_id = instance.id
@@ -239,6 +244,8 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
                 details={'email': instance.user.email},
                 request=self.request
             )
+
+        broadcast_member_update("members")
 
 
 class PaymentSettingsAPIView(APIView):
@@ -272,6 +279,8 @@ class PaymentSettingsAPIView(APIView):
             details=request.data,
             request=request
         )
+
+        broadcast_member_update("payment-settings")
 
         return Response(serializer.data)
 
@@ -355,6 +364,8 @@ class MemberApproveAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("members")
+
         return Response(MemberProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 
@@ -389,6 +400,8 @@ class MemberRenewAllAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("members")
+
         return Response({'renewed_count': renewed_count}, status=status.HTTP_200_OK)
 
 
@@ -415,6 +428,8 @@ class MemberRenewAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         profile.membership_status = MemberProfile.Status.PENDING
         serializer.save()
+
+        broadcast_member_update("members")
 
         return Response(
             MemberProfileSerializer(profile).data,

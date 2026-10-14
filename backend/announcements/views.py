@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.realtime import broadcast_member_update
 from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 from push.services import send_announcement_push
@@ -14,22 +15,9 @@ from .blast import send_announcement_blast
 from .models import Announcement, AnnouncementImage
 from .serializers import AnnouncementImageSerializer, AnnouncementSerializer
 
-def broadcast_announcements_updated():
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
 
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "member_updates",
-                {
-                    "type": "announcements.updated",
-                    "payload": {},
-                },
-            )
-    except Exception:
-        pass
+def broadcast_announcements_updated():
+    broadcast_member_update("announcements")
 
 
 class AnnouncementListAPIView(generics.ListAPIView):
@@ -178,6 +166,8 @@ class AnnouncementImageUploadAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("announcements")
+
         return Response(AnnouncementImageSerializer(image, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, image_id):
@@ -187,7 +177,9 @@ class AnnouncementImageUploadAPIView(APIView):
         if order is not None:
             image.order = order
             image.save(update_fields=['order'])
-        
+
+        broadcast_member_update("announcements")
+
         return Response(AnnouncementImageSerializer(image, context={'request': request}).data)
 
     def delete(self, request, image_id):
@@ -207,12 +199,15 @@ class AnnouncementImageUploadAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("announcements")
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AnnouncementReorderAPIView(ReorderAPIView):
     model = Announcement
     permission_classes = [CanManageContent]
+    realtime_resource = "announcements"
 
 
 class AnnouncementEmailBlastAPIView(APIView):

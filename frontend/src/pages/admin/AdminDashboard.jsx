@@ -8,6 +8,8 @@ import Skeleton from '../../components/Skeleton'
 import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Users, UserCheck, UserX, Clock, Shield, TrendingUp } from 'lucide-react'
 import OfficersCarousel from '../../components/OfficersCarousel'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 
 
 
@@ -25,6 +27,7 @@ const AdminDashboard = () => {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const [admins, setAdmins] = useState([])
+  const [realtimeNonce, setRealtimeNonce] = useState(0)
   const [memberStats, setMemberStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [savingAdmins, setSavingAdmins] = useState([])
@@ -85,7 +88,13 @@ const AdminDashboard = () => {
     if (user) {
       loadData()
     }
-  }, [canManageRoles, user])
+  }, [canManageRoles, user, realtimeNonce])
+
+  // Live updates from any admin/tab.
+  useRealtimeContent(
+    [RESOURCES.MEMBERS, RESOURCES.PAYMENT_SETTINGS, RESOURCES.ADMINS, RESOURCES.OFFICERS],
+    () => setRealtimeNonce((n) => n + 1)
+  )
 
   const statusCounts = memberStats?.status_counts || {}
   const totalAdmins = (admins || []).length

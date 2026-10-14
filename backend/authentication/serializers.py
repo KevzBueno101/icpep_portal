@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
+from common.realtime import broadcast_member_update
 from members.models import MemberProfile
 from members.serializers import validate_image_file
 
@@ -72,6 +73,8 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
         if profile_picture is not None:
             user.profile_picture = profile_picture
             user.save(update_fields=['profile_picture'])
+
+        broadcast_member_update("admins")
         return user
 
 
@@ -155,6 +158,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                     'Please try again.'
                 ]
             }) from err
+
+        broadcast_member_update("members")
         return user
 
     def validate_profile_picture(self, value):
