@@ -125,14 +125,14 @@ def _draw_background(c, snapshot):
     c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
 
 
-def _draw_signature(c, x_center, y_line, name, position, color, signature_url):
+def _draw_signature(c, x_center, y_line, name, position, color, signature_url, img_max_w=160):
     if signature_url:
         sig_bytes = _fetch_image_bytes(signature_url)
         if sig_bytes:
             try:
                 img = ImageReader(io.BytesIO(sig_bytes))
                 iw, ih = img.getSize()
-                target_w, target_h = 160, 46
+                target_w, target_h = img_max_w, 46
                 scale = min(target_w / iw, target_h / ih)
                 w, h = iw * scale, ih * scale
                 c.drawImage(img, x_center - w / 2, y_line + 4, width=w, height=h, mask='auto')
@@ -144,6 +144,28 @@ def _draw_signature(c, x_center, y_line, name, position, color, signature_url):
     c.drawCentredString(x_center, y_line - 16, name or '')
     c.setFont(SANS, 9.5)
     c.drawCentredString(x_center, y_line - 29, (position or '').upper())
+
+
+def _signatory_x_fractions(count, align):
+    """Horizontal centers (as page fractions) for the signature row."""
+    if count <= 0:
+        return []
+    if count == 1:
+        return [0.5 if align == 'CENTER' else (0.18 if align == 'LEFT' else 0.82)]
+    if align == 'LEFT':
+        left, right = 0.18, 0.60
+    elif align == 'RIGHT':
+        left, right = 0.40, 0.82
+    else:
+        left, right = 0.18, 0.82
+    spacing = min((right - left) / (count - 1), 0.30)
+    if align == 'LEFT':
+        start = left
+    elif align == 'RIGHT':
+        start = right - spacing * (count - 1)
+    else:
+        start = 0.5 - spacing * (count - 1) / 2
+    return [start + spacing * i for i in range(count)]
 
 
 def _draw_qr(c, url, x, y, size):
@@ -175,6 +197,21 @@ def build_certificate_pdf(certificate):
     _draw_background(c, snapshot)
 
     align = _normalize_align(snapshot.get('text_align'))
+
+    # Small three-line header (school / college / organization) at the top.
+    header_lines = [
+        (snapshot.get('header_school') or '').strip(),
+        (snapshot.get('header_college') or '').strip(),
+        (snapshot.get('header_organization') or '').strip(),
+    ]
+    header_lines = [line for line in header_lines if line]
+    if header_lines:
+        c.setFont(SANS, 10)
+        c.setFillColor(color)
+        header_y = PAGE_H - 46
+        for line in header_lines:
+            _draw_aligned(c, line, header_y, align)
+            header_y -= 13
 
     content_top = PAGE_H - 120
     title_size = max(30, min(base_size * 2.2, 52))
@@ -219,30 +256,32 @@ def build_certificate_pdf(certificate):
 
     # Signatories (bottom band); position follows the text alignment --------
     line_y = 150
-    if align == 'LEFT':
-        single_x, pair_x = PAGE_W * 0.20, (PAGE_W * 0.20, PAGE_W * 0.47)
-    elif align == 'RIGHT':
-        single_x, pair_x = PAGE_W * 0.80, (PAGE_W * 0.53, PAGE_W * 0.80)
-    else:
-        single_x, pair_x = PAGE_W * 0.50, (PAGE_W * 0.32, PAGE_W * 0.68)
+    signatories = list(snapshot.get('signatories') or [])
+    if not signatories:
+        # Backwards compatibility with snapshots issued before the list field.
+        if snapshot.get('signatory_name'):
+            signatories.append({
+                'name': snapshot.get('signatory_name'),
+                'position': snapshot.get('signatory_position'),
+                'signature_url': snapshot.get('signature_url'),
+            })
+        if snapshot.get('second_signatory_name'):
+            signatories.append({
+                'name': snapshot.get('second_signatory_name'),
+                'position': snapshot.get('second_signatory_position'),
+                'signature_url': '',
+            })
 
-    sec_name = (snapshot.get('second_signatory_name') or '').strip()
-    if sec_name:
-        _draw_signature(
-            c, pair_x[0], line_y, snapshot.get('signatory_name'),
-            snapshot.get('signatory_position'), color,
-            snapshot.get('signature_url'),
-        )
-        _draw_signature(
-            c, pair_x[1], line_y, sec_name,
-            snapshot.get('second_signatory_position'), color, '',
-        )
-    else:
-        _draw_signature(
-            c, single_x, line_y, snapshot.get('signatory_name'),
-            snapshot.get('signatory_position'), color,
-            snapshot.get('signature_url'),
-        )
+    if signatories:
+        xs = _signatory_x_fractions(len(signatories), align)
+        spacing = (xs[1] - xs[0]) if len(xs) > 1 else 0.30
+        img_w = max(70, min(160, PAGE_W * spacing * 0.7))
+        for sig, fx in zip(signatories, xs, strict=False):
+            _draw_signature(
+                c, PAGE_W * fx, line_y,
+                sig.get('name'), sig.get('position'), color,
+                sig.get('signature_url'), img_max_w=img_w,
+            )
 
     # QR verification block (bottom-right) ---------------------------------
     verify_url = f"{getattr(settings, 'FRONTEND_URL', '')}/verify/{certificate.verification_code}"

@@ -1,4 +1,7 @@
+import json
+
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APITestCase
 
 from members.models import MemberProfile
@@ -7,6 +10,13 @@ from .models import Certificate, CertificateDesign
 from .pdf import build_certificate_pdf
 
 User = get_user_model()
+
+# Minimal valid 1x1 PNG used for upload validation tests.
+PNG_1x1 = (
+    b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01'
+    b'\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01'
+    b'\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+)
 
 
 def _make_user(email, **kwargs):
@@ -46,8 +56,8 @@ class CertificateAPITests(APITestCase):
         self.other = _make_profile(self.other_user, '2023-0002')
         self.design = CertificateDesign.objects.create(
             name='Participation', title='Certificate of Participation',
-            message='For your participation.', signatory_name='Jane Doe',
-            signatory_position='President',
+            message='For your participation.',
+            signatories=[{'name': 'Jane Doe', 'position': 'President', 'signature_url': ''}],
         )
         self.event = {'event_name': 'Tech Summit', 'event_date': '2026-01-15'}
 
@@ -214,3 +224,47 @@ class CertificateAPITests(APITestCase):
         for align in ('LEFT', 'CENTER', 'RIGHT', 'garbage'):
             cert.design_snapshot = {**cert.design_snapshot, 'text_align': align}
             self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
+
+    def test_design_header_defaults_and_snapshot(self):
+        design = CertificateDesign.objects.create(name='Headed', title='Certificate')
+        snap = design.snapshot()
+        self.assertEqual(snap['header_school'], 'Catanduanes State University')
+        self.assertEqual(snap['header_college'], 'College of Engineering and Architecture')
+        self.assertIn('CatSU Chapter', snap['header_organization'])
+
+    def test_signatories_persist_and_snapshot(self):
+        self.client.force_authenticate(self.admin)
+        payload = [
+            {'name': 'Jane Doe', 'position': 'President', 'signature_url': ''},
+            {'name': 'John Cruz', 'position': 'Secretary', 'signature_url': ''},
+        ]
+        res = self.client.post('/api/certificates/designs/', {
+            'name': 'Two signers', 'title': 'Certificate', 'signatories': json.dumps(payload),
+        }, format='multipart')
+        self.assertEqual(res.status_code, 201, res.data)
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        self.assertEqual(len(design.signatories), 2)
+        self.assertEqual(design.snapshot()['signatories'][1]['name'], 'John Cruz')
+
+    def test_signatory_signature_upload_is_stored(self):
+        self.client.force_authenticate(self.admin)
+        img = SimpleUploadedFile('sig.png', PNG_1x1, content_type='image/png')
+        res = self.client.post('/api/certificates/designs/', {
+            'name': 'Sig upload', 'title': 'Certificate',
+            'signatories': json.dumps([{'name': 'Jane Doe', 'position': 'President', 'signature_url': ''}]),
+            'signature_0': img,
+        }, format='multipart')
+        self.assertEqual(res.status_code, 201, res.data)
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        self.assertTrue(design.signatories[0]['signature_url'])
+
+    def test_pdf_renders_with_multiple_signatories(self):
+        self.design.signatories = [
+            {'name': 'A', 'position': 'President', 'signature_url': ''},
+            {'name': 'B', 'position': 'Vice', 'signature_url': ''},
+            {'name': 'C', 'position': 'Secretary', 'signature_url': ''},
+        ]
+        self.design.save()
+        self._issue()
+        cert = Certificate.objects.first()
+        self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))

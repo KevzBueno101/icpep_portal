@@ -7,17 +7,34 @@ const DEFAULT_SAMPLE = {
   eventDate: '2026-01-15',
 }
 
-const SIGNATURE_POSITIONS = {
-  left: { single: '20%', double: ['20%', '47%'] },
-  center: { single: '50%', double: ['32%', '68%'] },
-  right: { single: '80%', double: ['53%', '80%'] },
-}
-
 function formatDate(value) {
   if (!value) return ''
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return String(value)
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+function signatoryXFractions(count, align) {
+  if (count <= 0) return []
+  if (count === 1) return [align === 'center' ? '50%' : align === 'left' ? '18%' : '82%']
+  let left
+  let right
+  if (align === 'left') {
+    left = 18
+    right = 60
+  } else if (align === 'right') {
+    left = 40
+    right = 82
+  } else {
+    left = 18
+    right = 82
+  }
+  const spacing = Math.min((right - left) / (count - 1), 30)
+  let start
+  if (align === 'left') start = left
+  else if (align === 'right') start = right - spacing * (count - 1)
+  else start = 50 - (spacing * (count - 1)) / 2
+  return Array.from({ length: count }, (_, i) => `${start + spacing * i}%`)
 }
 
 /**
@@ -35,14 +52,16 @@ export default function CertificatePreview({
   className = '',
 }) {
   const backgroundUrl = design.background_url || design.background_image || ''
-  const signatureUrl = design.signature_url || design.signature_image || ''
   const textColor = design.text_color || '#0f172a'
   const scale = Math.min(1.6, Math.max(0.8, (Number(design.font_size) || 16) / 16))
-  const secondName = design.second_signatory_name || ''
 
   const alignRaw = (design.text_align || 'CENTER').toLowerCase()
   const align = ['left', 'right', 'center'].includes(alignRaw) ? alignRaw : 'center'
-  const sigPos = SIGNATURE_POSITIONS[align]
+
+  const signatories = (Array.isArray(design.signatories) ? design.signatories : [])
+    .filter((s) => s && (s.name || s.position || s.signature_url))
+  const sigXs = signatoryXFractions(signatories.length, align)
+  const sigWidth = signatories.length <= 2 ? 30 : Math.max(12, Math.round(60 / signatories.length))
 
   const em = (factor) => `${(factor * scale).toFixed(3)}em`
 
@@ -63,6 +82,15 @@ export default function CertificatePreview({
 
       <div className="absolute inset-0">
         <div className="absolute" style={{ left: '8%', right: '8%', top: 0, bottom: 0, textAlign: align }}>
+          <div
+            className="absolute"
+            style={{ left: 0, right: 0, top: '3%', fontSize: em(0.52), lineHeight: 1.35 }}
+          >
+            {design.header_school ? <div>{design.header_school}</div> : null}
+            {design.header_college ? <div>{design.header_college}</div> : null}
+            {design.header_organization ? <div>{design.header_organization}</div> : null}
+          </div>
+
           <div
             className="absolute font-semibold uppercase tracking-wide"
             style={{ left: 0, right: 0, top: '10%', fontSize: em(1.9) }}
@@ -116,34 +144,18 @@ export default function CertificatePreview({
         </div>
 
         {/* Signatories */}
-        {secondName ? (
-          <>
-            <Signatory
-              left={sigPos.double[0]}
-              name={design.signatory_name}
-              position={design.signatory_position}
-              signatureUrl={signatureUrl}
-              color={textColor}
-              em={em}
-            />
-            <Signatory
-              left={sigPos.double[1]}
-              name={secondName}
-              position={design.second_signatory_position}
-              color={textColor}
-              em={em}
-            />
-          </>
-        ) : (
+        {signatories.map((sig, i) => (
           <Signatory
-            left={sigPos.single}
-            name={design.signatory_name}
-            position={design.signatory_position}
-            signatureUrl={signatureUrl}
+            key={i}
+            left={sigXs[i]}
+            width={sigWidth}
+            name={sig.name}
+            position={sig.position}
+            signatureUrl={sig.signature_url}
             color={textColor}
             em={em}
           />
-        )}
+        ))}
 
         {showQr ? (
           <div className="absolute" style={{ right: '2.5%', bottom: '3%' }}>
@@ -155,18 +167,18 @@ export default function CertificatePreview({
   )
 }
 
-function Signatory({ left, name, position, signatureUrl, color, em }) {
+function Signatory({ left, width = 30, name, position, signatureUrl, color, em }) {
   return (
     <div
-      className="absolute w-[30%] -translate-x-1/2 text-center"
-      style={{ left, top: '78%', color }}
+      className="absolute -translate-x-1/2 text-center"
+      style={{ left, top: '78%', width: `${width}%`, color }}
     >
       <div className="relative flex h-[26px] items-end justify-center">
         {signatureUrl ? (
           <img
             src={signatureUrl}
             alt=""
-            className="absolute bottom-0 max-h-[26px] max-w-[70%] object-contain"
+            className="absolute bottom-0 max-h-[26px] max-w-[80%] object-contain"
           />
         ) : null}
       </div>

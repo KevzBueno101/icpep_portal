@@ -1,4 +1,9 @@
+import json
+from uuid import uuid4
+
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files.storage import default_storage
 from rest_framework import serializers
 
 from members.models import MemberProfile
@@ -22,36 +27,113 @@ def _resolve_cloudinary_url(url, field_instance):
     return url
 
 
+class FlexibleJSONField(serializers.Field):
+    """Accepts either a JSON string (multipart) or an already-decoded value."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            try:
+                return json.loads(data)
+            except (ValueError, TypeError):
+                raise serializers.ValidationError('Invalid JSON.') from None
+        return data
+
+    def to_representation(self, value):
+        return value
+
+
 class CertificateDesignSerializer(serializers.ModelSerializer):
     background_image = serializers.ImageField(
         required=False, allow_null=True, validators=[validate_image_file]
     )
-    signature_image = serializers.ImageField(
-        required=False, allow_null=True, validators=[validate_image_file]
-    )
+    signatories = FlexibleJSONField(required=False)
     certificate_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = CertificateDesign
         fields = [
             'id', 'name', 'preset', 'background_image', 'title', 'message',
-            'signatory_name', 'signatory_position', 'signature_image',
-            'second_signatory_name', 'second_signatory_position',
-            'text_color', 'font_size', 'text_align', 'is_archived', 'certificate_count',
-            'created_at', 'updated_at',
+            'header_school', 'header_college', 'header_organization',
+            'signatories', 'text_color', 'font_size', 'text_align',
+            'is_archived', 'certificate_count', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'is_archived', 'created_at', 'updated_at']
 
     def get_certificate_count(self, obj):
         return obj.certificates.count()
 
+    def validate_signatories(self, value):
+        if value in (None, ''):
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Signatories must be a list.')
+        cleaned = []
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get('name') or '').strip()[:150]
+            position = str(item.get('position') or '').strip()[:150]
+            url = str(item.get('signature_url') or '').strip()
+            if not (name or position or url):
+                continue
+            cleaned.append({'name': name, 'position': position, 'signature_url': url})
+        return cleaned
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if request:
+            for key, uploaded in request.FILES.items():
+                if key.startswith('signature_'):
+                    try:
+                        validate_image_file(uploaded)
+                    except DjangoValidationError as exc:
+                        raise serializers.ValidationError({key: exc.messages}) from exc
+        return attrs
+
+    def _apply_signature_uploads(self, instance):
+        request = self.context.get('request')
+        if not request:
+            return instance
+        signatories = list(instance.signatories or [])
+        updated = False
+        for key, uploaded in request.FILES.items():
+            if not key.startswith('signature_'):
+                continue
+            try:
+                index = int(key[len('signature_'):])
+            except (ValueError, TypeError):
+                continue
+            if index < 0 or index >= len(signatories):
+                continue
+            safe_name = uploaded.name.replace('\\', '/').split('/')[-1]
+            stored = default_storage.save(
+                f'certificate_signatures/{uuid4().hex}_{safe_name}', uploaded
+            )
+            signatories[index]['signature_url'] = default_storage.url(stored)
+            updated = True
+        if updated:
+            instance.signatories = signatories
+            instance.save(update_fields=['signatories'])
+        return instance
+
+    def create(self, validated_data):
+        return self._apply_signature_uploads(super().create(validated_data))
+
+    def update(self, instance, validated_data):
+        return self._apply_signature_uploads(super().update(instance, validated_data))
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        for field_name in ('background_image', 'signature_image'):
-            val = data.get(field_name)
-            if val:
-                f_instance = getattr(instance, field_name, None)
-                data[field_name] = _resolve_cloudinary_url(val, f_instance)
+        val = data.get('background_image')
+        if val:
+            data['background_image'] = _resolve_cloudinary_url(
+                val, getattr(instance, 'background_image', None)
+            )
+        for entry in data.get('signatories') or []:
+            if entry.get('signature_url'):
+                entry['signature_url'] = _resolve_cloudinary_url(
+                    entry['signature_url'], entry['signature_url']
+                )
         return data
 
 
