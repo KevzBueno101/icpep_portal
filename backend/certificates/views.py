@@ -1,3 +1,5 @@
+import csv
+
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -333,6 +335,80 @@ class CertificateListAPIView(generics.ListAPIView):
         return qs
 
 
+class CertificateExportAPIView(APIView):
+    """Export issued certificates to CSV matching active filters (membership access only)."""
+
+    permission_classes = [CanManageMembership]
+
+    def get(self, request):
+        qs = Certificate.objects.select_related('member__user', 'design', 'issued_by', 'revoked_by').all()
+        event_key = (request.query_params.get('event_key') or '').strip()
+        if event_key:
+            qs = qs.filter(event_key=event_key)
+        status_param = (request.query_params.get('status') or '').strip()
+        if status_param:
+            qs = qs.filter(status=status_param)
+        search = (request.query_params.get('search') or '').strip()
+        if search:
+            qs = qs.filter(
+                Q(event_name__icontains=search)
+                | Q(member__first_name__icontains=search)
+                | Q(member__last_name__icontains=search)
+                | Q(member__student_number__icontains=search)
+                | Q(verification_code__icontains=search)
+            )
+
+        qs = qs.order_by('-issued_at')
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="issued_certificates.csv"'
+        response.write('\ufeff')
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Verification Code',
+            'Member Name',
+            'Student Number',
+            'Email',
+            'Event Name',
+            'Event Date',
+            'Design Name',
+            'Status',
+            'Issued At',
+            'Issued By',
+            'Revoked At',
+            'Revoked By',
+        ])
+
+        for cert in qs:
+            member = cert.member
+            member_name = ' '.join(
+                p for p in [member.first_name, member.middle_name, member.last_name] if p
+            ) or '—'
+            student_num = member.student_number or ''
+            email = getattr(member.user, 'email', '') if hasattr(member, 'user') and member.user else ''
+            design_name = cert.design.name if cert.design else (cert.design_snapshot or {}).get('title', '')
+            issued_by_name = getattr(cert.issued_by, 'email', '') if cert.issued_by else ''
+            revoked_by_name = getattr(cert.revoked_by, 'email', '') if cert.revoked_by else ''
+
+            writer.writerow([
+                cert.verification_code,
+                member_name,
+                student_num,
+                email,
+                cert.event_name,
+                cert.event_date.isoformat() if cert.event_date else '',
+                design_name,
+                cert.status,
+                cert.issued_at.strftime('%Y-%m-%d %H:%M:%S') if cert.issued_at else '',
+                issued_by_name,
+                cert.revoked_at.strftime('%Y-%m-%d %H:%M:%S') if cert.revoked_at else '',
+                revoked_by_name,
+            ])
+
+        return response
+
+
 class CertificateMineListAPIView(generics.ListAPIView):
     """The authenticated member's own issued certificates (newest first)."""
 
@@ -405,12 +481,35 @@ class CertificateDownloadAPIView(APIView):
 
 
 class CertificateRevokeAPIView(APIView):
-    """Cancel a certificate issued by mistake (membership access only)."""
+    """Cancel or restore a certificate issued by mistake (membership access only)."""
 
     permission_classes = [CanManageMembership]
 
     def post(self, request, pk):
         certificate = get_object_or_404(Certificate, pk=pk)
+        action = (request.data.get('action') or 'revoke').lower()
+
+        if action in ('restore', 'unrevoke'):
+            if certificate.status == Certificate.Status.ISSUED:
+                return Response(CertificateSerializer(certificate).data)
+
+            certificate.status = Certificate.Status.ISSUED
+            certificate.revoked_by = None
+            certificate.revoked_at = None
+            certificate.save(update_fields=['status', 'revoked_by', 'revoked_at'])
+
+            log_action(
+                user=request.user,
+                action_type=AuditLog.ActionType.CERTIFICATE_ISSUED,
+                entity_type=AuditLog.EntityType.CERTIFICATE,
+                entity_id=certificate.id,
+                entity_name=certificate.event_name,
+                details={'verification_code': certificate.verification_code, 'action': 'restored'},
+                request=request,
+            )
+            broadcast_member_update('certificates')
+            return Response(CertificateSerializer(certificate).data)
+
         if certificate.status == Certificate.Status.REVOKED:
             return Response(CertificateSerializer(certificate).data)
 

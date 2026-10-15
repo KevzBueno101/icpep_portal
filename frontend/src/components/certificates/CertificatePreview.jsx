@@ -6,6 +6,21 @@ const PAGE_W = 841.89
 const PAGE_H = 595.28
 const CONTENT_MARGIN = 70
 
+// Symmetric vertical whitespace between the text and the top/bottom edges.
+const EDGE_PADDING = 48
+// Title baseline from the top edge (larger = more breathing room under the header).
+const TITLE_TOP = 140
+// Signature row (bottom band): up to 2 rows of 2 signatories.
+const SIGNATORY_BASELINE = EDGE_PADDING
+const SIGNATORY_COMPACT_BOTTOM = 34
+const SIGNATORIES_PER_ROW = 2
+const SIGNATORY_ROWS_MAX = 2
+const SIG_IMG_MAX_W = 110
+const SIGNATORY_CLEARANCE = 12
+// QR verification block (bottom-right corner).
+const QR_SIZE = 60
+const QR_RIGHT_MARGIN = 28
+
 const SERIF = "'Times New Roman', Times, serif"
 const SANS = 'Helvetica, Arial, sans-serif'
 
@@ -43,27 +58,24 @@ function formatDate(value) {
   return `${MONTHS[month - 1]} ${String(day).padStart(2, '0')}, ${year}`
 }
 
-function signatoryXFractions(count, align) {
-  if (count <= 0) return []
-  if (count === 1) return [align === 'center' ? 0.5 : align === 'left' ? 0.18 : 0.82]
+// Horizontal centers for one signature row (max 2 per row) — mirrors pdf.py.
+function rowXFractions(count, align) {
   let left
   let right
   if (align === 'left') {
     left = 0.18
-    right = 0.60
+    right = 0.44
   } else if (align === 'right') {
-    left = 0.40
+    left = 0.56
     right = 0.82
   } else {
-    left = 0.18
-    right = 0.82
+    left = 0.30
+    right = 0.70
   }
-  const spacing = Math.min((right - left) / (count - 1), 0.30)
-  let start
-  if (align === 'left') start = left
-  else if (align === 'right') start = right - spacing * (count - 1)
-  else start = 0.5 - (spacing * (count - 1)) / 2
-  return Array.from({ length: count }, (_, i) => start + spacing * i)
+  if (count <= 0) return []
+  if (count === 1) return [(left + right) / 2]
+  const spacing = (right - left) / (count - 1)
+  return Array.from({ length: count }, (_, i) => left + spacing * i)
 }
 
 let _measureCtx = null
@@ -132,10 +144,10 @@ export default function CertificatePreview({
     .map((line) => (line || '').trim())
     .filter(Boolean)
   headerLines.forEach((line, i) => {
-    nodes.push({ text: line, y: PAGE_H - 46 - i * 13, size: 10, family: SANS, weight: 400, style: 'normal' })
+    nodes.push({ text: line, y: PAGE_H - EDGE_PADDING - i * 13, size: 10, family: SANS, weight: 400, style: 'normal' })
   })
 
-  let y = PAGE_H - 120
+  let y = PAGE_H - TITLE_TOP
   nodes.push({
     text: (design.title || 'Certificate of Participation').toUpperCase(),
     y, size: titleSize, family: SERIF, weight: 700, style: 'normal',
@@ -181,17 +193,51 @@ export default function CertificatePreview({
     text: `held on ${formatDate(eventDate)}`, y, size: 10.5, family: SANS, weight: 400, style: 'normal',
   })
 
-  // ---- Signatories (bottom band) ------------------------------------------
+  // ---- Signatories (bottom band): 2 per row, max 2 rows --------------------
+  // Mirrors pdf.py _draw_signatory_band: bottom-aligned, clamped so it never
+  // overlaps the "held on" text above it.
   const signatories = (Array.isArray(design.signatories) ? design.signatories : [])
     .filter((s) => s && (s.name || s.position || s.signature_url))
-  const sigXs = signatoryXFractions(signatories.length, align)
-  const sigSpacing = sigXs.length > 1 ? sigXs[1] - sigXs[0] : 0.30
-  const sigImgW = clamp(PAGE_W * sigSpacing * 0.7, 70, 160)
+
+  const chunked = []
+  for (let i = 0; i < signatories.length; i += SIGNATORIES_PER_ROW) {
+    chunked.push(signatories.slice(i, i + SIGNATORIES_PER_ROW))
+  }
+  let rows = chunked.slice(0, SIGNATORY_ROWS_MAX)
+
+  const topClearance = y - SIGNATORY_CLEARANCE
+  const imageGap = 4
+  const rowGap = 8
+  let nameGap = rows.length === 1 ? 16 : 13
+  let bandBottom = rows.length === 1 ? SIGNATORY_BASELINE : SIGNATORY_COMPACT_BOTTOM
+  let available = Math.max(0, topClearance - bandBottom)
+  const textZone = () => nameGap + 13 + imageGap
+  const fitHeight = (rowCount) => (available - (rowCount - 1) * rowGap) / rowCount - textZone()
+
+  let imgH = fitHeight(rows.length)
+  while (rows.length > 1 && imgH < 14) {
+    rows = rows.slice(0, -1)
+    nameGap = rows.length === 1 ? 16 : 13
+    bandBottom = rows.length === 1 ? SIGNATORY_BASELINE : SIGNATORY_COMPACT_BOTTOM
+    available = Math.max(0, topClearance - bandBottom)
+    imgH = fitHeight(rows.length)
+  }
+  imgH = clamp(imgH, 14, 46)
+
+  const bandRows = []
+  let lineY = bandBottom + nameGap + 13
+  rows.forEach((row) => {
+    const xs = rowXFractions(row.length, align)
+    const spacing = xs.length > 1 ? xs[1] - xs[0] : 0.26
+    const imgW = clamp(PAGE_W * spacing * 0.7, 50, SIG_IMG_MAX_W)
+    bandRows.push({ row, xs, lineY, imgW, imgH, nameGap, imageGap })
+    lineY += imageGap + imgH + rowGap + nameGap + 13
+  })
 
   // ---- QR / verify block (bottom-right) -----------------------------------
-  const qrSize = 68
-  const qrLeft = PAGE_W - 40 - qrSize
-  const qrBottom = 42
+  const qrSize = QR_SIZE
+  const qrLeft = PAGE_W - QR_RIGHT_MARGIN - qrSize
+  const qrBottom = EDGE_PADDING
 
   return (
     <div
@@ -225,23 +271,23 @@ export default function CertificatePreview({
           </text>
         ))}
 
-        {signatories.map((sig, i) => {
-          const cx = PAGE_W * sigXs[i]
+        {bandRows.map((r, ri) => r.row.map((sig, i) => {
+          const cx = PAGE_W * r.xs[i]
           return (
-            <g key={i}>
+            <g key={`${ri}-${i}`}>
               {sig.signature_url ? (
                 <image
                   href={sig.signature_url}
-                  x={cx - sigImgW / 2}
-                  y={PAGE_H - (154 + 46)}
-                  width={sigImgW}
-                  height={46}
+                  x={cx - r.imgW / 2}
+                  y={PAGE_H - (r.lineY + r.imageGap + r.imgH)}
+                  width={r.imgW}
+                  height={r.imgH}
                   preserveAspectRatio="xMidYMax meet"
                 />
               ) : null}
               <text
                 x={cx}
-                y={PAGE_H - 134}
+                y={PAGE_H - (r.lineY - r.nameGap)}
                 fill={textColor}
                 fontFamily={SERIF}
                 fontSize={13}
@@ -252,7 +298,7 @@ export default function CertificatePreview({
               </text>
               <text
                 x={cx}
-                y={PAGE_H - 121}
+                y={PAGE_H - (r.lineY - r.nameGap - 13)}
                 fill={textColor}
                 fontFamily={SANS}
                 fontSize={9.5}
@@ -262,12 +308,12 @@ export default function CertificatePreview({
               </text>
             </g>
           )
-        })}
+        }))}
 
         {showQr ? (
           <text
-            x={PAGE_W - 40 - qrSize / 2}
-            y={PAGE_H - 32}
+            x={PAGE_W - QR_RIGHT_MARGIN - qrSize / 2}
+            y={PAGE_H - (EDGE_PADDING - 12)}
             fill={textColor}
             fontFamily={SANS}
             fontSize={6.5}

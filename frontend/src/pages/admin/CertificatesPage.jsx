@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import {
   Award, Plus, Pencil, Trash2, Loader2, X, CheckCircle2,
   AlertTriangle, ImageIcon, ShieldAlert, RefreshCw, Search,
-  ChevronLeft, ChevronRight, Ban, Upload,
+  ChevronLeft, ChevronRight, Ban, Upload, Download,
 } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
@@ -379,6 +379,24 @@ export default function CertificatesPage() {
     }
   }
 
+  const exportIssued = async () => {
+    try {
+      const params = issuedDebounced ? { search: issuedDebounced } : {}
+      const res = await api.get('/certificates/export/', { params, responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'issued_certificates.csv')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Issued certificates exported.')
+    } catch {
+      toast.error('Failed to export issued certificates.')
+    }
+  }
+
   const confirmRevoke = async () => {
     if (!revokeTarget) return
     setRevoking(true)
@@ -462,6 +480,7 @@ export default function CertificatesPage() {
           search={issuedSearch}
           onSearch={setIssuedSearch}
           onRevoke={setRevokeTarget}
+          onExport={exportIssued}
           onPrev={() => setIssuedPage((p) => Math.max(1, p - 1))}
           onNext={() => setIssuedPage((p) => p + 1)}
           page={issuedPage}
@@ -730,7 +749,7 @@ function DesignsTab({ designs, loading, onCreate, onEdit, onDelete }) {
   )
 }
 
-function IssuedTab({ data, loading, search, onSearch, onRevoke, onPrev, onNext, page }) {
+function IssuedTab({ data, loading, search, onSearch, onRevoke, onExport, onPrev, onNext, page }) {
   const results = data.results || []
   const hasPrev = page > 1
   const hasNext = Boolean(data.next)
@@ -741,14 +760,23 @@ function IssuedTab({ data, loading, search, onSearch, onRevoke, onPrev, onNext, 
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">
           Issued certificates{data.count ? ` · ${data.count}` : ''}
         </h2>
-        <div className="relative sm:w-72">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search member, event, or code…"
-            className="w-full rounded-full border border-slate-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={onExport}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+          <div className="relative sm:ml-auto sm:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder="Search member, event, or code…"
+              className="w-full rounded-full border border-slate-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            />
+          </div>
         </div>
       </div>
 

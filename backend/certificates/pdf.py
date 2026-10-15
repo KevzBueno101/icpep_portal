@@ -21,6 +21,24 @@ PAGE_W, PAGE_H = landscape(A4)  # 841.89 x 595.28 points (landscape A4)
 
 CONTENT_MARGIN = 70  # horizontal inset (points) used for left/right alignment
 
+# Symmetric vertical whitespace between the text and the top/bottom page edges.
+EDGE_PADDING = 48
+
+# Title baseline from the top edge (larger = more breathing room under the header).
+TITLE_TOP = 140
+
+# Signature row (bottom band): up to 2 rows of 2 signatories.
+SIGNATORY_BASELINE = EDGE_PADDING  # bottom-row position-label baseline, from bottom
+SIGNATORY_COMPACT_BOTTOM = 34  # used when the band has 2 rows
+SIGNATORIES_PER_ROW = 2
+SIGNATORY_ROWS_MAX = 2
+SIG_IMG_MAX_W = 110  # cap signature image width so it clears the QR block
+SIGNATORY_CLEARANCE = 12  # gap kept between the band and the text above it
+
+# QR verification block (bottom-right corner).
+QR_SIZE = 60
+QR_RIGHT_MARGIN = 28
+
 SERIF = 'Times-Roman'
 SERIF_BOLD = 'Times-Bold'
 SERIF_ITALIC = 'Times-BoldItalic'
@@ -125,47 +143,88 @@ def _draw_background(c, snapshot):
     c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
 
 
-def _draw_signature(c, x_center, y_line, name, position, color, signature_url, img_max_w=160):
+def _draw_signature(
+    c, x_center, y_line, name, position, color, signature_url,
+    img_max_w=110, img_max_h=46, name_gap=16, image_gap=4,
+):
     if signature_url:
         sig_bytes = _fetch_image_bytes(signature_url)
         if sig_bytes:
             try:
                 img = ImageReader(io.BytesIO(sig_bytes))
                 iw, ih = img.getSize()
-                target_w, target_h = img_max_w, 46
+                target_w, target_h = img_max_w, img_max_h
                 scale = min(target_w / iw, target_h / ih)
                 w, h = iw * scale, ih * scale
-                c.drawImage(img, x_center - w / 2, y_line + 4, width=w, height=h, mask='auto')
+                c.drawImage(img, x_center - w / 2, y_line + image_gap, width=w, height=h, mask='auto')
             except Exception:
                 pass
 
     c.setFillColor(color)
     c.setFont(SERIF_BOLD, 13)
-    c.drawCentredString(x_center, y_line - 16, name or '')
+    c.drawCentredString(x_center, y_line - name_gap, name or '')
     c.setFont(SANS, 9.5)
-    c.drawCentredString(x_center, y_line - 29, (position or '').upper())
+    c.drawCentredString(x_center, y_line - name_gap - 13, (position or '').upper())
 
 
-def _signatory_x_fractions(count, align):
-    """Horizontal centers (as page fractions) for the signature row."""
+def _row_x_fractions(count, align):
+    """Horizontal centers for one signature row (max 2 per row)."""
+    if align == 'LEFT':
+        left, right = 0.18, 0.44
+    elif align == 'RIGHT':
+        left, right = 0.56, 0.82
+    else:
+        left, right = 0.30, 0.70
     if count <= 0:
         return []
     if count == 1:
-        return [0.5 if align == 'CENTER' else (0.18 if align == 'LEFT' else 0.82)]
-    if align == 'LEFT':
-        left, right = 0.18, 0.60
-    elif align == 'RIGHT':
-        left, right = 0.40, 0.82
-    else:
-        left, right = 0.18, 0.82
-    spacing = min((right - left) / (count - 1), 0.30)
-    if align == 'LEFT':
-        start = left
-    elif align == 'RIGHT':
-        start = right - spacing * (count - 1)
-    else:
-        start = 0.5 - spacing * (count - 1) / 2
-    return [start + spacing * i for i in range(count)]
+        return [(left + right) / 2]
+    spacing = (right - left) / (count - 1)
+    return [left + spacing * i for i in range(count)]
+
+
+def _draw_signatory_band(c, signatories, align, color, top_clearance):
+    """Bottom-aligned signatory band: 2 per row, max 2 rows, never overlapping the text above."""
+    rows = [
+        signatories[i:i + SIGNATORIES_PER_ROW]
+        for i in range(0, len(signatories), SIGNATORIES_PER_ROW)
+    ][:SIGNATORY_ROWS_MAX]
+
+    image_gap = 4
+    row_gap = 8
+    name_gap = 16 if len(rows) == 1 else 13
+    band_bottom = SIGNATORY_BASELINE if len(rows) == 1 else SIGNATORY_COMPACT_BOTTOM
+    available = max(0, top_clearance - band_bottom)
+    text_zone = name_gap + 13 + image_gap
+
+    def fit_height(row_count):
+        """Largest image height that keeps `row_count` rows under the text above."""
+        return (available - (row_count - 1) * row_gap) / row_count - text_zone
+
+    img_h = fit_height(len(rows))
+    while len(rows) > 1 and img_h < 14:
+        rows.pop()
+        name_gap = 16 if len(rows) == 1 else 13
+        band_bottom = SIGNATORY_BASELINE if len(rows) == 1 else SIGNATORY_COMPACT_BOTTOM
+        available = max(0, top_clearance - band_bottom)
+        text_zone = name_gap + 13 + image_gap
+        img_h = fit_height(len(rows))
+    img_h = max(14, min(46, img_h))
+
+    line_y = band_bottom + name_gap + 13
+    for row in rows:
+        xs = _row_x_fractions(len(row), align)
+        spacing = (xs[1] - xs[0]) if len(xs) > 1 else 0.26
+        img_w = max(50, min(SIG_IMG_MAX_W, PAGE_W * spacing * 0.7))
+        for sig, fx in zip(row, xs, strict=False):
+            _draw_signature(
+                c, PAGE_W * fx, line_y,
+                sig.get('name'), sig.get('position'), color,
+                sig.get('signature_url'),
+                img_max_w=img_w, img_max_h=img_h,
+                name_gap=name_gap, image_gap=image_gap,
+            )
+        line_y += image_gap + img_h + row_gap + name_gap + 13
 
 
 def _draw_qr(c, url, x, y, size):
@@ -208,12 +267,12 @@ def build_certificate_pdf(certificate):
     if header_lines:
         c.setFont(SANS, 10)
         c.setFillColor(color)
-        header_y = PAGE_H - 46
+        header_y = PAGE_H - EDGE_PADDING
         for line in header_lines:
             _draw_aligned(c, line, header_y, align)
             header_y -= 13
 
-    content_top = PAGE_H - 120
+    content_top = PAGE_H - TITLE_TOP
     title_size = max(30, min(base_size * 2.2, 52))
 
     c.setFillColor(color)
@@ -266,8 +325,7 @@ def build_certificate_pdf(certificate):
     c.setFont(SANS, 10.5)
     _draw_aligned(c, f"held on {certificate.event_date.strftime('%B %d, %Y')}", y, align)
 
-    # Signatories (bottom band); position follows the text alignment --------
-    line_y = 150
+    # Signatories (bottom band); 2 per row, clamped below the text above it ----
     signatories = list(snapshot.get('signatories') or [])
     if not signatories:
         # Backwards compatibility with snapshots issued before the list field.
@@ -285,24 +343,20 @@ def build_certificate_pdf(certificate):
             })
 
     if signatories:
-        xs = _signatory_x_fractions(len(signatories), align)
-        spacing = (xs[1] - xs[0]) if len(xs) > 1 else 0.30
-        img_w = max(70, min(160, PAGE_W * spacing * 0.7))
-        for sig, fx in zip(signatories, xs, strict=False):
-            _draw_signature(
-                c, PAGE_W * fx, line_y,
-                sig.get('name'), sig.get('position'), color,
-                sig.get('signature_url'), img_max_w=img_w,
-            )
+        _draw_signatory_band(
+            c, signatories, align, color, top_clearance=y - SIGNATORY_CLEARANCE
+        )
 
     # QR verification block (bottom-right) ---------------------------------
     verify_url = f"{getattr(settings, 'FRONTEND_URL', '')}/verify/{certificate.verification_code}"
-    qr_size = 68
-    _draw_qr(c, verify_url, PAGE_W - 40 - qr_size, 42, qr_size)
+    qr_x = PAGE_W - QR_RIGHT_MARGIN - QR_SIZE
+    _draw_qr(c, verify_url, qr_x, EDGE_PADDING, QR_SIZE)
     c.setFont(SANS, 6.5)
     c.setFillColor(color)
     c.drawRightString(
-        PAGE_W - 40 - qr_size / 2, 32, f"Verify: {certificate.verification_code}"
+        PAGE_W - QR_RIGHT_MARGIN - QR_SIZE / 2,
+        EDGE_PADDING - 12,
+        f"Verify: {certificate.verification_code}",
     )
 
     c.showPage()

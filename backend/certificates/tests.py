@@ -1,15 +1,33 @@
+import io
 import json
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image, ImageDraw
 from rest_framework.test import APITestCase
 
 from members.models import MemberProfile
 
+from . import serializers as certificate_serializers
+from .imaging import strip_light_background
 from .models import Certificate, CertificateDesign
 from .pdf import build_certificate_pdf
 
 User = get_user_model()
+
+
+def _png_bytes(image):
+    buffer = io.BytesIO()
+    image.save(buffer, format='PNG')
+    return buffer.getvalue()
+
+
+def _white_with_ink(size=(10, 10), box=(2, 2, 8, 8), ink=(20, 20, 20, 255)):
+    image = Image.new('RGBA', size, (255, 255, 255, 255))
+    ImageDraw.Draw(image).rectangle(box, fill=ink)
+    return image
+
 
 # Minimal valid 1x1 PNG used for upload validation tests.
 PNG_1x1 = (
@@ -286,12 +304,60 @@ class CertificateAPITests(APITestCase):
         design = CertificateDesign.objects.get(id=res.data['id'])
         self.assertTrue(design.signatories[0]['signature_url'])
 
+    def test_signature_upload_runs_background_strip(self):
+        self.client.force_authenticate(self.admin)
+        upload = SimpleUploadedFile(
+            'sig.png', _png_bytes(_white_with_ink()), content_type='image/png'
+        )
+        with patch.object(
+            certificate_serializers,
+            'strip_light_background',
+            wraps=certificate_serializers.strip_light_background,
+        ) as spy:
+            res = self.client.post('/api/certificates/designs/', {
+                'name': 'Clean sig', 'title': 'Certificate',
+                'signatories': json.dumps([{'name': 'Jane Doe', 'position': 'President', 'signature_url': ''}]),
+                'signature_0': upload,
+            }, format='multipart')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertTrue(spy.called)
+        self.assertTrue(spy.call_args.args[0])
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        self.assertTrue(design.signatories[0]['signature_url'])
+
+    def test_strip_light_background_removes_white(self):
+        cleaned = strip_light_background(_png_bytes(_white_with_ink()))
+        self.assertIsNotNone(cleaned)
+        result = Image.open(io.BytesIO(cleaned)).convert('RGBA')
+        self.assertEqual(result.getpixel((0, 0))[3], 0)
+        center = result.getpixel((result.width // 2, result.height // 2))
+        self.assertGreater(center[3], 200)
+
+    def test_strip_light_background_skips_transparent_input(self):
+        image = Image.new('RGBA', (10, 10), (255, 255, 255, 0))
+        self.assertIsNone(strip_light_background(_png_bytes(image)))
+
+    def test_strip_light_background_aborts_when_all_removed(self):
+        image = Image.new('RGBA', (10, 10), (255, 255, 255, 255))
+        self.assertIsNone(strip_light_background(_png_bytes(image)))
+
     def test_pdf_renders_with_multiple_signatories(self):
         self.design.signatories = [
             {'name': 'A', 'position': 'President', 'signature_url': ''},
             {'name': 'B', 'position': 'Vice', 'signature_url': ''},
             {'name': 'C', 'position': 'Secretary', 'signature_url': ''},
         ]
+        self.design.save()
+        self._issue()
+        cert = Certificate.objects.first()
+        self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
+
+    def test_pdf_renders_two_signatory_rows_with_long_content(self):
+        self.design.signatories = [
+            {'name': f'Name {i}', 'position': f'Position {i}', 'signature_url': ''}
+            for i in range(1, 6)
+        ]
+        self.design.message = 'Presented for outstanding participation ' * 6
         self.design.save()
         self._issue()
         cert = Certificate.objects.first()

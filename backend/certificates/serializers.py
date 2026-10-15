@@ -1,14 +1,17 @@
+import contextlib
 import json
 from uuid import uuid4
 
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework import serializers
 
 from members.models import MemberProfile
 from members.serializers import validate_image_file
 
+from .imaging import strip_light_background
 from .models import Certificate, CertificateDesign
 
 
@@ -107,9 +110,19 @@ class CertificateDesignSerializer(serializers.ModelSerializer):
             if index < 0 or index >= len(signatories):
                 continue
             safe_name = uploaded.name.replace('\\', '/').split('/')[-1]
-            stored = default_storage.save(
-                f'certificate_signatures/{uuid4().hex}_{safe_name}', uploaded
-            )
+            with contextlib.suppress(AttributeError, ValueError):
+                uploaded.seek(0)
+            raw = uploaded.read()
+            cleaned = strip_light_background(raw)
+            if cleaned:
+                stored = default_storage.save(
+                    f'certificate_signatures/{uuid4().hex}.png', ContentFile(cleaned)
+                )
+            else:
+                stored = default_storage.save(
+                    f'certificate_signatures/{uuid4().hex}_{safe_name}',
+                    ContentFile(raw),
+                )
             signatories[index]['signature_url'] = default_storage.url(stored)
             updated = True
         if updated:

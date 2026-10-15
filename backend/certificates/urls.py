@@ -11,6 +11,7 @@ urlpatterns = [
     path('mine/', views.CertificateMineListAPIView.as_view(), name='certificate-mine'),
     path('mine/mark-seen/', views.CertificateMarkSeenAPIView.as_view(), name='certificate-mark-seen'),
     path('verify/', views.CertificateVerifyAPIView.as_view(), name='certificate-verify'),
+    path('export/', views.CertificateExportAPIView.as_view(), name='certificate-export'),
     path('', views.CertificateListAPIView.as_view(), name='certificates-list'),
     path('<int:pk>/download/', views.CertificateDownloadAPIView.as_view(), name='certificate-download'),
     path('<int:pk>/revoke/', views.CertificateRevokeAPIView.as_view(), name='certificate-revoke'),

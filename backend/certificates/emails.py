@@ -27,11 +27,11 @@ def _send_one(certificate):
         ) or 'Member'
         html = f"""
         <div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.5">
-          <h2 style="margin:0 0 8px">Your certificate is ready 🎓</h2>
+          <h2 style="margin:0 0 8px">Your certificate is ready 📜</h2>
           <p>Hi {full_name},</p>
           <p>Your certificate for <strong>{certificate.event_name}</strong>
-             ({certificate.event_date.strftime('%B %d, %Y')}) is now available in the
-             ICpEP Portal.</p>
+             ({certificate.event_date.strftime('%B %d, %Y')}) is now available in
+             your Profile section in ICpEP Portal.</p>
           <p>
             <a href="{link}"
                style="display:inline-block;background:#0284c7;color:#ffffff;
