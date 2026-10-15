@@ -36,6 +36,7 @@ export default function MemberProfile() {
   const [editMode, setEditMode] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
   const [editForm, setEditForm] = useState({
+    username: '',
     first_name: '',
     middle_name: '',
     last_name: '',
@@ -85,6 +86,7 @@ export default function MemberProfile() {
     if (!profile) return
     setEditMode(true)
     setEditForm({
+      username: user?.username || '',
       first_name: profile.first_name || '',
       middle_name: profile.middle_name || '',
       last_name: profile.last_name || '',
@@ -142,10 +144,15 @@ export default function MemberProfile() {
 
   const saveProfile = async () => {
     if (!profile) return
+    if (!editForm.username.trim()) {
+      toast.error('Username is required.')
+      return
+    }
     setEditSaving(true)
 
     try {
       const patchBase = {
+        username: editForm.username.trim(),
         first_name: editForm.first_name,
         middle_name: editForm.middle_name,
         last_name: editForm.last_name,
@@ -299,6 +306,7 @@ export default function MemberProfile() {
           {/* Form details */}
           <div className="grid gap-6 md:grid-cols-2">
             {[
+              { label: 'Username', key: 'username', source: 'user', disabled: false },
               { label: 'First Name', key: 'first_name', disabled: false },
               { label: 'Middle Name', key: 'middle_name', disabled: false },
               { label: 'Last Name', key: 'last_name', disabled: false },
@@ -309,7 +317,8 @@ export default function MemberProfile() {
               { label: 'Section/Block', key: 'section', disabled: false },
             ].map((field) => {
               const isReadOnly = !editMode || field.disabled
-              const value = field.value !== undefined ? field.value : (editMode ? editForm[field.key] : profile?.[field.key])
+              const sourceObj = field.source === 'user' ? user : profile
+              const value = field.value !== undefined ? field.value : (editMode ? editForm[field.key] : sourceObj?.[field.key])
 
               return (
                 <div key={field.key} className="flex flex-col">

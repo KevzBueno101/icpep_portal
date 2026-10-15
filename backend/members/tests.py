@@ -150,3 +150,57 @@ class MemberStatsTests(APITestCase):
         daily = res.data['login_daily']
         self.assertEqual(daily[0]['count'], 1)
         self.assertEqual(sum(row['count'] for row in daily), 1)
+
+
+class MemberProfileUpdateTests(APITestCase):
+    def setUp(self):
+        self.member = _make_user('member@example.com')
+        self.profile = MemberProfile.objects.create(
+            user=self.member,
+            first_name='Juan',
+            last_name='Dela Cruz',
+            student_number='2023-0001',
+            course='BSCS',
+            year_level='1',
+            section='A',
+            contact_number='09171234567',
+        )
+        self.client.force_authenticate(self.member)
+
+    def test_retrieve_exposes_username(self):
+        resp = self.client.get(f'/api/members/{self.profile.id}/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data['username'], 'member')
+
+    def test_member_can_change_username(self):
+        resp = self.client.patch(
+            f'/api/members/{self.profile.id}/', {'username': 'juan.dc'}, format='json'
+        )
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.username, 'juan.dc')
+
+    def test_partial_update_without_username_keeps_username(self):
+        resp = self.client.patch(
+            f'/api/members/{self.profile.id}/', {'first_name': 'John'}, format='json'
+        )
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.member.refresh_from_db()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.member.username, 'member')
+        self.assertEqual(self.profile.first_name, 'John')
+
+    def test_duplicate_username_rejected(self):
+        _make_user('other@example.com', username='taken')
+        resp = self.client.patch(
+            f'/api/members/{self.profile.id}/', {'username': 'taken'}, format='json'
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.username, 'member')
+
+    def test_blank_username_rejected(self):
+        resp = self.client.patch(
+            f'/api/members/{self.profile.id}/', {'username': ''}, format='json'
+        )
+        self.assertEqual(resp.status_code, 400)

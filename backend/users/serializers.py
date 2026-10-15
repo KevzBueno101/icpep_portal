@@ -187,6 +187,19 @@ class AdminProfileSerializer(serializers.ModelSerializer):
         )
         return data
 
+    def validate_username(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('Username is required.')
+        if len(value) > 150:
+            raise serializers.ValidationError('Username must be at most 150 characters.')
+        qs = User.objects.filter(username__iexact=value)
+        if self.instance is not None:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('An account with this username already exists.')
+        return value
+
     def update(self, instance, validated_data):
         profile_picture = validated_data.pop('profile_picture', None)
         new_password = validated_data.pop('new_password', None)
@@ -198,6 +211,8 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             if isinstance(value, str):
                 if attr == 'academic_year':
                     validated_data[attr] = value[:20]
+                elif attr == 'username':
+                    validated_data[attr] = value[:150]
                 else:
                     validated_data[attr] = value[:100]
 
