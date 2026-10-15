@@ -230,19 +230,31 @@ def build_certificate_pdf(certificate):
         )
         y -= 14
 
-    c.setFont(SANS, 11)
     c.setFillColor(color)
-    _draw_aligned(c, 'This certificate is proudly presented to', y, align)
-    y -= 46
+    presented_to = (
+        snapshot.get('presented_to_text') or 'This certificate is proudly presented to'
+    ).strip()
+    if presented_to:
+        y = _draw_text_block(
+            c, presented_to, SANS, 11, color, y, PAGE_W - 2 * CONTENT_MARGIN, 14, align
+        )
+        y -= 32
+    else:
+        y -= 46
 
     name_size = max(24, min(base_size * 1.9, 40))
     c.setFont(SERIF_ITALIC, name_size)
     _draw_aligned(c, full_name, y, align)
     y -= name_size + 34
 
-    c.setFont(SANS, 11)
-    _draw_aligned(c, 'for participating in', y, align)
-    y -= 30
+    for_text = (snapshot.get('for_text') or 'for participating in').strip()
+    if for_text:
+        y = _draw_text_block(
+            c, for_text, SANS, 11, color, y, PAGE_W - 2 * CONTENT_MARGIN, 14, align
+        )
+        y -= 16
+    else:
+        y -= 30
 
     c.setFont(SERIF_BOLD, min(base_size + 4, 26))
     y = _draw_text_block(

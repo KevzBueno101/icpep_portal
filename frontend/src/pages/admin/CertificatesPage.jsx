@@ -31,6 +31,8 @@ const makeEmptyDesign = () => ({
   preset: 'CLASSIC',
   title: 'Certificate of Participation',
   message: 'For actively participating in this event and contributing to the success of the organization.',
+  presented_to_text: 'This certificate is proudly presented to',
+  for_text: 'for participating in',
   header_school: 'Catanduanes State University',
   header_college: 'College of Engineering and Architecture',
   header_organization: 'Institute of Computer Engineers of the Philippines. Student Edition - CatSU Chapter',
@@ -204,6 +206,8 @@ export default function CertificatesPage() {
       preset: design.preset || 'CLASSIC',
       title: design.title || '',
       message: design.message || '',
+      presented_to_text: design.presented_to_text || '',
+      for_text: design.for_text || '',
       header_school: design.header_school || '',
       header_college: design.header_college || '',
       header_organization: design.header_organization || '',
@@ -248,6 +252,8 @@ export default function CertificatesPage() {
       fd.append('preset', designForm.preset)
       fd.append('title', designForm.title.trim())
       fd.append('message', designForm.message || '')
+      fd.append('presented_to_text', designForm.presented_to_text || '')
+      fd.append('for_text', designForm.for_text || '')
       fd.append('header_school', designForm.header_school || '')
       fd.append('header_college', designForm.header_college || '')
       fd.append('header_organization', designForm.header_organization || '')
@@ -851,6 +857,18 @@ function DesignModal({
             <div>
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Message</label>
               <textarea value={form.message} onChange={(e) => set('message', e.target.value)} rows={3}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Line above the name</label>
+              <input value={form.presented_to_text} onChange={(e) => set('presented_to_text', e.target.value)}
+                placeholder="This certificate is proudly presented to"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Line after the name</label>
+              <input value={form.for_text} onChange={(e) => set('for_text', e.target.value)}
+                placeholder="for participating in"
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
             </div>
 

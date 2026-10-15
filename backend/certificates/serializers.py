@@ -53,6 +53,7 @@ class CertificateDesignSerializer(serializers.ModelSerializer):
         model = CertificateDesign
         fields = [
             'id', 'name', 'preset', 'background_image', 'title', 'message',
+            'presented_to_text', 'for_text',
             'header_school', 'header_college', 'header_organization',
             'signatories', 'text_color', 'font_size', 'text_align',
             'is_archived', 'certificate_count', 'created_at', 'updated_at',

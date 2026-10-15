@@ -246,6 +246,34 @@ class CertificateAPITests(APITestCase):
         self.assertEqual(len(design.signatories), 2)
         self.assertEqual(design.snapshot()['signatories'][1]['name'], 'John Cruz')
 
+    def test_custom_clause_text_persists_and_snapshots(self):
+        self.client.force_authenticate(self.admin)
+        res = self.client.post('/api/certificates/designs/', {
+            'name': 'Custom clause', 'title': 'Certificate',
+            'presented_to_text': 'Awarded to',
+            'for_text': 'for outstanding performance in',
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        snap = design.snapshot()
+        self.assertEqual(snap['presented_to_text'], 'Awarded to')
+        self.assertEqual(snap['for_text'], 'for outstanding performance in')
+
+    def test_clause_defaults_and_pdf_renders_with_long_wrapped_text(self):
+        design = CertificateDesign.objects.create(name='Defaults', title='Certificate')
+        snap = design.snapshot()
+        self.assertEqual(snap['presented_to_text'], 'This certificate is proudly presented to')
+        self.assertEqual(snap['for_text'], 'for participating in')
+
+        self._issue()
+        cert = Certificate.objects.first()
+        cert.design_snapshot = {
+            **cert.design_snapshot,
+            'presented_to_text': 'This certificate is proudly presented to ' * 3,
+            'for_text': 'for participating in the annual convention and leadership summit ' * 3,
+        }
+        self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
+
     def test_signatory_signature_upload_is_stored(self):
         self.client.force_authenticate(self.admin)
         img = SimpleUploadedFile('sig.png', PNG_1x1, content_type='image/png')

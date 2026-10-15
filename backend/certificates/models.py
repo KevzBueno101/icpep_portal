@@ -51,6 +51,10 @@ class CertificateDesign(models.Model):
     )
     title = models.CharField(max_length=200, default='Certificate of Participation')
     message = models.TextField(blank=True, default='')
+    presented_to_text = models.CharField(
+        max_length=200, default='This certificate is proudly presented to'
+    )
+    for_text = models.CharField(max_length=200, default='for participating in')
     header_school = models.CharField(max_length=200, default='Catanduanes State University')
     header_college = models.CharField(
         max_length=200, default='College of Engineering and Architecture'
@@ -94,6 +98,8 @@ class CertificateDesign(models.Model):
             'preset': self.preset,
             'title': self.title,
             'message': self.message,
+            'presented_to_text': self.presented_to_text,
+            'for_text': self.for_text,
             'header_school': self.header_school,
             'header_college': self.header_college,
             'header_organization': self.header_organization,
