@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import {
   Award, Plus, Pencil, Trash2, Loader2, X, CheckCircle2,
   AlertTriangle, ImageIcon, ShieldAlert, RefreshCw, Search,
-  ChevronLeft, ChevronRight, Ban,
+  ChevronLeft, ChevronRight, Ban, Upload,
 } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
@@ -22,19 +22,23 @@ const PRESETS = [
   { value: 'UPLOAD', label: 'Custom upload' },
 ]
 
-const EMPTY_DESIGN = {
+const makeSignatory = (data = {}) => ({
+  name: '', position: '', signature_url: '', file: null, preview: '', ...data,
+})
+
+const makeEmptyDesign = () => ({
   name: '',
   preset: 'CLASSIC',
   title: 'Certificate of Participation',
   message: 'For actively participating in this event and contributing to the success of the organization.',
-  signatory_name: '',
-  signatory_position: '',
-  second_signatory_name: '',
-  second_signatory_position: '',
+  header_school: 'Catanduanes State University',
+  header_college: 'College of Engineering and Architecture',
+  header_organization: 'Institute of Computer Engineers of the Philippines. Student Edition - CatSU Chapter',
+  signatories: [makeSignatory()],
   text_color: '#0f172a',
   font_size: 16,
   text_align: 'CENTER',
-}
+})
 
 const formatDate = (value) => {
   if (!value) return '—'
@@ -53,14 +57,11 @@ export default function CertificatesPage() {
 
   const [designModalOpen, setDesignModalOpen] = useState(false)
   const [designEditingId, setDesignEditingId] = useState(null)
-  const [designForm, setDesignForm] = useState(EMPTY_DESIGN)
+  const [designForm, setDesignForm] = useState(makeEmptyDesign)
   const [backgroundFile, setBackgroundFile] = useState(null)
-  const [signatureFile, setSignatureFile] = useState(null)
   const [bgPreview, setBgPreview] = useState('')
-  const [sigPreview, setSigPreview] = useState('')
   const [designSaving, setDesignSaving] = useState(false)
   const bgInputRef = useRef(null)
-  const sigInputRef = useRef(null)
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -133,13 +134,10 @@ export default function CertificatesPage() {
   })
   useRealtimeGuard(designModalOpen || deleteTarget != null || issueConfirmOpen || revokeTarget != null)
 
-  // Revoke object URLs on unmount / change
+  // Revoke the background preview object URL on unmount / change
   useEffect(() => () => {
     if (bgPreview) URL.revokeObjectURL(bgPreview)
   }, [bgPreview])
-  useEffect(() => () => {
-    if (sigPreview) URL.revokeObjectURL(sigPreview)
-  }, [sigPreview])
 
   const selectedCount = Object.keys(selected).length
 
@@ -152,16 +150,21 @@ export default function CertificatesPage() {
     ...designForm,
     font_size: Number(designForm.font_size) || 16,
     background_url: bgPreview || designForm.background_url || designForm.background_image || '',
-    signature_url: sigPreview || designForm.signature_url || designForm.signature_image || '',
-  }), [designForm, bgPreview, sigPreview])
+    signatories: (designForm.signatories || []).map((s) => ({
+      name: s.name,
+      position: s.position,
+      signature_url: s.preview || s.signature_url || '',
+    })),
+  }), [designForm, bgPreview])
 
   const resetDesignForm = () => {
-    setDesignForm(EMPTY_DESIGN)
+    setDesignForm((prev) => {
+      (prev.signatories || []).forEach((s) => { if (s.preview) URL.revokeObjectURL(s.preview) })
+      return makeEmptyDesign()
+    })
     setDesignEditingId(null)
     setBackgroundFile(null)
-    setSignatureFile(null)
     setBgPreview('')
-    setSigPreview('')
   }
 
   const openCreateDesign = () => {
@@ -169,27 +172,49 @@ export default function CertificatesPage() {
     setDesignModalOpen(true)
   }
 
+  const updateSignatory = (index, patch) => {
+    setDesignForm((prev) => ({
+      ...prev,
+      signatories: prev.signatories.map((s, i) => (i === index ? { ...s, ...patch } : s)),
+    }))
+  }
+
+  const addSignatory = () => {
+    setDesignForm((prev) => ({ ...prev, signatories: [...prev.signatories, makeSignatory()] }))
+  }
+
+  const removeSignatory = (index) => {
+    setDesignForm((prev) => {
+      const target = prev.signatories[index]
+      if (target?.preview) URL.revokeObjectURL(target.preview)
+      return { ...prev, signatories: prev.signatories.filter((_, i) => i !== index) }
+    })
+  }
+
   const openEditDesign = (design) => {
     setDesignEditingId(design.id)
+    const signatories = (Array.isArray(design.signatories) ? design.signatories : [])
+      .map((s) => makeSignatory({
+        name: s.name || '',
+        position: s.position || '',
+        signature_url: s.signature_url || '',
+      }))
     setDesignForm({
       name: design.name || '',
       preset: design.preset || 'CLASSIC',
       title: design.title || '',
       message: design.message || '',
-      signatory_name: design.signatory_name || '',
-      signatory_position: design.signatory_position || '',
-      second_signatory_name: design.second_signatory_name || '',
-      second_signatory_position: design.second_signatory_position || '',
+      header_school: design.header_school || '',
+      header_college: design.header_college || '',
+      header_organization: design.header_organization || '',
+      signatories: signatories.length ? signatories : [makeSignatory()],
       text_color: design.text_color || '#0f172a',
       font_size: design.font_size || 16,
       text_align: design.text_align || 'CENTER',
       background_url: design.background_image || '',
-      signature_url: design.signature_image || '',
     })
     setBackgroundFile(null)
-    setSignatureFile(null)
     setBgPreview('')
-    setSigPreview('')
     setDesignModalOpen(true)
   }
 
@@ -200,11 +225,17 @@ export default function CertificatesPage() {
     setBgPreview(URL.createObjectURL(file))
   }
 
-  const onPickSignature = (file) => {
+  const onPickSignature = (index, file) => {
     if (!file) return
     if (file.size > 10 * 1024 * 1024) { toast.error('Signature image must be under 10MB.'); return }
-    setSignatureFile(file)
-    setSigPreview(URL.createObjectURL(file))
+    setDesignForm((prev) => ({
+      ...prev,
+      signatories: prev.signatories.map((s, i) => {
+        if (i !== index) return s
+        if (s.preview) URL.revokeObjectURL(s.preview)
+        return { ...s, file, preview: URL.createObjectURL(file) }
+      }),
+    }))
   }
 
   const saveDesign = async () => {
@@ -217,15 +248,33 @@ export default function CertificatesPage() {
       fd.append('preset', designForm.preset)
       fd.append('title', designForm.title.trim())
       fd.append('message', designForm.message || '')
-      fd.append('signatory_name', designForm.signatory_name || '')
-      fd.append('signatory_position', designForm.signatory_position || '')
-      fd.append('second_signatory_name', designForm.second_signatory_name || '')
-      fd.append('second_signatory_position', designForm.second_signatory_position || '')
+      fd.append('header_school', designForm.header_school || '')
+      fd.append('header_college', designForm.header_college || '')
+      fd.append('header_organization', designForm.header_organization || '')
       fd.append('text_color', designForm.text_color || '#0f172a')
       fd.append('font_size', String(Number(designForm.font_size) || 16))
       fd.append('text_align', designForm.text_align || 'CENTER')
       if (backgroundFile) fd.append('background_image', backgroundFile)
-      if (signatureFile) fd.append('signature_image', signatureFile)
+
+      const keptSignatories = []
+      ;(designForm.signatories || []).forEach((s) => {
+        const name = (s.name || '').trim()
+        const position = (s.position || '').trim()
+        if (!name && !position && !s.signature_url && !s.file) return
+        keptSignatories.push({
+          name,
+          position,
+          signature_url: s.file ? '' : (s.signature_url || ''),
+          file: s.file,
+        })
+      })
+      fd.append(
+        'signatories',
+        JSON.stringify(keptSignatories.map(({ name, position, signature_url }) => ({ name, position, signature_url })))
+      )
+      keptSignatories.forEach((s, i) => {
+        if (s.file) fd.append(`signature_${i}`, s.file)
+      })
 
       if (designEditingId) {
         await api.patch(`/certificates/designs/${designEditingId}/`, fd)
@@ -553,11 +602,12 @@ export default function CertificatesPage() {
           saving={designSaving}
           preview={previewDesign}
           bgPreview={bgPreview}
-          sigPreview={sigPreview}
           bgInputRef={bgInputRef}
-          sigInputRef={sigInputRef}
           onPickBackground={onPickBackground}
           onPickSignature={onPickSignature}
+          onAddSignatory={addSignatory}
+          onRemoveSignatory={removeSignatory}
+          onUpdateSignatory={updateSignatory}
           onCancel={() => { setDesignModalOpen(false); resetDesignForm() }}
           onSave={saveDesign}
         />
@@ -763,8 +813,9 @@ function IssuedTab({ data, loading, search, onSearch, onRevoke, onPrev, onNext, 
 
 function DesignModal({
   form, setForm, editing, saving, preview,
-  bgPreview, sigPreview, bgInputRef, sigInputRef,
-  onPickBackground, onPickSignature, onCancel, onSave,
+  bgPreview, bgInputRef, onPickBackground,
+  onPickSignature, onAddSignatory, onRemoveSignatory, onUpdateSignatory,
+  onCancel, onSave,
 }) {
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -803,27 +854,50 @@ function DesignModal({
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Signatory name</label>
-                <input value={form.signatory_name} onChange={(e) => set('signatory_name', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Header (small text at top)</p>
+              <input value={form.header_school} onChange={(e) => set('header_school', e.target.value)} placeholder="School / University"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+              <input value={form.header_college} onChange={(e) => set('header_college', e.target.value)} placeholder="College"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+              <input value={form.header_organization} onChange={(e) => set('header_organization', e.target.value)} placeholder="Organization"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Signatories</p>
+                <button type="button" onClick={onAddSignatory}
+                  className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700">
+                  <Plus className="h-3.5 w-3.5" /> Add signatory
+                </button>
               </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Position</label>
-                <input value={form.signatory_position} onChange={(e) => set('signatory_position', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">2nd signatory (optional)</label>
-                <input value={form.second_signatory_name} onChange={(e) => set('second_signatory_name', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">2nd position</label>
-                <input value={form.second_signatory_position} onChange={(e) => set('second_signatory_position', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
-              </div>
+              {(form.signatories || []).map((sig, index) => (
+                <div key={index} className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-400">Signatory {index + 1}</span>
+                    <button type="button" onClick={() => onRemoveSignatory(index)}
+                      className="rounded-lg p-1 text-red-500 hover:bg-red-50" aria-label="Remove signatory">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <input value={sig.name} onChange={(e) => onUpdateSignatory(index, { name: e.target.value })} placeholder="Name"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                  <input value={sig.position} onChange={(e) => onUpdateSignatory(index, { position: e.target.value })} placeholder="Position"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                      <Upload className="h-3.5 w-3.5" />
+                      {sig.preview || sig.signature_url ? 'Change signature' : 'Upload signature'}
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={(e) => { onPickSignature(index, e.target.files?.[0]); e.target.value = '' }} />
+                    </label>
+                    {sig.preview || sig.signature_url ? (
+                      <img src={sig.preview || sig.signature_url} alt="" className="h-8 w-16 rounded object-contain" />
+                    ) : null}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -861,25 +935,14 @@ function DesignModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Background image</label>
-                <button type="button" onClick={() => bgInputRef.current?.click()}
-                  className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                  {bgPreview || form.background_url || form.background_image ? 'Change background' : 'Upload background'}
-                </button>
-                <input ref={bgInputRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => { onPickBackground(e.target.files?.[0]); e.target.value = '' }} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Signature image</label>
-                <button type="button" onClick={() => sigInputRef.current?.click()}
-                  className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                  {sigPreview || form.signature_url || form.signature_image ? 'Change signature' : 'Upload signature'}
-                </button>
-                <input ref={sigInputRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => { onPickSignature(e.target.files?.[0]); e.target.value = '' }} />
-              </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Background image</label>
+              <button type="button" onClick={() => bgInputRef.current?.click()}
+                className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                {bgPreview || form.background_url || form.background_image ? 'Change background' : 'Upload background'}
+              </button>
+              <input ref={bgInputRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => { onPickBackground(e.target.files?.[0]); e.target.value = '' }} />
             </div>
           </div>
 

@@ -51,13 +51,22 @@ class CertificateDesign(models.Model):
     )
     title = models.CharField(max_length=200, default='Certificate of Participation')
     message = models.TextField(blank=True, default='')
-    signatory_name = models.CharField(max_length=150, blank=True, default='')
-    signatory_position = models.CharField(max_length=150, blank=True, default='')
-    signature_image = models.ImageField(
-        upload_to='certificate_signatures/', null=True, blank=True, max_length=500
+    header_school = models.CharField(max_length=200, default='Catanduanes State University')
+    header_college = models.CharField(
+        max_length=200, default='College of Engineering and Architecture'
     )
-    second_signatory_name = models.CharField(max_length=150, blank=True, default='')
-    second_signatory_position = models.CharField(max_length=150, blank=True, default='')
+    header_organization = models.CharField(
+        max_length=250,
+        default=(
+            'Institute of Computer Engineers of the Philippines. '
+            'Student Edition - CatSU Chapter'
+        ),
+    )
+    signatories = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of {name, position, signature_url} signatory entries.',
+    )
     text_color = models.CharField(max_length=20, default='#0f172a')
     font_size = models.PositiveSmallIntegerField(default=16)
     is_archived = models.BooleanField(default=False)
@@ -85,15 +94,14 @@ class CertificateDesign(models.Model):
             'preset': self.preset,
             'title': self.title,
             'message': self.message,
-            'signatory_name': self.signatory_name,
-            'signatory_position': self.signatory_position,
-            'second_signatory_name': self.second_signatory_name,
-            'second_signatory_position': self.second_signatory_position,
+            'header_school': self.header_school,
+            'header_college': self.header_college,
+            'header_organization': self.header_organization,
+            'signatories': [dict(s) for s in (self.signatories or [])],
             'text_color': self.text_color,
             'font_size': self.font_size,
             'text_align': self.text_align,
             'background_url': self.background_image.url if self.background_image else '',
-            'signature_url': self.signature_image.url if self.signature_image else '',
         }
 
 
