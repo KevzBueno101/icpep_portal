@@ -7,6 +7,12 @@ const DEFAULT_SAMPLE = {
   eventDate: '2026-01-15',
 }
 
+const SIGNATURE_POSITIONS = {
+  left: { single: '20%', double: ['20%', '47%'] },
+  center: { single: '50%', double: ['32%', '68%'] },
+  right: { single: '80%', double: ['53%', '80%'] },
+}
+
 function formatDate(value) {
   if (!value) return ''
   const d = new Date(value)
@@ -34,6 +40,10 @@ export default function CertificatePreview({
   const scale = Math.min(1.6, Math.max(0.8, (Number(design.font_size) || 16) / 16))
   const secondName = design.second_signatory_name || ''
 
+  const alignRaw = (design.text_align || 'CENTER').toLowerCase()
+  const align = ['left', 'right', 'center'].includes(alignRaw) ? alignRaw : 'center'
+  const sigPos = SIGNATURE_POSITIONS[align]
+
   const em = (factor) => `${(factor * scale).toFixed(3)}em`
 
   return (
@@ -48,86 +58,68 @@ export default function CertificatePreview({
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (
-        <>
-          <div className="absolute inset-0 bg-white" />
-          <div
-            className="absolute rounded-[2px] border-[3px]"
-            style={{ inset: '2.5%', borderColor: textColor }}
-          />
-          <div
-            className="absolute rounded-[2px] border"
-            style={{ inset: '3.6%', borderColor: textColor, opacity: 0.6 }}
-          />
-        </>
+        <div className="absolute inset-0 bg-white" />
       )}
 
       <div className="absolute inset-0">
-        <div
-          className="absolute left-1/2 w-[86%] -translate-x-1/2 text-center font-semibold uppercase tracking-wide"
-          style={{ top: '10%', fontSize: em(1.9) }}
-        >
-          {design.title || 'Certificate of Participation'}
-        </div>
-
-        <div
-          className="absolute left-1/2 h-px w-[36%] -translate-x-1/2"
-          style={{ top: '20.5%', backgroundColor: textColor, opacity: 0.7 }}
-        />
-
-        {design.message ? (
+        <div className="absolute" style={{ left: '8%', right: '8%', top: 0, bottom: 0, textAlign: align }}>
           <div
-            className="absolute left-1/2 w-[74%] -translate-x-1/2 text-center leading-snug"
-            style={{ top: '23.5%', fontSize: em(0.85) }}
+            className="absolute font-semibold uppercase tracking-wide"
+            style={{ left: 0, right: 0, top: '10%', fontSize: em(1.9) }}
           >
-            {design.message}
+            {design.title || 'Certificate of Participation'}
           </div>
-        ) : null}
 
-        <div
-          className="absolute left-1/2 -translate-x-1/2 text-center uppercase tracking-wide"
-          style={{ top: '38%', fontSize: em(0.72) }}
-        >
-          This certificate is proudly presented to
-        </div>
+          {design.message ? (
+            <div
+              className="absolute leading-snug"
+              style={{ left: 0, right: 0, top: '23.5%', fontSize: em(0.85) }}
+            >
+              {design.message}
+            </div>
+          ) : null}
 
-        <div
-          className="absolute left-1/2 w-[80%] -translate-x-1/2 text-center font-semibold italic"
-          style={{ top: '44%', fontSize: em(1.5) }}
-        >
-          {memberName || ''}
-        </div>
+          <div
+            className="absolute uppercase tracking-wide"
+            style={{ left: 0, right: 0, top: '38%', fontSize: em(0.72) }}
+          >
+            This certificate is proudly presented to
+          </div>
 
-        <div
-          className="absolute left-1/2 h-px w-[55%] -translate-x-1/2"
-          style={{ top: '55%', backgroundColor: textColor, opacity: 0.6 }}
-        />
+          <div
+            className="absolute font-semibold italic"
+            style={{ left: 0, right: 0, top: '44%', fontSize: em(1.5) }}
+          >
+            {memberName || ''}
+          </div>
 
-        <div
-          className="absolute left-1/2 -translate-x-1/2 text-center uppercase tracking-wide"
-          style={{ top: '57.5%', fontSize: em(0.72) }}
-        >
-          for participating in
-        </div>
+          <div
+            className="absolute uppercase tracking-wide"
+            style={{ left: 0, right: 0, top: '57.5%', fontSize: em(0.72) }}
+          >
+            for participating in
+          </div>
 
-        <div
-          className="absolute left-1/2 w-[80%] -translate-x-1/2 text-center font-semibold"
-          style={{ top: '63%', fontSize: em(1.15) }}
-        >
-          {eventName || ''}
-        </div>
+          <div
+            className="absolute font-semibold"
+            style={{ left: 0, right: 0, top: '63%', fontSize: em(1.15) }}
+          >
+            {eventName || ''}
+          </div>
 
-        <div
-          className="absolute left-1/2 -translate-x-1/2 text-center"
-          style={{ top: '71.5%', fontSize: em(0.7) }}
-        >
-          held on {formatDate(eventDate)}
+          <div
+            className="absolute"
+            style={{ left: 0, right: 0, top: '71.5%', fontSize: em(0.7) }}
+          >
+            held on {formatDate(eventDate)}
+          </div>
         </div>
 
         {/* Signatories */}
         {secondName ? (
           <>
             <Signatory
-              left="30%"
+              left={sigPos.double[0]}
               name={design.signatory_name}
               position={design.signatory_position}
               signatureUrl={signatureUrl}
@@ -135,7 +127,7 @@ export default function CertificatePreview({
               em={em}
             />
             <Signatory
-              left="70%"
+              left={sigPos.double[1]}
               name={secondName}
               position={design.second_signatory_position}
               color={textColor}
@@ -144,7 +136,7 @@ export default function CertificatePreview({
           </>
         ) : (
           <Signatory
-            left="50%"
+            left={sigPos.single}
             name={design.signatory_name}
             position={design.signatory_position}
             signatureUrl={signatureUrl}
@@ -178,8 +170,7 @@ function Signatory({ left, name, position, signatureUrl, color, em }) {
           />
         ) : null}
       </div>
-      <div className="mt-1 h-px w-full" style={{ backgroundColor: color, opacity: 0.8 }} />
-      <div className="mt-1 truncate font-semibold" style={{ fontSize: em(0.78) }}>
+      <div className="truncate font-semibold" style={{ fontSize: em(0.78) }}>
         {name || '—'}
       </div>
       <div className="truncate uppercase tracking-wide" style={{ fontSize: em(0.62), opacity: 0.85 }}>

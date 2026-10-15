@@ -36,8 +36,16 @@ class CertificateDesign(models.Model):
         MINIMAL = 'MINIMAL', 'Minimal'
         UPLOAD = 'UPLOAD', 'Custom Upload'
 
+    class Alignment(models.TextChoices):
+        LEFT = 'LEFT', 'Left'
+        CENTER = 'CENTER', 'Center'
+        RIGHT = 'RIGHT', 'Right'
+
     name = models.CharField(max_length=150)
     preset = models.CharField(max_length=20, choices=Preset.choices, default=Preset.CLASSIC)
+    text_align = models.CharField(
+        max_length=6, choices=Alignment.choices, default=Alignment.CENTER
+    )
     background_image = models.ImageField(
         upload_to='certificate_backgrounds/', null=True, blank=True, max_length=500
     )
@@ -83,6 +91,7 @@ class CertificateDesign(models.Model):
             'second_signatory_position': self.second_signatory_position,
             'text_color': self.text_color,
             'font_size': self.font_size,
+            'text_align': self.text_align,
             'background_url': self.background_image.url if self.background_image else '',
             'signature_url': self.signature_image.url if self.signature_image else '',
         }

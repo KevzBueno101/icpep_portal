@@ -33,6 +33,7 @@ const EMPTY_DESIGN = {
   second_signatory_position: '',
   text_color: '#0f172a',
   font_size: 16,
+  text_align: 'CENTER',
 }
 
 const formatDate = (value) => {
@@ -181,6 +182,7 @@ export default function CertificatesPage() {
       second_signatory_position: design.second_signatory_position || '',
       text_color: design.text_color || '#0f172a',
       font_size: design.font_size || 16,
+      text_align: design.text_align || 'CENTER',
       background_url: design.background_image || '',
       signature_url: design.signature_image || '',
     })
@@ -221,6 +223,7 @@ export default function CertificatesPage() {
       fd.append('second_signatory_position', designForm.second_signatory_position || '')
       fd.append('text_color', designForm.text_color || '#0f172a')
       fd.append('font_size', String(Number(designForm.font_size) || 16))
+      fd.append('text_align', designForm.text_align || 'CENTER')
       if (backgroundFile) fd.append('background_image', backgroundFile)
       if (signatureFile) fd.append('signature_image', signatureFile)
 
@@ -837,6 +840,24 @@ function DesignModal({
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Font size ({form.font_size})</label>
                 <input type="range" min="11" max="30" value={Number(form.font_size) || 16} onChange={(e) => set('font_size', Number(e.target.value))}
                   className="w-full" />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Alignment</label>
+              <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+                {[{ value: 'LEFT', label: 'Left' }, { value: 'CENTER', label: 'Center' }, { value: 'RIGHT', label: 'Right' }].map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => set('text_align', o.value)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                      (form.text_align || 'CENTER') === o.value ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
               </div>
             </div>
 
