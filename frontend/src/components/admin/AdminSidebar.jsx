@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, User, LogOut, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X, Pencil } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, User, LogOut, Trophy, Megaphone, ClipboardList, UsersRound, BookOpen, Menu, X, Pencil, Award } from 'lucide-react'
 import ConfirmModal from '../common/ConfirmModal'
 import ThemeToggle from '../ThemeToggle'
 import RefreshButton from '../RefreshButton'
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
   { label: 'About Orgs',        to: '/admin/about',              icon: BookOpen },
   { label: 'Members',           to: '/admin/membership',         icon: Users },
+  { label: 'Generate Certificate', to: '/admin/certificates',    icon: Award, requiresMembership: true },
   { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
   { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },
   { label: 'Achievements',      to: '/admin/achievements',       icon: Trophy },
@@ -97,10 +98,12 @@ export default function AdminSidebar({ badges = {}, logout }) {
     return null
   }
 
-  const navItems = NAV_ITEMS.map((item) => ({
-    ...item,
-    badge: badgeCount(item.to),
-  }))
+  const navItems = NAV_ITEMS
+    .filter((item) => !(item.requiresMembership && user?.access_level === 'RESTRICTED'))
+    .map((item) => ({
+      ...item,
+      badge: badgeCount(item.to),
+    }))
 
   return (
     <>

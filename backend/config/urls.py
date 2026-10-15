@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/feedback/', include('feedback.urls')),
     path('api/partnership/', include('partnership.urls')),
     path('api/chatbot/', include('chatbot.urls')),
+    path('api/certificates/', include('certificates.urls')),
 ]
 
 # Serve locally stored media files even in production.

@@ -16,6 +16,7 @@ RESOURCES = (
     "admins",
     "members",
     "payment-settings",
+    "certificates",
 )
 
 

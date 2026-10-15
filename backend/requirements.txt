@@ -57,3 +57,4 @@ groq>=0.30.0
 ruff>=0.11.0,<1.0.0
 sendgrid>=6.10.0,<7.0.0
 pywebpush==2.3.0
+reportlab==4.4.10

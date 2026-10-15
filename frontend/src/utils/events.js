@@ -5,4 +5,5 @@ export const EVENTS = {
   NEW_ANNOUNCEMENT: 'new-announcement',
   OFFICERS_REFRESH: 'officers-refresh',
   PAYMENT_SETTINGS_UPDATED: 'payment-settings-updated',
+  CERTIFICATES_UPDATED: 'certificates-updated',
 }

@@ -28,6 +28,8 @@ import EditAdminProfile from './pages/admin/EditAdminProfile'
 import OfficerIdCardPage from './pages/admin/OfficerIdCardPage'
 import AdminOfficersAccounts from './pages/admin/AdminOfficersAccounts'
 import AdminAbout from './pages/admin/AdminAbout'
+import CertificatesPage from './pages/admin/CertificatesPage'
+import VerifyCertificate from './pages/public/VerifyCertificate'
 
 
 import AdminLogs from './pages/admin/placeholder/AdminLogs'
@@ -84,6 +86,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
           <Route path="/membership-pending" element={<MembershipPending />} />
+          <Route path="/verify/:code" element={<VerifyCertificate />} />
 
           {/* Hidden admin login — no links point here */}
           <Route path="/admin-portal/login" element={<AdminLogin />} />
@@ -133,6 +136,16 @@ function App() {
               <AdminProtectedRoute>
                 <AdminLayout>
                   <AdminMembership />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/certificates"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout>
+                  <CertificatesPage />
                 </AdminLayout>
               </AdminProtectedRoute>
             }
