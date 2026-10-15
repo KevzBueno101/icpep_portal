@@ -19,6 +19,8 @@ from reportlab.pdfgen import canvas as pdf_canvas
 
 PAGE_W, PAGE_H = landscape(A4)  # 841.89 x 595.28 points (landscape A4)
 
+CONTENT_MARGIN = 70  # horizontal inset (points) used for left/right alignment
+
 SERIF = 'Times-Roman'
 SERIF_BOLD = 'Times-Bold'
 SERIF_ITALIC = 'Times-BoldItalic'
@@ -64,6 +66,21 @@ def _fetch_image_bytes(url):
     return None
 
 
+def _normalize_align(value):
+    value = (value or 'CENTER').upper()
+    return value if value in ('LEFT', 'CENTER', 'RIGHT') else 'CENTER'
+
+
+def _draw_aligned(c, text, y, align):
+    """Draw a single line honoring the design's text alignment."""
+    if align == 'LEFT':
+        c.drawString(CONTENT_MARGIN, y, text)
+    elif align == 'RIGHT':
+        c.drawRightString(PAGE_W - CONTENT_MARGIN, y, text)
+    else:
+        c.drawCentredString(PAGE_W / 2, y, text)
+
+
 def _wrap_text(text, font, size, max_width, c):
     words = (text or '').split()
     lines, current = [], ''
@@ -79,13 +96,13 @@ def _wrap_text(text, font, size, max_width, c):
     return lines
 
 
-def _draw_text_block(c, text, font, size, color, y_top, max_width, leading):
+def _draw_text_block(c, text, font, size, color, y_top, max_width, leading, align='CENTER'):
     lines = _wrap_text(text, font, size, max_width, c)
     c.setFont(font, size)
     c.setFillColor(color)
     y = y_top
     for line in lines:
-        c.drawCentredString(PAGE_W / 2, y, line)
+        _draw_aligned(c, line, y, align)
         y -= leading
     return y
 
@@ -103,26 +120,12 @@ def _draw_background(c, snapshot):
         except Exception:
             pass
 
-    # Preset fallback: a clean bordered page with corner accents.
-    accent = _hex_color(snapshot.get('text_color'), '#0f172a')
+    # Plain background: white fill only (no border frame or accent lines).
     c.setFillColor(HexColor('#ffffff'))
     c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
-    c.setStrokeColor(accent)
-    c.setLineWidth(3)
-    c.rect(24, 24, PAGE_W - 48, PAGE_H - 48)
-    c.setLineWidth(0.8)
-    c.rect(34, 34, PAGE_W - 68, PAGE_H - 68)
-    c.setLineWidth(2)
-    c.line(34, PAGE_H - 34, 34 + 120, PAGE_H - 34)
-    c.line(PAGE_W - 34 - 120, PAGE_H - 34, PAGE_W - 34, PAGE_H - 34)
 
 
 def _draw_signature(c, x_center, y_line, name, position, color, signature_url):
-    line_w = 210
-    c.setStrokeColor(color)
-    c.setLineWidth(0.8)
-    c.line(x_center - line_w / 2, y_line, x_center + line_w / 2, y_line)
-
     if signature_url:
         sig_bytes = _fetch_image_bytes(signature_url)
         if sig_bytes:
@@ -171,70 +174,72 @@ def build_certificate_pdf(certificate):
     c = pdf_canvas.Canvas(buffer, pagesize=(PAGE_W, PAGE_H))
     _draw_background(c, snapshot)
 
+    align = _normalize_align(snapshot.get('text_align'))
+
     content_top = PAGE_H - 120
     title_size = max(30, min(base_size * 2.2, 52))
 
     c.setFillColor(color)
     c.setFont(SERIF_BOLD, title_size)
-    c.drawCentredString(PAGE_W / 2, content_top, (snapshot.get('title') or 'Certificate').upper())
+    _draw_aligned(c, (snapshot.get('title') or 'Certificate').upper(), content_top, align)
 
-    y = content_top - title_size - 14
-    c.setStrokeColor(color)
-    c.setLineWidth(1.2)
-    c.line(PAGE_W / 2 - 150, y, PAGE_W / 2 + 150, y)
-    y -= 34
+    y = content_top - title_size - 30
 
     message = (snapshot.get('message') or '').strip()
     if message:
         y = _draw_text_block(
-            c, message, SERIF, base_size, color, y, PAGE_W - 260, base_size + 6
+            c, message, SERIF, base_size, color, y, PAGE_W - 2 * CONTENT_MARGIN,
+            base_size + 6, align,
         )
         y -= 14
 
     c.setFont(SANS, 11)
     c.setFillColor(color)
-    c.drawCentredString(PAGE_W / 2, y, 'This certificate is proudly presented to')
+    _draw_aligned(c, 'This certificate is proudly presented to', y, align)
     y -= 46
 
     name_size = max(24, min(base_size * 1.9, 40))
     c.setFont(SERIF_ITALIC, name_size)
-    c.drawCentredString(PAGE_W / 2, y, full_name)
-    y -= name_size + 6
-
-    c.setLineWidth(0.6)
-    c.line(PAGE_W / 2 - 230, y, PAGE_W / 2 + 230, y)
-    y -= 40
+    _draw_aligned(c, full_name, y, align)
+    y -= name_size + 34
 
     c.setFont(SANS, 11)
-    c.drawCentredString(PAGE_W / 2, y, 'for participating in')
+    _draw_aligned(c, 'for participating in', y, align)
     y -= 30
 
     c.setFont(SERIF_BOLD, min(base_size + 4, 26))
     y = _draw_text_block(
         c, certificate.event_name, SERIF_BOLD, min(base_size + 4, 26),
-        color, y, PAGE_W - 240, min(base_size + 10, 32)
+        color, y, PAGE_W - 2 * CONTENT_MARGIN, min(base_size + 10, 32), align,
     )
     y -= 12
 
     c.setFont(SANS, 10.5)
-    c.drawCentredString(PAGE_W / 2, y, f"held on {certificate.event_date.strftime('%B %d, %Y')}")
+    _draw_aligned(c, f"held on {certificate.event_date.strftime('%B %d, %Y')}", y, align)
 
-    # Signatories (bottom band) --------------------------------------------
+    # Signatories (bottom band); position follows the text alignment --------
     line_y = 150
+    if align == 'LEFT':
+        single_x, pair_x = PAGE_W * 0.20, (PAGE_W * 0.20, PAGE_W * 0.47)
+    elif align == 'RIGHT':
+        single_x, pair_x = PAGE_W * 0.80, (PAGE_W * 0.53, PAGE_W * 0.80)
+    else:
+        single_x, pair_x = PAGE_W * 0.50, (PAGE_W * 0.32, PAGE_W * 0.68)
+
     sec_name = (snapshot.get('second_signatory_name') or '').strip()
     if sec_name:
         _draw_signature(
-            c, PAGE_W * 0.32, line_y, snapshot.get('signatory_name'),
+            c, pair_x[0], line_y, snapshot.get('signatory_name'),
             snapshot.get('signatory_position'), color,
             snapshot.get('signature_url'),
         )
         _draw_signature(
-            c, PAGE_W * 0.68, line_y, sec_name,
+            c, pair_x[1], line_y, sec_name,
             snapshot.get('second_signatory_position'), color, '',
         )
     else:
         _draw_signature(
-            c, PAGE_W / 2, line_y, snapshot.get('signatory_name'),
+            c, single_x, line_y, snapshot.get('signatory_name'),
             snapshot.get('signatory_position'), color,
             snapshot.get('signature_url'),
         )

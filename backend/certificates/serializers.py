@@ -37,7 +37,7 @@ class CertificateDesignSerializer(serializers.ModelSerializer):
             'id', 'name', 'preset', 'background_image', 'title', 'message',
             'signatory_name', 'signatory_position', 'signature_image',
             'second_signatory_name', 'second_signatory_position',
-            'text_color', 'font_size', 'is_archived', 'certificate_count',
+            'text_color', 'font_size', 'text_align', 'is_archived', 'certificate_count',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'is_archived', 'created_at', 'updated_at']

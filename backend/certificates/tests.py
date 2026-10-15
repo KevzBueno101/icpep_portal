@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from members.models import MemberProfile
 
 from .models import Certificate, CertificateDesign
+from .pdf import build_certificate_pdf
 
 User = get_user_model()
 
@@ -196,3 +197,20 @@ class CertificateAPITests(APITestCase):
         self.assertEqual(res.status_code, 204)
         self.design.refresh_from_db()
         self.assertTrue(self.design.is_archived)
+
+    def test_design_text_align_persists_and_snapshots(self):
+        self.client.force_authenticate(self.admin)
+        res = self.client.post('/api/certificates/designs/', {
+            'name': 'Aligned', 'title': 'Certificate', 'text_align': 'LEFT',
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data['text_align'], 'LEFT')
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        self.assertEqual(design.snapshot()['text_align'], 'LEFT')
+
+    def test_pdf_renders_for_each_alignment(self):
+        self._issue()
+        cert = Certificate.objects.first()
+        for align in ('LEFT', 'CENTER', 'RIGHT', 'garbage'):
+            cert.design_snapshot = {**cert.design_snapshot, 'text_align': align}
+            self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
