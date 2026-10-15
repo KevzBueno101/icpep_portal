@@ -6,6 +6,7 @@ export const RESOURCES = {
   ADMINS: 'admins',
   MEMBERS: 'members',
   PAYMENT_SETTINGS: 'payment-settings',
+  CERTIFICATES: 'certificates',
 }
 
 export const ALL_RESOURCES = Object.values(RESOURCES)
@@ -18,6 +19,7 @@ export const RESOURCE_LABELS = {
   [RESOURCES.ADMINS]: 'Admin accounts were updated',
   [RESOURCES.MEMBERS]: 'Member records were updated',
   [RESOURCES.PAYMENT_SETTINGS]: 'Payment settings were updated',
+  [RESOURCES.CERTIFICATES]: 'Certificates were updated',
 }
 
 export const CONTENT_UPDATED_EVENT = 'realtime:content-updated'

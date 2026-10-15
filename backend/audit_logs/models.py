@@ -30,6 +30,11 @@ class AuditLog(models.Model):
         ABOUT_SECTION_REORDERED = 'ABOUT_SECTION_REORDERED', 'About Section Reordered'
         YEAR_END_RESET = 'YEAR_END_RESET', 'Year-End Reset'
         PAYMENT_SETTINGS_UPDATED = 'PAYMENT_SETTINGS_UPDATED', 'Payment Settings Updated'
+        CERTIFICATE_DESIGN_CREATED = 'CERTIFICATE_DESIGN_CREATED', 'Certificate Design Created'
+        CERTIFICATE_DESIGN_UPDATED = 'CERTIFICATE_DESIGN_UPDATED', 'Certificate Design Updated'
+        CERTIFICATE_DESIGN_DELETED = 'CERTIFICATE_DESIGN_DELETED', 'Certificate Design Deleted'
+        CERTIFICATE_ISSUED = 'CERTIFICATE_ISSUED', 'Certificates Issued'
+        CERTIFICATE_REVOKED = 'CERTIFICATE_REVOKED', 'Certificate Revoked'
 
     class EntityType(models.TextChoices):
         MEMBER = 'Member', 'Member'
@@ -38,6 +43,7 @@ class AuditLog(models.Model):
         ANNOUNCEMENT = 'Announcement', 'Announcement'
         ABOUT = 'About', 'About'
         PAYMENT_SETTINGS = 'PaymentSettings', 'Payment Settings'
+        CERTIFICATE = 'Certificate', 'Certificate'
 
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     admin_user = models.ForeignKey(

@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'feedback',
     'partnership',
     'chatbot',
+    'certificates',
 ]
 
 # Channels - Redis for production, InMemory for local dev
