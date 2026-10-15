@@ -104,3 +104,20 @@ class MemberUpdatesConsumer(AsyncWebsocketConsumer):
             )
         )
 
+    async def content_updated(self, event):
+        """Generic handler for `content.updated` broadcasts.
+
+        The payload carries a `resources` list naming everything that changed
+        (announcements, about, milestones, officers, admins, members,
+        payment-settings). New resource types need no consumer changes.
+        """
+        payload = event.get("payload") or {}
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "content.updated",
+                    "payload": payload,
+                }
+            )
+        )
+

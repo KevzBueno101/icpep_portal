@@ -5,6 +5,8 @@ import ConfirmModal from '../../components/common/ConfirmModal'
 import SortableList from '../../components/admin/SortableList'
 import Skeleton from '../../components/Skeleton'
 import { CheckCircle2 } from 'lucide-react'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../context/RealtimeContext'
 
 const CATEGORY_OPTIONS = [
   { value: 'founding', label: 'Founding' },
@@ -45,22 +47,29 @@ const AdminAchievements = () => {
   const [saved, setSaved] = useState(false)
   const savedTimerRef = useRef(null)
 
-  useEffect(() => {
-    fetchMilestones()
-  }, [])
-
-  const fetchMilestones = async () => {
-    setLoading(true)
+  const fetchMilestones = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/milestones/admin/')
       setMilestones(res.data.results)
-      setCurrentPage(1)
+      if (!silent) setCurrentPage(1)
     } catch (err) {
       toast.error('Failed to load milestones.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchMilestones()
+  }, [fetchMilestones])
+
+  // Live updates from any admin/tab.
+  useRealtimeContent(RESOURCES.MILESTONES, () => {
+    fetchMilestones({ silent: true })
+  })
+
+  useRealtimeGuard(showForm || editingMilestone != null || expandedMilestoneId != null || deletingMilestone != null)
 
   useEffect(() => {
     if (milestones.length > 0) {

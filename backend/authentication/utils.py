@@ -3,6 +3,7 @@ from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -17,6 +18,24 @@ logger = logging.getLogger(__name__)
 # Number of failed logins (per email/IP, within the 15-minute window) that
 # trigger the "Too many login attempts" block. Blocks on the 11th failure.
 LOGIN_FAILURE_LIMIT = 10
+
+
+def find_user_by_login(identifier):
+    """Resolve a login identifier (email OR username) to a user.
+
+    Email is matched first so that, in the rare case where one user's email
+    equals another user's username, the email match wins deterministically.
+    Returns None when nothing matches.
+    """
+    identifier = (identifier or '').strip()
+    if not identifier:
+        return None
+
+    User = get_user_model()
+    return (
+        User.objects.filter(email__iexact=identifier).first()
+        or User.objects.filter(username__iexact=identifier).first()
+    )
 
 
 def build_password_reset_url(user, token, frontend_url=None, request=None):
@@ -60,6 +79,17 @@ def get_client_ip(request):
 
 def record_failed_attempt(email, ip):
     FailedLoginAttempt.objects.create(email=email, ip_address=ip)
+
+
+def failure_key(identifier):
+    """Canonical key for failure tracking so email + username share a counter.
+
+    Resolves the identifier to the account's email when it exists; otherwise
+    falls back to the raw (stripped) identifier so unknown attempts are still
+    rate limited, just not merged across both forms.
+    """
+    user = find_user_by_login(identifier)
+    return user.email if user else (identifier or '').strip()
 
 
 def clear_failures(email):

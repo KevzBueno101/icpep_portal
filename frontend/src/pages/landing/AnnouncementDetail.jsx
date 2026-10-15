@@ -8,6 +8,8 @@ import NewBadge from '../../components/NewBadge'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { useAuth } from '../../context/useAuth'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 import { parseUrlsInText } from '../../utils/urlParser.jsx'
 import { Calendar, Clock, MapPin, User, Link as LinkIcon } from 'lucide-react'
 
@@ -75,8 +77,8 @@ export default function AnnouncementDetail() {
   const [modalInitialIndex, setModalInitialIndex] = useState(0)
   const [newestId, setNewestId] = useState(null)
 
-  const fetchAnnouncement = async () => {
-    setLoading(true)
+  const fetchAnnouncement = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     setRequiresLogin(false)
     try {
       const client = user && user.role !== 'ADMIN' ? api : publicApi
@@ -84,14 +86,18 @@ export default function AnnouncementDetail() {
       setAnnouncement(res.data)
     } catch (err) {
       console.error('Failed to fetch announcement:', err)
-      setAnnouncement(null)
+      if (!silent) setAnnouncement(null)
       if (err.response?.status === 404 && !user) {
         setRequiresLogin(true)
       }
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
+
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
+    fetchAnnouncement({ silent: true })
+  })
 
   useEffect(() => {
     fetchAnnouncement()

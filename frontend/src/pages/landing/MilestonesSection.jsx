@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Info } from 'lucide-react'
 import { publicApi } from '../../api/axios'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n))
@@ -202,20 +204,25 @@ export default function MilestonesSection() {
   const displayedMilestones = showAllMilestones ? milestones : milestones.slice(0, 3)
   const hasHiddenMilestones = milestones.length > displayedMilestones.length
 
-  useEffect(() => {
-    const fetchMilestones = async () => {
-      try {
-        const res = await publicApi.get('/milestones/')
-        setMilestones(res.data.results)
-      } catch (err) {
-        console.error('Failed to fetch milestones:', err)
-        setMilestones([])
-      } finally {
-        setLoading(false)
-      }
+  const fetchMilestones = useCallback(async () => {
+    try {
+      const res = await publicApi.get('/milestones/')
+      setMilestones(res.data.results)
+    } catch (err) {
+      console.error('Failed to fetch milestones:', err)
+      setMilestones([])
+    } finally {
+      setLoading(false)
     }
-    fetchMilestones()
   }, [])
+
+  useEffect(() => {
+    fetchMilestones()
+  }, [fetchMilestones])
+
+  useRealtimeContent(RESOURCES.MILESTONES, () => {
+    fetchMilestones()
+  })
 
   useEffect(() => {
     const observer = new IntersectionObserver(

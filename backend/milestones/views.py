@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.realtime import broadcast_member_update
 from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 
@@ -64,6 +65,8 @@ class MilestoneAdminListCreateAPIView(generics.ListCreateAPIView):
             request=self.request
         )
 
+        broadcast_member_update("milestones")
+
 
 class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Admin endpoint for updating and deleting milestones"""
@@ -94,6 +97,8 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
             request=self.request
         )
 
+        broadcast_member_update("milestones")
+
     def perform_destroy(self, instance):
         entity_id = instance.id
         entity_name = instance.title
@@ -109,6 +114,8 @@ class MilestoneAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
             details={'title': entity_name},
             request=self.request
         )
+
+        broadcast_member_update("milestones")
 
 
 class MilestoneImageUploadAPIView(APIView):
@@ -140,6 +147,8 @@ class MilestoneImageUploadAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("milestones")
+
         return Response(MilestoneImageSerializer(image).data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, image_id):
@@ -159,9 +168,12 @@ class MilestoneImageUploadAPIView(APIView):
             request=request
         )
 
+        broadcast_member_update("milestones")
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MilestoneReorderAPIView(ReorderAPIView):
     model = Milestone
     permission_classes = [CanManageContent]
+    realtime_resource = "milestones"

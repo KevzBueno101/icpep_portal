@@ -4,6 +4,8 @@ import api from '../../api/axios'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import SortableList from '../../components/admin/SortableList'
 import CardSkeleton from '../../components/skeletons/CardSkeleton'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../context/RealtimeContext'
 import {
   CheckCircle2,
   Eye,
@@ -51,8 +53,8 @@ const AdminAbout = () => {
 
   const isEditMode = !!editingSection
 
-  async function fetchSections() {
-    setLoading(true)
+  const fetchSections = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/about/admin/')
       const results = res.data.results
@@ -61,13 +63,19 @@ const AdminAbout = () => {
     } catch {
       toast.error('Failed to load about sections.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchSections()
-  }, [])
+  }, [fetchSections])
+
+  useRealtimeContent(RESOURCES.ABOUT, () => {
+    fetchSections({ silent: true })
+  })
+
+  useRealtimeGuard(showForm || isEditMode || deletingSection != null)
 
   const handleCreate = (presetCategory) => {
     setEditingSection(null)

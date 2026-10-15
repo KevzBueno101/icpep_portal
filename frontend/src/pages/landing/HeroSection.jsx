@@ -4,6 +4,8 @@ import { Info } from 'lucide-react'
 import { startHeroParticles } from './_heroParticles'
 import { publicApi } from '../../api/axios'
 import { registerLogoTap } from '../../utils/logoSecretTaps'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 
 
 
@@ -58,6 +60,7 @@ export default function HeroSection() {
   const canvasRef = useRef(null)
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
+  const [realtimeNonce, setRealtimeNonce] = useState(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -106,7 +109,13 @@ export default function HeroSection() {
 
     fetchPinnedAnnouncements()
 
-  }, [])
+  }, [realtimeNonce])
+
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
+
+    setRealtimeNonce((n) => n + 1)
+
+  })
 
 
 

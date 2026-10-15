@@ -8,6 +8,8 @@ import toast from 'react-hot-toast'
 import OfficerCard from '../../components/OfficerCard'
 import SortableList from '../../components/admin/SortableList'
 import { resolveProfilePictureUrl } from '../../utils/profilePicture'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../context/RealtimeContext'
 import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
 import ConfirmModal from '../../components/common/ConfirmModal'
@@ -98,7 +100,7 @@ const AdminOfficersAccounts = () => {
   }, [officerRoster, localOrderIds])
 
 
-  const loadRoster = async () => {
+  const loadRoster = useCallback(async () => {
     try {
       const res = await publicApi.get('/users/officers/roster/')
       setOfficers(res.data.results || [])
@@ -106,7 +108,7 @@ const AdminOfficersAccounts = () => {
       toast.error('Unable to load officer accounts.')
       setOfficers([])
     }
-  }
+  }, [])
 
   const handleReorder = useCallback(async (orderedIds) => {
     setLocalOrderIds(orderedIds)
@@ -130,7 +132,14 @@ const AdminOfficersAccounts = () => {
     }
 
     if (user) load()
-  }, [user])
+  }, [user, loadRoster])
+
+  // Live updates when the roster or admin accounts change anywhere.
+  useRealtimeContent([RESOURCES.OFFICERS, RESOURCES.ADMINS], () => {
+    loadRoster()
+  })
+
+  useRealtimeGuard(modalOpen || deleteOfficer != null)
 
   const resetForm = () => {
     setForm({

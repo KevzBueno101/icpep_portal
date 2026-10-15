@@ -333,16 +333,16 @@ const AdminLogin = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1.5 font-mono tracking-wide">
-                EMAIL ADDRESS
+                EMAIL OR USERNAME
               </label>
               <input
-                type="email"
+                type="text"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
                 required
                 autoComplete="username"
-                placeholder="admin@icpep.edu"
+                placeholder="admin@icpep.edu or username"
                 className="w-full bg-[#0a0a0f] border border-gray-800 text-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition placeholder-gray-700 font-mono"
               />
             </div>

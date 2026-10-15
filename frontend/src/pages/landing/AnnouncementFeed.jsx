@@ -5,7 +5,8 @@ import { publicApi } from '../../api/axios'
 import { ANNOUNCEMENT_DELETED_EVENT, ANNOUNCEMENT_UPDATED_EVENT } from '../../utils/announcementEvents'
 import { getNewestAnnouncementId } from '../../utils/announcementCategories'
 import { EVENTS } from '../../utils/events'
-import { getMemberUpdatesWsUrl } from '../../utils/ws'
+import { RESOURCES } from '../../utils/realtime'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 
 export default function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState([])
@@ -55,58 +56,10 @@ export default function AnnouncementFeed() {
     }
   }, [])
 
-  // Live updates for anonymous visitors via the public WebSocket.
-  useEffect(() => {
-    const wsUrl = getMemberUpdatesWsUrl()
-
-    let ws
-    let isCancelled = false
-    let reconnectTimeout
-
-    const connect = () => {
-      try {
-        ws = new WebSocket(wsUrl)
-      } catch (e) {
-        console.warn('[AnnouncementFeed] WebSocket init failed:', e)
-        return
-      }
-
-      ws.onmessage = (event) => {
-        if (isCancelled) return
-        try {
-          const data = JSON.parse(event.data)
-          if (data?.type === 'announcements.updated') {
-            fetchAnnouncements({ announceNew: true, silent: true })
-          }
-        } catch {
-          // ignore malformed messages
-        }
-      }
-
-      ws.onerror = () => {
-        // avoid spamming the console
-      }
-
-      ws.onclose = () => {
-        if (isCancelled) return
-        reconnectTimeout = setTimeout(() => {
-          if (!isCancelled) connect()
-        }, 3000)
-      }
-    }
-
-    connect()
-
-    return () => {
-      isCancelled = true
-      clearTimeout(reconnectTimeout)
-      try {
-        ws?.close()
-      } catch {
-        // ignore
-      }
-    }
-  }, [])
+  // Live updates for anonymous visitors via the shared realtime provider.
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
+    fetchAnnouncements({ announceNew: true, silent: true })
+  })
 
   const sortedAnnouncements = useMemo(
     () =>

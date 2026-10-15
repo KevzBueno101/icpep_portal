@@ -2,8 +2,11 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
+from common.realtime import broadcast_member_update
 from members.models import MemberProfile
 from members.serializers import validate_image_file
+
+from .utils import find_user_by_login
 
 User = get_user_model()
 
@@ -72,6 +75,8 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
         if profile_picture is not None:
             user.profile_picture = profile_picture
             user.save(update_fields=['profile_picture'])
+
+        broadcast_member_update("admins")
         return user
 
 
@@ -155,6 +160,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                     'Please try again.'
                 ]
             }) from err
+
+        broadcast_member_update("members")
         return user
 
     def validate_profile_picture(self, value):
@@ -239,34 +246,32 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AdminLoginSerializer(serializers.Serializer):
-    email    = serializers.EmailField()
+    email    = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
         from django.contrib.auth import authenticate
-        email = data.get('email', '')
+        identifier = data.get('email', '')
         password = data.get('password', '')
 
-        if not User.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError('No account found with this email.')
+        identifier_user = find_user_by_login(identifier)
+        if identifier_user is None:
+            raise serializers.ValidationError('No account found with this email or username.')
 
-        user = authenticate(email=email, password=password)
+        user = authenticate(email=identifier, password=password)
 
         if not user:
             # authenticate() returns None for inactive users even if password is correct
-            try:
-                inactive_user = User.objects.get(email__iexact=email)
-                if inactive_user.check_password(password):
-                    status = getattr(inactive_user, 'registration_status', 'APPROVED')
-                    if status == 'PENDING':
-                        raise serializers.ValidationError('Your admin request is still pending approval.')
-                    if status == 'REJECTED':
-                        raise serializers.ValidationError('Your admin request was rejected. Please contact the President.')
-                    if not inactive_user.is_active:
-                        raise serializers.ValidationError('This account is disabled.')
-                raise serializers.ValidationError('Incorrect password.')
-            except User.DoesNotExist:
-                raise serializers.ValidationError('Incorrect password.') from None
+            inactive_user = identifier_user
+            if inactive_user.check_password(password):
+                reg_status = getattr(inactive_user, 'registration_status', 'APPROVED')
+                if reg_status == 'PENDING':
+                    raise serializers.ValidationError('Your admin request is still pending approval.')
+                if reg_status == 'REJECTED':
+                    raise serializers.ValidationError('Your admin request was rejected. Please contact the President.')
+                if not inactive_user.is_active:
+                    raise serializers.ValidationError('This account is disabled.')
+            raise serializers.ValidationError('Incorrect password.')
 
         if hasattr(user, 'role'):
             if user.role != 'ADMIN':

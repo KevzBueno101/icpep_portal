@@ -1,8 +1,11 @@
 import imghdr
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
+
+User = get_user_model()
 
 ALLOWED_IMAGE_TYPES = {
     'rgb', 'gif', 'pbm', 'pgm', 'ppm',
@@ -26,19 +29,44 @@ class MemberProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_role = serializers.CharField(source='user.role', read_only=True)
+    username = serializers.CharField(source='user.username', required=False, max_length=150, allow_blank=False)
     fee_amount = serializers.IntegerField(read_only=True)
     latest_reference_number = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MemberProfile
         fields = [
-            'id', 'user', 'user_email', 'user_role', 'first_name', 'middle_name', 'last_name',
+            'id', 'user', 'user_email', 'user_role', 'username', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'profile_picture', 'payment_method', 'payment_proof_image',
             'coe_id_image', 'membership_fee', 'fee_amount', 'admin_message', 'membership_status',
             'latest_reference_number', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'admin_message', 'membership_status', 'created_at', 'updated_at']
+
+    def validate_username(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('Username is required.')
+        if len(value) > 150:
+            raise serializers.ValidationError('Username must be at most 150 characters.')
+        qs = User.objects.filter(username__iexact=value)
+        if self.instance is not None:
+            qs = qs.exclude(pk=self.instance.user_id)
+        if qs.exists():
+            raise serializers.ValidationError('An account with this username already exists.')
+        return value
+
+    def update(self, instance, validated_data):
+        # username is declared with source='user.username', so DRF nests it
+        # under a 'user' dict in validated_data. Persist it on the related User.
+        user_data = validated_data.pop('user', None)
+        profile = super().update(instance, validated_data)
+        if user_data and user_data.get('username'):
+            user = profile.user
+            user.username = user_data['username']
+            user.save(update_fields=['username'])
+        return profile
 
     def get_latest_reference_number(self, obj):
         txn = obj.transactions.order_by('-created_at').first()

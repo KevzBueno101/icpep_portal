@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useAuth } from '../../../context/useAuth'
 import { useOfficers } from '../../../context/OfficersContext'
 import api from '../../../api/axios'
@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import { User, Plus } from 'lucide-react'
 import { resolveProfilePictureUrl } from '../../../utils/profilePicture'
+import { RESOURCES } from '../../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../../context/RealtimeContext'
 
 const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Admin' },
@@ -61,7 +63,7 @@ const AdminAdmins = ({ refreshTrigger }) => {
   const canEdit = useMemo(() => user?.can_manage_roles, [user])
   const canReviewApprovals = useMemo(() => user?.can_manage_roles, [user])
 
-  const loadPendingRequests = async () => {
+  const loadPendingRequests = useCallback(async () => {
     if (!canReviewApprovals) {
       setPendingRequests([])
       return
@@ -75,7 +77,23 @@ const AdminAdmins = ({ refreshTrigger }) => {
     } finally {
       setPendingLoading(false)
     }
-  }
+  }, [canReviewApprovals])
+
+  const loadAdmins = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/users/admins/')
+      setAdmins(res.data.results || [])
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setAdmins([])
+      } else {
+        toast.error('Unable to load admin accounts.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   const handleApprovalAction = async (requestId, action) => {
     if (!canReviewApprovals) return
@@ -95,27 +113,19 @@ const AdminAdmins = ({ refreshTrigger }) => {
   }
 
   useEffect(() => {
-    const loadAdmins = async () => {
-      setLoading(true)
-      try {
-        const res = await api.get('/users/admins/')
-        setAdmins(res.data.results || [])
-      } catch (err) {
-        if (err.response?.status === 403) {
-          setAdmins([])
-        } else {
-          toast.error('Unable to load admin accounts.')
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
     if (user) {
       loadAdmins()
       loadPendingRequests()
     }
-  }, [user, refreshTrigger, canReviewApprovals])
+  }, [user, refreshTrigger, canReviewApprovals, loadAdmins, loadPendingRequests])
+
+  // Live updates: any change to admin accounts or the officers roster.
+  useRealtimeContent([RESOURCES.ADMINS, RESOURCES.OFFICERS], () => {
+    loadAdmins()
+    loadPendingRequests()
+  })
+
+  useRealtimeGuard(modalOpen || deleteAdmin != null)
 
   const resetForm = () => {
     setForm({

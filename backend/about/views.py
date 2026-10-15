@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.realtime import broadcast_member_update
 from common.views import ReorderAPIView
 from permissions import CanManageContent, IsAdmin
 
@@ -20,21 +21,7 @@ from .models import AboutSection
 from .serializers import AboutSectionSerializer
 
 def broadcast_about_updated():
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "member_updates",
-                {
-                    "type": "about.updated",
-                    "payload": {},
-                },
-            )
-    except Exception:
-        pass
+    broadcast_member_update("about")
 
 _CLOUDINARY_DOWNLOAD_URL = 'https://api.cloudinary.com/v1_1/{cloud}/{resource_type}/download'
 _DOCUMENT_FETCH_TIMEOUT = 90
@@ -235,6 +222,7 @@ class AboutSectionDocumentContentAPIView(APIView):
 class AboutSectionReorderAPIView(ReorderAPIView):
     model = AboutSection
     permission_classes = [CanManageContent]
+    realtime_resource = "about"
 
     def post(self, request):
         response = super().post(request)

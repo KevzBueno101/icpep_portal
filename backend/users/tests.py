@@ -101,3 +101,40 @@ class AdminProfileAPITests(TestCase):
 
         resp = self._patch({'role': 'OFFICER'})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_username_can_be_changed(self):
+        resp = self._patch({'username': 'jane-smith'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'jane-smith')
+
+    def test_duplicate_username_rejected(self):
+        User.objects.create_user(
+            email='other@example.com',
+            username='takenname',
+            password='pass-12345',
+            role='ADMIN',
+            position='Treasurer',
+        )
+        resp = self._patch({'username': 'takenname'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'officer1')
+
+    def test_username_change_is_case_insensitively_unique(self):
+        User.objects.create_user(
+            email='other@example.com',
+            username='TakenName',
+            password='pass-12345',
+            role='ADMIN',
+            position='Treasurer',
+        )
+        resp = self._patch({'username': 'takenname'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_same_username_allowed_for_self(self):
+        resp = self._patch({'username': 'officer1', 'first_name': 'Janet'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'officer1')
+        self.assertEqual(self.user.first_name, 'Janet')

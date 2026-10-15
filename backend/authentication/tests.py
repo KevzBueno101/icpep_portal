@@ -352,3 +352,145 @@ class LoginEventTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(LoginEvent.objects.count(), 0)
+
+
+class LoginWithEmailOrUsernameTests(APITestCase):
+    def _make_member(self, **kwargs):
+        fields = {
+            'email': 'member@example.com',
+            'username': 'member',
+            'password': 'Password123',
+            'role': 'OFFICER',
+            'registration_status': 'APPROVED',
+            'is_active': True,
+        }
+        fields.update(kwargs)
+        return User.objects.create_user(**fields)
+
+    def _make_admin(self, **kwargs):
+        fields = {
+            'email': 'president@example.com',
+            'username': 'president',
+            'password': 'Password123',
+            'role': 'ADMIN',
+            'position': 'President',
+            'registration_status': 'APPROVED',
+            'is_active': True,
+        }
+        fields.update(kwargs)
+        return User.objects.create_user(**fields)
+
+    def test_member_can_login_with_username(self):
+        self._make_member()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+        self.assertEqual(LoginEvent.objects.count(), 1)
+
+    def test_member_can_still_login_with_email(self):
+        self._make_member()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+
+    def test_member_username_login_is_case_insensitive(self):
+        self._make_member()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'MeMbEr',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_member_login_unknown_identifier_reports_email_or_username(self):
+        response = self.client.post('/api/auth/login/', {
+            'email': 'does-not-exist',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('email or username', str(response.data).lower())
+
+    def test_member_login_wrong_password_via_username(self):
+        self._make_member()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member',
+            'password': 'WrongPass123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('incorrect password', str(response.data).lower())
+
+    def test_admin_can_login_with_username(self):
+        self._make_admin()
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data.get('tokens', {}))
+
+    def test_admin_can_still_login_with_email(self):
+        self._make_admin()
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'president@example.com',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('tokens', response.data)
+
+    def test_admin_login_unknown_identifier(self):
+        response = self.client.post('/api/auth/admin-login/', {
+            'email': 'nobody-here',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('email or username', str(response.data).lower())
+
+    def test_admin_cannot_use_member_login_via_username(self):
+        self._make_admin()
+        response = self.client.post('/api/auth/login/', {
+            'email': 'president',
+            'password': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('admin portal', str(response.data).lower())
+
+    def test_failure_counter_is_shared_between_email_and_username(self):
+        self._make_member()
+
+        self.client.post('/api/auth/login/', {
+            'email': 'member',
+            'password': 'WrongPass123',
+        }, format='json')
+        self.client.post('/api/auth/login/', {
+            'email': 'member@example.com',
+            'password': 'WrongPass123',
+        }, format='json')
+
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='member@example.com').count(),
+            2,
+        )
+
+        response = self.client.post('/api/auth/login/', {
+            'email': 'member',
+            'password': 'Password123',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            FailedLoginAttempt.objects.filter(email__iexact='member@example.com').count(),
+            0,
+        )

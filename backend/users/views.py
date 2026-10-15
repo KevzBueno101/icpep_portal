@@ -29,6 +29,7 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from common.realtime import broadcast_member_update
 from permissions import _is_admin_or_president
 
 User = get_user_model()
@@ -58,6 +59,10 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
             logger = logging.getLogger(__name__)
             logger.error(f"Error in AdminProfileAPIView.get_object: {str(e)}", exc_info=True)
             raise
+
+    def perform_update(self, serializer):
+        serializer.save()
+        broadcast_member_update(["officers", "admins"])
 
     def patch(self, request, *args, **kwargs):
         user = self.request.user
@@ -166,6 +171,8 @@ def admin_accounts_list(request):
             request=request
         )
 
+        broadcast_member_update(["officers", "admins"])
+
         return Response({
             'message': 'Admin account created successfully.',
             'user': UserListSerializer(new_admin).data,
@@ -259,22 +266,7 @@ def admin_account_detail(request, pk):
             request=request
         )
 
-        # Broadcast roster update to all connected clients
-        try:
-            from asgiref.sync import async_to_sync
-            from channels.layers import get_channel_layer
-
-            channel_layer = get_channel_layer()
-            if channel_layer is not None:
-                async_to_sync(channel_layer.group_send)(
-                    "officers",
-                    {
-                        "type": "officers.roster.updated",
-                        "payload": {"updated_by": request.user.id},
-                    },
-                )
-        except Exception:
-            pass
+        broadcast_member_update(["officers", "admins"])
 
         return Response({'message': 'Admin account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -316,22 +308,7 @@ def admin_account_detail(request, pk):
         request=request
     )
 
-    # Broadcast roster update to all connected clients
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "officers",
-                {
-                    "type": "officers.roster.updated",
-                    "payload": {"updated_by": request.user.id},
-                },
-            )
-    except Exception:
-        pass
+    broadcast_member_update(["officers", "admins"])
 
     return Response({
         'message': 'Admin account updated successfully.',
@@ -391,6 +368,8 @@ def approve_admin_request(request, pk):
     target.approved_at = timezone.now()
     target.save(update_fields=['registration_status', 'access_level', 'position', 'department', 'academic_year', 'is_active', 'approved_by', 'approved_at'])
 
+    broadcast_member_update(["officers", "admins"])
+
     return Response({'message': 'Admin request approved successfully.', 'user': UserListSerializer(target).data})
 
 
@@ -410,6 +389,8 @@ def reject_admin_request(request, pk):
     target.approved_by = request.user
     target.approved_at = timezone.now()
     target.save(update_fields=['registration_status', 'is_active', 'position', 'approved_by', 'approved_at'])
+
+    broadcast_member_update(["officers", "admins"])
 
     return Response({'message': 'Admin request rejected.', 'user': UserListSerializer(target).data})
 
@@ -473,23 +454,7 @@ def assign_role(request, pk):
         request=request
     )
 
-    # Broadcast roster update to all connected clients
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "officers",
-                {
-                    "type": "officers.roster.updated",
-                    "payload": {"updated_by": request.user.id},
-                },
-            )
-    except Exception:
-        # Real-time updates are best-effort; do not fail request.
-        pass
+    broadcast_member_update(["officers", "admins"])
 
     return Response({
         'message': 'Role updated successfully.',
@@ -535,6 +500,8 @@ def year_end_reset(request):
         },
         request=request
     )
+
+    broadcast_member_update(["members", "admins", "officers"])
 
     return Response({
         'message': f'Year-end reset complete. {expired_members} member(s) expired, {updated_admins} admin account(s) reset.',
@@ -599,22 +566,7 @@ def create_officer_account(request):
         request=request
     )
 
-    # Broadcast roster update to all connected clients
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-
-        channel_layer = get_channel_layer()
-        if channel_layer is not None:
-            async_to_sync(channel_layer.group_send)(
-                "officers",
-                {
-                    "type": "officers.roster.updated",
-                    "payload": {"updated_by": request.user.id},
-                },
-            )
-    except Exception:
-        pass
+    broadcast_member_update(["officers", "admins"])
 
     return Response({
         'message': 'Officer account created successfully.',
@@ -683,5 +635,7 @@ class OfficerReorderAPIView(APIView):
             for idx, pk in enumerate(ordered_ids)
         ]
         User.objects.bulk_update(updates, ['display_order'])
+
+        broadcast_member_update("officers")
 
         return Response({'detail': 'Order updated.'}, status=status.HTTP_200_OK)

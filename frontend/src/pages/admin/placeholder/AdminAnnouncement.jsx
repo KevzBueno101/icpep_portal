@@ -5,7 +5,8 @@ import ConfirmModal from '../../../components/common/ConfirmModal'
 import SortableList from '../../../components/admin/SortableList'
 import { notifyAnnouncementDeleted, notifyAnnouncementUpdated } from '../../../utils/announcementEvents'
 import { EVENTS } from '../../../utils/events'
-import { getMemberUpdatesWsUrl } from '../../../utils/ws'
+import { RESOURCES } from '../../../utils/realtime'
+import { useRealtimeContent, useRealtimeGuard } from '../../../context/RealtimeContext'
 import CardSkeleton from '../../../components/skeletons/CardSkeleton'
 import NewBadge from '../../../components/NewBadge'
 import { formatCategory, getNewestAnnouncementId } from '../../../utils/announcementCategories'
@@ -93,55 +94,13 @@ const AdminAnnouncement = () => {
   }, [fetchAnnouncements])
 
   // Real-time updates: reflect changes made from any tab/admin without a manual refresh.
-  useEffect(() => {
-    let ws
-    let isCancelled = false
-    let reconnectTimeout
+  useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
+    fetchAnnouncements({ silent: true })
+  })
 
-    const connect = () => {
-      try {
-        ws = new WebSocket(getMemberUpdatesWsUrl())
-      } catch (e) {
-        console.warn('[AdminAnnouncement] WebSocket init failed:', e)
-        return
-      }
-
-      ws.onmessage = (event) => {
-        if (isCancelled) return
-        try {
-          const data = JSON.parse(event.data)
-          if (data?.type === 'announcements.updated') {
-            fetchAnnouncements({ silent: true })
-          }
-        } catch {
-          // ignore malformed messages
-        }
-      }
-
-      ws.onerror = () => {
-        // avoid spamming the console
-      }
-
-      ws.onclose = () => {
-        if (isCancelled) return
-        reconnectTimeout = setTimeout(() => {
-          if (!isCancelled) connect()
-        }, 3000)
-      }
-    }
-
-    connect()
-
-    return () => {
-      isCancelled = true
-      clearTimeout(reconnectTimeout)
-      try {
-        ws?.close()
-      } catch {
-        // ignore
-      }
-    }
-  }, [fetchAnnouncements])
+  // Defer live refreshes while the admin is editing or confirming a delete so
+  // an incoming change never clobbers the open form/modal.
+  useRealtimeGuard(showForm || isEditMode || deletingAnnouncement != null)
 
   useEffect(() => {
     if (announcements.length > 0) {
