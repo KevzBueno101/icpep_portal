@@ -77,15 +77,16 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">Email</label>
+            <label className="block text-sm text-slate-600 mb-1 dark:text-slate-400">Email or Username</label>
             <input
-              type="email"
+              type="text"
               name="email"
+              autoComplete="username"
               value={form.email}
               onChange={handleChange}
               required
               className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 dark:ring-slate-600"
-              placeholder="you@email.com"
+              placeholder="you@email.com or username"
             />
           </div>
 

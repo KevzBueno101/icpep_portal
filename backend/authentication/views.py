@@ -28,6 +28,8 @@ from .utils import (
     build_password_reset_url,
     clear_failures,
     clear_ip_failures,
+    find_user_by_login,
+    failure_key,
     get_client_ip,
     recent_failures,
     recent_ip_failures,
@@ -44,22 +46,22 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         from django.contrib.auth import authenticate
-        email = attrs.get('email', '')
+        identifier = attrs.get('email', '')
         password = attrs.get('password', '')
 
-        if not User.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError('No account found with this email.')
+        user_by_identifier = find_user_by_login(identifier)
+        if user_by_identifier is None:
+            raise serializers.ValidationError('No account found with this email or username.')
 
         user = authenticate(
             request=self.context.get('request'),
-            username=email,
+            username=identifier,
             password=password,
         )
         if not user:
-            user_by_email = User.objects.filter(email__iexact=email).first()
-            if user_by_email and (
-                getattr(user_by_email, 'role', None) == 'ADMIN'
-                or user_by_email.is_staff
+            if (
+                getattr(user_by_identifier, 'role', None) == 'ADMIN'
+                or user_by_identifier.is_staff
             ):
                 raise serializers.ValidationError(
                     'Admin users must use the admin portal login at /admin-portal/login'
@@ -110,10 +112,11 @@ class EmailTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email', '')
         ip = get_client_ip(request)
+        key = failure_key(email)
 
-        # Block if too many recent failures for this email (non-critical)
+        # Block if too many recent failures for this email/username (non-critical)
         try:
-            blocked = email and recent_failures(email, minutes=15) > LOGIN_FAILURE_LIMIT
+            blocked = key and recent_failures(key, minutes=15) > LOGIN_FAILURE_LIMIT
         except Exception:
             blocked = False
         if blocked:
@@ -127,14 +130,14 @@ class EmailTokenObtainPairView(TokenObtainPairView):
         except Exception:
             # Login failed (DRF raises on invalid credentials) — record the attempt.
             # Non-critical — must not break login.
-            if email:
+            if key:
                 with contextlib.suppress(Exception):
-                    record_failed_attempt(email, ip)
+                    record_failed_attempt(key, ip)
             raise
 
-        # Successful login — reset the per-email failure counter
+        # Successful login — reset the per-email/username failure counter
         with contextlib.suppress(Exception):
-            clear_failures(email)
+            clear_failures(key)
 
         return response
 
@@ -210,11 +213,12 @@ def admin_login(request):
     """
     email = request.data.get('email', '')
     ip = get_client_ip(request)
+    key = failure_key(email)
 
-    # Block if too many recent failures for this email OR this IP (non-critical).
+    # Block if too many recent failures for this email/username OR this IP (non-critical).
     # Only failed attempts count — successful logins never consume the budget.
     try:
-        blocked = (email and recent_failures(email, minutes=15) > LOGIN_FAILURE_LIMIT) or recent_ip_failures(ip, minutes=15) > LOGIN_FAILURE_LIMIT
+        blocked = (key and recent_failures(key, minutes=15) > LOGIN_FAILURE_LIMIT) or recent_ip_failures(ip, minutes=15) > LOGIN_FAILURE_LIMIT
     except Exception:
         blocked = False
     if blocked:
@@ -234,9 +238,9 @@ def admin_login(request):
         access_token['position'] = getattr(user, 'position', 'NONE')
         position = access_token['position']
 
-        # Successful login — reset failure counters for this email + IP
+        # Successful login — reset failure counters for this email/username + IP
         with contextlib.suppress(Exception):
-            clear_failures(email)
+            clear_failures(key)
         with contextlib.suppress(Exception):
             clear_ip_failures(ip)
 
@@ -250,9 +254,9 @@ def admin_login(request):
         })
 
     # Record failed attempt (non-critical)
-    if email:
+    if key:
         with contextlib.suppress(Exception):
-            record_failed_attempt(email, ip)
+            record_failed_attempt(key, ip)
     return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -267,7 +271,7 @@ def failed_attempts(request):
     if not email:
         return Response({'count': 0})
     try:
-        count = recent_failures(email, minutes=15)
+        count = recent_failures(failure_key(email), minutes=15)
     except Exception:
         count = 0
     return Response({'count': count})
