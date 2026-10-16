@@ -226,6 +226,7 @@ class CertificateIssueAPIView(APIView):
         design = get_object_or_404(CertificateDesign, pk=data['design'])
         event_name = data['event_name']
         event_date = data['event_date']
+        event_venue = (data.get('event_venue') or '').strip()
         member_ids = list(dict.fromkeys(data['member_ids']))
         event_key = normalize_event_key(event_name, event_date)
 
@@ -274,6 +275,7 @@ class CertificateIssueAPIView(APIView):
                 design_snapshot=snapshot,
                 event_name=event_name,
                 event_date=event_date,
+                event_venue=event_venue,
                 event_key=event_key,
                 verification_code=generate_verification_code(),
                 issued_by=request.user,
@@ -287,6 +289,7 @@ class CertificateIssueAPIView(APIView):
             details={
                 'event_name': event_name,
                 'event_date': event_date.isoformat(),
+                'event_venue': event_venue,
                 'design': design.name,
                 'issued': len(created),
                 'skipped': len(skipped),
@@ -304,6 +307,7 @@ class CertificateIssueAPIView(APIView):
                 'skipped': skipped,
                 'event_name': event_name,
                 'event_date': event_date.isoformat(),
+                'event_venue': event_venue,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -372,6 +376,7 @@ class CertificateExportAPIView(APIView):
             'Email',
             'Event Name',
             'Event Date',
+            'Venue',
             'Design Name',
             'Status',
             'Issued At',
@@ -398,6 +403,7 @@ class CertificateExportAPIView(APIView):
                 email,
                 cert.event_name,
                 cert.event_date.isoformat() if cert.event_date else '',
+                cert.event_venue or '',
                 design_name,
                 cert.status,
                 cert.issued_at.strftime('%Y-%m-%d %H:%M:%S') if cert.issued_at else '',
@@ -559,6 +565,7 @@ class CertificateVerifyAPIView(APIView):
             'member_name': member_name,
             'event_name': certificate.event_name,
             'event_date': certificate.event_date.isoformat(),
+            'event_venue': certificate.event_venue or '',
             'issued_at': certificate.issued_at.isoformat(),
             'verification_code': certificate.verification_code,
         })

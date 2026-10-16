@@ -9,7 +9,7 @@ import api from '../../api/axios'
 import { useAuth } from '../../context/useAuth'
 import { useRealtimeContent, useRealtimeGuard } from '../../context/RealtimeContext'
 import { RESOURCES } from '../../utils/realtime'
-import { fetchCandidateIds } from '../../api/certificates'
+import { fetchCandidateIds, downloadCertificate } from '../../api/certificates'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import CertificatePreview from '../../components/certificates/CertificatePreview'
 import MemberPicker from '../../components/certificates/MemberPicker'
@@ -38,6 +38,7 @@ const makeEmptyDesign = () => ({
   header_organization: 'Institute of Computer Engineers of the Philippines. Student Edition - CatSU Chapter',
   signatories: [makeSignatory()],
   text_color: '#0f172a',
+  qr_color: '#0f172a',
   font_size: 16,
   text_align: 'CENTER',
 })
@@ -70,6 +71,7 @@ export default function CertificatesPage() {
 
   const [eventName, setEventName] = useState('')
   const [eventDate, setEventDate] = useState('')
+  const [eventVenue, setEventVenue] = useState('')
   const [designId, setDesignId] = useState('')
   const [selected, setSelected] = useState({})
   const [selectAllOpen, setSelectAllOpen] = useState(false)
@@ -213,6 +215,7 @@ export default function CertificatesPage() {
       header_organization: design.header_organization || '',
       signatories: signatories.length ? signatories : [makeSignatory()],
       text_color: design.text_color || '#0f172a',
+      qr_color: design.qr_color || '#0f172a',
       font_size: design.font_size || 16,
       text_align: design.text_align || 'CENTER',
       background_url: design.background_image || '',
@@ -258,6 +261,7 @@ export default function CertificatesPage() {
       fd.append('header_college', designForm.header_college || '')
       fd.append('header_organization', designForm.header_organization || '')
       fd.append('text_color', designForm.text_color || '#0f172a')
+      fd.append('qr_color', designForm.qr_color || '#0f172a')
       fd.append('font_size', String(Number(designForm.font_size) || 16))
       fd.append('text_align', designForm.text_align || 'CENTER')
       if (backgroundFile) fd.append('background_image', backgroundFile)
@@ -365,6 +369,7 @@ export default function CertificatesPage() {
         design: selectedDesign.id,
         event_name: eventName.trim(),
         event_date: eventDate,
+        event_venue: eventVenue.trim(),
         member_ids: Object.keys(selected).map((id) => Number(id)),
       })
       setIssueResult(res.data)
@@ -507,6 +512,15 @@ export default function CertificatesPage() {
               />
             </div>
             <div className="flex flex-col sm:col-span-2">
+              <label className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Venue / place <span className="font-normal normal-case text-slate-400">(optional)</span></label>
+              <input
+                value={eventVenue}
+                onChange={(e) => setEventVenue(e.target.value)}
+                placeholder="e.g. CatSU Gymnasium, Virac"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              />
+            </div>
+            <div className="flex flex-col sm:col-span-2">
               <label className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Certificate design</label>
               <select
                 value={designId}
@@ -542,6 +556,7 @@ export default function CertificatesPage() {
                 memberName="Sample Member Name"
                 eventName={eventName || 'Event name'}
                 eventDate={eventDate}
+                eventVenue={eventVenue}
               />
             </div>
           </div>
@@ -753,6 +768,18 @@ function IssuedTab({ data, loading, search, onSearch, onRevoke, onExport, onPrev
   const results = data.results || []
   const hasPrev = page > 1
   const hasNext = Boolean(data.next)
+  const [exportingId, setExportingId] = useState(null)
+
+  const exportOne = async (cert) => {
+    setExportingId(cert.id)
+    try {
+      await downloadCertificate(cert)
+    } catch {
+      toast.error('Failed to export this certificate.')
+    } finally {
+      setExportingId(null)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -797,15 +824,28 @@ function IssuedTab({ data, loading, search, onSearch, onRevoke, onExport, onPrev
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-900">{cert.member_name}</p>
                   <p className="truncate text-xs text-slate-500">
-                    {cert.event_name} · {formatDate(cert.event_date)} · <span className="font-mono">{cert.verification_code}</span>
+                    {cert.event_name} · {formatDate(cert.event_date)}{cert.event_venue ? ` · ${cert.event_venue}` : ''} · <span className="font-mono">{cert.verification_code}</span>
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                     cert.status === 'REVOKED' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
-                  }`}>
+                  }`}                  >
                     {cert.status === 'REVOKED' ? 'Revoked' : 'Issued'}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => exportOne(cert)}
+                    disabled={exportingId === cert.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-sky-200 px-3 py-1.5 text-xs font-semibold text-sky-600 hover:bg-sky-50 disabled:opacity-60"
+                  >
+                    {exportingId === cert.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    Export
+                  </button>
                   {cert.status === 'ISSUED' ? (
                     <button
                       type="button"
@@ -957,10 +997,20 @@ function DesignModal({
                 </div>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Font size ({form.font_size})</label>
-                <input type="range" min="11" max="30" value={Number(form.font_size) || 16} onChange={(e) => set('font_size', Number(e.target.value))}
-                  className="w-full" />
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">QR color</label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={form.qr_color || '#0f172a'} onChange={(e) => set('qr_color', e.target.value)}
+                    className="h-10 w-12 cursor-pointer rounded-lg border border-slate-200" />
+                  <input value={form.qr_color || ''} onChange={(e) => set('qr_color', e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500" />
+                </div>
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Font size ({form.font_size})</label>
+              <input type="range" min="11" max="30" value={Number(form.font_size) || 16} onChange={(e) => set('font_size', Number(e.target.value))}
+                className="w-full" />
             </div>
 
             <div>

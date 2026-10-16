@@ -37,6 +37,8 @@ const MONTHS = [
 
 const clamp = (value, lo, hi) => Math.max(lo, Math.min(value, hi))
 
+const isValidHex = (value) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value || '')
+
 function formatDate(value) {
   if (!value) return ''
   const str = String(value)
@@ -118,12 +120,14 @@ export default function CertificatePreview({
   memberName = DEFAULT_SAMPLE.memberName,
   eventName = DEFAULT_SAMPLE.eventName,
   eventDate = DEFAULT_SAMPLE.eventDate,
+  eventVenue = '',
   verificationCode = 'ICPEP-SAMPLE',
   showQr = true,
   className = '',
 }) {
   const backgroundUrl = design.background_url || design.background_image || ''
   const textColor = design.text_color || '#0f172a'
+  const qrColor = isValidHex(design.qr_color) ? design.qr_color : '#0f172a'
 
   const alignRaw = (design.text_align || 'CENTER').toLowerCase()
   const align = ['left', 'right', 'center'].includes(alignRaw) ? alignRaw : 'center'
@@ -189,9 +193,16 @@ export default function CertificatePreview({
   })
   y = y - eventLines.length * eventLeading - 12
 
-  nodes.push({
-    text: `held on ${formatDate(eventDate)}`, y, size: 10.5, family: SANS, weight: 400, style: 'normal',
+  const venueText = (eventVenue || '').trim()
+  const heldText = venueText
+    ? `held on ${formatDate(eventDate)} at ${venueText}`
+    : `held on ${formatDate(eventDate)}`
+  const heldLines = wrapLines(heldText, SANS, 10.5, 400, 'normal', maxW)
+  heldLines.forEach((line, i) => {
+    nodes.push({ text: line, y: y - i * 13, size: 10.5, family: SANS, weight: 400, style: 'normal' })
   })
+  // Mirror pdf.py: y ends on the last line's baseline so band clearance is unchanged.
+  y = y - (heldLines.length - 1) * 13
 
   // ---- Signatories (bottom band): 2 per row, max 2 rows --------------------
   // Mirrors pdf.py _draw_signatory_band: bottom-aligned, clamped so it never
@@ -317,7 +328,7 @@ export default function CertificatePreview({
             fill={textColor}
             fontFamily={SANS}
             fontSize={6.5}
-            textAnchor="end"
+            textAnchor="middle"
           >
             {`Verify: ${verificationCode}`}
           </text>
@@ -337,6 +348,8 @@ export default function CertificatePreview({
           <QRCodeSVG
             value={certificateVerifyUrl(verificationCode)}
             size={qrSize}
+            fgColor={qrColor}
+            bgColor="#FFFFFF"
             style={{ width: '100%', height: '100%' }}
           />
         </div>

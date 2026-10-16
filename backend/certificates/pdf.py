@@ -227,8 +227,11 @@ def _draw_signatory_band(c, signatories, align, color, top_clearance):
         line_y += image_gap + img_h + row_gap + name_gap + 13
 
 
-def _draw_qr(c, url, x, y, size):
+def _draw_qr(c, url, x, y, size, fill_color=None):
     qr = QrCodeWidget(url)
+    if fill_color is not None:
+        # Module color only; the square's background stays transparent (white page).
+        qr.barFillColor = fill_color
     bounds = qr.getBounds()
     w = bounds[2] - bounds[0]
     h = bounds[3] - bounds[1]
@@ -322,8 +325,16 @@ def build_certificate_pdf(certificate):
     )
     y -= 12
 
-    c.setFont(SANS, 10.5)
-    _draw_aligned(c, f"held on {certificate.event_date.strftime('%B %d, %Y')}", y, align)
+    venue = (getattr(certificate, 'event_venue', '') or '').strip()
+    held_line = f"held on {certificate.event_date.strftime('%B %d, %Y')}"
+    if venue:
+        held_line = f"{held_line} at {venue}"
+    last_baseline = _draw_text_block(
+        c, held_line, SANS, 10.5, color, y, PAGE_W - 2 * CONTENT_MARGIN, 13, align
+    )
+    # _draw_text_block returns (last line baseline - leading); restore the last
+    # baseline so the signatory band clearance below the text stays unchanged.
+    y = last_baseline + 13
 
     # Signatories (bottom band); 2 per row, clamped below the text above it ----
     signatories = list(snapshot.get('signatories') or [])
@@ -350,10 +361,12 @@ def build_certificate_pdf(certificate):
     # QR verification block (bottom-right) ---------------------------------
     verify_url = f"{getattr(settings, 'FRONTEND_URL', '')}/verify/{certificate.verification_code}"
     qr_x = PAGE_W - QR_RIGHT_MARGIN - QR_SIZE
-    _draw_qr(c, verify_url, qr_x, EDGE_PADDING, QR_SIZE)
+    qr_color = _hex_color(snapshot.get('qr_color'), '#0f172a')
+    _draw_qr(c, verify_url, qr_x, EDGE_PADDING, QR_SIZE, qr_color)
     c.setFont(SANS, 6.5)
     c.setFillColor(color)
-    c.drawRightString(
+    # Centered directly beneath the QR square.
+    c.drawCentredString(
         PAGE_W - QR_RIGHT_MARGIN - QR_SIZE / 2,
         EDGE_PADDING - 12,
         f"Verify: {certificate.verification_code}",

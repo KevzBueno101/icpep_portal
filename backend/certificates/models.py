@@ -72,6 +72,7 @@ class CertificateDesign(models.Model):
         help_text='List of {name, position, signature_url} signatory entries.',
     )
     text_color = models.CharField(max_length=20, default='#0f172a')
+    qr_color = models.CharField(max_length=20, default='#0f172a')
     font_size = models.PositiveSmallIntegerField(default=16)
     is_archived = models.BooleanField(default=False)
     created_by = models.ForeignKey(
@@ -105,6 +106,7 @@ class CertificateDesign(models.Model):
             'header_organization': self.header_organization,
             'signatories': [dict(s) for s in (self.signatories or [])],
             'text_color': self.text_color,
+            'qr_color': self.qr_color,
             'font_size': self.font_size,
             'text_align': self.text_align,
             'background_url': self.background_image.url if self.background_image else '',
@@ -142,6 +144,7 @@ class Certificate(models.Model):
     design_snapshot = models.JSONField(default=dict, blank=True)
     event_name = models.CharField(max_length=200)
     event_date = models.DateField()
+    event_venue = models.CharField(max_length=300, blank=True, default='')
     event_key = models.CharField(max_length=255, db_index=True)
     verification_code = models.CharField(max_length=24, unique=True, db_index=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ISSUED)

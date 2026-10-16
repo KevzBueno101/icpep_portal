@@ -96,6 +96,7 @@ class CertificateAPITests(APITestCase):
         self.assertEqual(Certificate.objects.count(), 1)
         cert = Certificate.objects.first()
         self.assertEqual(cert.status, 'ISSUED')
+        self.assertEqual(cert.event_venue, '')
         self.assertTrue(cert.verification_code.startswith('ICPEP-'))
 
     def test_issue_skips_duplicate_for_same_event(self):
@@ -361,4 +362,48 @@ class CertificateAPITests(APITestCase):
         self.design.save()
         self._issue()
         cert = Certificate.objects.first()
+        self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
+
+    def test_issue_venue_round_trip(self):
+        self.client.force_authenticate(self.admin)
+        res = self.client.post('/api/certificates/issue/', {
+            'design': self.design.id,
+            'event_name': 'Hackfest',
+            'event_date': '2026-02-10',
+            'event_venue': 'CatSU Gymnasium, Virac',
+            'member_ids': [self.member.id],
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data['event_venue'], 'CatSU Gymnasium, Virac')
+        cert = Certificate.objects.first()
+        self.assertEqual(cert.event_venue, 'CatSU Gymnasium, Virac')
+        # Venue does not affect the duplicate-event key.
+        self.assertEqual(cert.event_key, 'hackfest|2026-02-10')
+
+        self.client.force_authenticate(self.admin)
+        res = self.client.get('/api/certificates/')
+        self.assertEqual(res.data['results'][0]['event_venue'], 'CatSU Gymnasium, Virac')
+
+        self.client.force_authenticate(user=None)
+        res = self.client.get('/api/certificates/verify/', {'code': cert.verification_code})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['event_venue'], 'CatSU Gymnasium, Virac')
+
+        self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))
+
+    def test_design_qr_color_persists_snapshots_and_renders(self):
+        self.client.force_authenticate(self.admin)
+        res = self.client.post('/api/certificates/designs/', {
+            'name': 'QR color', 'title': 'Certificate', 'qr_color': '#123456',
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data['qr_color'], '#123456')
+        design = CertificateDesign.objects.get(id=res.data['id'])
+        self.assertEqual(design.snapshot()['qr_color'], '#123456')
+
+        self.design.qr_color = '#123456'
+        self.design.save()
+        self._issue()
+        cert = Certificate.objects.first()
+        self.assertEqual(cert.design_snapshot['qr_color'], '#123456')
         self.assertTrue(build_certificate_pdf(cert).startswith(b'%PDF'))

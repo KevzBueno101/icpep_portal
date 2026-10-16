@@ -58,7 +58,7 @@ class CertificateDesignSerializer(serializers.ModelSerializer):
             'id', 'name', 'preset', 'background_image', 'title', 'message',
             'presented_to_text', 'for_text',
             'header_school', 'header_college', 'header_organization',
-            'signatories', 'text_color', 'font_size', 'text_align',
+            'signatories', 'text_color', 'qr_color', 'font_size', 'text_align',
             'is_archived', 'certificate_count', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'is_archived', 'created_at', 'updated_at']
@@ -160,7 +160,7 @@ class CertificateSerializer(serializers.ModelSerializer):
         model = Certificate
         fields = [
             'id', 'member', 'member_name', 'design', 'design_name',
-            'event_name', 'event_date', 'issued_at', 'status',
+            'event_name', 'event_date', 'event_venue', 'issued_at', 'status',
             'verification_code', 'is_new', 'seen_at',
         ]
 
@@ -210,6 +210,9 @@ class CertificateIssueSerializer(serializers.Serializer):
     design = serializers.IntegerField()
     event_name = serializers.CharField(max_length=200)
     event_date = serializers.DateField()
+    event_venue = serializers.CharField(
+        max_length=300, required=False, allow_blank=True, default=''
+    )
     member_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )

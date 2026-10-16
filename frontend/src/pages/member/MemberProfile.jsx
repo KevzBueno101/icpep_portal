@@ -289,6 +289,65 @@ export default function MemberProfile() {
         </p>
       </div>
 
+      {/* Certificates (first section, above the edit-profile card) */}
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Award className="h-5 w-5 text-sky-600" />
+            Certificates
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          {certLoading ? (
+            <div className="text-sm text-slate-400 text-center py-6">Loading certificates…</div>
+          ) : certificates.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+              <Award className="mx-auto h-8 w-8 text-slate-300" />
+              <p className="mt-2 text-sm text-slate-500">
+                No certificates yet. Certificates from events you joined will show up here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-semibold text-slate-900">{cert.event_name}</p>
+                      {cert.is_new ? <NewBadge /> : null}
+                    </div>
+                    <p className="text-sm text-slate-500">{formatCertDate(cert.event_date)}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewCertificate(cert)}
+                      disabled={certBusyId === cert.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
+                    >
+                      {certBusyId === cert.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadCertificate(cert)}
+                      disabled={certBusyId === cert.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         {/* Profile Card Header Cover */}
         <div className="h-32 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 relative" />
@@ -563,64 +622,6 @@ export default function MemberProfile() {
         </div>
       </div>
 
-      {/* Certificates */}
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Award className="h-5 w-5 text-sky-600" />
-            Certificates
-          </h2>
-        </div>
-        <div className="px-6 py-5">
-          {certLoading ? (
-            <div className="text-sm text-slate-400 text-center py-6">Loading certificates…</div>
-          ) : certificates.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-              <Award className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">
-                No certificates yet. Certificates from events you joined will show up here.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate font-semibold text-slate-900">{cert.event_name}</p>
-                      {cert.is_new ? <NewBadge /> : null}
-                    </div>
-                    <p className="text-sm text-slate-500">{formatCertDate(cert.event_date)}</p>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleViewCertificate(cert)}
-                      disabled={certBusyId === cert.id}
-                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
-                    >
-                      {certBusyId === cert.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadCertificate(cert)}
-                      disabled={certBusyId === cert.id}
-                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Download
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

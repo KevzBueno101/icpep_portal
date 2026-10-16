@@ -57,6 +57,12 @@ export default function VerifyCertificate() {
                 <dt className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Date</dt>
                 <dd className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatDate(state.data.event_date)}</dd>
               </div>
+              {state.data.event_venue ? (
+                <div className="rounded-2xl border border-slate-100 bg-slate-100/70 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/50">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Venue</dt>
+                  <dd className="text-sm font-semibold text-slate-900 dark:text-slate-100">{state.data.event_venue}</dd>
+                </div>
+              ) : null}
             </dl>
 
             <p className="mt-5 font-mono text-xs text-slate-500 dark:text-slate-400">{state.data.verification_code}</p>
