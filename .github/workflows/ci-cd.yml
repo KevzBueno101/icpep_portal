@@ -69,13 +69,12 @@ jobs:
         run: |
           set -o pipefail
           python manage.py test --noinput 2>&1 | tee django-tests.log || {
-            grep -E "^(FAIL|ERROR)(:| |$)|ModuleNotFoundError|ImportError|AssertionError|^Ran |^FAILED" django-tests.log \
-              | head -n 40 \
+            tail -n 30 django-tests.log \
               | while IFS= read -r line; do echo "::error::$line"; done
             {
               echo "### Django tests failed"
               echo '```'
-              tail -n 60 django-tests.log
+              tail -n 80 django-tests.log
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
