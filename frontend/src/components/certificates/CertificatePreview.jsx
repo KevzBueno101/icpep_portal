@@ -137,8 +137,8 @@ export default function CertificatePreview({
   const base = clamp(Number(design.font_size) || 16, 11, 30)
   const titleSize = clamp(base * 2.2, 30, 52)
   const nameSize = clamp(base * 1.9, 24, 40)
-  const eventSize = clamp(base + 4, 26)
-  const eventLeading = clamp(base + 10, 32)
+  const eventSize = Math.min(base + 4, 26)
+  const eventLeading = Math.min(base + 10, 32)
   const maxW = PAGE_W - 2 * CONTENT_MARGIN
 
   // ---- Vertical flow (baselines measured from the page bottom) ------------
