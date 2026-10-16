@@ -66,7 +66,20 @@ jobs:
         run: ruff check .
 
       - name: Django tests
-        run: python manage.py test
+        run: |
+          set -o pipefail
+          python manage.py test --noinput 2>&1 | tee django-tests.log || {
+            echo "::error::$(tail -n 1 django-tests.log)"
+            tac django-tests.log | head -n 24 \
+              | while IFS= read -r line; do echo "::error::$line"; done
+            {
+              echo "### Django tests failed"
+              echo '```'
+              cat django-tests.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
         env:
           DEBUG: 'False'
           SECRET_KEY: ci-test-secret-key-not-for-production
@@ -80,6 +93,14 @@ jobs:
           SUPABASE_URL: ''
           SUPABASE_KEY: ''
 
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: django-tests-log
+          path: backend/django-tests.log
+          if-no-files-found: ignore
+
   # ──────────────────────────────────────────────
   # 3. Deploy (only on push to main)
   # ──────────────────────────────────────────────
@@ -91,7 +112,6 @@ jobs:
       - name: Deploy Frontend → Vercel
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
-        if: ${{ secrets.VERCEL_DEPLOY_HOOK != '' }}
         run: |
           if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
             echo "::warning::VERCEL_DEPLOY_HOOK is not configured — skipping Vercel deploy"
@@ -101,7 +121,6 @@ jobs:
       - name: Deploy Backend → Render
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-        if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
         run: |
           if [ -z "$RENDER_DEPLOY_HOOK" ]; then
             echo "::warning::RENDER_DEPLOY_HOOK is not configured — skipping Render deploy"

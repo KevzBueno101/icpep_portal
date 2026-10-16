@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-
 from rest_framework.test import APITestCase
 
 from members.models import MemberProfile
+
 from .models import AuditLog
 
 User = get_user_model()

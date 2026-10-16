@@ -331,3 +331,145 @@
     transition: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Officers Directory: 3D coverflow gallery
+   Covers are absolutely centered in .od-stage (perspective 620px).
+   The transform/z-index/opacity for each cover is written from JS
+   on every selection change; CSS only supplies sizing, the
+   critically-damped ~800ms spring transition, and the caption swap.
+   Only transform and opacity ever animate.
+   ───────────────────────────────────────────────────────────── */
+.od-coverflow {
+  --od-w: clamp(165px, 44vw, 255px);
+  --od-spring: linear(
+    0,
+    0.094 5.6%,
+    0.274 11.1%,
+    0.455 16.7%,
+    0.608 22.2%,
+    0.726 27.8%,
+    0.812 33.3%,
+    0.873 38.9%,
+    0.944 50%,
+    0.976 61.1%,
+    1 100%
+  );
+  position: relative;
+}
+
+.od-stage {
+  position: relative;
+  width: 100%;
+  height: calc(var(--od-w) * 4 / 3 + 56px);
+  perspective: 620px;
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.od-arrow {
+  position: absolute;
+  top: calc(var(--od-w) * 2 / 3 + 28px);
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  color: #334155;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.od-arrow-prev {
+  left: 0;
+}
+
+.od-arrow-next {
+  right: 0;
+}
+
+.od-arrow:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.od-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.od-arrow:focus-visible {
+  outline: 3px solid #0284c7;
+  outline-offset: 2px;
+}
+
+.od-cover {
+  position: absolute;
+  top: 28px;
+  left: calc(50% - var(--od-w) / 2);
+  width: var(--od-w);
+  height: calc(var(--od-w) * 4 / 3);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  backface-visibility: hidden;
+  transition:
+    transform 800ms var(--od-spring),
+    opacity 800ms var(--od-spring);
+}
+
+.od-cover:focus-visible {
+  z-index: 20 !important;
+  outline: 3px solid #0284c7;
+  outline-offset: 4px;
+}
+
+.od-caption {
+  margin-top: 32px;
+  min-height: 44px;
+  text-align: center;
+}
+
+.od-caption > div {
+  animation: od-swap 400ms var(--od-spring) both;
+}
+
+.od-title {
+  font-size: clamp(1.1rem, 2.5vw, 1.375rem);
+  font-weight: 700;
+  color: #0f172a;
+}
+
+@keyframes od-swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .od-cover {
+    transition: none;
+  }
+
+  .od-caption > div {
+    animation: none;
+  }
+}

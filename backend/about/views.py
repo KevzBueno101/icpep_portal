@@ -20,6 +20,7 @@ from permissions import CanManageContent, IsAdmin
 from .models import AboutSection
 from .serializers import AboutSectionSerializer
 
+
 def broadcast_about_updated():
     broadcast_member_update("about")
 

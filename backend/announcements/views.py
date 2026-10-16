@@ -173,7 +173,7 @@ class AnnouncementImageUploadAPIView(APIView):
     def patch(self, request, image_id):
         image = get_object_or_404(AnnouncementImage, id=image_id)
         order = request.data.get('order')
-        
+
         if order is not None:
             image.order = order
             image.save(update_fields=['order'])
@@ -219,8 +219,8 @@ class AnnouncementEmailBlastAPIView(APIView):
     """
     permission_classes = [CanManageContent]
 
-    def post(self, request, id):
-        announcement = get_object_or_404(Announcement, id=id)
+    def post(self, request, announcement_id):
+        announcement = get_object_or_404(Announcement, id=announcement_id)
 
         if not announcement.is_published:
             return Response(

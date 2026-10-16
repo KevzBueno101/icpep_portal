@@ -10,7 +10,7 @@ const OfficersContext = createContext(null)
 
 export const OfficersProvider = ({ children }) => {
   const [officers, setOfficers] = useState([])
-  const [officersLoading, setOfficersLoading] = useState(false)
+  const [officersLoading, setOfficersLoading] = useState(true)
 
   const fetchOfficers = useCallback(async (params = undefined) => {
     setOfficersLoading(true)

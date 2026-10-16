@@ -1,12 +1,11 @@
 import logging
-from typing import Optional
 
 from django.contrib.auth import get_user_model
 
-from announcements.models import Announcement
 from about.models import AboutSection
-from milestones.models import Milestone
+from announcements.models import Announcement
 from members.models import MemberProfile, PaymentSettings
+from milestones.models import Milestone
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ The team behind the portal:
 - **Jayron Benavidez** — QA Tester
 - If asked about the team/committee who developed the portal, list these four members with their roles.
 
-## Membership Plans & Fees (IMPORTANT - use these exact amounts). Valid as of the current academic semester/year. 
+## Membership Plans & Fees (IMPORTANT - use these exact amounts). Valid as of the current academic semester/year.
 The portal has exactly two membership plans, paid via GCash or on-hand (in person to an officer):
 - **Regular Membership — ₱25** : standard membership.
 - **Membership Plus — ₱60** : standard membership with inclusions & add-ons.
@@ -258,7 +257,7 @@ def _live_data_section(user) -> str:
     return block
 
 
-def build_context(user, message: str, session_id: Optional[str] = None) -> str:
+def build_context(user, message: str, session_id: str | None = None) -> str:
     """
     Build the full context for the chatbot including system prompt.
     Injects live portal data (officers, announcements, about, milestones,
