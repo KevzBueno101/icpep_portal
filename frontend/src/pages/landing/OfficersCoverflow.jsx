@@ -1,17 +1,27 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useOfficers } from '../../context/OfficersContext'
 import EmptyLeadershipState from '../../components/EmptyLeadershipState'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 40
 const DRAG_CAPTURE_THRESHOLD = 10
+const AUTOPLAY_MS = 2000
 
 export default function OfficersCoverflow() {
   const [error, setError] = useState(null)
   const [active, setActive] = useState(0)
   const [imgFailed, setImgFailed] = useState(() => new Set())
+  const [autoOn, setAutoOn] = useState(true)
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  )
   const optionRefs = useRef([])
   const pointerRef = useRef({ startX: 0, active: false, captured: false })
   const justSwipedRef = useRef(false)
+  const hoverPauseRef = useRef(false)
+  const focusPauseRef = useRef(false)
 
   let officers = []
   let officersLoading = false
@@ -36,9 +46,27 @@ export default function OfficersCoverflow() {
   const current = lastIndex >= 0 ? Math.min(active, lastIndex) : 0
   const activeOfficer = lastIndex >= 0 ? validOfficers[current] : null
 
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!mq?.addEventListener) return undefined
+    const onChange = (e) => setReducedMotion(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!autoOn || reducedMotion || lastIndex < 1) return undefined
+    const id = window.setInterval(() => {
+      if (hoverPauseRef.current || focusPauseRef.current) return
+      setActive((prev) => (prev >= lastIndex ? 0 : prev + 1))
+    }, AUTOPLAY_MS)
+    return () => window.clearInterval(id)
+  }, [autoOn, reducedMotion, lastIndex])
+
   const select = useCallback(
     (next, opts = {}) => {
       if (lastIndex < 0) return
+      setAutoOn(false)
       const clamped = Math.max(0, Math.min(next, lastIndex))
       setActive(clamped)
       if (opts.focus) optionRefs.current[clamped]?.focus({ preventScroll: true })
@@ -186,7 +214,31 @@ export default function OfficersCoverflow() {
   }
 
   return (
-    <div>
+    <div
+      className="od-coverflow"
+      onMouseEnter={() => {
+        hoverPauseRef.current = true
+      }}
+      onMouseLeave={() => {
+        hoverPauseRef.current = false
+      }}
+      onFocus={() => {
+        focusPauseRef.current = true
+      }}
+      onBlur={() => {
+        focusPauseRef.current = false
+      }}
+    >
+      <button
+        type="button"
+        className="od-arrow od-arrow-prev"
+        aria-label="Previous officer"
+        disabled={current <= 0}
+        onClick={() => select(current - 1)}
+      >
+        <ChevronLeft aria-hidden="true" className="h-6 w-6" />
+      </button>
+
       <div
         className="od-stage"
         role="listbox"
@@ -257,7 +309,17 @@ export default function OfficersCoverflow() {
         })}
       </div>
 
-      <div className="od-caption" aria-live="polite">
+      <button
+        type="button"
+        className="od-arrow od-arrow-next"
+        aria-label="Next officer"
+        disabled={current >= lastIndex}
+        onClick={() => select(current + 1)}
+      >
+        <ChevronRight aria-hidden="true" className="h-6 w-6" />
+      </button>
+
+      <div className="od-caption" aria-live={autoOn ? 'off' : 'polite'}>
         {activeOfficer && (
           <div key={activeOfficer.id}>
             <p className="od-title">{activeOfficer.fullName}</p>
