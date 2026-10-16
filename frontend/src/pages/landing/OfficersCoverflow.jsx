@@ -7,6 +7,15 @@ const SWIPE_THRESHOLD = 40
 const DRAG_CAPTURE_THRESHOLD = 10
 const AUTOPLAY_MS = 2000
 
+const officeLabelFor = (officer) => {
+  const office = (officer.office || '').trim()
+  const position = (officer.position || '').trim()
+  const haystack = `${office} ${position}`.toLowerCase()
+  if (haystack.includes('director')) return 'Directors Office'
+  if (haystack.includes('head')) return 'Head Office'
+  return office || position
+}
+
 export default function OfficersCoverflow() {
   const [error, setError] = useState(null)
   const [active, setActive] = useState(0)
@@ -297,10 +306,10 @@ export default function OfficersCoverflow() {
               )}
 
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-3 pt-8">
-                <p className="truncate text-sm font-bold text-white">
+                <p className="truncate text-xs font-bold text-white">
                   {officer.fullName}
                 </p>
-                <p className="truncate text-xs font-medium text-sky-200">
+                <p className="truncate text-[11px] font-medium text-sky-200">
                   {officer.position}
                 </p>
               </div>
@@ -322,8 +331,7 @@ export default function OfficersCoverflow() {
       <div className="od-caption" aria-live={autoOn ? 'off' : 'polite'}>
         {activeOfficer && (
           <div key={activeOfficer.id}>
-            <p className="od-title">{activeOfficer.fullName}</p>
-            <p className="od-artist">{activeOfficer.position}</p>
+            <p className="od-title">{officeLabelFor(activeOfficer)}</p>
           </div>
         )}
       </div>
