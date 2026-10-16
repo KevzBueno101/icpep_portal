@@ -1,11 +1,15 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
+import { useRealtimeContent } from '../../context/RealtimeContext'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { EVENTS } from '../../utils/events'
+import { RESOURCES } from '../../utils/realtime'
 import { downloadFile } from '../../utils/download'
-import { User, Camera, Save, X, Edit2, Download } from 'lucide-react'
+import { downloadCertificate, viewCertificate } from '../../api/certificates'
+import NewBadge from '../../components/NewBadge'
+import { User, Camera, Save, X, Edit2, Download, Award, Eye, Loader2 } from 'lucide-react'
 
 const YEAR_LABEL_BY_VALUE = {
   '1': '1st Year',
@@ -27,6 +31,13 @@ const safeDetailFromError = (err) => {
     err?.message ||
     'Unable to complete the request.'
   )
+}
+
+const formatCertDate = (value) => {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return String(value)
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 export default function MemberProfile() {
@@ -59,6 +70,57 @@ export default function MemberProfile() {
 
   const [transactions, setTransactions] = useState([])
   const [txnLoading, setTxnLoading] = useState(true)
+
+  const [certificates, setCertificates] = useState([])
+  const [certLoading, setCertLoading] = useState(true)
+  const [certBusyId, setCertBusyId] = useState(null)
+
+  const fetchCertificates = useCallback(async ({ silent = false } = {}) => {
+    try {
+      if (!silent) setCertLoading(true)
+      const res = await api.get('/certificates/mine/')
+      const list = res.data.results ?? res.data
+      setCertificates(list)
+      // Clear the "New" badge server-side a moment after viewing, so it stays
+      // visible during this visit but is gone on the next one.
+      if (list.some((c) => c.is_new)) {
+        setTimeout(() => {
+          api.post('/certificates/mine/mark-seen/').catch(() => {})
+          setCertificates((prev) => prev.map((c) => ({ ...c, is_new: false })))
+        }, 3000)
+      }
+    } catch {
+      // non-critical
+    } finally {
+      if (!silent) setCertLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchCertificates() }, [fetchCertificates])
+
+  useRealtimeContent(RESOURCES.CERTIFICATES, () => fetchCertificates({ silent: true }))
+
+  const handleViewCertificate = async (cert) => {
+    setCertBusyId(cert.id)
+    try {
+      await viewCertificate(cert)
+    } catch {
+      toast.error('Could not open the certificate.')
+    } finally {
+      setCertBusyId(null)
+    }
+  }
+
+  const handleDownloadCertificate = async (cert) => {
+    setCertBusyId(cert.id)
+    try {
+      await downloadCertificate(cert)
+    } catch {
+      toast.error('Could not download the certificate.')
+    } finally {
+      setCertBusyId(null)
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -225,6 +287,65 @@ export default function MemberProfile() {
         <p className="mt-2 text-slate-600 text-sm md:text-base">
           Manage your personal details, contact number, year level, and profile avatar.
         </p>
+      </div>
+
+      {/* Certificates (first section, above the edit-profile card) */}
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Award className="h-5 w-5 text-sky-600" />
+            Certificates
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          {certLoading ? (
+            <div className="text-sm text-slate-400 text-center py-6">Loading certificates…</div>
+          ) : certificates.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+              <Award className="mx-auto h-8 w-8 text-slate-300" />
+              <p className="mt-2 text-sm text-slate-500">
+                No certificates yet. Certificates from events you joined will show up here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-semibold text-slate-900">{cert.event_name}</p>
+                      {cert.is_new ? <NewBadge /> : null}
+                    </div>
+                    <p className="text-sm text-slate-500">{formatCertDate(cert.event_date)}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewCertificate(cert)}
+                      disabled={certBusyId === cert.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
+                    >
+                      {certBusyId === cert.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadCertificate(cert)}
+                      disabled={certBusyId === cert.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -500,6 +621,7 @@ export default function MemberProfile() {
           )}
         </div>
       </div>
+
     </div>
   )
 }

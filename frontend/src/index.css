@@ -280,3 +280,54 @@
     }
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Hero headline: per-word blur-in reveal
+   Words start hidden (opacity 0, blurred) and settle in with a
+   staggered delay driven by --i. Subcopy/CTA fade in after the
+   last word via --sub-delay. Short headline text only.
+   ───────────────────────────────────────────────────────────── */
+.hero-word {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(6px);
+}
+
+.hero-reveal .hero-word {
+  animation: hero-word-in 700ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation-delay: calc(var(--i, 0) * 100ms);
+  will-change: opacity, filter, transform;
+}
+
+@keyframes hero-word-in {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+.hero-after {
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.hero-reveal .hero-after {
+  opacity: 1;
+  transition-delay: var(--sub-delay, 700ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-word {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+  }
+
+  .hero-after {
+    opacity: 1;
+    transition: none;
+  }
+}

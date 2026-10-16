@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Info } from 'lucide-react'
 import { startHeroParticles } from './_heroParticles'
@@ -58,6 +58,7 @@ function ValueCard({ title, text, accent }) {
 export default function HeroSection() {
   const navigate = useNavigate()
   const canvasRef = useRef(null)
+  const headlineRef = useRef(null)
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
   const [realtimeNonce, setRealtimeNonce] = useState(0)
@@ -67,6 +68,101 @@ export default function HeroSection() {
     if (!canvas) return
     const stop = startHeroParticles(canvas)
     return () => stop && stop()
+  }, [])
+
+  // ── Hero blur-in reveal ──────────────────────────────────────────────────
+  // Split the h1 into per-word spans, then trigger the staggered animation
+  // once (on load / when scrolled into view). Falls back to the final state
+  // under prefers-reduced-motion (handled in CSS). Layout effect so the first
+  // paint already shows the split (hidden) words instead of static text.
+  useLayoutEffect(() => {
+    const h1 = headlineRef.current
+    if (!h1) return
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    // Split into word spans while preserving the original text for screen
+    // readers via aria-label on the h1.
+    const label = h1.textContent.replace(/\s+/g, ' ').trim()
+    let wordIndex = 0
+
+    const wrapWords = (el) => {
+      el.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const frag = document.createDocumentFragment()
+          node.textContent
+            .split(/(\s+)/)
+            .forEach((part) => {
+              if (!part) return
+              if (/^\s+$/.test(part)) {
+                frag.appendChild(document.createTextNode(' '))
+                return
+              }
+              const span = document.createElement('span')
+              span.className = 'hero-word'
+              span.style.setProperty('--i', String(wordIndex++))
+              span.textContent = part
+              frag.appendChild(span)
+            })
+          node.replaceWith(frag)
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          wrapWords(node)
+        }
+      })
+    }
+
+    wrapWords(h1)
+
+    if (label) h1.setAttribute('aria-label', label)
+
+    // Total word count drives the subcopy/CTA delay (after the last word).
+    const total = wordIndex
+    const stagger = 100 // ms between words (spec: 70–140ms)
+    const duration = 700
+    const subDelay = total > 0 ? (total - 1) * stagger + duration : duration
+
+    // The trigger class lives on the shared wrapper so both the headline
+    // words (.hero-word, inside the h1) and the taglines/CTA row (.hero-after,
+    // siblings of the h1) match their descendant reveal rules.
+    const root = h1.parentElement
+    root?.querySelectorAll('.hero-after')
+      .forEach((el) => el.style.setProperty('--sub-delay', `${subDelay}ms`))
+
+    if (reduceMotion) {
+      // CSS already forces the final state; just reveal and bail out.
+      root?.classList.add('hero-reveal')
+      return undefined
+    }
+
+    let observer
+    const reveal = () => {
+      root?.classList.add('hero-reveal')
+      // Drop will-change hints once the animation has settled.
+      window.setTimeout(() => {
+        h1.querySelectorAll('.hero-word').forEach((w) => {
+          w.style.willChange = 'auto'
+        })
+      }, subDelay + duration + 100)
+    }
+
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              reveal()
+              observer.disconnect()
+            }
+          })
+        },
+        { threshold: 0.25 }
+      )
+      observer.observe(h1)
+    } else {
+      reveal()
+    }
+
+    return () => observer && observer.disconnect()
   }, [])
 
   const handleLogoTap = () => {
@@ -284,19 +380,19 @@ export default function HeroSection() {
 
         {/* Main Title */}
 
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-none mb-5">
-
+        <h1
+          ref={headlineRef}
+          className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-none mb-5"
+        >
           Empowering Future<br />
-
           <span className="text-cyan-400">Computer Engineers</span>
-
         </h1>
 
 
 
         {/* Tagline */}
 
-        <p className="max-w-xl text-base sm:text-lg text-white/70 leading-relaxed mb-2">
+        <p className="hero-after max-w-xl text-base sm:text-lg text-white/70 leading-relaxed mb-2">
 
           The official website/web-app of ICpEP.SE CatSU Chapter
 
@@ -304,7 +400,7 @@ export default function HeroSection() {
 
 
 
-        <p className="max-w-xl text-base sm:text-lg text-cyan-400 leading-relaxed mb-10">
+        <p className="hero-after max-w-xl text-base sm:text-lg text-cyan-400 leading-relaxed mb-10">
 
           Code Blooded Engineers; Wired for the future
 
@@ -320,7 +416,7 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16">
+        <div className="hero-after flex flex-col sm:flex-row items-center gap-4 mb-16">
 
           <a
 
