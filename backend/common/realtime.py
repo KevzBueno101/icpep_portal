@@ -50,10 +50,7 @@ def broadcast_member_update(resource, payload=None):
 
     ``resource`` may be a single resource name (str) or an iterable of names.
     """
-    if isinstance(resource, str):
-        resources = [resource]
-    else:
-        resources = [r for r in resource if r]
+    resources = [resource] if isinstance(resource, str) else [r for r in resource if r]
 
     if not resources:
         return

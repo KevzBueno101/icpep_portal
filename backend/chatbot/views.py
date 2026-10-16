@@ -7,10 +7,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import ChatRequestSerializer, ChatResponseSerializer, ChatErrorSerializer
+from .serializers import (
+    ChatErrorSerializer,
+    ChatRequestSerializer,
+    ChatResponseSerializer,
+)
+from .services.context_builder import (
+    SYSTEM_PROMPT,
+    build_context,
+    get_session_history,
+    update_session_history,
+)
 from .services.groq_client import GroqClient
-from .services.context_builder import SYSTEM_PROMPT, build_context, get_session_history, update_session_history
-from .throttles import ChatUserMinuteThrottle, ChatUserDailyThrottle
+from .throttles import ChatUserDailyThrottle, ChatUserMinuteThrottle
 
 logger = logging.getLogger(__name__)
 

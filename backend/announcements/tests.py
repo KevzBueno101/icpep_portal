@@ -197,7 +197,8 @@ class AnnouncementEmailBlastTests(APITestCase):
         self.announcement.refresh_from_db()
         self.assertIsNotNone(self.announcement.email_blast_sent_at)
 
-    def test_public_announcement_cannot_be_blasted(self):
+    @patch('announcements.blast.send_email_blocking', return_value=True)
+    def test_public_announcement_can_be_blasted(self, mock_send):
         self.announcement.members_only = False
         self.announcement.save()
 
@@ -205,8 +206,11 @@ class AnnouncementEmailBlastTests(APITestCase):
             f'/api/announcements/admin/{self.announcement.id}/email-blast/'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsNone(self.announcement.email_blast_sent_at)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['sent'], 1)
+        mock_send.assert_called_once()
+        self.announcement.refresh_from_db()
+        self.assertIsNotNone(self.announcement.email_blast_sent_at)
 
     def test_unpublished_announcement_cannot_be_blasted(self):
         self.announcement.is_published = False
