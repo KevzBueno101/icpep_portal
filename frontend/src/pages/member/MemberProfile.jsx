@@ -9,7 +9,13 @@ import { RESOURCES } from '../../utils/realtime'
 import { downloadFile } from '../../utils/download'
 import { downloadCertificate, viewCertificate } from '../../api/certificates'
 import NewBadge from '../../components/NewBadge'
-import { User, Camera, Save, X, Edit2, Download, Award, Eye, Loader2 } from 'lucide-react'
+import { User, Camera, Save, X, Edit2, Download, Award, Eye, Loader2, CreditCard } from 'lucide-react'
+
+const PROFILE_TABS = [
+  { id: 'certificates', label: 'Certificate', icon: Award },
+  { id: 'details', label: 'My Details', icon: User },
+  { id: 'receipts', label: 'Receipts', icon: CreditCard },
+]
 
 const YEAR_LABEL_BY_VALUE = {
   '1': '1st Year',
@@ -45,6 +51,7 @@ export default function MemberProfile() {
   const { profile, refreshProfile, profileCacheKey } = useMember()
 
   const [editMode, setEditMode] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
   const [editSaving, setEditSaving] = useState(false)
   const [editForm, setEditForm] = useState({
     username: '',
@@ -289,7 +296,30 @@ export default function MemberProfile() {
         </p>
       </div>
 
-      {/* Certificates (first section, above the edit-profile card) */}
+      {/* Kanban-style tab bar */}
+      <div className="flex w-full gap-2 overflow-x-auto pb-1 sm:inline-flex sm:w-auto sm:gap-1 sm:rounded-full sm:border sm:border-slate-200 sm:bg-white sm:p-1 sm:shadow-sm">
+        {PROFILE_TABS.map((tab) => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-1 shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition sm:flex-none sm:rounded-full ${
+                isActive
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 sm:border-0'
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {activeTab === 'certificates' && (
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -347,7 +377,10 @@ export default function MemberProfile() {
           )}
         </div>
       </div>
+      )}
 
+      {activeTab === 'details' && (
+      <>
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         {/* Profile Card Header Cover */}
         <div className="h-32 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 relative" />
@@ -536,8 +569,10 @@ export default function MemberProfile() {
           </div>
         </div>
       )}
+      </>
+      )}
 
-      {/* Payment History */}
+      {activeTab === 'receipts' && (
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -621,6 +656,7 @@ export default function MemberProfile() {
           )}
         </div>
       </div>
+      )}
 
     </div>
   )

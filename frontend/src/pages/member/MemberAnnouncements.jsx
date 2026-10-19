@@ -96,8 +96,8 @@ export default function MemberAnnouncements() {
 
       {/* Feed List */}
       {annLoading ? (
-        <div className="space-y-3 sm:space-y-4">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between gap-2 sm:gap-4">
                 <div className="h-6 w-16 sm:w-20 animate-pulse rounded-full bg-slate-200" />
@@ -125,13 +125,13 @@ export default function MemberAnnouncements() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4 w-full min-w-0">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
           {filteredAnnouncements.map((ann) => (
             <button
               key={ann.id}
               type="button"
               onClick={() => navigate(`/announcement/${ann.id}`)}
-              className="group flex flex-col text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full overflow-hidden max-w-full min-h-0"
+              className="group flex h-full flex-col text-left rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 w-full overflow-hidden max-w-full min-h-0"
             >
               {ann.first_image && (
                 <div className="relative w-full overflow-hidden bg-slate-100 shrink-0">
@@ -143,7 +143,7 @@ export default function MemberAnnouncements() {
                   />
                 </div>
               )}
-              <div className="flex flex-col p-4 sm:p-6 overflow-hidden min-h-0">
+              <div className="flex flex-1 flex-col p-4 sm:p-6 overflow-hidden min-h-0">
                 <div className="flex items-center justify-between gap-2 shrink-0">
                   <span className="inline-flex min-w-0 truncate rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-sky-700">
                     {formatCategory(ann.category)}
@@ -184,7 +184,7 @@ export default function MemberAnnouncements() {
                     {parseUrlsInText(ann.body)}
                   </p>
                 </div>
-                <div className="mt-3 sm:mt-5 border-t border-slate-100 pt-3 sm:pt-4 flex justify-between items-center text-[10px] sm:text-xs font-bold text-sky-600 shrink-0">
+                <div className="mt-auto border-t border-slate-100 pt-3 sm:pt-4 flex justify-between items-center text-[10px] sm:text-xs font-bold text-sky-600 shrink-0">
                   <span>Read announcement</span>
                   <ArrowRight size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 transform group-hover:translate-x-1 transition-transform" />
                 </div>

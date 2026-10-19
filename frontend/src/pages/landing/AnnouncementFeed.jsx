@@ -126,7 +126,7 @@ export default function AnnouncementFeed() {
                 )}
               </div>
               <div className="relative">
-                <div className="flex flex-col gap-3 sm:gap-4 max-h-[460px] sm:max-h-[520px] lg:max-h-[580px] overflow-y-auto pr-2 pb-2 custom-scrollbar overscroll-contain">
+                <div className="flex flex-col gap-3 sm:gap-4 max-h-[460px] sm:max-h-[520px] lg:max-h-[580px] overflow-y-auto pr-2 pb-2 custom-scrollbar">
                   {recentAnnouncements.map((announcement) => (
                     <div key={announcement.id} className="block">
                       <AnnouncementCard announcement={announcement} variant="compact" isNew={announcement?.id === newestId} />
