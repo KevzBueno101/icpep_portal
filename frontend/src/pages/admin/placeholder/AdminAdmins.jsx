@@ -4,7 +4,7 @@ import { useOfficers } from '../../../context/OfficersContext'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import ConfirmModal from '../../../components/common/ConfirmModal'
-import { User, Plus } from 'lucide-react'
+import { User, Plus, PencilLine, Trash2 } from 'lucide-react'
 import { resolveProfilePictureUrl } from '../../../utils/profilePicture'
 import { RESOURCES } from '../../../utils/realtime'
 import { useRealtimeContent, useRealtimeGuard } from '../../../context/RealtimeContext'
@@ -381,8 +381,20 @@ const AdminAdmins = ({ refreshTrigger }) => {
             <p className="text-sm text-slate-500">Total admin accounts</p>
             <p className="mt-2 text-2xl font-semibold text-slate-900">{(admins || []).length}</p>
           </div>
-          <div className="text-sm text-slate-600">
-            {canEdit ? 'You can create, update, and delete admin accounts.' : 'You can view admin accounts only.'}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="text-sm text-slate-600">
+              {canEdit ? 'You can create, update, and delete admin accounts.' : 'You can view admin accounts only.'}
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+              >
+                <Plus size={16} />
+                Add Admin
+              </button>
+            )}
           </div>
         </div>
 
@@ -391,31 +403,119 @@ const AdminAdmins = ({ refreshTrigger }) => {
             <div className="flex items-center justify-center py-12 text-slate-500">
               Loading admin accounts...
             </div>
+          ) : (admins || []).length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-slate-500">
+              No admin accounts found.
+            </div>
           ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={openCreateModal}
-                  className="flex aspect-[4/3] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition hover:border-sky-400 hover:bg-sky-50"
-                >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-600 transition hover:bg-sky-200">
-                    <Plus size={32} />
-                  </div>
-                  <p className="mt-4 text-sm font-semibold text-slate-700">Add New Officer</p>
-                </button>
-              )}
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Account</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Role</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Position</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Access</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Department</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Academic Year</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Status</th>
+                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-slate-700">Created</th>
+                      {canEdit && (
+                        <th className="px-4 py-3 text-right font-semibold uppercase tracking-wider text-slate-700">Actions</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.map((admin) => (
+                      <tr
+                        key={admin.id}
+                        onClick={() => openEditModal(admin)}
+                        className="border-b border-slate-100 last:border-0 transition duration-150 hover:bg-slate-50 cursor-pointer"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            {admin.profile_picture && !brokenImages.has(admin.id) ? (
+                              <img
+                                src={resolveProfilePictureUrl(admin.profile_picture)}
+                                alt={admin.username}
+                                className="h-9 w-9 flex-shrink-0 rounded-full border border-slate-200 object-cover"
+                                onError={() => setBrokenImages((prev) => new Set(prev).add(admin.id))}
+                              />
+                            ) : (
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+                                <User size={16} />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900">{admin.username}</p>
+                              <p className="truncate text-slate-500">{admin.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 uppercase tracking-wide text-slate-700">{admin.role}</td>
+                        <td className={`px-4 py-3 uppercase tracking-wide ${admin.position ? 'font-semibold text-sky-700' : 'text-slate-500'}`}>
+                          {admin.position || '—'}
+                        </td>
+                        <td className={`px-4 py-3 font-semibold uppercase tracking-wide ${
+                          admin.access_level === 'FULL_CONTROL' ? 'text-purple-700' :
+                          admin.access_level === 'MEMBERSHIP' ? 'text-emerald-700' : 'text-slate-500'
+                        }`}>
+                          {admin.access_level === 'FULL_CONTROL' ? 'Full Control' :
+                           admin.access_level === 'MEMBERSHIP' ? 'Membership' : 'Restricted'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{admin.department || '—'}</td>
+                        <td className="px-4 py-3 text-slate-700">{admin.academic_year ? `AY ${admin.academic_year}` : '—'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            admin.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {STATUS_LABELS[String(admin.is_active)] || (admin.is_active ? 'Active' : 'Inactive')}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(admin.created_at)}</td>
+                        {canEdit && (
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openEditModal(admin)
+                                }}
+                                aria-label="Edit"
+                                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                              >
+                                <PencilLine size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDeleteAdmin(admin)
+                                }}
+                                aria-label="Delete"
+                                className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50 hover:text-rose-700"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-              {(admins || []).length === 0 && !canEdit ? (
-                <div className="col-span-full flex items-center justify-center py-12 text-slate-500">
-                  No admin accounts found.
-                </div>
-              ) : (
-                admins.map((admin) => (
+              {/* Mobile cards */}
+              <div className="space-y-4 md:hidden">
+                {admins.map((admin) => (
                   <div
                     key={admin.id}
                     onClick={() => openEditModal(admin)}
-                    className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer sm:p-6"
+                    className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300 hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
                       <div className="relative h-16 w-16 flex-shrink-0">
@@ -518,9 +618,9 @@ const AdminAdmins = ({ refreshTrigger }) => {
                       </div>
                     )}
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
