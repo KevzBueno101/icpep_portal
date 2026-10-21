@@ -297,7 +297,7 @@ export default function MemberProfile() {
       </div>
 
       {/* Kanban-style tab bar */}
-      <div className="flex w-full gap-2 overflow-x-auto pb-1 sm:inline-flex sm:w-auto sm:gap-1 sm:rounded-full sm:border sm:border-slate-200 sm:bg-white sm:p-1 sm:shadow-sm">
+      <div className="flex w-full gap-1.5 overflow-x-auto pb-1 sm:inline-flex sm:w-auto sm:rounded-full sm:border sm:border-slate-200 sm:bg-white sm:p-1 sm:shadow-sm">
         {PROFILE_TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -306,13 +306,13 @@ export default function MemberProfile() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-1 shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition sm:flex-none sm:rounded-full ${
+              className={`flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition sm:flex-none sm:rounded-full sm:px-4 sm:py-1.5 sm:text-sm ${
                 isActive
                   ? 'bg-sky-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 sm:border-0'
               }`}
             >
-              <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+              <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
               <span>{tab.label}</span>
             </button>
           )
