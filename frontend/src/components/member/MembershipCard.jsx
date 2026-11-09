@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, forwardRef, useImperativeHandle, useContext } from 'react'
+import { useMemo, useRef, useState, forwardRef, useImperativeHandle, useContext, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
@@ -405,6 +405,22 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
 
   const avatarInitial = String(profile?.first_name || '?').slice(0, 1).toUpperCase()
 
+  // Scale the fixed 384×224 card down on narrow/mobile screens so the whole
+  // design stays proportional instead of overflowing or distorting.
+  const cardWrapRef = useRef(null)
+  const [scale, setScale] = useState(1)
+  useEffect(() => {
+    const el = cardWrapRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setScale(Math.min(1, entry.contentRect.width / 384))
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const faceProps = {
     profile,
     fullName,
@@ -451,7 +467,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
       if (wasDark) htmlEl.classList.remove('dark')
 
       const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: C.bg1,
+        backgroundColor: '#ffffff',
         useCORS: true,
         allowTaint: true,
         scale: 3,
@@ -475,17 +491,21 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
 
   return (
     <div className="w-full flex flex-col items-center justify-center p-4">
-      {/* Interactive flip card display */}
-      <div className="relative w-full max-w-[384px]" style={{ perspective: '2000px' }}>
-        <div
-          className="relative w-full transition-transform duration-700"
-          style={{ height: 224, transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
-        >
-          <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
-            <FrontFace {...faceProps} onFlip={() => setFlipped(true)} />
-          </div>
-          <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-            <BackFace {...faceProps} onFlip={() => setFlipped(false)} />
+      {/* Interactive flip card display — scaled to fit small screens */}
+      <div ref={cardWrapRef} className="w-full flex justify-center overflow-hidden" style={{ height: 224 * scale }}>
+        <div style={{ width: 384, height: 224, flexShrink: 0, transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+          <div className="relative w-full h-full" style={{ perspective: '2000px' }}>
+            <div
+              className="relative w-full h-full transition-transform duration-700"
+              style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+            >
+              <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+                <FrontFace {...faceProps} onFlip={() => setFlipped(true)} />
+              </div>
+              <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                <BackFace {...faceProps} onFlip={() => setFlipped(false)} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -500,7 +520,7 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
             flexDirection: 'row',
             gap: 48,
             padding: 40,
-            background: C.bg1,
+            background: '#ffffff',
             borderRadius: 24,
           }}
         >
