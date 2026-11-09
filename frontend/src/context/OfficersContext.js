@@ -5,7 +5,7 @@ import { RESOURCES } from '../utils/realtime'
 import { useRealtimeContent } from './RealtimeContext'
 
 
-const OfficersContext = createContext(null)
+export const OfficersContext = createContext(null)
 
 
 export const OfficersProvider = ({ children }) => {

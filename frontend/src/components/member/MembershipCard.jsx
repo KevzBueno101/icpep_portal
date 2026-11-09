@@ -1,384 +1,374 @@
-import { useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+import { useMemo, useRef, useState, forwardRef, useImperativeHandle, useContext } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
+import { OfficersContext } from '../../context/OfficersContext'
 
-const COLORS = {
-  navyDark: '#03152B',
-  navyLight: '#071F3D',
-  accentBlue: '#0C2D54',
-  white: '#FFFFFF',
-  textGray: '#7E91A6',
+const C = {
+  bg0: '#07112E',
+  bg1: '#102D70',
+  royal: '#102D70',
+  electric: '#176BFF',
+  violet: '#713CFF',
+  cyan: '#00D5FF',
+  silver: '#F1F5FF',
+  muted: 'rgba(241,245,255,0.55)',
+  faint: 'rgba(241,245,255,0.32)',
 }
 
-function GeometricLines() {
+const FONT_DISPLAY = "'Orbitron','Rajdhani',ui-sans-serif,system-ui,sans-serif"
+const FONT_TECH = "'Rajdhani','Inter',ui-sans-serif,system-ui,sans-serif"
+const FONT_BODY = "'Inter','Poppins',ui-sans-serif,system-ui,sans-serif"
+
+const ACADEMIC_YEAR = '2025–2026'
+const EMPTY_OFFICERS = []
+
+const officerName = (o) =>
+  o?.fullName || [o?.first_name, o?.last_name].filter(Boolean).join(' ') || null
+
+/* ─── Shared backdrop: navy gradient, restrained diagonal accents ─────────── */
+
+function CardBackdrop() {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+    <>
       <div
-        className="absolute w-full h-[200%] top-[-50%] left-[20%] rotate-[28deg]"
         style={{
-          backgroundImage: `linear-gradient(90deg, transparent 0%, ${COLORS.white} 2px, transparent 2px)`,
-          backgroundSize: '40px 100%',
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(120deg, ${C.bg0} 0%, ${C.bg1} 52%, ${C.bg0} 100%)`,
         }}
       />
-    </div>
+      {/* Sharp diagonal gradient bands — smooth, no hard shapes */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(115deg, transparent 52%, rgba(23,107,255,0.20) 54%, rgba(113,60,255,0.16) 56%, rgba(0,213,255,0.10) 58%, transparent 60%)`,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(115deg, transparent 78%, rgba(113,60,255,0.14) 80%, rgba(23,107,255,0.10) 82%, transparent 84%)`,
+        }}
+      />
+      {/* Metallic top highlight */}
+      <div
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+          background: 'linear-gradient(90deg, rgba(241,245,255,0.35) 0%, rgba(241,245,255,0.08) 40%, transparent 75%)',
+        }}
+      />
+      {/* Soft depth glows */}
+      <div
+        style={{
+          position: 'absolute', top: -70, right: -50, width: 220, height: 220,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${C.electric}26, transparent 68%)`,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute', bottom: -80, left: -40, width: 200, height: 200,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${C.violet}26, transparent 68%)`,
+        }}
+      />
+    </>
   )
 }
 
-/* ─── Card Front ──────────────────────────────────────────────────────────── */
+/* ─── QR: SVG on screen, PNG <img> inside the html2canvas export clone ────── */
 
-function CardFront({ onFlip }) {
+function CardQR({ value, size, fgColor = C.bg0, imgSrc }) {
+  if (imgSrc) {
+    return <img src={imgSrc} alt="QR" width={size} height={size} style={{ display: 'block' }} />
+  }
+  return <QRCodeSVG value={value} size={size} includeMargin={false} fgColor={fgColor} />
+}
+
+/* ─── Front face: member identity | official seal ─────────────────────────── */
+
+function FrontFace({ profile, fullName, yearText, avatarInitial, cacheKey, membershipFee, president, adviser, onFlip }) {
+  const isPlus = membershipFee === 'PLUS'
   return (
-    <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none" style={{ backgroundColor: COLORS.navyDark }}>
-      <div
-        className="absolute inset-0"
-        style={{ backgroundImage: `linear-gradient(135deg, ${COLORS.navyDark} 0%, ${COLORS.navyLight} 100%)` }}
-      />
-      <GeometricLines />
+    <div
+      style={{
+        position: 'relative', width: '100%', height: '100%',
+        borderRadius: 16, overflow: 'hidden',
+        background: C.bg0,
+        boxShadow: '0 18px 40px -12px rgba(2,6,23,0.8)',
+        fontFamily: FONT_BODY,
+      }}
+    >
+      <CardBackdrop />
 
-      <div className="relative h-full px-6 flex flex-col items-center justify-center text-center">
-        <div className="mb-3 flex items-center justify-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white shadow-md">
-            <img
-              src="/icpep_logo.png"
-              alt="ICpEP Logo"
-              className="w-full h-full object-cover"
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
+      <div style={{ position: 'relative', height: '100%', display: 'flex', padding: '13px 15px', boxSizing: 'border-box' }}>
+        {/* ── LEFT: identity ── */}
+        <div style={{ width: '63%', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: FONT_TECH, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.1em', color: C.silver, lineHeight: 1.15 }}>
+                ICpEP.SE - Catanduanes State University Chapter
+              </div>
+              <div style={{ fontSize: 5.5, fontWeight: 600, letterSpacing: '0.16em', color: C.muted, textTransform: 'uppercase', marginTop: 1.5 }}>
+                Membership ID Card
+              </div>
+            </div>
+          </div>
+
+          {/* Member profile — vertically centered in remaining space */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 54, height: 54, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                border: `2px solid ${C.electric}`,
+                boxShadow: '0 0 12px rgba(23,107,255,0.4)',
+                background: C.royal,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {profile?.profile_picture ? (
+                <img
+                  src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`}
+                  alt="Member"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 700, color: C.silver }}>
+                  {avatarInitial}
+                </span>
+              )}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: FONT_TECH, fontSize: 13, fontWeight: 700,
+                  letterSpacing: '0.03em', color: C.silver, textTransform: 'uppercase',
+                  lineHeight: 1.12, wordBreak: 'break-word',
+                }}
+              >
+                {fullName}
+              </div>
+              <div style={{ fontSize: 7, fontWeight: 500, letterSpacing: '0.08em', color: C.muted, textTransform: 'uppercase', marginTop: 2 }}>
+                {profile?.course || 'BSCpE'}{yearText ? `  •  ${yearText}` : ''}
+              </div>
+              <div
+                style={{
+                  display: 'inline-block', marginTop: 4,
+                  fontSize: 6, fontWeight: 700, letterSpacing: '0.18em',
+                  color: isPlus ? C.cyan : C.muted, textTransform: 'uppercase',
+                  fontFamily: FONT_TECH,
+                  borderTop: `1px solid ${isPlus ? C.cyan : C.electric}`,
+                  paddingTop: 2,
+                }}
+              >
+                {isPlus ? 'Membership Plus' : 'Student Member'}
+              </div>
+            </div>
+            </div>
+
+          {/* Member identification */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 5 }}>
+            {[
+              ['ID No.', profile?.student_number || '—'],
+              ['Block', profile?.section || '—'],
+              ['A.Y.', ACADEMIC_YEAR],
+            ].map(([label, value]) => (
+              <span key={label} style={{ fontSize: 6, fontWeight: 600, letterSpacing: '0.08em', color: C.muted, textTransform: 'uppercase', fontFamily: FONT_TECH }}>
+                {label} <span style={{ color: C.silver }}>{value}</span>
+              </span>
+            ))}
+          </div>
+          </div>
+
+          {/* Signatories — dynamic, blank until officers are assigned */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <div style={{ minWidth: 0, flex: 1, textAlign: 'center' }}>
+              <div
+                style={{
+                  fontFamily: FONT_BODY, fontSize: 7.5,
+                  color: C.silver, lineHeight: 1.15, wordBreak: 'break-word',
+                }}
+              >
+                {president || ' '}
+              </div>
+              <div
+                style={{
+                  fontSize: 4.5, fontWeight: 700, letterSpacing: '0.1em',
+                  color: C.faint, textTransform: 'uppercase', marginTop: 1,
+                  fontFamily: FONT_TECH,
+                }}
+              >
+                President, ICpEP.SE CatSU
+              </div>
+            </div>
+            <div style={{ minWidth: 0, flex: 1, textAlign: 'center' }}>
+              <div
+                style={{
+                  fontFamily: FONT_BODY, fontSize: 7.5,
+                  color: C.silver, lineHeight: 1.15, wordBreak: 'break-word',
+                }}
+              >
+                {adviser || ' '}
+              </div>
+              <div
+                style={{
+                  fontSize: 4.5, fontWeight: 700, letterSpacing: '0.1em',
+                  color: C.faint, textTransform: 'uppercase', marginTop: 1,
+                  fontFamily: FONT_TECH,
+                }}
+              >
+                Adviser, ICpEP.SE CatSU
+              </div>
+            </div>
           </div>
         </div>
 
-        <h2 className="text-sm font-bold tracking-[0.2em] text-white m-0 leading-tight">
-          ICpEP.SE
-        </h2>
-        <p className="text-[9px] font-medium tracking-[0.15em] text-gray-400 uppercase mt-1 mb-0">
-          Membership ID Card
-        </p>
+        {/* ── RIGHT: official seal ── */}
+        <div style={{ width: '37%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                width: 118, height: 118, borderRadius: '50%',
+                background: `radial-gradient(circle at 35% 30%, ${C.bg1} 0%, ${C.bg0} 78%)`,
+                boxShadow: '0 6px 18px rgba(0,0,0,0.45)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <img
+                src="/icpep_logo.png"
+                alt="ICpEP Official Seal"
+                style={{ width: '94%', height: '94%', objectFit: 'contain' }}
+              />
+            </div>
+            <div
+              style={{
+                fontSize: 5.5, fontWeight: 700, letterSpacing: '0.22em',
+                color: C.muted, textTransform: 'uppercase', marginTop: 7,
+                fontFamily: FONT_TECH,
+              }}
+            >
+              Official Seal
+            </div>
+          </div>
+        </div>
       </div>
 
       {onFlip && (
         <button
           type="button"
           onClick={onFlip}
-          className="absolute right-3 top-3 z-10 rounded-lg bg-white/5 px-2.5 py-1 text-[9px] font-semibold text-white/80 border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+          style={{
+            position: 'absolute', right: 8, top: 8, zIndex: 10,
+            borderRadius: 6, padding: '2px 8px',
+            background: 'rgba(7,17,46,0.6)', border: '1px solid rgba(241,245,255,0.22)',
+            color: 'rgba(241,245,255,0.85)', fontSize: 8, fontWeight: 700,
+            fontFamily: FONT_TECH, letterSpacing: '0.08em', textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
         >
-          Flip Card
+          Flip
         </button>
       )}
     </div>
   )
 }
 
-/* ─── Card Back (Display) ─────────────────────────────────────────────────── */
+/* ─── Back face: QR verification ──────────────────────────────────────────── */
 
-function CardBack({ qrPayload, fullName, yearText, profile, avatarInitial, onFlip, cacheKey = 0, membershipFee }) {
+function BackFace({ qrPayload, qrImageSrc, onFlip }) {
   return (
-    <div className="relative w-full h-full rounded-xl shadow-xl overflow-hidden select-none bg-white">
-      {/* Membership Plus badge */}
-      {membershipFee === 'PLUS' && (
-        <div className="absolute top-2 right-2 text-green-500 text-[12px] font-bold leading-none z-20">
-          +
-        </div>
-      )}
+    <div
+      style={{
+        position: 'relative', width: '100%', height: '100%',
+        borderRadius: 16, overflow: 'hidden',
+        background: C.bg0,
+        boxShadow: '0 18px 40px -12px rgba(2,6,23,0.8)',
+        fontFamily: FONT_BODY,
+      }}
+    >
+      <CardBackdrop />
 
-      {/* Background columns */}
-      <div className="absolute inset-0 flex">
-        <div className="w-[58%] h-full relative overflow-hidden" style={{ backgroundColor: COLORS.navyDark }}>
-          <div
-            className="absolute inset-0"
-            style={{ backgroundImage: `linear-gradient(135deg, ${COLORS.navyDark} 0%, ${COLORS.navyLight} 100%)` }}
-          />
-        </div>
-        <div className="w-[42%] h-full bg-white" />
-      </div>
-
-      {/* Diagonal divider */}
-      <div className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
-        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(0 0, 215px 0, 250px 224px, 0 224px)', background: COLORS.navyDark }} />
-        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(215px 0, 225px 0, 260px 224px, 250px 224px)', background: COLORS.white }} />
-        <div style={{ position: 'absolute', inset: 0, clipPath: 'polygon(225px 0, 240px 0, 275px 224px, 260px 224px)', background: COLORS.accentBlue }} />
-      </div>
-
-      {/* Content */}
-      <div className="absolute inset-0 flex z-10 p-3.5">
-        <div className="w-[62%] flex flex-col justify-between text-white pr-1">
-          <div className="space-y-0.5 mt-0.5">
-            <div className="flex flex-col items-start gap-1">
-              <h3 className="text-[5.5px] font-black tracking-wide text-white leading-tight m-0 opacity-95">
-                Institute of Computer Engineers of the Philippines
-              </h3>
-              <h5 className="text-[5.5px] font-black tracking-wide text-white leading-tight m-0 opacity-95">
-                Student Edition
-              </h5>
-            </div>
-            <p className="text-[4.5px] font-medium text-gray-300 uppercase tracking-wider leading-none m-0 opacity-80">
-              College of Engineering and Architecture
-            </p>
-            <p className="text-[3.5px] font-bold text-blue-400 uppercase tracking-wider leading-none m-0 opacity-90">
-              Catanduanes State University
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 mt-2">
-            <div className="relative flex-shrink-0">
-              <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/5 flex items-center justify-center">
-                {profile?.profile_picture ? (
-                  <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-[10px] font-black text-white">{avatarInitial}</span>
-                )}
-              </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-[11px] font-black tracking-normal uppercase whitespace-normal break-words pr-1 m-0 leading-tight">
-                {fullName}
-              </h1>
-              <p className="text-[7.5px] font-semibold text-gray-300 uppercase tracking-normal m-0 mt-0.5">
-                {profile?.course || 'BSCPE'} {yearText ? `• ${yearText}` : ''}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between gap-2.5 mt-2">
-            <div className="flex-shrink-0 bg-white p-1 rounded-lg shadow-lg border border-white/10">
-              <QRCodeSVG value={qrPayload} size={52} includeMargin={false} fgColor={COLORS.navyDark} />
-            </div>
-            <div className="flex-1 space-y-0.5 font-mono text-[7.5px] tracking-wide text-white/90 pb-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="tracking-normal font-sans font-bold">ID# {profile?.student_number || '—'}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="tracking-normal font-sans font-bold">Block {profile?.section || '—'}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="tracking-normal font-sans font-bold">A.Y 2025–2026</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-[38%] flex flex-col items-end justify-between pl-1">
-          <div className="h-5 flex items-start justify-end w-full">
-            {onFlip && (
-              <button
-                type="button"
-                onClick={onFlip}
-                className="rounded-lg bg-slate-900/5 px-2 py-0.5 text-[8px] font-bold text-slate-700 border border-slate-200/80 hover:bg-slate-900/10 active:scale-95 transition-all"
-              >
-                Flip
-              </button>
-            )}
-          </div>
-          <div className="flex flex-col items-center justify-center flex-1 w-full pb-1">
-            <div className="w-34 h-34 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-white shadow-sm mb-2">
-              <img src="/icpep_logo.png" alt="ICpEP Logo" className="w-full h-full object-cover" />
-            </div>
-            <span className="text-[6.5px] font-black uppercase tracking-widest text-slate-400 text-center block">
-              Official Seal
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Export Card Front (fully inline styled) ─────────────────────────────── */
-
-function ExportCardFront() {
-  return (
-    <div style={{
-      position: 'relative', width: '100%', height: '100%',
-      borderRadius: 16, overflow: 'hidden',
-      background: `linear-gradient(135deg, ${COLORS.navyDark} 0%, ${COLORS.navyLight} 100%)`,
-    }}>
-      {/* Geometric lines */}
-      <div style={{
-        position: 'absolute', inset: 0, overflow: 'hidden', opacity: 0.1,
-        backgroundImage: `linear-gradient(90deg, transparent 0%, #fff 2px, transparent 2px)`,
-        backgroundSize: '40px 100%',
-        transform: 'rotate(28deg) scaleY(2)',
-        transformOrigin: 'center',
-      }} />
-
-      <div style={{
-        position: 'relative', height: '100%',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-        padding: '0 24px',
-      }}>
-        <div style={{
-          width: 96, height: 96, borderRadius: '50%', overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.2)',
-          background: '#fff', marginBottom: 12,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <img src="/icpep_logo.png" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-
-        <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '0.2em', fontFamily: 'Arial, sans-serif' }}>
-          ICpEP.SE
-        </div>
-        <div style={{ color: '#9CA3AF', fontSize: 9, fontWeight: 500, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4, fontFamily: 'Arial, sans-serif' }}>
-          Membership ID Card
-        </div>
-        <div style={{ color: '#6B7280', fontSize: 7, fontStyle: 'italic', marginTop: 4, fontFamily: 'Arial, sans-serif' }}>
-          Valid for 1 Semester
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Export Card Back (fully inline styled, no Tailwind) ─────────────────── */
-
-function ExportCardBack({ qrPayload, fullName, yearText, profile, avatarInitial, cacheKey = 0, membershipFee }) {
-  // Match display card exactly:
-  // Left navy block: 58% = ~223px, right white block: 42% = ~161px
-  // Diagonal: top at x=215, bottom at x=250 (35px shift over 224px height)
-  const W = 384, H = 224
-
-  return (
-    <div style={{
-      position: 'relative', width: '100%', height: '100%',
-      borderRadius: 16, overflow: 'hidden',
-      background: COLORS.navyDark,
-      fontFamily: 'Arial, sans-serif',
-    }}>
-      {/* Membership Plus badge */}
-      {membershipFee === 'PLUS' && (
-        <div style={{
-          position: 'absolute', top: 8, right: 8,
-          color: '#22C55E',
-          fontSize: 10, fontWeight: 900, zIndex: 20,
-        }}>
-          +
-        </div>
-      )}
-
-      {/* SVG background — full card size, exact polygon match to display card */}
-      <svg
-        style={{ position: 'absolute', top: 0, left: 0, width: W, height: H }}
-        viewBox={`0 0 ${W} ${H}`}
-        xmlns="http://www.w3.org/2000/svg"
+      <div
+        style={{
+          position: 'relative', height: '100%',
+          display: 'flex', flexDirection: 'column',
+          padding: '16px 18px', boxSizing: 'border-box',
+        }}
       >
-        <defs>
-          <linearGradient id="ng" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={COLORS.navyDark} />
-            <stop offset="100%" stopColor={COLORS.navyLight} />
-          </linearGradient>
-        </defs>
-        {/* Navy background */}
-        <rect width={W} height={H} fill="url(#ng)" />
-        {/* White right panel: top-left at 225, bottom-left at 260 */}
-        <polygon points={`225,0 ${W},0 ${W},${H} 260,${H}`} fill="#ffffff" />
-        {/* Accent blue stripe between navy and white */}
-        <polygon points={`215,0 225,0 260,${H} 250,${H}`} fill={COLORS.accentBlue} />
-        {/* Thin white highlight stripe */}
-        <polygon points={`207,0 215,0 250,${H} 242,${H}`} fill="rgba(255,255,255,0.9)" />
-      </svg>
-
-      {/* Content overlay */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        display: 'flex', padding: 14, zIndex: 10,
-      }}>
-
-        {/* LEFT: Navy info block — 62% width to stay within navy area */}
-        <div style={{
-          width: '60%', display: 'flex', flexDirection: 'column',
-          justifyContent: 'space-between', color: '#fff',
-        }}>
-          {/* Header text */}
-          <div>
-            <div style={{ fontSize: 5.5, fontWeight: 900, color: '#fff', lineHeight: 1.4, marginBottom: 1 }}>
-              Institute of Computer Engineers of the Philippines
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 20 }}>
+          {/* QR — primary focal point */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+            <div
+              style={{
+                background: '#fff', padding: 8, borderRadius: 10,
+                boxShadow: '0 0 0 1px rgba(255,255,255,0.22), 0 8px 22px rgba(0,0,0,0.5), 0 0 26px rgba(23,107,255,0.28)',
+              }}
+            >
+              <CardQR value={qrPayload} size={92} imgSrc={qrImageSrc} />
             </div>
-            <div style={{ fontSize: 5.5, fontWeight: 900, color: '#fff', lineHeight: 1.4, marginBottom: 2 }}>
-              Student Edition
-            </div>
-            <div style={{ fontSize: 4.5, fontWeight: 500, color: '#D1D5DB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 1 }}>
-              College of Engineering and Architecture
-            </div>
-            <div style={{ fontSize: 4, fontWeight: 700, color: '#60A5FA', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Catanduanes State University
+            <div
+              style={{
+                fontSize: 6, fontWeight: 700, letterSpacing: '0.22em',
+                color: C.muted, textTransform: 'uppercase', marginTop: 6,
+                fontFamily: FONT_TECH, textAlign: 'center',
+              }}
+            >
+              Scan to Verify
             </div>
           </div>
 
-          {/* Profile row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%', overflow: 'hidden',
-              border: '2px solid rgba(255,255,255,0.2)',
-              background: 'rgba(255,255,255,0.05)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              {profile?.profile_picture
-                ? <img src={`${profile.profile_picture}${profile.profile_picture.includes('?') ? '&' : '?'}_=${cacheKey}`} alt="Member" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{avatarInitial}</span>
-              }
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 900, color: '#fff', textTransform: 'uppercase', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                {fullName}
-              </div>
-              <div style={{ fontSize: 7.5, fontWeight: 600, color: '#D1D5DB', textTransform: 'uppercase', marginTop: 2 }}>
-                {profile?.course || 'BSCPE'}{yearText ? ` • ${yearText}` : ''}
-              </div>
-            </div>
-          </div>
-
-          {/* QR + Info row */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-            <div style={{ background: '#fff', padding: 4, borderRadius: 8, flexShrink: 0 }}>
-              <QRCodeSVG value={qrPayload} size={52} includeMargin={false} fgColor={COLORS.navyDark} />
-            </div>
-            <div>
-              <div style={{ fontSize: 7.5, fontWeight: 700, color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>
-                ID# {profile?.student_number || '—'}
-              </div>
-              <div style={{ fontSize: 7.5, fontWeight: 700, color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>
-                Block {profile?.section || '—'}
-              </div>
-              <div style={{ fontSize: 7.5, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
-                A.Y 2025–2026
-              </div>
+          {/* Certification statement */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+            <div style={{ fontSize: 7.5, fontWeight: 500, letterSpacing: '0.02em', color: C.muted, lineHeight: 1.5 }}>
+              This is to certify that the person whose name and photograph appear herein is a duly registered member of{' '}
+              <span style={{ fontFamily: FONT_TECH, fontWeight: 700, letterSpacing: '0.05em', color: C.cyan }}>
+                ICpEP.SE CatSU Chapter
+              </span>{' '}
+              and shall enjoy the benefits of members as defined in the Article III of the ICPEP.SE Constitution and By-Laws
             </div>
           </div>
         </div>
 
-        {/* RIGHT: White seal block — push to right side */}
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          paddingLeft: 20,
-        }}>
-          <div style={{
-            width: 76, height: 76, borderRadius: '50%', overflow: 'hidden',
-            border: '1px solid #CBD5E1', background: '#fff', marginBottom: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <img src="/icpep_logo.png" alt="ICpEP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {/* Organizational identification */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 6, fontWeight: 600, letterSpacing: '0.18em', color: C.faint, textTransform: 'uppercase', fontFamily: FONT_TECH }}>
+            Institute of Computer Engineers of the Philippines – Student Edition
           </div>
-          <div style={{
-            fontSize: 6, fontWeight: 900, textTransform: 'uppercase',
-            letterSpacing: '0.1em', color: '#94A3B8', textAlign: 'center',
-          }}>
-            Official Seal
+          <div style={{ fontSize: 6, fontWeight: 700, letterSpacing: '0.22em', color: C.muted, textTransform: 'uppercase', marginTop: 2, fontFamily: FONT_TECH }}>
+            CatSU Chapter
           </div>
         </div>
-
       </div>
+
+      {onFlip && (
+        <button
+          type="button"
+          onClick={onFlip}
+          style={{
+            position: 'absolute', right: 8, top: 8, zIndex: 10,
+            borderRadius: 6, padding: '2px 8px',
+            background: 'rgba(7,17,46,0.6)', border: '1px solid rgba(241,245,255,0.22)',
+            color: 'rgba(241,245,255,0.85)', fontSize: 8, fontWeight: 700,
+            fontFamily: FONT_TECH, letterSpacing: '0.08em', textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
+        >
+          Flip
+        </button>
+      )}
     </div>
   )
 }
 
-/* ─── Main Component ──────────────────────────────────────────────────────── */
+/* ─── Main component ──────────────────────────────────────────────────────── */
 
 const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cacheKey = 0, membershipFee }, ref) {
   const exportRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [qrImageSrc, setQrImageSrc] = useState('')
 
   const fullName = useMemo(() => {
     return [profile?.first_name, profile?.middle_name, profile?.last_name]
@@ -392,6 +382,20 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
     return map[v] || profile?.year_level || ''
   }, [profile?.year_level])
 
+  // OfficersProvider is not mounted on every page that renders this card
+  // (e.g. /admin/membership), so read the context directly — it is null there.
+  const officersCtx = useContext(OfficersContext)
+  const officers = officersCtx?.officers || EMPTY_OFFICERS
+
+  const president = useMemo(
+    () => officerName(officers.find((o) => /president/i.test(o?.position || ''))),
+    [officers]
+  )
+  const adviser = useMemo(
+    () => officerName(officers.find((o) => /adviser/i.test(o?.position || ''))),
+    [officers]
+  )
+
   const qrPayload = useMemo(() => {
     const sn = profile?.student_number || ''
     const uid = userId || profile?.user || ''
@@ -401,12 +405,34 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
 
   const avatarInitial = String(profile?.first_name || '?').slice(0, 1).toUpperCase()
 
+  const faceProps = {
+    profile,
+    fullName,
+    yearText,
+    avatarInitial,
+    cacheKey,
+    membershipFee,
+    qrPayload,
+    president,
+    adviser,
+  }
+
   const saveAsPng = async () => {
     if (!exportRef.current) return
     const htmlEl = document.documentElement
     const wasDark = htmlEl.classList.contains('dark')
     try {
       setSaving(true)
+
+      // html2canvas cannot rasterise the inline-SVG QR reliably, so render the
+      // QR as a crisp PNG <img> inside the hidden export clone.
+      const qrDataUrl = await QRCode.toDataURL(qrPayload, {
+        width: 240,
+        margin: 1,
+        color: { dark: C.bg0, light: '#ffffff' },
+      })
+      setQrImageSrc(qrDataUrl)
+      await new Promise((resolve) => setTimeout(resolve, 60))
 
       const images = exportRef.current.querySelectorAll('img')
       await Promise.all(
@@ -420,12 +446,12 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
         )
       )
 
-      // Export the ID card against a light palette so the PNG looks
-      // like a real ID regardless of the current dark-mode setting.
+      // Export against a light page palette so the PNG is consistent
+      // regardless of the current dark-mode setting.
       if (wasDark) htmlEl.classList.remove('dark')
 
       const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: '#ffffff',
+        backgroundColor: C.bg1,
         useCORS: true,
         allowTaint: true,
         scale: 3,
@@ -456,25 +482,16 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
           style={{ height: 224, transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
         >
           <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
-            <CardFront onFlip={() => setFlipped(true)} />
+            <FrontFace {...faceProps} onFlip={() => setFlipped(true)} />
           </div>
           <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-            <CardBack
-              qrPayload={qrPayload}
-              fullName={fullName}
-              yearText={yearText}
-              profile={profile}
-              avatarInitial={avatarInitial}
-              onFlip={() => setFlipped(false)}
-              cacheKey={cacheKey}
-              membershipFee={membershipFee}
-            />
+            <BackFace {...faceProps} onFlip={() => setFlipped(false)} />
           </div>
         </div>
       </div>
 
-      {/* Hidden export block — fully inline styled, no Tailwind */}
-      <div style={{ position: 'fixed', left: 9999, top: 0, opacity: 0, pointerEvents: 'none' }}>
+      {/* Hidden export block — same faces, QR as <img>, off-screen for html2canvas */}
+      <div style={{ position: 'fixed', left: -9999, top: 0, opacity: 0, pointerEvents: 'none' }}>
         <div
           ref={exportRef}
           style={{
@@ -483,23 +500,15 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
             flexDirection: 'row',
             gap: 48,
             padding: 40,
-            background: '#f1f5f9',
+            background: C.bg1,
             borderRadius: 24,
           }}
         >
-          <div style={{ width: 384, height: 224, position: 'relative', borderRadius: 16, overflow: 'hidden', boxShadow: '0 0 0 1.5px #CBD5E1' }}>
-            <ExportCardFront />
+          <div style={{ width: 384, height: 224, position: 'relative', flexShrink: 0 }}>
+            <FrontFace {...faceProps} qrImageSrc={qrImageSrc} />
           </div>
-          <div style={{ width: 384, height: 224, position: 'relative', borderRadius: 16, overflow: 'hidden', boxShadow: '0 0 0 1.5px #CBD5E1' }}>
-            <ExportCardBack
-              qrPayload={qrPayload}
-              fullName={fullName}
-              yearText={yearText}
-              profile={profile}
-              avatarInitial={avatarInitial}
-              cacheKey={cacheKey}
-              membershipFee={membershipFee}
-            />
+          <div style={{ width: 384, height: 224, position: 'relative', flexShrink: 0 }}>
+            <BackFace {...faceProps} qrImageSrc={qrImageSrc} />
           </div>
         </div>
       </div>
@@ -510,7 +519,13 @@ const MembershipCard = forwardRef(function MembershipCard({ profile, userId, cac
           type="button"
           onClick={saveAsPng}
           disabled={saving}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold tracking-wide text-white shadow-md hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-[0.99]"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold tracking-wide shadow-md transition-all active:scale-[0.99] disabled:opacity-50"
+          style={{
+            background: 'linear-gradient(135deg, #F8FAFF 0%, #C7D2E8 45%, #8FA3C4 100%)',
+            color: '#0A1740',
+            border: '1px solid rgba(255,255,255,0.5)',
+            boxShadow: '0 6px 18px rgba(2,6,23,0.45), inset 0 1px 0 rgba(255,255,255,0.8)',
+          }}
         >
           {saving ? 'Processing Export...' : 'Download ID Card (PNG)'}
         </button>
