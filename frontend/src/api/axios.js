@@ -2,6 +2,49 @@ import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
 
+// Render's free tier spins down when idle and can take ~50s to wake up, so a
+// 15s timeout turned cold starts into "Network Error" failures.
+const REQUEST_TIMEOUT = 60000
+
+function isIdempotent(config) {
+  return ['get', 'head', 'options'].includes((config?.method || 'get').toLowerCase())
+}
+
+function isImmediateNetworkFailure(error) {
+  // Only retry failures that come back right away (502/503 from the edge,
+  // proxy/network hiccups). Timeouts already waited the full REQUEST_TIMEOUT.
+  if (error.response || error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+    return false
+  }
+  return (
+    error.code === 'ERR_NETWORK' ||
+    error.message === 'Network Error' ||
+    error.message?.includes('timeout')
+  )
+}
+
+// One retry for safe requests so a transient upstream error (e.g. Cloudflare
+// returning a 502 while Render restarts) doesn't blank out the landing page.
+function addNetworkRetry(client) {
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const original = error.config
+      if (
+        original &&
+        !original._networkRetry &&
+        isIdempotent(original) &&
+        isImmediateNetworkFailure(error)
+      ) {
+        original._networkRetry = true
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        return client(original)
+      }
+      return Promise.reject(error)
+    }
+  )
+}
+
 // ─── Token key constants ──────────────────────────────────────────────────────
 // Use separate keys so admin and member sessions never overwrite each other.
 export const MEMBER_ACCESS_KEY = 'member_access_token'
@@ -21,7 +64,7 @@ export const getRefreshToken = () =>
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: REQUEST_TIMEOUT,
 })
 
 api.interceptors.request.use((config) => {
@@ -29,6 +72,8 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+addNetworkRetry(api)
 
 // Shared in-flight refresh so concurrent 401s (e.g. dashboard parallel fetches)
 // reuse ONE refresh call instead of each posting the same refresh token — the
@@ -112,8 +157,10 @@ api.interceptors.response.use(
 
 export const publicApi = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: REQUEST_TIMEOUT,
 })
+
+addNetworkRetry(publicApi)
 
 export default api
 
