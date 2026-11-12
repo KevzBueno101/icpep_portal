@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/useAuth'
 import { useTheme } from '../../context/ThemeContext'
 import api from '../../api/axios'
@@ -27,30 +27,9 @@ const AdminDashboard = () => {
   const [memberStats, setMemberStats] = useState(null)
   const [adminLoginDailyRaw, setAdminLoginDailyRaw] = useState([])
   const [loading, setLoading] = useState(true)
-  const [savingAdmins, setSavingAdmins] = useState([])
-  const [selectedRole, setSelectedRole] = useState({})
-  const [selectedPosition, setSelectedPosition] = useState({})
-
-  const [createBusy, setCreateBusy] = useState(false)
-  const [createForm, setCreateForm] = useState({
-    email: '',
-    username: '',
-    password: '',
-    position: 'NONE',
-    department: '',
-    academic_year: '',
-  })
   const [gcashNumber, setGcashNumber] = useState('')
   const [gcashName, setGcashName] = useState('')
   const [gcashSaving, setGcashSaving] = useState(false)
-
-  const assignablePositions = useMemo(() => {
-    if (!user) return []
-    if (user.position === 'PRESIDENT') {
-      return ['PRESIDENT', 'TREASURER', 'SECRETARY', 'NONE']
-    }
-    return []
-  }, [user])
 
   const canManageRoles = !!user?.can_manage_roles
 
@@ -124,36 +103,6 @@ const AdminDashboard = () => {
   }))
   const hasAdminLoginActivity = adminLoginDaily.some((row) => row.count > 0)
 
-  const handleRoleChange = (id, value) => {
-    setSelectedRole((prev) => ({ ...prev, [id]: value }))
-  }
-
-  const handlePositionChange = (id, value) => {
-    setSelectedPosition((prev) => ({ ...prev, [id]: value }))
-  }
-
-  const handleSaveAdmin = async (admin) => {
-    const adminId = admin.id
-    const role = selectedRole[adminId] ?? admin.role
-    const position = selectedPosition[adminId] ?? admin.position
-    const payload = { role, position }
-
-    setSavingAdmins((prev) => [...prev, adminId])
-    try {
-      const res = await api.patch(`/users/admins/${adminId}/assign-role/`, payload)
-      setAdmins((prev) => (prev || []).map((item) => (item.id === adminId ? res.data.user : item)))
-      toast.success('Admin role updated.')
-      setSelectedRole((prev) => { const copy = { ...prev }; delete copy[adminId]; return copy })
-      setSelectedPosition((prev) => { const copy = { ...prev }; delete copy[adminId]; return copy })
-      window.dispatchEvent(new Event('officers-refresh'))
-    } catch (err) {
-      const errorText = err.response?.data?.detail || 'Unable to update admin account.'
-      toast.error(errorText)
-    } finally {
-      setSavingAdmins((prev) => prev.filter((id) => id !== adminId))
-    }
-  }
-
   const handleSaveGcashSettings = async () => {
     setGcashSaving(true)
     try {
@@ -167,32 +116,6 @@ const AdminDashboard = () => {
       toast.error(err.response?.data?.detail || 'Unable to save GCash settings.')
     } finally {
       setGcashSaving(false)
-    }
-  }
-
-  const handleCreateOfficer = async (e) => {
-    e.preventDefault()
-    setCreateBusy(true)
-    try {
-      const payload = {
-        email: createForm.email,
-        username: createForm.username,
-        password: createForm.password,
-        role: 'ADMIN',
-        position: createForm.position,
-        department: createForm.department,
-        academic_year: createForm.academic_year,
-      }
-      await api.post('/users/admins/create/', payload)
-      toast.success('Officer account created.')
-      window.dispatchEvent(new Event('officers-refresh'))
-      setCreateForm({ email: '', username: '', password: '', position: 'NONE', department: '', academic_year: '' })
-      const adminsRes = await api.get('/users/admins/')
-      setAdmins(adminsRes.data.results || [])
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Unable to create officer account.')
-    } finally {
-      setCreateBusy(false)
     }
   }
 
@@ -381,154 +304,64 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* GCash + Leadership side by side on large screens */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="space-y-3">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">GCash Payment</p>
-              <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Payment Settings</h2>
-            </div>
-            {!canManageRoles && <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">Read-only</span>}
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="block text-xs text-slate-600">GCash Name</label>
-                <input
-                  value={gcashName}
-                  onChange={(e) => setGcashName(e.target.value)}
-                  disabled={!canManageRoles}
-                  className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
-                  placeholder="GCash account name"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-xs text-slate-600">GCash #</label>
-                <input
-                  value={gcashNumber}
-                  onChange={(e) => setGcashNumber(e.target.value)}
-                  disabled={!canManageRoles}
-                  className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
-                  placeholder="09XXXXXXXXX or account number"
-                />
-              </div>
-            </div>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="truncate text-xs text-slate-600">
-                Current: <span className="font-semibold text-slate-900">{gcashName || '—'}</span> <span className="font-semibold text-slate-900">{gcashNumber || '—'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleSaveGcashSettings}
-                disabled={!canManageRoles || gcashSaving}
-                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {gcashSaving ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </section>
+      {/* Leadership Board (full width) */}
+      <section className="space-y-3">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">Leadership Team</p>
+          <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Student Leadership Board</h2>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <OfficersCarousel />
+        </div>
+      </section>
 
-        <section className="space-y-3">
+      {/* Payment Settings (bottom, full width) */}
+      <section className="space-y-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">Leadership Team</p>
-            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Student Leadership Board</h2>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">GCash Payment</p>
+            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Payment Settings</h2>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <OfficersCarousel />
-          </div>
-        </section>
-      </div>
-
-      {/* Officer creation (president only) */}
-      {canManageRoles && (
-        <section className="space-y-3">
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">Admin Tools</p>
-            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Create Officer Account</h2>
-          </div>
-          <form onSubmit={handleCreateOfficer} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <input value={createForm.email} onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))} placeholder="Email" required className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500" />
-              <input value={createForm.username} onChange={(e) => setCreateForm((p) => ({ ...p, username: e.target.value }))} placeholder="Username (optional)" className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500" />
-              <input type="password" value={createForm.password} onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))} placeholder="Password" required className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500" />
-              <select value={createForm.position} onChange={(e) => setCreateForm((p) => ({ ...p, position: e.target.value }))} className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500">
-                <option value="NONE">NONE</option>
-                {assignablePositions.map((pos) => (<option key={pos} value={pos}>{pos}</option>))}
-              </select>
-              <input value={createForm.department} onChange={(e) => setCreateForm((p) => ({ ...p, department: e.target.value }))} placeholder="Department" className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500" />
-              <input value={createForm.academic_year} onChange={(e) => setCreateForm((p) => ({ ...p, academic_year: e.target.value }))} placeholder="Academic year" className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500" />
+          {!canManageRoles && <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">Read-only</span>}
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="block text-xs text-slate-600">GCash Name</label>
+              <input
+                value={gcashName}
+                onChange={(e) => setGcashName(e.target.value)}
+                disabled={!canManageRoles}
+                className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                placeholder="GCash account name"
+              />
             </div>
-            <div className="mt-3 flex justify-end">
-              <button type="submit" disabled={createBusy} className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50">
-                {createBusy ? 'Creating...' : 'Create Officer'}
-              </button>
+            <div className="space-y-1.5">
+              <label className="block text-xs text-slate-600">GCash #</label>
+              <input
+                value={gcashNumber}
+                onChange={(e) => setGcashNumber(e.target.value)}
+                disabled={!canManageRoles}
+                className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                placeholder="09XXXXXXXXX or account number"
+              />
             </div>
-          </form>
-        </section>
-      )}
-
-      {/* Admin role management (president only) */}
-      {canManageRoles && admins.length > 0 && (
-        <section className="space-y-3">
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">Admin Tools</p>
-            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">Manage Admin Roles</h2>
           </div>
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <table className="w-full min-w-[640px] text-xs">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-700">Name</th>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-700">Email</th>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-700">Role</th>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-700">Position</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-700">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((admin) => (
-                  <tr key={admin.id} className="border-t border-slate-100">
-                    <td className="px-3 py-2 text-slate-900">{admin.first_name} {admin.last_name}</td>
-                    <td className="px-3 py-2 text-slate-600">{admin.email}</td>
-                    <td className="px-3 py-2">
-                      <select
-                        value={selectedRole[admin.id] ?? admin.role}
-                        onChange={(e) => handleRoleChange(admin.id, e.target.value)}
-                        className="rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-900 ring-1 ring-slate-200"
-                      >
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="OFFICER">OFFICER</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
-                      <select
-                        value={selectedPosition[admin.id] ?? admin.position}
-                        onChange={(e) => handlePositionChange(admin.id, e.target.value)}
-                        className="rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-900 ring-1 ring-slate-200"
-                      >
-                        <option value="NONE">NONE</option>
-                        {assignablePositions.map((pos) => (<option key={pos} value={pos}>{pos}</option>))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleSaveAdmin(admin)}
-                        disabled={savingAdmins.includes(admin.id)}
-                        className="rounded-lg bg-sky-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
-                      >
-                        {savingAdmins.includes(admin.id) ? 'Saving...' : 'Save'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="truncate text-xs text-slate-600">
+              Current: <span className="font-semibold text-slate-900">{gcashName || '—'}</span> <span className="font-semibold text-slate-900">{gcashNumber || '—'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveGcashSettings}
+              disabled={!canManageRoles || gcashSaving}
+              className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {gcashSaving ? 'Saving...' : 'Save'}
+            </button>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
     </div>
   )
 }
