@@ -3,10 +3,16 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
-import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
+import { CacheFirst } from 'workbox-strategies'
 
 // Take control of currently-open tabs as soon as the fresh service worker activates
 clientsClaim()
+
+// Drop API responses cached by previous versions. They could contain
+// authenticated data (auth/me, members) and be served stale to the next user.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.delete('api-cache'))
+})
 
 // Gain control via the "Refresh now" button in the UpdateNotice banner, and
 // apply/clear the app-icon unread badge on request from the page.
@@ -74,22 +80,9 @@ registerRoute(
   }
 )
 
-// API requests — prefer cache, refresh in the background.
-// Exclude /api/push/ so the VAPID key and subscription endpoints are never
-// served stale (a cached wrong key causes pushManager.subscribe to fail).
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/push/'),
-  new StaleWhileRevalidate({
-    cacheName: 'api-cache',
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 100,
-        maxAgeSeconds: 60 * 60 * 24 * 7,
-      }),
-    ],
-  })
-)
+// API requests are intentionally NOT cached. Responses are user-specific
+// (auth/me, members, payment settings), so a stale cache entry could show
+// another session's data or hide a real error behind an old response.
 
 // Images — cache first
 registerRoute(

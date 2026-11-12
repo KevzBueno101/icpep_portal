@@ -127,6 +127,12 @@ export default {
       )
     }
 
+    // WebSocket upgrades must be returned untouched — rebuilding a 101
+    // response would break the upgrade handshake.
+    if (resp.status === 101 || resp.webSocket) {
+      return resp
+    }
+
     return withCors(new Response(resp.body, resp), origin)
   },
 }

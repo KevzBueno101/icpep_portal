@@ -68,7 +68,9 @@ export default function MemberLayout({ children }) {
     }
   }, [userId, refreshUser, navigate])
 
-  const isLoading = authLoading || profileLoading
+  // Full-page skeleton only on the very first load. Once a profile exists,
+  // background refreshes must keep the current page mounted.
+  const isLoading = authLoading || (profileLoading && !profile)
 
   if (isLoading) {
     return <PageSkeleton />
