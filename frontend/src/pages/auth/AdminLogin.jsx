@@ -114,6 +114,7 @@ const AdminLogin = () => {
     confirm_password: '',
     first_name: '',
     last_name: '',
+    sex: '',
     position: 'President',
     department: 'HEAD OFFICE',
     academic_year: '',
@@ -204,6 +205,7 @@ const AdminLogin = () => {
     const errs = {}
     if (!requestForm.first_name.trim()) errs.first_name = 'First name is required.'
     if (!requestForm.last_name.trim()) errs.last_name = 'Last name is required.'
+    if (!requestForm.sex) errs.sex = 'Sex is required.'
     if (!requestForm.email.trim()) errs.email = 'Email is required.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestForm.email.trim())) errs.email = 'Enter a valid email address.'
     if (!requestForm.department) errs.department = 'Department is required.'
@@ -239,6 +241,7 @@ const AdminLogin = () => {
         confirm_password: '',
         first_name: '',
         last_name: '',
+        sex: '',
         position: 'President',
         department: 'HEAD OFFICE',
         academic_year: '',
@@ -257,7 +260,7 @@ const AdminLogin = () => {
         }
       }
       setRequestErrors(fieldErr)
-      const knownKeys = ['detail', 'email', 'password', 'confirm_password', 'profile_picture']
+      const knownKeys = ['detail', 'email', 'password', 'confirm_password', 'sex', 'profile_picture']
       if (!data || Object.keys(fieldErr).length === 0 || !Object.keys(fieldErr).some((k) => knownKeys.includes(k))) {
         console.error('Admin request failed:', err)
       }
@@ -476,7 +479,7 @@ const AdminLogin = () => {
                     {requestErrors.confirm_password && <p className="mt-1 text-xs text-red-400">{requestErrors.confirm_password}</p>}
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <div>
                     <select name="department" value={requestForm.department} required onChange={(e) => handleDepartmentChange(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
                       {OFFICER_GROUPS.map((group) => (
@@ -496,6 +499,14 @@ const AdminLogin = () => {
                       ))}
                     </select>
                     {requestErrors.position && <p className="mt-1 text-xs text-red-400">{requestErrors.position}</p>}
+                  </div>
+                  <div>
+                    <select name="sex" value={requestForm.sex} required onChange={handleRequestChange} className="w-full rounded-lg border border-gray-800 bg-[#0f0f18] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/60">
+                      <option value="" disabled>Sex</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                    </select>
+                    {requestErrors.sex && <p className="mt-1 text-xs text-red-400">{requestErrors.sex}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

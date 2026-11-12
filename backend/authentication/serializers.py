@@ -16,12 +16,13 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
     profile_picture = serializers.ImageField(required=False, allow_null=True)
     username = serializers.CharField(required=False, allow_blank=True)
+    sex = serializers.ChoiceField(choices=User.Sex.choices)
 
     class Meta:
         model = User
         fields = [
             'email', 'username', 'password', 'confirm_password',
-            'first_name', 'last_name', 'position', 'department',
+            'first_name', 'last_name', 'sex', 'position', 'department',
             'academic_year', 'admin_note', 'profile_picture',
         ]
 
@@ -60,6 +61,7 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
             password=password,
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
+            sex=validated_data.get('sex', ''),
             role='ADMIN',
             position='',
             department=validated_data.get('department', ''),
@@ -87,6 +89,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     first_name         = serializers.CharField(max_length=100)
     last_name          = serializers.CharField(max_length=100)
     middle_name        = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    sex                = serializers.ChoiceField(choices=User.Sex.choices)
     student_number     = serializers.CharField(max_length=30)
     course             = serializers.CharField(max_length=100)
     year_level         = serializers.ChoiceField(choices=MemberProfile.YearLevel.choices)
@@ -102,7 +105,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model  = User
         fields = [
             'email', 'username', 'password', 'confirm_password',
-            'first_name', 'middle_name', 'last_name',
+            'first_name', 'middle_name', 'last_name', 'sex',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'payment_method', 'membership_fee', 'profile_picture', 'payment_proof_image', 'coe_id_image',
         ]
@@ -187,7 +190,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model  = User
         fields = [
-            'id', 'email', 'username', 'role', 'position',
+            'id', 'email', 'username', 'role', 'position', 'sex',
             'is_term_active', 'is_term_expired', 'can_manage_roles',
             'membership_status', 'admin_message', 'profile_picture',
             'registration_status', 'access_level', 'requested_position',

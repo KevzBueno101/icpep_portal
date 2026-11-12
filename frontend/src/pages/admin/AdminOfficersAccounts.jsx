@@ -58,6 +58,7 @@ const AdminOfficersAccounts = () => {
     is_active: true,
     profile_picture: null,
     year_level: '',
+    sex: '',
     department: '',
     academic_year: '',
   })
@@ -152,6 +153,7 @@ const AdminOfficersAccounts = () => {
       is_active: true,
       profile_picture: null,
       year_level: '',
+      sex: '',
       department: '',
       academic_year: '',
     })
@@ -181,6 +183,7 @@ const AdminOfficersAccounts = () => {
         is_active: admin.is_active ?? true,
         profile_picture: null,
         year_level: admin.year_level || '',
+        sex: admin.sex || '',
         department: admin.department || '',
         academic_year: admin.academic_year || '',
       })
@@ -237,6 +240,7 @@ const AdminOfficersAccounts = () => {
         username: form.username,
         role: form.role,
         position: form.position,
+        sex: form.sex,
         is_active: Boolean(form.is_active),
       }
 
@@ -543,6 +547,21 @@ const AdminOfficersAccounts = () => {
                     disabled={!canEdit}
                     className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                   />
+                </label>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="space-y-2 text-sm text-slate-700">
+                  <span>Sex</span>
+                  <select
+                    value={form.sex}
+                    onChange={(e) => handleFormChange('sex', e.target.value)}
+                    disabled={!canEdit}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                  >
+                    <option value="">Not specified</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                  </select>
                 </label>
               </div>
               <div className="grid gap-4 md:grid-cols-2">

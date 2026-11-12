@@ -30,13 +30,14 @@ class MemberProfileSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_role = serializers.CharField(source='user.role', read_only=True)
     username = serializers.CharField(source='user.username', required=False, max_length=150, allow_blank=False)
+    sex = serializers.CharField(source='user.sex', required=False, allow_blank=True)
     fee_amount = serializers.IntegerField(read_only=True)
     latest_reference_number = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MemberProfile
         fields = [
-            'id', 'user', 'user_email', 'user_role', 'username', 'first_name', 'middle_name', 'last_name',
+            'id', 'user', 'user_email', 'user_role', 'username', 'sex', 'first_name', 'middle_name', 'last_name',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'profile_picture', 'payment_method', 'payment_proof_image',
             'coe_id_image', 'membership_fee', 'fee_amount', 'admin_message', 'membership_status',
@@ -58,14 +59,21 @@ class MemberProfileSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        # username is declared with source='user.username', so DRF nests it
-        # under a 'user' dict in validated_data. Persist it on the related User.
+        # username/sex are declared with source='user.*', so DRF nests them
+        # under a 'user' dict in validated_data. Persist them on the related User.
         user_data = validated_data.pop('user', None)
         profile = super().update(instance, validated_data)
-        if user_data and user_data.get('username'):
+        if user_data:
             user = profile.user
-            user.username = user_data['username']
-            user.save(update_fields=['username'])
+            update_fields = []
+            if user_data.get('username'):
+                user.username = user_data['username']
+                update_fields.append('username')
+            if 'sex' in user_data:
+                user.sex = user_data['sex'] or ''
+                update_fields.append('sex')
+            if update_fields:
+                user.save(update_fields=update_fields)
         return profile
 
     def get_latest_reference_number(self, obj):
@@ -127,6 +135,10 @@ class PaymentSettingsSerializer(serializers.ModelSerializer):
 
 class MemberCreateSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(write_only=True)
+    sex = serializers.ChoiceField(
+        choices=[('MALE', 'Male'), ('FEMALE', 'Female')],
+        write_only=True,
+    )
     payment_proof_image = serializers.ImageField(
         required=False,
         allow_null=True,
@@ -136,7 +148,7 @@ class MemberCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberProfile
         fields = [
-            'id', 'user_email', 'first_name', 'middle_name', 'last_name',
+            'id', 'user_email', 'first_name', 'middle_name', 'last_name', 'sex',
             'student_number', 'course', 'year_level', 'section', 'contact_number',
             'profile_picture', 'membership_fee', 'membership_status',
             'payment_method', 'payment_proof_image'
@@ -171,6 +183,7 @@ class MemberCreateSerializer(serializers.ModelSerializer):
 
         User = get_user_model()
         user_email = validated_data.pop('user_email')
+        sex = validated_data.pop('sex', '')
 
         username = user_email.split('@')[0]
         student_number = validated_data.get("student_number")
@@ -182,7 +195,8 @@ class MemberCreateSerializer(serializers.ModelSerializer):
             username=username,
             password=temp_pw,
             role='MEMBER',
-            position='NONE'
+            position='NONE',
+            sex=sex,
         )
 
         profile = MemberProfile.objects.create(user=user, **validated_data)

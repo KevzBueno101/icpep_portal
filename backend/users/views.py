@@ -73,7 +73,7 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
                 'first_name', 'last_name', 'email', 'username',
                 'role', 'position', 'profile_picture',
                 'current_password', 'new_password', 'confirm_password',
-                'department', 'academic_year',
+                'department', 'academic_year', 'sex',
             }
             if 'role' in request.data and request.data['role'] != 'ADMIN':
                 raise ValidationError({'detail': 'President cannot change their own role to MEMBER.'})
@@ -81,7 +81,7 @@ class AdminProfileAPIView(generics.RetrieveUpdateAPIView):
             allowed_fields = {
                 'first_name', 'last_name', 'email', 'username',
                 'profile_picture', 'current_password', 'new_password', 'confirm_password',
-                'department', 'academic_year',
+                'department', 'academic_year', 'sex',
             }
 
         incoming = set(request.data.keys())
@@ -540,6 +540,7 @@ def create_officer_account(request):
             position=validated.get('position', ''),
             first_name=validated.get('first_name', ''),
             last_name=validated.get('last_name', ''),
+            sex=validated.get('sex', ''),
             department=validated.get('department', ''),
             academic_year=validated.get('academic_year', ''),
             registration_status=UserModel.RegistrationStatus.APPROVED,

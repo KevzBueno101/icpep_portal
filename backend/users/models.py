@@ -38,6 +38,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         THIRD = '3', '3rd Year'
         SECOND = '2', '2nd Year'
         FIRST = '1', '1st Year'
+
+    class Sex(models.TextChoices):
+        MALE = 'MALE', 'Male'
+        FEMALE = 'FEMALE', 'Female'
+
     must_change_password = models.BooleanField(default=False)
 
     email    = models.EmailField(unique=True)
@@ -48,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role     = models.CharField(max_length=10, choices=Role.choices,     default=Role.OFFICER)
     position = models.CharField(max_length=100, blank=True, default='')
     year_level = models.CharField(max_length=1, choices=YearLevel.choices, null=True, blank=True)
+    sex = models.CharField(max_length=10, choices=Sex.choices, blank=True, default='')
     department = models.CharField(max_length=100, blank=True, default='')
     academic_year = models.CharField(max_length=20, blank=True, default='')
 
