@@ -1,7 +1,10 @@
 import os
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -29,8 +32,9 @@ from rest_framework.views import APIView
 
 from audit_logs.models import AuditLog
 from audit_logs.utils import log_action
+from authentication.models import LoginEvent
 from common.realtime import broadcast_member_update
-from permissions import _is_admin_or_president
+from permissions import IsAdmin, _is_admin_or_president
 
 User = get_user_model()
 
@@ -640,3 +644,35 @@ class OfficerReorderAPIView(APIView):
         broadcast_member_update("officers")
 
         return Response({'detail': 'Order updated.'}, status=status.HTTP_200_OK)
+
+
+class AdminLoginStatsAPIView(APIView):
+    """30-day daily distinct admin login counts for the admin dashboard chart."""
+    permission_classes = [IsAdmin]
+    LOGIN_WINDOW_DAYS = 30
+
+    def get(self, request):
+        login_start = timezone.localdate() - timedelta(days=self.LOGIN_WINDOW_DAYS - 1)
+        login_counts = {}
+        for row in (
+            LoginEvent.objects.filter(created_at__date__gte=login_start, user__role='ADMIN')
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(count=Count('user', distinct=True))
+        ):
+            day = row.get('day')
+            if day is None:
+                continue
+            if hasattr(day, 'date'):
+                day = day.date()
+            login_counts[day] = row['count']
+
+        login_daily = []
+        for offset in range(self.LOGIN_WINDOW_DAYS):
+            day = login_start + timedelta(days=offset)
+            login_daily.append({
+                'date': day.isoformat(),
+                'count': login_counts.get(day, 0),
+            })
+
+        return Response({'login_daily': login_daily})

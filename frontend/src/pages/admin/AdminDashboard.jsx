@@ -29,6 +29,7 @@ const AdminDashboard = () => {
   const [admins, setAdmins] = useState([])
   const [realtimeNonce, setRealtimeNonce] = useState(0)
   const [memberStats, setMemberStats] = useState(null)
+  const [adminLoginDailyRaw, setAdminLoginDailyRaw] = useState([])
   const [loading, setLoading] = useState(true)
   const [savingAdmins, setSavingAdmins] = useState([])
   const [selectedRole, setSelectedRole] = useState({})
@@ -76,6 +77,14 @@ const AdminDashboard = () => {
 
         const statsRes = await api.get('/members/stats/')
         setMemberStats(statsRes.data || null)
+
+        try {
+          const adminLoginRes = await api.get('/users/admin-login-stats/')
+          setAdminLoginDailyRaw(adminLoginRes.data?.login_daily || [])
+        } catch (e) {
+          // Non-critical: chart stays empty.
+          setAdminLoginDailyRaw([])
+        }
       } catch (err) {
         toast.error('Unable to load admin dashboard data.')
         setGcashNumber('')
@@ -117,6 +126,12 @@ const AdminDashboard = () => {
     label: formatDayLabel(row.date),
   }))
   const hasLoginActivity = loginDaily.some((row) => row.count > 0)
+
+  const adminLoginDaily = (adminLoginDailyRaw || []).map((row) => ({
+    ...row,
+    label: formatDayLabel(row.date),
+  }))
+  const hasAdminLoginActivity = adminLoginDaily.some((row) => row.count > 0)
 
   const handleRoleChange = (id, value) => {
     setSelectedRole((prev) => ({ ...prev, [id]: value }))
@@ -373,6 +388,45 @@ const AdminDashboard = () => {
             {hasLoginActivity
               ? 'Distinct members who logged in per day (last 30 days).'
               : 'Distinct members who logged in per day (last 30 days). Login tracking starts from the feature launch date — earlier activity is not recorded.'}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Admin Logins — Last 30 Days</h3>
+
+          <div className="h-[320px]">
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={adminLoginDaily} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="4 4" stroke={isDark ? '#334155' : '#e2e8f0'} />
+                <XAxis dataKey="label" tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    background: isDark ? '#0f172a' : 'white',
+                    border: isDark ? '1px solid #334155' : '1px solid #e5e7eb',
+                    borderRadius: 12,
+                  }}
+                  labelStyle={{ color: isDark ? '#f1f5f9' : '#0f172a' }}
+                  formatter={(value) => [value, 'Admins Logged In']}
+                />
+                <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#475569' }} />
+
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Admins Logged In"
+                  stroke={isDark ? '#c084fc' : '#7c3aed'}
+                  strokeWidth={3}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p className="mt-3 text-xs text-slate-500">
+            {hasAdminLoginActivity
+              ? 'Distinct admins who logged in per day (last 30 days).'
+              : 'Distinct admins who logged in per day (last 30 days). Login tracking starts from the feature launch date — earlier activity is not recorded.'}
           </p>
         </div>
 
