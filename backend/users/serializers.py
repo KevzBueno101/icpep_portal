@@ -99,7 +99,7 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
-            'role', 'position', 'is_active',
+            'role', 'position', 'sex', 'is_active',
             'year_level', 'created_at', 'profile_picture',
             'department', 'academic_year', 'officer_id',
             'registration_status', 'access_level', 'requested_position',
@@ -139,6 +139,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             'last_name',
             'role',
             'position',
+            'sex',
             'is_active',
             'profile_picture',
             'can_manage_roles',
@@ -237,7 +238,7 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
-            'role', 'position', 'is_active',
+            'role', 'position', 'sex', 'is_active',
             'year_level', 'profile_picture', 'password',
             'department', 'academic_year', 'officer_id',
             'registration_status', 'access_level', 'requested_position',
@@ -306,6 +307,7 @@ class OfficerCreateSerializer(serializers.Serializer):
     # NOTE: positions are dynamic (free text) — there is no User.Position
     # choices class on the model, so this must be a CharField, not ChoiceField.
     position = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
+    sex = serializers.ChoiceField(choices=User.Sex.choices, required=False, allow_blank=True, default='')
     department = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
     academic_year = serializers.CharField(max_length=20, allow_blank=True, required=False, default='')
     username = serializers.CharField(max_length=150, required=False, allow_blank=True)

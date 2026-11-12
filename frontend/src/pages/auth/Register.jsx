@@ -21,6 +21,7 @@ const FIELD_LABELS = {
   first_name: 'First name',
   middle_name: 'Middle name',
   last_name: 'Last name',
+  sex: 'Sex',
   student_number: 'Student number',
   year_level: 'Year level',
   section: 'Section / block',
@@ -150,7 +151,7 @@ const Register = () => {
   const [previewUrl, setPreviewUrl] = useState('')
   const [form, setForm] = useState({
     email: '', username: '', password: '', confirm_password: '',
-    first_name: '', middle_name: '', last_name: '',
+    first_name: '', middle_name: '', last_name: '', sex: '',
     student_number: '', course: 'BSCpE', year_level: '', section: '', contact_number: '',
     profile_picture: null,
     payment_method: 'ON_HAND',
@@ -271,7 +272,7 @@ const Register = () => {
     }
 
     if (stepNumber === 2) {
-      return hasValue(form.first_name) && hasValue(form.last_name)
+      return hasValue(form.first_name) && hasValue(form.last_name) && hasValue(form.sex)
     }
 
     if (stepNumber === 3) {
@@ -316,7 +317,7 @@ const Register = () => {
         toast.error('Passwords do not match.')
       }
     } else if (stepNumber === 2) {
-      toast.error('Please complete your first name and last name.')
+      toast.error('Please complete your first name, last name, and sex.')
     } else if (stepNumber === 3) {
       if (!isValidStudentNumber(form.student_number)) {
         toast.error('Student number must have at least 5 digits.')
@@ -760,6 +761,20 @@ const Register = () => {
                 <Field label="First Name" name="first_name" placeholder="Juan" value={form.first_name} onChange={handleChange} />
                 <Field label="Middle Name" name="middle_name" placeholder="(optional)" value={form.middle_name} onChange={handleChange} required={false} />
                 <Field label="Last Name" name="last_name" placeholder="Dela Cruz" value={form.last_name} onChange={handleChange} />
+              </div>
+              <div className="max-w-xs">
+                <label className="block text-sm text-slate-600 mb-1">Sex</label>
+                <select
+                  name="sex"
+                  value={form.sex}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="">Select sex</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
               </div>
             </div>
           )}

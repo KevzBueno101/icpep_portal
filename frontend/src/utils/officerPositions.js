@@ -39,6 +39,16 @@ export const OFFICER_GROUPS = [
       '1st Year Representative',
     ],
   },
+  {
+    label: 'COMMITTEES',
+    positions: [
+      'Documentation Committee',
+      'Creatives Committee',
+      'Development Committee',
+      'Sports/E-sports Committee',
+      'Technical Committee',
+    ],
+  },
 ]
 
 export const positionsForGroup = (groupLabel) => {

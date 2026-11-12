@@ -16,7 +16,7 @@ const officeLabelFor = (officer) => {
   return office || position
 }
 
-export default function OfficersCoverflow() {
+export default function OfficersCoverflow({ officers: officersProp, caption }) {
   const [error, setError] = useState(null)
   const [active, setActive] = useState(0)
   const [imgFailed, setImgFailed] = useState(() => new Set())
@@ -32,19 +32,26 @@ export default function OfficersCoverflow() {
   const hoverPauseRef = useRef(false)
   const focusPauseRef = useRef(false)
 
-  let officers = []
+  let contextOfficers = []
   let officersLoading = false
   let refreshOfficers = () => {}
 
   try {
     const value = useOfficers()
-    officers = value.officers || []
+    contextOfficers = value.officers || []
     officersLoading = !!value.officersLoading
     refreshOfficers = value.refreshOfficers || (() => {})
   } catch (e) {
+    // Only fatal when the parent isn't supplying its own list.
     console.error('[OfficersCoverflow] OfficersContext unavailable:', e)
-    setError('Unable to load leadership directory. Please try again later.')
+    if (!Array.isArray(officersProp)) {
+      setError('Unable to load leadership directory. Please try again later.')
+    }
   }
+
+  // The landing board passes a pre-filtered category list; standalone usage
+  // (and the admin previews) keep reading from the shared OfficersContext.
+  const officers = Array.isArray(officersProp) ? officersProp : contextOfficers
 
   const validOfficers = officers.filter((officer) => {
     const activeOk = officer.isActive === undefined ? true : !!officer.isActive
@@ -331,7 +338,7 @@ export default function OfficersCoverflow() {
       <div className="od-caption" aria-live={autoOn ? 'off' : 'polite'}>
         {activeOfficer && (
           <div key={activeOfficer.id}>
-            <p className="od-title">{officeLabelFor(activeOfficer)}</p>
+            <p className="od-title">{caption || officeLabelFor(activeOfficer)}</p>
           </div>
         )}
       </div>

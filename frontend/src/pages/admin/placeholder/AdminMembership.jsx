@@ -25,6 +25,7 @@ const AdminMembership = () => {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [yearFilter, setYearFilter] = useState('ALL')
   const [feeFilter, setFeeFilter] = useState('ALL')
+  const [sexFilter, setSexFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedMemberId, setExpandedMemberId] = useState(null)
 
@@ -59,6 +60,7 @@ const AdminMembership = () => {
     first_name: '',
     middle_name: '',
     last_name: '',
+    sex: '',
     student_number: '',
     course: 'Computer Engineering',
     year_level: '1',
@@ -114,6 +116,9 @@ const AdminMembership = () => {
       pending: members.filter((m) => m.membership_status === 'PENDING').length,
       approved: members.filter((m) => m.membership_status === 'APPROVED').length,
       expired: members.filter((m) => m.membership_status === 'EXPIRED').length,
+      male: members.filter((m) => m.sex === 'MALE').length,
+      female: members.filter((m) => m.sex === 'FEMALE').length,
+      unspecified: members.filter((m) => !m.sex).length,
     }
   }, [members])
 
@@ -133,10 +138,14 @@ const AdminMembership = () => {
       const matchesStatus = statusFilter === 'ALL' || member.membership_status === statusFilter
       const matchesYear = yearFilter === 'ALL' || member.year_level === yearFilter
       const matchesFee = feeFilter === 'ALL' || member.membership_fee === feeFilter
+      const memberSex = member.sex || ''
+      const matchesSex =
+        sexFilter === 'ALL' ||
+        (sexFilter === 'UNSPECIFIED' ? !memberSex : memberSex === sexFilter)
 
-      return matchesSearch && matchesStatus && matchesYear && matchesFee
+      return matchesSearch && matchesStatus && matchesYear && matchesFee && matchesSex
     })
-  }, [members, searchTerm, statusFilter, yearFilter, feeFilter])
+  }, [members, searchTerm, statusFilter, yearFilter, feeFilter, sexFilter])
 
   // Pagination
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
@@ -166,6 +175,9 @@ const AdminMembership = () => {
   }
 
   const formatFee = (fee) => (fee === 'PLUS' ? '₱60' : '₱25')
+
+  const formatSex = (sex) =>
+    sex === 'MALE' ? 'Male' : sex === 'FEMALE' ? 'Female' : 'Not specified'
 
   const getMemberName = (member) =>
     `${member?.first_name || ''} ${member?.middle_name || ''} ${member?.last_name || ''}`.replace(/\s+/g, ' ').trim()
@@ -197,6 +209,7 @@ const AdminMembership = () => {
       first_name: member.first_name || '',
       middle_name: member.middle_name || '',
       last_name: member.last_name || '',
+      sex: member.sex || '',
       student_number: member.student_number || '',
       course: member.course || '',
       year_level: member.year_level || '1',
@@ -292,6 +305,7 @@ const AdminMembership = () => {
       first_name: '',
       middle_name: '',
       last_name: '',
+      sex: '',
       student_number: '',
       course: 'Computer Engineering',
       year_level: '1',
@@ -330,6 +344,7 @@ const AdminMembership = () => {
       'user_email',
       'first_name',
       'last_name',
+      'sex',
       'student_number',
       'course',
       'year_level',
@@ -389,6 +404,7 @@ try {
       'Student ID',
       'Name',
       'Email',
+      'Sex',
       'Year',
       'Department / Course',
       'Fee',
@@ -400,6 +416,7 @@ try {
     const rows = filteredMembers.map((member) => {
       const name = `${member.first_name || ''} ${member.last_name || ''}`.replace(/"/g, '""')
       const email = (member.user_email || '').replace(/"/g, '""')
+      const sex = formatSex(member.sex)
       const studentNum = (member.student_number || '').replace(/"/g, '""')
       const year = formatYearLevel(member.year_level)
       const dept = (member.course || '').replace(/"/g, '""')
@@ -414,6 +431,7 @@ try {
         `"${studentNum}"`,
         `"${name}"`,
         `"${email}"`,
+        `"${sex}"`,
         `"${year}"`,
         `"${dept}"`,
         `"${fee}"`,
@@ -441,7 +459,7 @@ try {
     return (
       <div className="space-y-6">
 <div className="grid gap-3 grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="h-4 w-24 animate-pulse rounded bg-slate-200 mb-3" />
               <div className="h-8 w-16 animate-pulse rounded bg-slate-200" />
@@ -564,6 +582,57 @@ try {
         </div>
       </div>
 
+      {/* Sex Distribution Section */}
+      <div className="grid gap-3 grid-cols-3">
+        {/* Male Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Male</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.male}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Male members</p>
+            </div>
+            <div className="p-2 rounded-lg bg-blue-100">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 12H9m4 0v4m0-4v-4m6 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Female Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Female</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.female}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Female members</p>
+            </div>
+            <div className="p-2 rounded-lg bg-pink-100">
+              <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14a5 5 0 100-10 5 5 0 000 10zm0 0v6m-3-3h6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Not Specified Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] text-slate-600 uppercase font-semibold tracking-wide sm:text-xs">Not Specified</p>
+              <p className="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">{stats.unspecified}</p>
+              <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">No sex recorded</p>
+            </div>
+            <div className="p-2 rounded-lg bg-slate-100">
+              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8m-8 4h8M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Controls Section */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="space-y-4">
@@ -615,7 +684,7 @@ try {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
             <p className="hidden text-xs font-semibold text-slate-600 uppercase tracking-wide sm:block">Filter:</p>
 
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:gap-2">
               {/* Status Filter */}
               <select
                 value={statusFilter}
@@ -660,6 +729,21 @@ try {
                 <option value="ALL">All Fees</option>
                 <option value="SEMESTER">₱25 — Regular Membership</option>
                 <option value="PLUS">₱60 — Membership Plus</option>
+              </select>
+
+              {/* Sex Filter */}
+              <select
+                value={sexFilter}
+                onChange={(e) => {
+                  setSexFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full min-w-0 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">All Sex</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="UNSPECIFIED">Not specified</option>
               </select>
             </div>
 
@@ -737,6 +821,10 @@ try {
                           <span>{formatYearLevel(member.year_level)}</span>
                         </div>
                         <div className="flex items-center justify-between">
+                          <span className="font-medium text-slate-700">Sex</span>
+                          <span>{formatSex(member.sex)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
                           <span className="font-medium text-slate-700">Fee</span>
                           <span>{formatFee(member.membership_fee)}</span>
                         </div>
@@ -811,6 +899,7 @@ try {
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Student ID</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Name</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Year</th>
+                <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Sex</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Department</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Fee</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 text-[11px] uppercase tracking-wider">Status</th>
@@ -854,6 +943,7 @@ try {
                         </div>
                       </td>
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{formatYearLevel(member.year_level)}</td>
+                      <td className="px-3 py-3 text-slate-600 text-[11px]">{formatSex(member.sex)}</td>
                       <td className="px-3 py-3 text-slate-600 text-[11px]">{member.course || 'Unassigned'}</td>
                       <td className="px-3 py-3">
                         <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${member.membership_fee === 'PLUS' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`}>
@@ -1085,6 +1175,25 @@ try {
                       placeholder="Dela Cruz"
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50"
                     />
+                  </div>
+
+                  {/* Sex */}
+                  <div>
+                    <label htmlFor="sex" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Sex <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="sex"
+                      name="sex"
+                      required
+                      value={formData.sex}
+                      onChange={handleFormChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
+                    >
+                      <option value="">Select sex</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1413,6 +1522,19 @@ try {
                       onChange={handleEditFormChange}
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Sex</label>
+                    <select
+                      name="sex"
+                      value={editForm.sex || ''}
+                      onChange={handleEditFormChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer"
+                    >
+                      <option value="">Not specified</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                    </select>
                   </div>
                 </div>
               </div>
