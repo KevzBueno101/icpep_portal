@@ -34,6 +34,7 @@ export const RealtimeProvider = ({ children }) => {
     let reconnectTimer
     let attempts = 0
     let hasConnected = false
+    let lastResyncAt = 0
 
     const handleResources = (resources) => {
       if (!resources || resources.length === 0) return
@@ -72,7 +73,11 @@ export const RealtimeProvider = ({ children }) => {
         attempts = 0
         // Resync once, only after a *successful* reconnect — not on every
         // failed attempt (that was causing a full refetch every 3 seconds).
-        if (hasConnected) handleResources(ALL_RESOURCES)
+        // Throttled too, in case the socket opens and closes in a tight loop.
+        if (hasConnected && Date.now() - lastResyncAt >= 30000) {
+          lastResyncAt = Date.now()
+          handleResources(ALL_RESOURCES)
+        }
         hasConnected = true
       }
 
