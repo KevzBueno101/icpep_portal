@@ -12,6 +12,7 @@ urlpatterns = [
     path('admins/year-end-reset/',         views.year_end_reset,      name='year-end-reset'),
     path('admins/create/',                 views.create_officer_account, name='create-officer'),
     path('admin/profile/', views.AdminProfileAPIView.as_view(), name='admin-profile'),
+    path('admin-login-stats/', views.AdminLoginStatsAPIView.as_view(), name='admin-login-stats'),
     path('officers/roster/', views.officers_roster, name='officers-roster'),
     path('officers/reorder/', views.OfficerReorderAPIView.as_view(), name='officers-reorder'),
 ]

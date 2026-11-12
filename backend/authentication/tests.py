@@ -345,7 +345,7 @@ class LoginEventTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(LoginEvent.objects.count(), 0)
 
-    def test_admin_login_does_not_record_event(self):
+    def test_admin_login_records_event(self):
         self._make_admin()
         response = self.client.post('/api/auth/admin-login/', {
             'email': 'president@example.com',
@@ -353,7 +353,7 @@ class LoginEventTests(APITestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(LoginEvent.objects.count(), 0)
+        self.assertEqual(LoginEvent.objects.count(), 1)
 
 
 class LoginWithEmailOrUsernameTests(APITestCase):

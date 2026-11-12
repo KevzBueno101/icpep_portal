@@ -244,6 +244,10 @@ def admin_login(request):
         with contextlib.suppress(Exception):
             clear_ip_failures(ip)
 
+        # Track admin logins for the dashboard chart.
+        with contextlib.suppress(Exception):
+            LoginEvent.objects.create(user=user)
+
         return Response({
             'message':  f'Welcome, {position.capitalize()}!',
             'user':     UserSerializer(user).data,
