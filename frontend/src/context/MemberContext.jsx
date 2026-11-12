@@ -133,9 +133,12 @@ export const MemberProvider = ({ children }) => {
     })
   }, [aboutSections, aboutLastSeenAt])
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (silent = false) => {
     if (!user?.id) return
-    setProfileLoading(true)
+    // Only the initial load may blank the app with a skeleton. Background
+    // refreshes (tab focus, realtime events) must stay silent so the member
+    // area doesn't flash a full-page loader every few seconds.
+    if (!silent) setProfileLoading(true)
     try {
       const res = await api.get('/members/')
       const items = Array.isArray(res.data) ? res.data : res.data?.results || []
@@ -144,14 +147,18 @@ export const MemberProvider = ({ children }) => {
         const pUser = p?.user
         return pUser === meId || String(pUser) === String(meId)
       })
-      setProfile(found || null)
+      // A silent refresh should never wipe an already-rendered profile just
+      // because a transient request failed or the list page changed.
+      if (found || !silent) setProfile(found || null)
       setProfileCacheKey((k) => k + 1)
     } catch (err) {
       console.error(err)
-      toast.error('Unable to fetch member profile.')
-      setProfile(null)
+      if (!silent) {
+        toast.error('Unable to fetch member profile.')
+        setProfile(null)
+      }
     } finally {
-      setProfileLoading(false)
+      if (!silent) setProfileLoading(false)
     }
   }, [user?.id])
 
@@ -199,7 +206,7 @@ export const MemberProvider = ({ children }) => {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) {
+    if (!user?.id) {
       setProfile(null)
       setPaymentSettings(null)
       setAnnouncements([])
@@ -212,11 +219,14 @@ export const MemberProvider = ({ children }) => {
     fetchPaymentSettings()
     fetchAnnouncements()
     fetchAboutSections()
-  }, [user, authLoading, fetchProfile, fetchPaymentSettings, fetchAnnouncements, fetchAboutSections])
+    // Depend on the stable user id, not the user object: refreshUser() creates
+    // a new object every 30s, which previously re-ran this whole block (and
+    // flashed the full-page skeleton) even when nothing had changed.
+  }, [user?.id, authLoading, fetchProfile, fetchPaymentSettings, fetchAnnouncements, fetchAboutSections])
 
   useEffect(() => {
     const onProfileUpdated = () => {
-      fetchProfile()
+      fetchProfile(true)
       fetchPaymentSettings()
       triggerContentRefresh()
     }
@@ -229,7 +239,7 @@ export const MemberProvider = ({ children }) => {
       triggerContentRefresh()
     }
     const onMemberListUpdated = () => {
-      fetchProfile()
+      fetchProfile(true)
       triggerContentRefresh()
     }
 
@@ -253,9 +263,9 @@ export const MemberProvider = ({ children }) => {
   useEffect(() => {
     const onFocus = () => {
       if (document.visibilityState !== 'visible') return
-      fetchProfile()
-      // Silent refresh: picks up pushes that arrived while the app was
-      // suspended and re-syncs the app-icon badge accordingly.
+      // Both refreshes stay silent: returning to the tab must not replace the
+      // page with a loading skeleton.
+      fetchProfile(true)
       fetchAnnouncements(true)
     }
     document.addEventListener('visibilitychange', onFocus)
@@ -288,7 +298,7 @@ export const MemberProvider = ({ children }) => {
   })
 
   useRealtimeContent(RESOURCES.MEMBERS, () => {
-    fetchProfile()
+    fetchProfile(true)
   })
 
   const value = {

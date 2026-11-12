@@ -87,7 +87,13 @@ function refreshSession() {
       const refresh = getRefreshToken()
       if (!refresh) throw new Error('No refresh token available')
 
-      const res = await axios.post(`${API_BASE}/auth/refresh/`, { refresh })
+      // Use the same timeout as the clients: a bare axios call has no timeout
+      // by default and could leave AuthContext stuck on `loading` forever.
+      const res = await axios.post(
+        `${API_BASE}/auth/refresh/`,
+        { refresh },
+        { timeout: REQUEST_TIMEOUT }
+      )
 
       // SimpleJWT rotates the refresh token on every call, so persist the NEW
       // pair. Which bucket (admin vs member) owns it is decided by the refresh
@@ -105,9 +111,13 @@ function refreshSession() {
 
       return res.data
     })()
-    refreshPromise.finally(() => {
-      refreshPromise = null
-    })
+    // Silence the rejection on this bookkeeping chain; the original promise is
+    // still returned to (and rejected for) the real callers below.
+    refreshPromise
+      .finally(() => {
+        refreshPromise = null
+      })
+      .catch(() => {})
   }
   return refreshPromise
 }

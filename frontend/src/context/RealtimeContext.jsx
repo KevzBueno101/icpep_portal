@@ -5,7 +5,8 @@ import { ALL_RESOURCES, CONTENT_UPDATED_EVENT, labelForResources } from '../util
 
 const RealtimeContext = createContext(null)
 
-const RECONNECT_DELAY_MS = 3000
+const RECONNECT_BASE_MS = 3000
+const RECONNECT_MAX_MS = 30000
 
 export const RealtimeProvider = ({ children }) => {
   const { triggerContentRefresh } = useRefresh()
@@ -31,6 +32,9 @@ export const RealtimeProvider = ({ children }) => {
     let ws
     let cancelled = false
     let reconnectTimer
+    let attempts = 0
+    let hasConnected = false
+    let lastResyncAt = 0
 
     const handleResources = (resources) => {
       if (!resources || resources.length === 0) return
@@ -42,16 +46,39 @@ export const RealtimeProvider = ({ children }) => {
       }
     }
 
+    const scheduleReconnect = () => {
+      // Exponential backoff (3s → 30s) so a persistently unreachable socket
+      // doesn't hammer the API or flash loading states every few seconds.
+      const delay = Math.min(
+        RECONNECT_BASE_MS * 2 ** attempts,
+        RECONNECT_MAX_MS
+      )
+      attempts += 1
+      reconnectTimer = setTimeout(() => {
+        if (!cancelled) connect()
+      }, delay)
+    }
+
     const connect = () => {
       try {
         ws = new WebSocket(wsUrl)
       } catch {
-        reconnectTimer = setTimeout(connect, RECONNECT_DELAY_MS)
+        scheduleReconnect()
         return
       }
 
       ws.onopen = () => {
-        if (!cancelled) setConnected(true)
+        if (cancelled) return
+        setConnected(true)
+        attempts = 0
+        // Resync once, only after a *successful* reconnect — not on every
+        // failed attempt (that was causing a full refetch every 3 seconds).
+        // Throttled too, in case the socket opens and closes in a tight loop.
+        if (hasConnected && Date.now() - lastResyncAt >= 30000) {
+          lastResyncAt = Date.now()
+          handleResources(ALL_RESOURCES)
+        }
+        hasConnected = true
       }
 
       ws.onmessage = (event) => {
@@ -71,11 +98,7 @@ export const RealtimeProvider = ({ children }) => {
       ws.onclose = () => {
         if (cancelled) return
         setConnected(false)
-        reconnectTimer = setTimeout(() => {
-          if (cancelled) return
-          connect()
-          handleResources(ALL_RESOURCES)
-        }, RECONNECT_DELAY_MS)
+        scheduleReconnect()
       }
     }
 
