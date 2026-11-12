@@ -422,7 +422,7 @@ const AdminLogin = () => {
               onClick={() => { setShowRequestForm((prev) => !prev); setProfilePic(null); setProfilePicPreview(null) }}
               className="w-full rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/20"
             >
-              {showRequestForm ? 'Cancel Request' : 'Request Admin Access'}
+              {showRequestForm ? 'Cancel Request' : 'Create Admin Account'}
             </button>
 
             {showRequestForm && (
