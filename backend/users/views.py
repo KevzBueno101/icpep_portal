@@ -647,7 +647,7 @@ class OfficerReorderAPIView(APIView):
 
 
 class AdminLoginStatsAPIView(APIView):
-    """30-day daily distinct admin login counts for the admin dashboard chart."""
+    """30-day daily distinct admin/officer login counts for the admin dashboard chart."""
     permission_classes = [IsAdmin]
     LOGIN_WINDOW_DAYS = 30
 
@@ -655,7 +655,10 @@ class AdminLoginStatsAPIView(APIView):
         login_start = timezone.localdate() - timedelta(days=self.LOGIN_WINDOW_DAYS - 1)
         login_counts = {}
         for row in (
-            LoginEvent.objects.filter(created_at__date__gte=login_start, user__role='ADMIN')
+            LoginEvent.objects.filter(
+                created_at__date__gte=login_start,
+                user__role__in=['ADMIN', 'OFFICER'],
+            )
             .annotate(day=TruncDate('created_at'))
             .values('day')
             .annotate(count=Count('user', distinct=True))

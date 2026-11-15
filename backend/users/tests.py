@@ -138,3 +138,49 @@ class AdminProfileAPITests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.username, 'officer1')
         self.assertEqual(self.user.first_name, 'Janet')
+
+
+class AdminLoginStatsAPITests(TestCase):
+    """GET /api/users/admin-login-stats/ counts ADMIN + OFFICER logins only."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email='adminstats@example.com',
+            username='adminstats',
+            password='pass-12345',
+            role='ADMIN',
+            position='PRESIDENT',
+        )
+        self.officer = User.objects.create_user(
+            email='officerstats@example.com',
+            username='officerstats',
+            password='pass-12345',
+            role='OFFICER',
+            position='Secretary',
+        )
+        self.member = User.objects.create_user(
+            email='memberstats@example.com',
+            username='memberstats',
+            password='pass-12345',
+            role='MEMBER',
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.admin)
+
+    def test_counts_admin_and_officer_excludes_member(self):
+        from authentication.models import LoginEvent
+
+        for user in (self.admin, self.officer, self.member):
+            LoginEvent.objects.create(user=user)
+
+        res = self.client.get('/api/users/admin-login-stats/')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.data)
+        self.assertEqual(len(res.data['login_daily']), 30)
+        self.assertEqual(res.data['login_daily'][-1]['count'], 2)
+
+    def test_requires_admin(self):
+        member_client = APIClient()
+        member_client.force_authenticate(user=self.member)
+        res = member_client.get('/api/users/admin-login-stats/')
+        self.assertIn(res.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
