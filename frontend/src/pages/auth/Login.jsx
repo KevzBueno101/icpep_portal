@@ -1,18 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
-import { publicApi } from '../../api/axios'
+import { publicApi, warmupApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import ThemeToggle from '../../components/ThemeToggle'
 
 const Login = () => {
-  const { login } = useAuth()
+  const { login, serverWaking } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [failedCount, setFailedCount] = useState(0)
+
+  // Best-effort ping so a sleeping backend starts waking while the user
+  // types their credentials (Render free tier cold start).
+  useEffect(() => {
+    warmupApi()
+  }, [])
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -35,7 +41,12 @@ const Login = () => {
       }
 
     } catch (err) {
-      const errorMsg = err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Invalid credentials.'
+      const errorMsg =
+        err.response?.data?.detail ||
+        err.response?.data?.non_field_errors?.[0] ||
+        (err.response
+          ? 'Invalid credentials.'
+          : 'Cannot reach the server. It may be waking up — please try again.')
       const nextCount = failedCount + 1
       setFailedCount(nextCount)
       toast.error(errorMsg)
@@ -139,7 +150,7 @@ const Login = () => {
             disabled={loading}
             className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (serverWaking ? 'Waking up server…' : 'Signing in...') : 'Sign In'}
           </button>
         </form>
 

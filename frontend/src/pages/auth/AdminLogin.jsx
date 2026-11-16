@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { publicApi } from '../../api/axios'
+import { publicApi, warmupApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { OFFICER_GROUPS, positionsForGroup } from '../../utils/officerPositions'
 
@@ -101,7 +101,7 @@ const YearPicker = ({ label, value, placeholder, open, onToggle, onSelect }) => 
 }
 
 const AdminLogin = () => {
-  const { adminLogin } = useAuth()
+  const { adminLogin, serverWaking } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
@@ -128,6 +128,12 @@ const AdminLogin = () => {
   const [profilePic, setProfilePic] = useState(null)
   const [profilePicPreview, setProfilePicPreview] = useState(null)
   const [requestLoading, setRequestLoading] = useState(false)
+
+  // Best-effort ping so a sleeping backend starts waking while the user
+  // types their credentials (Render free tier cold start).
+  useEffect(() => {
+    warmupApi()
+  }, [])
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const handleRequestChange = (e) => setRequestForm({ ...requestForm, [e.target.name]: e.target.value })
@@ -166,7 +172,9 @@ const AdminLogin = () => {
       const msg =
         data?.non_field_errors?.[0] ||
         data?.detail ||
-        'Login failed.'
+        (err.response
+          ? 'Login failed.'
+          : 'Cannot reach the server. It may be waking up — please try again.')
       const nextCount = failedCount + 1
       setFailedCount(nextCount)
       toast.error(msg)
@@ -408,7 +416,7 @@ const AdminLogin = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                   </svg>
-                  Verifying...
+                  {serverWaking ? 'Waking up server…' : 'Verifying...'}
                 </span>
               ) : (
                 'Login'
