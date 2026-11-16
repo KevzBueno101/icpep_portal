@@ -12,7 +12,32 @@ import { EVENTS } from '../utils/events'
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [serverWaking, setServerWaking] = useState(false)
   const refreshUserRef = useRef(null)
+
+  // Render free tier cold starts (~50s) surface as network errors, timeouts,
+  // or edge 502/503/504s — none of which mean the credentials are wrong.
+  // Retry those until the service is warm (max ~2 min); real HTTP verdicts
+  // like 401/400/429 are thrown immediately so error handling stays accurate.
+  const postLoginWithRetry = async (path, payload) => {
+    const RETRYABLE_STATUSES = new Set([502, 503, 504])
+    const deadline = Date.now() + 120000
+    try {
+      for (;;) {
+        try {
+          return await api.post(path, payload)
+        } catch (err) {
+          const status = err.response?.status
+          const retryable = status ? RETRYABLE_STATUSES.has(status) : true
+          if (!retryable || Date.now() >= deadline) throw err
+          setServerWaking(true)
+          await new Promise((resolve) => setTimeout(resolve, 8000))
+        }
+      }
+    } finally {
+      setServerWaking(false)
+    }
+  }
 
   useEffect(() => {
     // One-time migration: clear old single-key tokens from previous implementation
@@ -75,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(ADMIN_ACCESS_KEY)
     localStorage.removeItem(ADMIN_REFRESH_KEY)
 
-    const res = await api.post('/auth/login/', { email, password })
+    const res = await postLoginWithRetry('/auth/login/', { email, password })
     localStorage.setItem(MEMBER_ACCESS_KEY, res.data.access)
     localStorage.setItem(MEMBER_REFRESH_KEY, res.data.refresh)
 
@@ -101,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(MEMBER_ACCESS_KEY)
     localStorage.removeItem(MEMBER_REFRESH_KEY)
 
-    const res = await api.post('/auth/admin-login/', { email, password })
+    const res = await postLoginWithRetry('/auth/admin-login/', { email, password })
     localStorage.setItem(ADMIN_ACCESS_KEY, res.data.tokens.access)
     localStorage.setItem(ADMIN_REFRESH_KEY, res.data.tokens.refresh)
 
@@ -142,7 +167,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, adminLogin, register, refreshUser, logout }}
+      value={{ user, loading, login, adminLogin, register, refreshUser, logout, serverWaking }}
     >
       {children}
     </AuthContext.Provider>

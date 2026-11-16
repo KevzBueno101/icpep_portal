@@ -165,6 +165,14 @@ api.interceptors.response.use(
   }
 )
 
+// Render free tier sleeps after ~15 min idle (~50s cold start). Firing a
+// best-effort ping when a page loads wakes the service while the user is
+// still typing, so the real request usually lands on a warm backend.
+export const warmupApi = () => {
+  const origin = API_BASE.replace(/\/api\/?$/, '')
+  fetch(`${origin}/`, { mode: 'no-cors' }).catch(() => {})
+}
+
 export const publicApi = axios.create({
   baseURL: API_BASE,
   timeout: REQUEST_TIMEOUT,
