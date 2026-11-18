@@ -1,7 +1,7 @@
 import { useAuth } from '../../context/useAuth'
 import { useMember } from '../../context/MemberContext'
 import MembershipCard from '../../components/member/MembershipCard'
-import { CreditCard, ShieldCheck, Award, CheckCircle2, IdCard, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
+import { CreditCard, ShieldCheck, Award, CheckCircle2, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 const MEMBER_BENEFITS = [
   {
@@ -27,7 +27,6 @@ const MEMBER_BENEFITS = [
 ]
 
 const MEMBERSHIP_PLUS_INCLUSIONS = [
-  { icon: IdCard, label: 'Laminated ID card' },
   { icon: Stamp, label: 'With Documentary stamped' },
   { icon: BadgeCheck, label: 'Badge pin' },
   { icon: Sticker, label: 'Stickers' },

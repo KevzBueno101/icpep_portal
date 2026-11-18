@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("SEMESTER", "₱25 — Regular Membership"),
-                    ("PLUS", "₱60 — Membership Plus"),
+                    ("PLUS", "₱50 — Membership Plus"),
                 ],
                 default="SEMESTER",
                 max_length=10,

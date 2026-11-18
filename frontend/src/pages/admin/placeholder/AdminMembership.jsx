@@ -174,7 +174,7 @@ const AdminMembership = () => {
     return mapping[level] || `${level} Year`
   }
 
-  const formatFee = (fee) => (fee === 'PLUS' ? '₱60' : '₱25')
+  const formatFee = (fee) => (fee === 'PLUS' ? '₱50' : '₱25')
 
   const formatSex = (sex) =>
     sex === 'MALE' ? 'Male' : sex === 'FEMALE' ? 'Female' : 'Not specified'
@@ -728,7 +728,7 @@ try {
               >
                 <option value="ALL">All Fees</option>
                 <option value="SEMESTER">₱25 — Regular Membership</option>
-                <option value="PLUS">₱60 — Membership Plus</option>
+                <option value="PLUS">₱50 — Membership Plus</option>
               </select>
 
               {/* Sex Filter */}
@@ -1309,7 +1309,7 @@ try {
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 cursor-pointer"
                     >
                       <option value="SEMESTER">₱25 — Regular Membership</option>
-                      <option value="PLUS">₱60 — Membership Plus</option>
+                      <option value="PLUS">₱50 — Membership Plus</option>
                     </select>
                   </div>
 
@@ -1417,7 +1417,7 @@ try {
             window.dispatchEvent(new CustomEvent(EVENTS.MEMBER_LIST_UPDATED))
             toast.success(renewFee === 'ALL'
               ? 'All approved memberships set to Pending.'
-              : `${renewFee === 'PLUS' ? '₱60' : '₱25'} memberships set to Pending.`)
+              : `${renewFee === 'PLUS' ? '₱50' : '₱25'} memberships set to Pending.`)
             await fetchMembers()
             setIsRenewConfirmOpen(false)
           } catch (err) {
@@ -1434,7 +1434,7 @@ try {
             {[
               { value: 'ALL', label: 'All fee plans', desc: 'Everyone currently approved' },
               { value: 'SEMESTER', label: '₱25 — Regular Membership', desc: 'Only ₱25 members' },
-              { value: 'PLUS', label: '₱60 — Membership Plus', desc: 'Only ₱60 members' },
+              { value: 'PLUS', label: '₱50 — Membership Plus', desc: 'Only ₱50 members' },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -1632,7 +1632,7 @@ try {
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     >
                       <option value="SEMESTER">₱25 — Regular Membership</option>
-                      <option value="PLUS">₱60 — Membership Plus</option>
+                      <option value="PLUS">₱50 — Membership Plus</option>
                     </select>
                   </div>
                 </div>
