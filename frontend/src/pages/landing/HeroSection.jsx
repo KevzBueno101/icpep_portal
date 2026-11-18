@@ -273,13 +273,13 @@ export default function HeroSection() {
 
       {/* ── Main Content ── */}
 
-      <div className="relative flex flex-1 flex-col items-start justify-center px-4 sm:items-center sm:px-6 sm:text-center lg:px-8 py-8 text-left">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 text-center">
 
 
 
         {/* 3 Logos */}
 
-        <div className="flex items-center justify-start sm:justify-center gap-3 sm:gap-5 md:gap-8 mb-10">
+        <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mb-10">
 
           {[
 
@@ -447,7 +447,7 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
 
-        <div className="hero-after flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10 sm:mb-16">
+        <div className="hero-after flex flex-col sm:flex-row items-center gap-4 mb-10 sm:mb-16">
 
           <a
 
