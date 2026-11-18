@@ -39,10 +39,10 @@ const membershipPlans = [
   },
   {
     title: 'Membership Plus',
-    price: 'P60/semester',
+    price: 'P50/semester',
     description: 'This package is optional and available for those who want to be more involved in the chapter.',
     benefits: [
-      'Laminated ID card with documentary stamped',
+      'Documentary stamped',
       'Highest priority for limited-slot events',
       'Early access to exclusive events',
       'Exclusive members-only networking channels',
@@ -116,7 +116,7 @@ export default function FeatureSection() {
               <div className="mb-4">
                 <Link
                   to={plan.actionLink}
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-400 backdrop-blur transition pointer-events-none opacity-50"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-200 backdrop-blur transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
                 >
                   Get Started
                   <span className="ml-2">→</span>

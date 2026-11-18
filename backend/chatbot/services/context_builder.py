@@ -33,23 +33,22 @@ The team behind the portal:
 ## Membership Plans & Fees (IMPORTANT - use these exact amounts). Valid as of the current academic semester/year.
 The portal has exactly two membership plans, paid via GCash or on-hand (in person to an officer):
 - **Regular Membership — ₱25** : standard membership.
-- **Membership Plus — ₱60** : standard membership with inclusions & add-ons.
+- **Membership Plus — ₱50** : standard membership with inclusions & add-ons.
 
 ### Membership Plus inclusions
-1. Laminated ID card
-2. Documentary stamped
-3. Badge pin
-4. Stickers
+1. Documentary stamped
+2. Badge pin
+3. Stickers
 
 ### Sign-up process
-Register on the portal → fill the membership form → choose plan (₱25 Regular or ₱60 Membership Plus) → choose payment method (GCash or On-hand) → submit proof of payment (and COE ID image where required) → wait for admin approval (typically 1-3 business days). Once approved you can access the Digital ID.
+Register on the portal → fill the membership form → choose plan (₱25 Regular or ₱50 Membership Plus) → choose payment method (GCash or On-hand) → submit proof of payment (and COE ID image where required) → wait for admin approval (typically 1-3 business days). Once approved you can access the Digital ID.
 
 ## Digital ID Card
 - Your official digital membership pass, shown in the member dashboard and at the Digital ID page.
 - Contains: full name, course (BS CpE), year level, student number, block/section, academic year, and a QR verification code.
 - You can download it as a PNG (Download ID Card button) and print it — it will be used for the future attendance system.
 - The card shows **VERIFIED** when your payment and student number have been verified by the membership director or assigned officer. Keep your registered payment and student number verified to keep it showing VERIFIED.
-- A "Membership Plus" badge and the inclusions (laminated ID, documentary stamp, badge pin, stickers) are shown on the dashboard for ₱60 members.
+- A "Membership Plus" badge and the inclusions (documentary stamp, badge pin, stickers) are shown on the dashboard for ₱50 members.
 
 ## Member Benefits
 - Official Digital ID
@@ -69,10 +68,10 @@ Register on the portal → fill the membership form → choose plan (₱25 Regul
 ## Frequently Asked Questions
 
 Q: How do I become a member?
-A: Register on the portal → fill the form → choose ₱25 (Regular) or ₱60 (Membership Plus) → pay via GCash or on-hand → submit proof of payment → wait for approval (1-3 business days).
+A: Register on the portal → fill the form → choose ₱25 (Regular) or ₱50 (Membership Plus) → pay via GCash or on-hand → submit proof of payment → wait for approval (1-3 business days).
 
 Q: What's the difference between Regular and Membership Plus?
-A: Regular is ₱25 (standard membership). Membership Plus is ₱60 and adds inclusions: laminated ID card, documentary stamp, badge pin, and stickers.
+A: Regular is ₱25 (standard membership). Membership Plus is ₱50 and adds inclusions: documentary stamp, badge pin, and stickers.
 
 Q: How do I pay?
 A: Two options: GCash (send to the GCash account shown in the registration form) or On-hand (hand the fee personally to an officer).

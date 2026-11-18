@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
-import { Info, Plus, IdCard, Stamp, BadgeCheck, Sticker } from 'lucide-react'
+import { Info, Plus, Stamp, BadgeCheck, Sticker } from 'lucide-react'
 import ThemeToggle from '../../components/ThemeToggle'
 
 const YEAR_LEVELS = [
@@ -1057,14 +1057,14 @@ const Register = () => {
                         <div className="flex items-center gap-1.5">
                           <Plus className="h-4 w-4 text-green-600" />
                           <div>
-                            <p className="text-sm font-semibold text-green-700">₱60 — Membership Plus</p>
+                            <p className="text-sm font-semibold text-green-700">₱50 — Membership Plus</p>
                             <p className="text-xs text-slate-500">With inclusions & add-ons</p>
                           </div>
                         </div>
                       </label>
                     </div>
                     <p className="mt-1.5 text-xs text-slate-500">
-                      Choose your coverage: ₱25 for Regular Membership or ₱60 for Membership Plus.
+                      Choose your coverage: ₱25 for Regular Membership or ₱50 for Membership Plus.
                     </p>
                   </div>
 
@@ -1162,12 +1162,6 @@ const Register = () => {
                 <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-slate-700">
                   <p className="font-semibold text-green-800 mb-2">Membership Plus Inclusions</p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
-                        <IdCard className="h-4 w-4" />
-                      </span>
-                      Laminated ID card
-                    </li>
                     <li className="flex items-center gap-2.5">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
                         <Stamp className="h-4 w-4" />

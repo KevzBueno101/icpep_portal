@@ -348,14 +348,14 @@ const MembershipPending = () => {
                       <div className="flex items-center gap-1.5">
                         <Plus className="h-4 w-4 text-green-600" />
                         <div>
-                          <p className="text-sm font-semibold text-green-700">₱60 — Membership Plus</p>
+                          <p className="text-sm font-semibold text-green-700">₱50 — Membership Plus</p>
                           <p className="text-xs text-slate-500">With inclusions & add-ons</p>
                         </div>
                       </div>
                     </label>
                   </div>
                   <p className="mt-1.5 text-xs text-slate-500">
-                    ₱25 covers Regular Membership; ₱60 covers Membership Plus.
+                    ₱25 covers Regular Membership; ₱50 covers Membership Plus.
                   </p>
                 </div>
 
