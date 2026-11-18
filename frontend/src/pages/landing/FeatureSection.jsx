@@ -42,7 +42,6 @@ const membershipPlans = [
     price: 'P50/semester',
     description: 'This package is optional and available for those who want to be more involved in the chapter.',
     benefits: [
-      'Documentary stamped',
       'Highest priority for limited-slot events',
       'Early access to exclusive events',
       'Exclusive members-only networking channels',
