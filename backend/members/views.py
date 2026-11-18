@@ -113,6 +113,21 @@ class MemberListAPIView(generics.ListCreateAPIView):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
+class PublicMemberStatsAPIView(APIView):
+    """Public, read-only membership counts for the landing page."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        profiles = MemberProfile.objects.all()
+        return Response({
+            'registered_members': profiles.count(),
+            'approved_members': profiles.filter(
+                membership_status=MemberProfile.Status.APPROVED
+            ).count(),
+        })
+
+
 class MemberStatsAPIView(APIView):
     """Aggregate membership stats for the admin dashboard.
 

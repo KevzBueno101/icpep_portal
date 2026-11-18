@@ -7,7 +7,7 @@ import { downloadFile } from '../../utils/download'
 import { formatCategory, getNewestAnnouncementId } from '../../utils/announcementCategories'
 import ImageModal from '../../components/ImageModal'
 import NewBadge from '../../components/NewBadge'
-import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, Stamp, BadgeCheck, Sticker, Plus } from 'lucide-react'
+import { Bell, CreditCard, ArrowRight, UserCheck, Download, Maximize2, Award, BadgeCheck, Sticker, Plus } from 'lucide-react'
 
 
 
@@ -233,7 +233,6 @@ export default function MemberDashboard() {
               </p>
               <ul className="space-y-2">
                 {[
-                  { icon: Stamp, label: 'With Documentary stamped' },
                   { icon: BadgeCheck, label: 'Badge pin' },
                   { icon: Sticker, label: 'Stickers' },
                 ].map((item) => (

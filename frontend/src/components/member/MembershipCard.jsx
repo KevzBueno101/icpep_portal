@@ -277,7 +277,8 @@ function FrontFace({ profile, fullName, yearText, avatarInitial, cacheKey, membe
 
 /* ─── Back face: QR verification ──────────────────────────────────────────── */
 
-function BackFace({ qrPayload, qrImageSrc, onFlip }) {
+function BackFace({ qrPayload, qrImageSrc, onFlip, membershipFee }) {
+  const isPlus = membershipFee === 'PLUS'
   return (
     <div
       style={{
@@ -341,6 +342,23 @@ function BackFace({ qrPayload, qrImageSrc, onFlip }) {
           </div>
         </div>
       </div>
+
+      {isPlus && (
+        <div
+          aria-label="Membership Plus"
+          title="Membership Plus"
+          style={{
+            position: 'absolute', left: 8, top: 8, zIndex: 10,
+            width: 18, height: 18, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,213,255,0.16)', border: '1px solid rgba(0,213,255,0.65)',
+            color: C.cyan, fontFamily: FONT_TECH, fontSize: 13, fontWeight: 700,
+            lineHeight: 1, boxShadow: '0 0 10px rgba(0,213,255,0.35)',
+          }}
+        >
+          +
+        </div>
+      )}
 
       {onFlip && (
         <button

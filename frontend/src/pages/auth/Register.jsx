@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
-import { Info, Plus, Stamp, BadgeCheck, Sticker } from 'lucide-react'
+import { Info, Plus, BadgeCheck, Sticker } from 'lucide-react'
 import ThemeToggle from '../../components/ThemeToggle'
 
 const YEAR_LEVELS = [
@@ -1162,12 +1162,6 @@ const Register = () => {
                 <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-slate-700">
                   <p className="font-semibold text-green-800 mb-2">Membership Plus Inclusions</p>
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
-                        <Stamp className="h-4 w-4" />
-                      </span>
-                      With Documentary stamped
-                    </li>
                     <li className="flex items-center gap-2.5">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
                         <BadgeCheck className="h-4 w-4" />

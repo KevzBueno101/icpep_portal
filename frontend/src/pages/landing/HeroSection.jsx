@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Info } from 'lucide-react'
+import { UsersRound } from 'lucide-react'
 import { startHeroParticles } from './_heroParticles'
 import { publicApi } from '../../api/axios'
 import { registerLogoTap } from '../../utils/logoSecretTaps'
@@ -62,6 +62,7 @@ export default function HeroSection() {
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
   const [realtimeNonce, setRealtimeNonce] = useState(0)
+  const [memberStats, setMemberStats] = useState({ registered_members: 0, approved_members: 0 })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -207,6 +208,22 @@ export default function HeroSection() {
 
   }, [realtimeNonce])
 
+  useEffect(() => {
+    let active = true
+
+    const fetchMemberStats = async () => {
+      try {
+        const res = await publicApi.get('/members/public-stats/')
+        if (active) setMemberStats(res.data)
+      } catch (err) {
+        console.error('Failed to fetch member stats:', err)
+      }
+    }
+
+    fetchMemberStats()
+    return () => { active = false }
+  }, [])
+
   useRealtimeContent(RESOURCES.ANNOUNCEMENTS, () => {
 
     setRealtimeNonce((n) => n + 1)
@@ -256,13 +273,13 @@ export default function HeroSection() {
 
       {/* ── Main Content ── */}
 
-      <div className="relative flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 text-center">
+      <div className="relative flex flex-1 flex-col items-start justify-center px-4 sm:items-center sm:px-6 sm:text-center lg:px-8 py-8 text-left">
 
 
 
         {/* 3 Logos */}
 
-        <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mb-10">
+        <div className="flex items-center justify-start sm:justify-center gap-3 sm:gap-5 md:gap-8 mb-10">
 
           {[
 
@@ -400,7 +417,7 @@ export default function HeroSection() {
 
 
 
-        <p className="hero-after max-w-xl text-base sm:text-lg text-cyan-400 leading-relaxed mb-10">
+        <p className="hero-after max-w-xl text-base sm:text-lg text-cyan-400 leading-relaxed mb-6">
 
           Code Blooded Engineers; Wired for the future
 
@@ -408,15 +425,29 @@ export default function HeroSection() {
 
 
 
-        {/* Membership Notice */}
-        <div className="flex items-center gap-2 mb-4">
-          <Info className="h-4 w-4 text-cyan-400" />
-          <span className="text-sm text-cyan-200/80">The Membership Feature Will Be Available Soon</span>
+        {/* Registered members stat */}
+        <div className="hero-after mb-8 inline-flex items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 backdrop-blur-sm">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300">
+            <UsersRound className="h-4 w-4" />
+          </span>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold leading-none text-white">
+                {memberStats.registered_members.toLocaleString()}
+              </span>
+              <span className="text-[10px] font-medium text-cyan-200/60">
+                {memberStats.approved_members.toLocaleString()} approved
+              </span>
+            </div>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/80">
+              Registered Members
+            </p>
+          </div>
         </div>
 
         {/* CTA Buttons */}
 
-        <div className="hero-after flex flex-col sm:flex-row items-center gap-4 mb-16">
+        <div className="hero-after flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10 sm:mb-16">
 
           <a
 
