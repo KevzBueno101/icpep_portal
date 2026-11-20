@@ -13,20 +13,22 @@ description: Membership application form walkthrough
 
 The multi-part membership application form:
 
-1. **Account info + Payment** — email, username, password, confirm password, privacy agreement, payment method, membership plan, GCash details, proof of payment
-2. **Personal info** — first/middle/last name, sex
-3. **Student info** — student number, course, year level (1–4), section, contact number
-4. **Documents** — profile picture, COE/ID (JPG/PNG/PDF, ≤ 10 MB)
+1. **Payment** — payment method, membership plan, GCash details, proof of payment
+2. **Account info** — email, username, password, confirm password (with live availability checks)
+3. **Personal info** — first/middle/last name, sex
+4. **Student info** — student number, course, year level (1–4), section, contact number
+5. **Documents + agreement** — profile picture, COE/ID (JPG/PNG/PDF, ≤ 10 MB), and the "I agree to the Privacy Policy" checkbox at the very end
 
 ## How to move around
 
 | Step | Instruction |
 |---|---|
-| 1 | Fill account + payment details; the form validates live (email/username availability, password ≥ 8 chars, payment proof) |
-| 2 | Fill personal info including sex |
-| 3 | Fill student info (student number format `XXXX-XXXXX`, contact `09...`) |
-| 4 | Upload profile picture and COE/ID (each ≤ 10 MB) |
-| Submit | Agree to the privacy policy, `POST /api/auth/register/`, redirect to `/membership-pending` |
+| 1 | Choose a payment method / membership plan and upload proof of payment |
+| 2 | Fill account info (email/username availability, password ≥ 8 chars) |
+| 3 | Fill personal info including sex |
+| 4 | Fill student info (student number format `XXXX-XXXXX`, contact `09...`) |
+| 5 | Upload profile picture and COE/ID (each ≤ 10 MB), then agree to the Privacy Policy |
+| Submit | `POST /api/auth/register/`, redirect to `/membership-pending` |
 
 ## Key API calls
 
