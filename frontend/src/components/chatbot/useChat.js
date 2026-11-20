@@ -72,7 +72,7 @@ function chatReducer(state, action) {
   }
 }
 
-export function useChat() {
+export function useChat({ public: isPublic = false } = {}) {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadInitialState)
   const abortControllerRef = useRef(null)
   const retryTimeoutRef = useRef(null)
@@ -111,7 +111,7 @@ export function useChat() {
     abortControllerRef.current = new AbortController()
 
     try {
-      const response = await chatbotAPI.sendMessage(message.trim(), state.sessionId)
+      const response = await chatbotAPI.sendMessage(message.trim(), state.sessionId, { public: isPublic })
 
       if (response.data.response) {
         dispatch({ type: 'ADD_BOT_MESSAGE', payload: response.data.response })
@@ -163,7 +163,7 @@ export function useChat() {
         payload: { message: errorMessage, detail, retryAfter },
       })
     }
-  }, [state.sessionId, state.isLoading])
+  }, [state.sessionId, state.isLoading, isPublic])
 
   const retry = useCallback(() => {
     if (state.messages.length === 0) return

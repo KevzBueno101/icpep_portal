@@ -66,6 +66,8 @@ class ChatAPIView(APIView):
 
         # Check access level (block RESTRICTED)
         user = request.user
+        # Anonymous visitors have no .email attribute — use a safe label for logs.
+        user_label = getattr(user, 'email', None) or 'guest'
         if getattr(user, 'access_level', 'FULL_CONTROL') == 'RESTRICTED':
             return Response(
                 ChatErrorSerializer({'error': 'Chatbot access restricted for your account'}).data,
@@ -97,7 +99,7 @@ class ChatAPIView(APIView):
 
             # Log token usage (for monitoring)
             tokens_estimated = self.groq_client.count_tokens(context + message + response_text)
-            logger.info(f'Chatbot: user={user.email} session={session_id} tokens~={tokens_estimated}')
+            logger.info(f'Chatbot: user={user_label} session={session_id} tokens~={tokens_estimated}')
 
             return Response(ChatResponseSerializer({
                 'response': response_text,
@@ -113,7 +115,7 @@ class ChatAPIView(APIView):
             )
 
         except groq.RateLimitError as e:
-            logger.exception(f'Chatbot rate limit for user={user.email}: {e}')
+            logger.exception(f'Chatbot rate limit for user={user_label}: {e}')
             return Response(
                 ChatErrorSerializer({
                     'error': 'Rate limit exceeded. Please try again later.',
@@ -124,7 +126,7 @@ class ChatAPIView(APIView):
             )
 
         except (groq.APIConnectionError, groq.APITimeoutError) as e:
-            logger.exception(f'Chatbot connection error for user={user.email}: {e}')
+            logger.exception(f'Chatbot connection error for user={user_label}: {e}')
             return Response(
                 ChatErrorSerializer({
                     'error': 'Failed to generate response. Please try again.',
@@ -134,7 +136,7 @@ class ChatAPIView(APIView):
             )
 
         except groq.APIStatusError as e:
-            logger.exception(f'Chatbot API error for user={user.email}: {e}')
+            logger.exception(f'Chatbot API error for user={user_label}: {e}')
             return Response(
                 ChatErrorSerializer({
                     'error': 'Failed to generate response. Please try again.',
@@ -144,7 +146,7 @@ class ChatAPIView(APIView):
             )
 
         except Exception as e:
-            logger.exception(f'Chatbot error for user={user.email}: {e}')
+            logger.exception(f'Chatbot error for user={user_label}: {e}')
             error_msg = str(e)
 
             if '404' in error_msg or 'not found' in error_msg.lower() or 'not supported' in error_msg.lower():

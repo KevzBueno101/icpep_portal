@@ -40,7 +40,7 @@ export default function ChatWidget({ variant = 'member' }) {
     retry,
     clearError,
     clearChat,
-  } = useChat()
+  } = useChat({ public: isPublic })
 
   // Scroll to bottom when messages change
   useEffect(() => {
