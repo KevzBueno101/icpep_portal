@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Mail } from 'lucide-react'
 import PrivacyPolicyModal from './PrivacyPolicyModal'
 import DevCommitteeModal from './DevCommitteeModal'
+import { APP_VERSION } from '../utils/appVersion'
 
 function FacebookIcon({ className }) {
   return (
@@ -105,6 +106,7 @@ export default function Footer() {
               DevCommittee
             </button>
             {' '}| ICpEP.SE CatSU @2026</p>
+          <p className="mt-1 text-xs text-slate-500">Version {APP_VERSION}</p>
         </div>
       </div>
 
