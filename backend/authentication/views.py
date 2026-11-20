@@ -51,7 +51,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         user_by_identifier = find_user_by_login(identifier)
         if user_by_identifier is None:
-            raise serializers.ValidationError('No account found with this email or username.')
+            raise serializers.ValidationError('Account not found.')
 
         user = authenticate(
             request=self.context.get('request'),

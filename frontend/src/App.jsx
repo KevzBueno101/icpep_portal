@@ -133,7 +133,7 @@ function App() {
           <Route
             path="/admin/membership"
             element={
-              <AdminProtectedRoute>
+              <AdminProtectedRoute requiresMembership>
                 <AdminLayout>
                   <AdminMembership />
                 </AdminLayout>
@@ -153,7 +153,7 @@ function App() {
           <Route
             path="/admin/membership/:id/verify"
             element={
-              <AdminProtectedRoute>
+              <AdminProtectedRoute requiresMembership>
                 <AdminLayout>
                   <AdminMembershipVerify />
                 </AdminLayout>

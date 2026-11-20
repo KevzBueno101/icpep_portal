@@ -4,6 +4,7 @@ from datetime import date
 from django.core.management.base import BaseCommand
 
 from members.models import MemberProfile, PaymentTransaction
+from members.receipt_generator import FIRST_REF_SEQUENCE
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +22,8 @@ def generate_ref_number():
     last_txn = PaymentTransaction.objects.filter(
         reference_number__startswith=prefix
     ).order_by('-reference_number').first()
-    if last_txn:
-        last_seq = int(last_txn.reference_number.split('-')[-1])
-        next_seq = last_seq + 1
-    else:
-        next_seq = 1
+    last_seq = int(last_txn.reference_number.split('-')[-1]) if last_txn else 0
+    next_seq = max(last_seq + 1, FIRST_REF_SEQUENCE)
     return f"{prefix}{next_seq:04d}"
 
 

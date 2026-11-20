@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   const [gcashSaving, setGcashSaving] = useState(false)
 
   const canManageRoles = !!user?.can_manage_roles
+  const isRestricted = user?.access_level === 'RESTRICTED'
 
   useEffect(() => {
     const loadData = async () => {
@@ -48,8 +49,17 @@ const AdminDashboard = () => {
           setAdmins([])
         }
 
-        const statsRes = await api.get('/members/stats/')
-        setMemberStats(statsRes.data || null)
+        // RESTRICTED admins cannot view member data; skip the request entirely.
+        if (!isRestricted) {
+          try {
+            const statsRes = await api.get('/members/stats/')
+            setMemberStats(statsRes.data || null)
+          } catch (e) {
+            setMemberStats(null)
+          }
+        } else {
+          setMemberStats(null)
+        }
 
         try {
           const adminLoginRes = await api.get('/users/admin-login-stats/')
@@ -69,7 +79,7 @@ const AdminDashboard = () => {
     if (user) {
       loadData()
     }
-  }, [canManageRoles, user, realtimeNonce])
+  }, [canManageRoles, isRestricted, user, realtimeNonce])
 
   useRealtimeContent(
     [RESOURCES.MEMBERS, RESOURCES.PAYMENT_SETTINGS, RESOURCES.ADMINS, RESOURCES.OFFICERS],
@@ -145,14 +155,19 @@ const AdminDashboard = () => {
     )
   }
 
-  const kpiCards = [
+  const memberKpiCards = [
     { icon: Clock, color: 'amber', label: 'Pending approvals', value: totalPending, sub: 'Members awaiting approval.' },
     { icon: UserCheck, color: 'green', label: 'Approved members', value: totalApproved, sub: 'Active members in the system.' },
-    { icon: Shield, color: 'sky', label: 'Admin accounts', value: totalAdmins, sub: 'Total admin users in the system.' },
     { icon: Users, color: 'slate', label: 'Total Members', value: totalMembers, sub: 'All registered members in the system.' },
     { icon: UserX, color: 'red', label: 'Rejected members', value: totalRejected, sub: 'Members with rejected applications.' },
     { icon: TrendingUp, color: 'purple', label: 'Expired members', value: totalExpired, sub: 'Members with expired memberships.' },
   ]
+  const kpiCards = isRestricted
+    ? [{ icon: Shield, color: 'sky', label: 'Admin accounts', value: totalAdmins, sub: 'Total admin users in the system.' }]
+    : [
+        ...memberKpiCards,
+        { icon: Shield, color: 'sky', label: 'Admin accounts', value: totalAdmins, sub: 'Total admin users in the system.' },
+      ]
 
   const colorMap = {
     amber: 'bg-amber-100 text-amber-600',
@@ -208,7 +223,8 @@ const AdminDashboard = () => {
 
       {/* Charts: 3 side-by-side on large screens */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        {/* Member logins */}
+        {/* Member logins — hidden for RESTRICTED admins (member data) */}
+        {!isRestricted && (
         <div className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/80 p-3 shadow-sm backdrop-blur sm:p-4">
           <h3 className="mb-3 text-sm font-semibold text-slate-900 sm:text-base">Member Logins — Last 30 Days</h3>
           <div className="h-[220px] sm:h-[240px]">
@@ -230,6 +246,7 @@ const AdminDashboard = () => {
             {hasLoginActivity ? 'Distinct members who logged in per day (last 30 days).' : 'Login tracking starts from the feature launch date.'}
           </p>
         </div>
+        )}
 
         {/* Admin logins */}
         <div className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/80 p-3 shadow-sm backdrop-blur sm:p-4">
@@ -254,7 +271,8 @@ const AdminDashboard = () => {
           </p>
         </div>
 
-        {/* Status distribution */}
+        {/* Status distribution — hidden for RESTRICTED admins (member data) */}
+        {!isRestricted && (
         <div className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/80 p-3 shadow-sm backdrop-blur sm:p-4">
           <h3 className="mb-3 text-sm font-semibold text-slate-900 sm:text-base">Membership Status</h3>
           {(() => {
@@ -302,6 +320,7 @@ const AdminDashboard = () => {
             )
           })()}
         </div>
+        )}
       </div>
 
       {/* Leadership Board (full width) */}

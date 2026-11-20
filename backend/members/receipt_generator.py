@@ -4,6 +4,9 @@ import os
 from django.conf import settings
 from PIL import Image, ImageDraw, ImageFont
 
+# First receipt sequence number used for each new year's ICPEP-{year}- series.
+FIRST_REF_SEQUENCE = 1152
+
 
 def _get_font(size, bold=False):
     """Try to load a Courier (monospace) TTF font; fall back to default bitmap font."""

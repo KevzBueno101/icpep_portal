@@ -1,6 +1,6 @@
 ---
 title: Screen — Admin Dashboard
-description: Admin analytics, role management, GCash settings, and officer creation
+description: Admin analytics, leadership board, and GCash payment settings
 ---
 
 # Admin Dashboard (`/admin/dashboard`)
@@ -12,28 +12,27 @@ description: Admin analytics, role management, GCash settings, and officer creat
 ## What it shows
 
 - **Stat cards** — admins, pending / approved / rejected / expired / total members, your role
-- **Charts** (Recharts) — membership growth line chart + membership status pie chart
-- **GCash settings** editor (President/Treasurer or full-control)
-- **Role / position assignment** controls
-- **Create officer account** (President only)
+- **Charts** (Recharts) — member logins + admin logins (last 30 days) and membership status distribution
+- **Leadership board** — full-width student officers carousel
+- **GCash settings** editor at the bottom (President/Treasurer or full-control)
+
+Role management and officer creation are handled in the **Admins** page, not here.
 
 ## How to move around
 
 | Action | Result |
 |---|---|
-| Manage members | Links to `/admin/membership` |
+| Manage members | Links to `/admin/membership` (not shown for RESTRICTED) |
 | Verify a pending member | Opens `/admin/membership/:id/verify` |
 | Edit GCash settings | `PATCH /api/members/payment-settings/` |
-| Assign role / position | `POST /api/users/admins/<id>/assign-role/` |
-| Create officer | `POST /api/users/admins/create/` (President only) |
-| Approve/reject member | `POST /api/members/<id>/approve/` |
 
 ## Permission gating
 
 | Capability | Who |
 |---|---|
-| `canManageRoles` | GCash settings + role/position + officer creation |
+| `canManageRoles` | GCash settings editing |
 | `canApproveMembers` | PRESIDENT / SECRETARY |
+| `RESTRICTED` access | Member stat cards, member-login chart and membership-status chart are hidden; GCash settings are read-only |
 | President-only positions | `PRESIDENT`, `TREASURER`, `SECRETARY`, `NONE` |
 
 ## Key API calls
@@ -41,9 +40,9 @@ description: Admin analytics, role management, GCash settings, and officer creat
 | Endpoint | Use |
 |---|---|
 | `GET /api/audit-logs/stats/` (via sidebar) | Unread logs badge |
-| `GET /api/members/` | Member counts |
-| `PATCH /api/members/payment-settings/` | GCash settings |
-| `POST /api/users/admins/create/` | Officer creation |
+| `GET /api/members/stats/` | Member counts and login activity (skipped for RESTRICTED) |
+| `GET /api/users/admin-login-stats/` | Admin login activity |
+| `GET/PATCH /api/members/payment-settings/` | GCash settings |
 
 ## Notes
 

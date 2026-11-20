@@ -259,7 +259,7 @@ class AdminLoginSerializer(serializers.Serializer):
 
         identifier_user = find_user_by_login(identifier)
         if identifier_user is None:
-            raise serializers.ValidationError('No account found with this email or username.')
+            raise serializers.ValidationError('Account not found.')
 
         user = authenticate(email=identifier, password=password)
 

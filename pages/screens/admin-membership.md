@@ -33,7 +33,10 @@ The member management table:
 
 ## Permission gating
 
-`isRestricted` (access_level = RESTRICTED) admins are blocked from destructive actions.
+Only **FULL_CONTROL** and **MEMBERSHIP** admins can view member data. `RESTRICTED` admins cannot
+open this page (the sidebar link is hidden and the route redirects to the dashboard), and the API
+returns an empty member list / `403` on member detail. Inside the page, `isRestricted` admins are
+also blocked from destructive actions.
 
 ## Key API calls
 

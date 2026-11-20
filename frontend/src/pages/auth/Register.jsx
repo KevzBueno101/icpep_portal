@@ -5,6 +5,7 @@ import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { Info, Plus, BadgeCheck, Sticker } from 'lucide-react'
 import ThemeToggle from '../../components/ThemeToggle'
+import { PrivacyPolicySections } from '../../components/PrivacyPolicyModal'
 
 const YEAR_LEVELS = [
   { value: '1', label: '1st Year' },
@@ -267,7 +268,9 @@ const Register = () => {
         form.password.length >= 8 &&
         hasValue(form.confirm_password) &&
         form.password === form.confirm_password &&
-        agreedToPrivacy
+        agreedToPrivacy &&
+        hasValue(form.payment_method) &&
+        isFile(form.payment_proof_image)
       )
     }
 
@@ -286,10 +289,6 @@ const Register = () => {
 
     if (stepNumber === 4) {
       return isFile(form.profile_picture) && isFile(form.coe_id_image)
-    }
-
-    if (stepNumber === 5) {
-      return hasValue(form.payment_method) && isFile(form.payment_proof_image)
     }
 
     return true
@@ -313,8 +312,10 @@ const Register = () => {
         toast.error('Password must be at least 8 characters.')
       } else if (!agreedToPrivacy) {
         toast.error('Please agree to the Privacy Policy before continuing.')
-      } else {
+      } else if (form.password !== form.confirm_password) {
         toast.error('Passwords do not match.')
+      } else if (!hasValue(form.payment_method) || !isFile(form.payment_proof_image)) {
+        toast.error('Please choose a payment method and upload your proof of payment.')
       }
     } else if (stepNumber === 2) {
       toast.error('Please complete your first name, last name, and sex.')
@@ -328,8 +329,6 @@ const Register = () => {
       }
     } else if (stepNumber === 4) {
       toast.error('Please upload your profile picture and COE / School ID.')
-    } else if (stepNumber === 5) {
-      toast.error('Please upload your proof of payment.')
     }
 
     return false
@@ -560,7 +559,7 @@ const Register = () => {
       return
     }
     
-    setStep((prev) => Math.min(prev + 1, 5))
+    setStep((prev) => Math.min(prev + 1, 4))
   }
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 1))
 
@@ -584,7 +583,7 @@ const Register = () => {
       return
     }
 
-    if (![1, 2, 3, 4, 5].every(validateStep)) {
+    if (![1, 2, 3, 4].every(validateStep)) {
       return
     }
 
@@ -674,11 +673,11 @@ const Register = () => {
         </div>
 
         <div className="mb-6 space-y-2">
-          <p className="text-sm text-slate-500 dark:text-slate-400">Step {step} of 5</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Step {step} of 4</p>
           <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
             <div
               className="h-2 rounded-full bg-sky-600 transition-all duration-300"
-              style={{ width: `${(step / 5) * 100}%` }}
+              style={{ width: `${(step / 4) * 100}%` }}
             />
           </div>
         </div>
@@ -965,7 +964,8 @@ const Register = () => {
             </div>
           )}
 
-          {step === 5 && (
+          {/* Payment details now live on Step 1 with the account info */}
+          {step === 1 && (
             <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-xs text-slate-500 uppercase tracking-widest">Payment Details</p>
@@ -1189,7 +1189,7 @@ const Register = () => {
             >
               Back
             </button>
-            {step < 5 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={handleNext}
@@ -1252,6 +1252,7 @@ const Register = () => {
                   By clicking &ldquo;I agree&rdquo;, you confirm that you have read and understood this Privacy
                   Policy and consent to the collection and use of your data as described.
                 </p>
+                <PrivacyPolicySections />
               </div>
               <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
                 <button
