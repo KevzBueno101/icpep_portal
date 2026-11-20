@@ -48,6 +48,7 @@ import MemberAbout from './pages/member/MemberAbout'
 import MemberProfile from './pages/member/MemberProfile'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
 import UpdateNotice from './components/UpdateNotice'
+import VersionUpdateModal from './components/VersionUpdateModal'
 import NewAnnouncementToast from './components/NewAnnouncementToast'
 import FeedbackButton from './components/FeedbackButton'
 import ReportBugButton from './components/ReportBugButton'
@@ -70,6 +71,7 @@ function App() {
         />
         <PWAInstallPrompt />
         <UpdateNotice />
+        <VersionUpdateModal />
         <NewAnnouncementToast />
         <ReportBugButton />
         <FeedbackButton />
