@@ -41,6 +41,12 @@ This guide is written for the **next generation** who will take over the ICPEP P
 - Frontend: `npm install` in `frontend/`; keep ESLint at 0 errors and Ruff at 0.
 - Run `cd frontend && npm run test` and `cd backend && python manage.py test` before pushing.
 
+### Feature releases / version popup
+- Every pushed feature update should bump `APP_VERSION` in `frontend/src/utils/appVersion.js` and
+  update `RELEASE_NOTES`.
+- Returning users then see the **VersionUpdateModal** once for that version, with a close (X) button;
+  the version is remembered in `localStorage` so it does not reappear until the next bump.
+
 ## 3. Year-end transition (once per academic year)
 
 1. Announce the transition to members.

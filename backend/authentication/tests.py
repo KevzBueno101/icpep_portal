@@ -412,14 +412,14 @@ class LoginWithEmailOrUsernameTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_member_login_unknown_identifier_reports_email_or_username(self):
+    def test_member_login_unknown_identifier_reports_account_not_found(self):
         response = self.client.post('/api/auth/login/', {
             'email': 'does-not-exist',
             'password': 'Password123',
         }, format='json')
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('email or username', str(response.data).lower())
+        self.assertIn('account not found', str(response.data).lower())
 
     def test_member_login_wrong_password_via_username(self):
         self._make_member()
@@ -458,7 +458,7 @@ class LoginWithEmailOrUsernameTests(APITestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, 401)
-        self.assertIn('email or username', str(response.data).lower())
+        self.assertIn('account not found', str(response.data).lower())
 
     def test_admin_cannot_use_member_login_via_username(self):
         self._make_admin()

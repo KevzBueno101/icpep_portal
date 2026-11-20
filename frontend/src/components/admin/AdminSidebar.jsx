@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard',         to: '/admin/dashboard',         icon: LayoutDashboard },
   { label: 'Announcement',      to: '/admin/announcement',       icon: Megaphone },
   { label: 'About Orgs',        to: '/admin/about',              icon: BookOpen },
-  { label: 'Members',           to: '/admin/membership',         icon: Users },
+  { label: 'Members',           to: '/admin/membership',         icon: Users, requiresMembership: true },
   { label: 'Generate Certificate', to: '/admin/certificates',    icon: Award, requiresMembership: true },
   { label: 'Admins',            to: '/admin/admins',             icon: UserCog },
   { label: 'Officers Roster',   to: '/admin/officers-accounts',  icon: UsersRound },

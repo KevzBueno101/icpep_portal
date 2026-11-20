@@ -65,13 +65,15 @@ ADMIN --> OFFICER --> MEMBER
 
 ## Permission Matrix
 
-| Access Level | Members CRUD | Announcements CRUD | Achievements CRUD | Admins CRUD | Own Profile |
+| Access Level | Members (read + CRUD) | Announcements CRUD | Achievements CRUD | Admins CRUD | Own Profile |
 |---|---|---|---|---|---|
 | **FULL_CONTROL** | Yes | Yes | Yes | Yes | Yes |
 | **MEMBERSHIP** | Yes | Yes | Yes | No | Yes |
 | **RESTRICTED** | No | No | No | No | Yes |
 
 > **Note**: The **President** position always has FULL_CONTROL regardless of their `access_level` field.
+> **RESTRICTED** accounts cannot view member data at all: `/api/members/` returns no members and
+> `/api/members/<id>/` returns `403`. Only **FULL_CONTROL** and **MEMBERSHIP** can read member data.
 
 ## Data Flow: Registration → Approval → Receipt
 

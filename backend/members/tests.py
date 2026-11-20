@@ -5,7 +5,8 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from authentication.models import LoginEvent
-from members.models import MemberProfile
+from members.models import MemberProfile, PaymentTransaction
+from members.views import generate_ref_number
 
 User = get_user_model()
 
@@ -204,3 +205,121 @@ class MemberProfileUpdateTests(APITestCase):
             f'/api/members/{self.profile.id}/', {'username': ''}, format='json'
         )
         self.assertEqual(resp.status_code, 400)
+
+
+class ReceiptNumberTests(APITestCase):
+    def test_first_reference_number_starts_at_1152(self):
+        self.assertEqual(
+            generate_ref_number(),
+            f"ICPEP-{date.today().year}-1152",
+        )
+
+    def test_reference_number_continues_from_last_transaction(self):
+        owner = _make_user('receipt@example.com')
+        profile = MemberProfile.objects.create(
+            user=owner,
+            first_name='Receipt',
+            last_name='Owner',
+            student_number='RECEIPT-1',
+            course='BSCS',
+            year_level='1',
+            section='A',
+            contact_number='09170000000',
+        )
+        prefix = f"ICPEP-{date.today().year}-"
+        PaymentTransaction.objects.create(
+            member=profile,
+            transaction_type=PaymentTransaction.Type.REGISTRATION,
+            payment_method=PaymentTransaction.PaymentMethod.GCASH,
+            status=PaymentTransaction.Status.VERIFIED,
+            reference_number=f'{prefix}1160',
+        )
+        self.assertEqual(generate_ref_number(), f'{prefix}1161')
+
+
+class MemberHardDeleteTests(APITestCase):
+    def setUp(self):
+        self.admin = _make_user('admin@example.com', role='ADMIN', position='PRESIDENT')
+        self.client.force_authenticate(self.admin)
+        self.member = _make_user('deleted@example.com')
+        self.profile = MemberProfile.objects.create(
+            user=self.member,
+            first_name='Deleted',
+            last_name='Member',
+            student_number='DELETED-1',
+            course='BSCS',
+            year_level='1',
+            section='A',
+            contact_number='09170000000',
+        )
+
+    def test_admin_delete_removes_user_and_login_reports_account_not_found(self):
+        resp = self.client.delete(f'/api/members/{self.profile.id}/')
+        self.assertEqual(resp.status_code, 204, resp.data)
+        self.assertFalse(MemberProfile.objects.filter(pk=self.profile.pk).exists())
+        self.assertFalse(User.objects.filter(pk=self.member.pk).exists())
+
+        self.client.force_authenticate(None)
+        login = self.client.post('/api/auth/login/', {
+            'email': 'deleted@example.com',
+            'password': 'Password123',
+        }, format='json')
+        self.assertEqual(login.status_code, 400)
+        self.assertIn('account not found', str(login.data).lower())
+
+
+class RestrictedAdminMemberAccessTests(APITestCase):
+    """RESTRICTED admins must not be able to read member data at all."""
+
+    def setUp(self):
+        self.member_user = _make_user('member@example.com')
+        self.profile = MemberProfile.objects.create(
+            user=self.member_user,
+            first_name='Visible',
+            last_name='Member',
+            student_number='VISIBLE-1',
+            course='BSCS',
+            year_level='1',
+            section='A',
+            contact_number='09170000000',
+        )
+
+    def _admin(self, email, access_level):
+        return _make_user(email, role='ADMIN', position='TREASURER', access_level=access_level)
+
+    def test_restricted_admin_sees_no_members_in_list(self):
+        self.client.force_authenticate(self._admin('restricted@example.com', 'RESTRICTED'))
+        res = self.client.get('/api/members/')
+        self.assertEqual(res.status_code, 200)
+        results = res.data.get('results', res.data)
+        self.assertEqual(results, [])
+
+    def test_restricted_admin_cannot_retrieve_member_detail(self):
+        self.client.force_authenticate(self._admin('restricted@example.com', 'RESTRICTED'))
+        res = self.client.get(f'/api/members/{self.profile.id}/')
+        self.assertEqual(res.status_code, 403)
+
+    def test_membership_admin_can_read_member_data(self):
+        self.client.force_authenticate(self._admin('membership@example.com', 'MEMBERSHIP'))
+        res = self.client.get('/api/members/')
+        self.assertEqual(res.status_code, 200)
+        results = res.data.get('results', res.data)
+        self.assertTrue(any(row['id'] == self.profile.id for row in results))
+
+        res = self.client.get(f'/api/members/{self.profile.id}/')
+        self.assertEqual(res.status_code, 200)
+
+    def test_full_control_admin_can_read_member_data(self):
+        self.client.force_authenticate(self._admin('full@example.com', 'FULL_CONTROL'))
+        res = self.client.get('/api/members/')
+        self.assertEqual(res.status_code, 200)
+        results = res.data.get('results', res.data)
+        self.assertTrue(any(row['id'] == self.profile.id for row in results))
+
+        res = self.client.get(f'/api/members/{self.profile.id}/')
+        self.assertEqual(res.status_code, 200)
+
+    def test_member_can_still_read_own_profile(self):
+        self.client.force_authenticate(self.member_user)
+        res = self.client.get(f'/api/members/{self.profile.id}/')
+        self.assertEqual(res.status_code, 200)

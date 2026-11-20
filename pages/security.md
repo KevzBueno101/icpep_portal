@@ -45,13 +45,15 @@ ADMIN → OFFICER → MEMBER
 
 ### Permission matrix
 
-| Access Level | Members CRUD | Announcements CRUD | Achievements CRUD | Admins CRUD | Own Profile |
+| Access Level | Members (read + CRUD) | Announcements CRUD | Achievements CRUD | Admins CRUD | Own Profile |
 |---|---|---|---|---|---|
 | **FULL_CONTROL** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **MEMBERSHIP** | ✅ | ✅ | ✅ | ❌ | ✅ |
 | **RESTRICTED** | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 > **President** always has `FULL_CONTROL` regardless of its `access_level` field.
+> **RESTRICTED** accounts cannot read member data: the member list is empty and member detail
+> returns `403`. Only **FULL_CONTROL** and **MEMBERSHIP** can view member records.
 
 ### Position-based capabilities (`users.User` properties)
 

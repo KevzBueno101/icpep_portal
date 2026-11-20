@@ -5,6 +5,7 @@ import { publicApi } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { Info, Plus, BadgeCheck, Sticker } from 'lucide-react'
 import ThemeToggle from '../../components/ThemeToggle'
+import { PrivacyPolicySections } from '../../components/PrivacyPolicyModal'
 
 const YEAR_LEVELS = [
   { value: '1', label: '1st Year' },
@@ -255,7 +256,13 @@ const Register = () => {
   }
 
   const isStepComplete = (stepNumber) => {
+    // Step 1 — Payment Details
     if (stepNumber === 1) {
+      return hasValue(form.payment_method) && isFile(form.payment_proof_image)
+    }
+
+    // Step 2 — Account Info
+    if (stepNumber === 2) {
       return (
         hasValue(form.email) &&
         isValidEmail(form.email) &&
@@ -266,16 +273,17 @@ const Register = () => {
         !checkingAvailability.username &&
         form.password.length >= 8 &&
         hasValue(form.confirm_password) &&
-        form.password === form.confirm_password &&
-        agreedToPrivacy
+        form.password === form.confirm_password
       )
     }
 
-    if (stepNumber === 2) {
+    // Step 3 — Personal Info
+    if (stepNumber === 3) {
       return hasValue(form.first_name) && hasValue(form.last_name) && hasValue(form.sex)
     }
 
-    if (stepNumber === 3) {
+    // Step 4 — Student Info
+    if (stepNumber === 4) {
       return (
         isValidStudentNumber(form.student_number) &&
         /^09\d{9}$/.test(form.contact_number) &&
@@ -284,12 +292,9 @@ const Register = () => {
       )
     }
 
-    if (stepNumber === 4) {
-      return isFile(form.profile_picture) && isFile(form.coe_id_image)
-    }
-
+    // Step 5 — Documents + Privacy agreement
     if (stepNumber === 5) {
-      return hasValue(form.payment_method) && isFile(form.payment_proof_image)
+      return isFile(form.profile_picture) && isFile(form.coe_id_image) && agreedToPrivacy
     }
 
     return true
@@ -301,6 +306,10 @@ const Register = () => {
     }
 
     if (stepNumber === 1) {
+      if (!hasValue(form.payment_method) || !isFile(form.payment_proof_image)) {
+        toast.error('Please choose a payment method and upload your proof of payment.')
+      }
+    } else if (stepNumber === 2) {
       if (!hasValue(form.email) || !hasValue(form.username) || !hasValue(form.password) || !hasValue(form.confirm_password)) {
         toast.error('Please complete all account info fields.')
       } else if (!isValidEmail(form.email)) {
@@ -311,14 +320,12 @@ const Register = () => {
         toast.error('Please wait while we check email and username availability.')
       } else if (form.password.length < 8) {
         toast.error('Password must be at least 8 characters.')
-      } else if (!agreedToPrivacy) {
-        toast.error('Please agree to the Privacy Policy before continuing.')
-      } else {
+      } else if (form.password !== form.confirm_password) {
         toast.error('Passwords do not match.')
       }
-    } else if (stepNumber === 2) {
-      toast.error('Please complete your first name, last name, and sex.')
     } else if (stepNumber === 3) {
+      toast.error('Please complete your first name, last name, and sex.')
+    } else if (stepNumber === 4) {
       if (!isValidStudentNumber(form.student_number)) {
         toast.error('Student number must have at least 5 digits.')
       } else if (!/^09\d{9}$/.test(form.contact_number)) {
@@ -326,10 +333,12 @@ const Register = () => {
       } else {
         toast.error('Please complete all student info fields.')
       }
-    } else if (stepNumber === 4) {
-      toast.error('Please upload your profile picture and COE / School ID.')
     } else if (stepNumber === 5) {
-      toast.error('Please upload your proof of payment.')
+      if (!isFile(form.profile_picture) || !isFile(form.coe_id_image)) {
+        toast.error('Please upload your profile picture and COE / School ID.')
+      } else if (!agreedToPrivacy) {
+        toast.error('Please agree to the Privacy Policy before submitting.')
+      }
     }
 
     return false
@@ -684,288 +693,8 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Step 1 — Payment Details */}
           {step === 1 && (
-            <div className="space-y-5">
-              <p className="text-xs text-slate-500 uppercase tracking-widest">Account Info</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="you@email.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  error={emailError}
-                  info={checkingAvailability.email ? 'Checking email availability...' : ''}
-                />
-                <Field
-                  label="Username"
-                  name="username"
-                  placeholder="username"
-                  value={form.username}
-                  onChange={handleChange}
-                  error={usernameError}
-                  info={checkingAvailability.username ? 'Checking username availability...' : ''}
-                />
-                <PasswordField
-                  label="Password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  show={showPassword}
-                  onToggle={() => setShowPassword((prev) => !prev)}
-                  error={passwordError}
-                />
-                <PasswordField
-                  label="Confirm Password"
-                  name="confirm_password"
-                  value={form.confirm_password}
-                  onChange={handleChange}
-                  show={showConfirmPassword}
-                  onToggle={() => setShowConfirmPassword((prev) => !prev)}
-                  error={confirmPasswordError}
-                />
-              </div>
-
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <label className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={agreedToPrivacy}
-                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  <div className="text-sm text-slate-700">
-                    <span>I agree to the </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowPrivacyPolicy(true)}
-                      className="font-semibold text-sky-600 hover:underline"
-                    >
-                      Privacy Policy
-                    </button>
-                    <span> and terms.</span>
-                  </div>
-                </label>
-                {!agreedToPrivacy && (
-                  <p className="mt-2 text-xs text-red-500">You must agree before continuing.</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-5">
-              <p className="text-xs text-slate-500 uppercase tracking-widest">Personal Info</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Field label="First Name" name="first_name" placeholder="Juan" value={form.first_name} onChange={handleChange} />
-                <Field label="Middle Name" name="middle_name" placeholder="(optional)" value={form.middle_name} onChange={handleChange} required={false} />
-                <Field label="Last Name" name="last_name" placeholder="Dela Cruz" value={form.last_name} onChange={handleChange} />
-              </div>
-              <div className="max-w-xs">
-                <label className="block text-sm text-slate-600 mb-1">Sex</label>
-                <select
-                  name="sex"
-                  value={form.sex}
-                  onChange={handleChange}
-                  required
-                  className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
-                >
-                  <option value="">Select sex</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-5">
-              <p className="text-xs text-slate-500 uppercase tracking-widest">Student Info</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field
-                  label="Student Number"
-                  name="student_number"
-                  placeholder="2024-73359"
-                  value={form.student_number}
-                  onChange={handleStudentNumberChange}
-                  onKeyDown={handleStudentNumberKeyDown}
-                  inputMode="numeric"
-                  error={errors.student_number}
-                />
-                <Field label="Contact Number" name="contact_number" placeholder="09123456789" value={form.contact_number} onChange={handleContactNumberChange} error={errors.contact_number} />
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">Course</label>
-                  <input
-                    name="course"
-                    type="text"
-                    value="BSCpE"
-                    disabled
-                    className="w-full bg-slate-100 text-slate-500 rounded-lg px-4 py-3 text-sm cursor-not-allowed ring-1 ring-slate-200"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">Year Level</label>
-                  <select
-                    name="year_level"
-                    value={form.year_level}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
-                  >
-                    <option value="">Select year</option>
-                    {YEAR_LEVELS.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
-                  </select>
-                </div>
-                <div className="relative" ref={sectionFieldRef}>
-                  <label className="flex items-center gap-1 text-sm text-slate-600 mb-1">
-                    Section/Block
-                    <button
-                      type="button"
-                      onClick={() => setShowSectionSuggestions((prev) => !prev)}
-                      className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200"
-                      aria-label="Section suggestions"
-                    >
-                      <Info className="h-3 w-3" />
-                    </button>
-                  </label>
-                  <input
-                    name="section"
-                    placeholder="A"
-                    value={form.section}
-                    onChange={handleChange}
-                    onFocus={() => setShowSectionSuggestions(true)}
-                    className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
-                  />
-                  {showSectionSuggestions && (
-                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                      <p className="mb-2 text-xs font-medium text-slate-500">Suggested sections</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {SECTION_SUGGESTIONS.map((section) => (
-                          <button
-                            key={section}
-                            type="button"
-                            onClick={() => {
-                              setForm({ ...form, section })
-                              setShowSectionSuggestions(false)
-                            }}
-                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                              form.section === section
-                                ? 'border-sky-500 bg-sky-50 text-sky-700'
-                                : 'border-slate-200 text-slate-700 hover:border-sky-400 hover:bg-sky-50'
-                            }`}
-                          >
-                            {section}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-5">
-              <p className="text-xs text-slate-500 uppercase tracking-widest">Document Uploads</p>
-              
-              <div className="space-y-3">
-                <label className="block text-sm text-slate-600 mb-1">Profile Picture</label>
-                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
-                  previewUrl
-                    ? 'border-sky-300 bg-sky-50'
-                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
-                }`}>
-                  {previewUrl ? (
-                    <>
-                      <img src={previewUrl} alt="Profile picture preview" className="h-52 w-full object-contain bg-white" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
-                        <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change photo</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="px-6 py-10 text-center">
-                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <path d="M12 15V3" />
-                        </svg>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
-                      </div>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    name="profile_picture"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              <div className="space-y-3">
-                <label className="block text-sm text-slate-600 mb-1">Certificate of Enrollment / School ID</label>
-                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
-                  coeIdPreviewUrl
-                    ? 'border-sky-300 bg-sky-50'
-                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
-                }`}>
-                  {coeIdPreviewUrl ? (
-                    <>
-                      {form.coe_id_image?.type === 'application/pdf' ? (
-                        <div className="px-6 py-10 text-center">
-                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
-                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                          </div>
-                          <p className="text-sm font-semibold text-slate-900 break-all">{form.coe_id_image.name}</p>
-                          <p className="text-xs text-slate-500 mt-1">PDF attached — click to change</p>
-                        </div>
-                      ) : (
-                        <>
-                          <img src={coeIdPreviewUrl} alt="COE/ID preview" className="h-52 w-full object-contain bg-white" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
-                            <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change file</span>
-                          </div>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <div className="px-6 py-10 text-center">
-                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <path d="M12 15V3" />
-                        </svg>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
-                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
-                      </div>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    name="coe_id_image"
-                    accept="image/*,.pdf"
-                    onChange={handleCoeIdChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            </div>
-          )}
-
-          {step === 5 && (
             <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-xs text-slate-500 uppercase tracking-widest">Payment Details</p>
@@ -1180,6 +909,287 @@ const Register = () => {
             </div>
           )}
 
+          {step === 2 && (
+            <div className="space-y-5">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Account Info</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="you@email.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  error={emailError}
+                  info={checkingAvailability.email ? 'Checking email availability...' : ''}
+                />
+                <Field
+                  label="Username"
+                  name="username"
+                  placeholder="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  error={usernameError}
+                  info={checkingAvailability.username ? 'Checking username availability...' : ''}
+                />
+                <PasswordField
+                  label="Password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  show={showPassword}
+                  onToggle={() => setShowPassword((prev) => !prev)}
+                  error={passwordError}
+                />
+                <PasswordField
+                  label="Confirm Password"
+                  name="confirm_password"
+                  value={form.confirm_password}
+                  onChange={handleChange}
+                  show={showConfirmPassword}
+                  onToggle={() => setShowConfirmPassword((prev) => !prev)}
+                  error={confirmPasswordError}
+                />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-5">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Personal Info</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Field label="First Name" name="first_name" placeholder="Juan" value={form.first_name} onChange={handleChange} />
+                <Field label="Middle Name" name="middle_name" placeholder="(optional)" value={form.middle_name} onChange={handleChange} required={false} />
+                <Field label="Last Name" name="last_name" placeholder="Dela Cruz" value={form.last_name} onChange={handleChange} />
+              </div>
+              <div className="max-w-xs">
+                <label className="block text-sm text-slate-600 mb-1">Sex</label>
+                <select
+                  name="sex"
+                  value={form.sex}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="">Select sex</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-5">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Student Info</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field
+                  label="Student Number"
+                  name="student_number"
+                  placeholder="2024-73359"
+                  value={form.student_number}
+                  onChange={handleStudentNumberChange}
+                  onKeyDown={handleStudentNumberKeyDown}
+                  inputMode="numeric"
+                  error={errors.student_number}
+                />
+                <Field label="Contact Number" name="contact_number" placeholder="09123456789" value={form.contact_number} onChange={handleContactNumberChange} error={errors.contact_number} />
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Course</label>
+                  <input
+                    name="course"
+                    type="text"
+                    value="BSCpE"
+                    disabled
+                    className="w-full bg-slate-100 text-slate-500 rounded-lg px-4 py-3 text-sm cursor-not-allowed ring-1 ring-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Year Level</label>
+                  <select
+                    name="year_level"
+                    value={form.year_level}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                  >
+                    <option value="">Select year</option>
+                    {YEAR_LEVELS.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
+                  </select>
+                </div>
+                <div className="relative" ref={sectionFieldRef}>
+                  <label className="flex items-center gap-1 text-sm text-slate-600 mb-1">
+                    Section/Block
+                    <button
+                      type="button"
+                      onClick={() => setShowSectionSuggestions((prev) => !prev)}
+                      className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200"
+                      aria-label="Section suggestions"
+                    >
+                      <Info className="h-3 w-3" />
+                    </button>
+                  </label>
+                  <input
+                    name="section"
+                    placeholder="A"
+                    value={form.section}
+                    onChange={handleChange}
+                    onFocus={() => setShowSectionSuggestions(true)}
+                    className="w-full bg-slate-100 text-slate-900 rounded-lg px-4 py-3 text-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-500"
+                  />
+                  {showSectionSuggestions && (
+                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                      <p className="mb-2 text-xs font-medium text-slate-500">Suggested sections</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {SECTION_SUGGESTIONS.map((section) => (
+                          <button
+                            key={section}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, section })
+                              setShowSectionSuggestions(false)
+                            }}
+                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                              form.section === section
+                                ? 'border-sky-500 bg-sky-50 text-sky-700'
+                                : 'border-slate-200 text-slate-700 hover:border-sky-400 hover:bg-sky-50'
+                            }`}
+                          >
+                            {section}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="space-y-5">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Document Uploads</p>
+              
+              <div className="space-y-3">
+                <label className="block text-sm text-slate-600 mb-1">Profile Picture</label>
+                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
+                  previewUrl
+                    ? 'border-sky-300 bg-sky-50'
+                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
+                }`}>
+                  {previewUrl ? (
+                    <>
+                      <img src={previewUrl} alt="Profile picture preview" className="h-52 w-full object-contain bg-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
+                        <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change photo</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="px-6 py-10 text-center">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <path d="M12 15V3" />
+                        </svg>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
+                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG</p>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="profile_picture"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm text-slate-600 mb-1">Certificate of Enrollment / School ID</label>
+                <label className={`group block cursor-pointer rounded-3xl border-2 border-dashed transition overflow-hidden relative ${
+                  coeIdPreviewUrl
+                    ? 'border-sky-300 bg-sky-50'
+                    : 'border-slate-300 bg-slate-50 hover:border-sky-400 hover:bg-slate-100'
+                }`}>
+                  {coeIdPreviewUrl ? (
+                    <>
+                      {form.coe_id_image?.type === 'application/pdf' ? (
+                        <div className="px-6 py-10 text-center">
+                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-900 break-all">{form.coe_id_image.name}</p>
+                          <p className="text-xs text-slate-500 mt-1">PDF attached — click to change</p>
+                        </div>
+                      ) : (
+                        <>
+                          <img src={coeIdPreviewUrl} alt="COE/ID preview" className="h-52 w-full object-contain bg-white" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 group-hover:bg-slate-900/40 group-hover:opacity-100 transition">
+                            <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-800 shadow">Change file</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="px-6 py-10 text-center">
+                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <path d="M12 15V3" />
+                        </svg>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-900">Drag & drop or choose file to upload</p>
+                        <p className="text-sm text-slate-500">Supported formats: JPG, PNG, JPEG, PDF (Max 10MB)</p>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="coe_id_image"
+                    accept="image/*,.pdf"
+                    onChange={handleCoeIdChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={agreedToPrivacy}
+                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  <div className="text-sm text-slate-700">
+                    <span>I agree to the </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPrivacyPolicy(true)}
+                      className="font-semibold text-sky-600 hover:underline"
+                    >
+                      Privacy Policy
+                    </button>
+                    <span> and terms.</span>
+                  </div>
+                </label>
+                {!agreedToPrivacy && (
+                  <p className="mt-2 text-xs text-red-500">You must agree before submitting.</p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
             <button
               type="button"
@@ -1252,6 +1262,7 @@ const Register = () => {
                   By clicking &ldquo;I agree&rdquo;, you confirm that you have read and understood this Privacy
                   Policy and consent to the collection and use of your data as described.
                 </p>
+                <PrivacyPolicySections />
               </div>
               <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
                 <button

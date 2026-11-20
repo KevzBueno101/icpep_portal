@@ -18,11 +18,12 @@ from permissions import (
     CanManageMembership,
     IsOwnerOrCanManageMembership,
     _is_admin_or_president,
+    can_view_member_data,
 )
 
 from .emails import notify_member_approved
 from .models import MemberProfile, PaymentSettings, PaymentTransaction
-from .receipt_generator import generate_receipt_png
+from .receipt_generator import FIRST_REF_SEQUENCE, generate_receipt_png
 from .serializers import (
     MemberApprovalSerializer,
     MemberCreateSerializer,
@@ -46,19 +47,9 @@ def generate_ref_number():
     last_txn = PaymentTransaction.objects.filter(
         reference_number__startswith=prefix
     ).order_by('-reference_number').first()
-    if last_txn:
-        last_seq = int(last_txn.reference_number.split('-')[-1])
-        next_seq = last_seq + 1
-    else:
-        next_seq = 1
+    last_seq = int(last_txn.reference_number.split('-')[-1]) if last_txn else 0
+    next_seq = max(last_seq + 1, FIRST_REF_SEQUENCE)
     return f"{prefix}{next_seq:04d}"
-
-
-class IsOwnerOrAdmin(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if _is_admin_or_president(request.user):
-            return True
-        return obj.user == request.user
 
 
 class MemberListAPIView(generics.ListCreateAPIView):
@@ -71,9 +62,12 @@ class MemberListAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Admins and President can see all members.
-        if _is_admin_or_president(self.request.user):
+        # Admins/President with membership access can see all members.
+        if can_view_member_data(self.request.user):
             return MemberProfile.objects.all().order_by('-created_at')
+        if _is_admin_or_president(self.request.user):
+            # RESTRICTED admins must not see member data at all.
+            return MemberProfile.objects.none()
         # Members can only see their own profile.
         return MemberProfile.objects.filter(user=self.request.user).order_by('-created_at')
 
@@ -216,15 +210,13 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         """
-        - GET: owner or any admin can view.
+        - GET: owner OR admin with membership access can view (not RESTRICTED).
         - PUT/PATCH: owner OR admin with membership access can edit.
         - DELETE: only admin with membership access can delete.
         """
         if self.request.method == 'DELETE':
             return [permissions.IsAuthenticated(), CanManageMembership()]
-        if self.request.method in ('PUT', 'PATCH'):
-            return [permissions.IsAuthenticated(), IsOwnerOrCanManageMembership()]
-        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        return [permissions.IsAuthenticated(), IsOwnerOrCanManageMembership()]
 
     def perform_update(self, serializer):
         profile = serializer.save()
@@ -246,7 +238,14 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         entity_name = f"{instance.first_name} {instance.last_name}"
         entity_id = instance.id
+        member_user = instance.user
+        member_email = member_user.email if member_user else ''
+
+        # Delete the profile first, then the auth user so the account is gone
+        # from the database entirely (login must not work for a deleted member).
         super().perform_destroy(instance)
+        if member_user is not None:
+            member_user.delete()
 
         # Log member deletion
         if _is_admin_or_president(self.request.user):
@@ -256,7 +255,7 @@ class MemberRetrieveUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
                 entity_type=AuditLog.EntityType.MEMBER,
                 entity_id=entity_id,
                 entity_name=entity_name,
-                details={'email': instance.user.email},
+                details={'email': member_email},
                 request=self.request
             )
 
