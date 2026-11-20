@@ -12,6 +12,7 @@ import MovingLogoText from './MovingLogoText'
 import { OfficersProvider } from '../../context/OfficersContext'
 import OfficersRoster from './OfficersRoster'
 import SponsorshipSection from './SponsorshipSection'
+import ChatWidget from '../../components/chatbot/ChatWidget'
 
 
 export default function Landing() {
@@ -51,6 +52,9 @@ export default function Landing() {
         </main>
 
         <Footer />
+
+        {/* Public chatbot bubble — available to landing page visitors */}
+        <ChatWidget variant="public" />
       </div>
     </OfficersProvider>
   )

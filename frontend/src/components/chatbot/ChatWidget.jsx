@@ -14,7 +14,16 @@ function getRandomWelcome() {
   return WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
 }
 
-export default function ChatWidget() {
+export default function ChatWidget({ variant = 'member' }) {
+  const isPublic = variant === 'public'
+  // Landing page has no mobile bottom nav, so the bubble sits lower.
+  const bubbleClass = isPublic
+    ? 'bottom-6 right-4 sm:right-6'
+    : 'bottom-24 right-6'
+  const panelClass = isPublic
+    ? 'bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:bottom-6'
+    : 'bottom-[calc(7.5rem+env(safe-area-inset-bottom))] sm:bottom-24'
+
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -99,7 +108,7 @@ export default function ChatWidget() {
 
   if (isMinimized) {
     return (
-      <div ref={widgetRef} className="fixed bottom-24 right-6 z-50">
+      <div ref={widgetRef} className={`fixed ${bubbleClass} z-50`}>
         <button
           onClick={handleMaximize}
           className="relative flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-bounce-subtle"
@@ -123,7 +132,7 @@ export default function ChatWidget() {
         <button
           ref={widgetRef}
           onClick={toggleOpen}
-          className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4"
+          className={`fixed ${bubbleClass} z-50 flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-600 text-white shadow-xl hover:bg-sky-700 transition-all duration-300 animate-in slide-in-from-bottom-4`}
           aria-label="Open chatbot"
         >
           <Bot className="h-7 w-7" />
@@ -139,7 +148,7 @@ export default function ChatWidget() {
       {isOpen && (
         <div
           ref={widgetRef}
-          className="fixed inset-x-3 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300"
+          className={`fixed inset-x-3 ${panelClass} z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm md:max-w-md lg:max-w-lg animate-in slide-in-from-bottom-4 duration-300`}
         >
           <div className="flex flex-col h-[calc(100dvh-9.5rem)] max-h-[85vh] md:h-[550px] md:max-h-[85vh] lg:h-[600px] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}

@@ -16,11 +16,12 @@ The marketing/entry page for visitors. Composes, in order:
 1. **Navbar** — logo, links, **Install App** button
 2. **Hero section** — dark gradient hero, particles canvas, CatSU / ICpEP.SE / CEA logos, **Join** CTA, pinned announcements (up to 2)
 3. **Announcement feed** — featured + recent published announcements; hosts the **notification toggle**
-4. **Feature section** — "How to be a member" (Register → Wait for Activation → Verify; PHP 25 fee, 1-year validity, 1–5 day activation)
+4. **Feature section** — "How to be a member" (Register → Wait for Activation → Verify; ₱50 fee, 1-year validity, 1–5 day activation)
 5. **Milestones timeline** — chapter history with category colors
 6. **Officers roster** — leadership board (from `/users/officers/roster/`)
 7. **Sponsorship section** — partnership pitch + mailto contact
 8. **Footer** + moving logo text marquee
+9. **Chatbot bubble** — floating ICPEP Assistant, available to public visitors (same widget as the member dashboard)
 
 ## How to move around
 
@@ -31,6 +32,7 @@ The marketing/entry page for visitors. Composes, in order:
 | Click an announcement | Opens `/announcement/:id` |
 | Tap the **ICpEP.SE logo 5 times** within 2.5s | Opens the hidden `/admin-portal/login` |
 | Click **Install App** | Triggers the PWA install prompt (iOS shows instructions modal) |
+| Click the chatbot bubble | Opens the ICPEP Assistant (public info; members get personalized context) |
 
 ## Key API calls
 
@@ -40,6 +42,7 @@ The marketing/entry page for visitors. Composes, in order:
 | `GET /api/milestones/` | Public timeline |
 | `GET /api/users/officers/roster/` | Leadership board (public) |
 | `GET /api/push/vapid-key/` | Enable push (toggle) |
+| `POST /api/chatbot/chat/` | Chatbot replies (public; IP-throttled for guests) |
 
 ## Notes
 

@@ -3,7 +3,7 @@ import uuid
 
 import groq
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -27,10 +27,15 @@ logger = logging.getLogger(__name__)
 class ChatAPIView(APIView):
     """
     Chat endpoint for ICPEP chatbot.
-    Requires authentication (MEMBERSHIP+ access level).
+
+    Public so visitors on the landing page can use it too. Authenticated users
+    still get member-specific context; anonymous users get public information
+    only and are rate-limited by IP via the throttle classes below.
+    RESTRICTED accounts remain blocked.
+
     Stateless - no DB persistence. Uses in-memory session for multi-turn context.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     throttle_classes = [ChatUserMinuteThrottle, ChatUserDailyThrottle]
 
     _groq_client = None
