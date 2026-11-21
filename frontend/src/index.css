@@ -453,6 +453,28 @@
   color: #0f172a;
 }
 
+.od-academic-year {
+  display: none;
+}
+
+@media (max-width: 639.98px) {
+  .od-office-name {
+    display: none;
+  }
+
+  .od-academic-year {
+    display: inline;
+  }
+
+  .od-title {
+    display: inline-block;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.88);
+    color: #ffffff;
+  }
+}
+
 @keyframes od-swap {
   from {
     opacity: 0;

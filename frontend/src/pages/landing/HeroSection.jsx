@@ -426,7 +426,7 @@ export default function HeroSection() {
 
 
         {/* Registered members stat */}
-        <div className="hero-after mb-8 inline-flex items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 backdrop-blur-sm">
+        <div className="hero-after mb-8 inline-flex w-full max-w-xs items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 backdrop-blur-sm sm:mb-8 sm:w-auto sm:max-w-none">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300">
             <UsersRound className="h-4 w-4" />
           </span>
@@ -447,21 +447,21 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
 
-        <div className="hero-after flex flex-col sm:flex-row items-center gap-4 mb-10 sm:mb-16">
+        <div className="hero-after mb-10 grid w-full max-w-xs grid-cols-2 gap-3 sm:mb-16 sm:flex sm:w-auto sm:max-w-none sm:items-center sm:gap-4">
 
           <a
 
             href="/register"
 
-            className="group inline-flex items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-8 py-3.5 text-[15px] font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20"
+            className="group inline-flex w-full items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-3 py-3 text-[13px] font-semibold text-cyan-100 backdrop-blur transition hover:border-cyan-400/55 hover:bg-cyan-500/20 sm:w-auto sm:px-8 sm:py-3.5 sm:text-[15px]"
 
           >
 
-            <span className="mr-2">▣</span>
+            <span className="mr-1.5 hidden sm:mr-2 sm:inline">▣</span>
 
             Join ICPEP.SE
 
-            <span className="ml-2 opacity-0 transition group-hover:opacity-100">↗</span>
+            <span className="ml-1.5 hidden opacity-0 transition group-hover:opacity-100 sm:ml-2 sm:inline">↗</span>
 
           </a>
 
@@ -469,11 +469,11 @@ export default function HeroSection() {
 
             href="/login"
 
-            className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-[15px] font-semibold text-white/90 backdrop-blur transition hover:border-cyan-400/40 hover:bg-white/10"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-[13px] font-semibold text-white/90 backdrop-blur transition hover:border-cyan-400/40 hover:bg-white/10 sm:w-auto sm:px-8 sm:py-3.5 sm:text-[15px]"
 
           >
 
-            <span className="mr-2">⟶</span>
+            <span className="mr-1.5 hidden sm:mr-2 sm:inline">⟶</span>
 
             Login as member
 
@@ -487,11 +487,11 @@ export default function HeroSection() {
 
             rel="noreferrer"
 
-            className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-[15px] font-semibold text-white/90 backdrop-blur transition hover:border-purple-400/40 hover:bg-white/10"
+            className="col-span-2 inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-[13px] font-semibold text-white/90 backdrop-blur transition hover:border-purple-400/40 hover:bg-white/10 sm:col-span-1 sm:w-auto sm:px-8 sm:py-3.5 sm:text-[15px]"
 
           >
 
-            <span className="mr-2">⟡</span>
+            <span className="mr-1.5 hidden sm:mr-2 sm:inline">⟡</span>
 
             Follow us on Facebook
 
