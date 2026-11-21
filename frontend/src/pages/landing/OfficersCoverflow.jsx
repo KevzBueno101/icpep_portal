@@ -338,7 +338,14 @@ export default function OfficersCoverflow({ officers: officersProp, caption }) {
       <div className="od-caption" aria-live={autoOn ? 'off' : 'polite'}>
         {activeOfficer && (
           <div key={activeOfficer.id}>
-            <p className="od-title">{caption || officeLabelFor(activeOfficer)}</p>
+            <p className="od-title">
+              <span className="od-office-name">
+                {caption || officeLabelFor(activeOfficer)}
+              </span>
+              <span className="od-academic-year">
+                A.Y. {activeOfficer.academicYear?.trim() || '—'}
+              </span>
+            </p>
           </div>
         )}
       </div>
