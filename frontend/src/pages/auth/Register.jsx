@@ -769,12 +769,15 @@ const Register = () => {
                         </div>
                       </label>
                       <label
-                        className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
+                        className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border-2 px-5 py-3.5 cursor-pointer transition flex-1 ${
                           form.membership_fee === 'PLUS'
                             ? 'border-green-500 bg-green-50'
                             : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                       >
+                        <p className="w-full text-[11px] font-semibold uppercase tracking-wide text-green-700">
+                          This membership option is optional
+                        </p>
                         <input
                           type="radio"
                           name="membership_fee"
