@@ -176,6 +176,11 @@ npm run build
 | PATCH | `/api/users/admins/<id>/delegate/` | Toggle secretary delegation |
 | POST | `/api/users/admins/create/` | Create officer accounts |
 
+### Public
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/public/stats/` | Public aggregate member/officer counts (no auth, cached) |
+
 ### Other
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -187,7 +192,7 @@ npm run build
 
 ## Authentication
 
-All endpoints (except registration and login) require a JWT token:
+All endpoints (except registration, login, and public stats) require a JWT token:
 
 1. Login → receives `access` and `refresh` tokens
 2. Include in requests: `Authorization: Bearer <access_token>`
