@@ -319,6 +319,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'chat_user_minute': '30/minute',
         'chat_user_daily': '100/day',
+        'public_stats': '60/hour',
     },
 }
 

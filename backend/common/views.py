@@ -1,6 +1,15 @@
-from rest_framework import status
+from django.core.cache import cache
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from members.models import MemberProfile
+from users.models import User
+
+from .throttles import PublicStatsAnonThrottle
+
+PUBLIC_STATS_CACHE_KEY = 'public_stats:v1'
+PUBLIC_STATS_CACHE_TIMEOUT = 60 * 15  # 15 minutes
 
 
 class ReorderAPIView(APIView):
@@ -51,3 +60,29 @@ class ReorderAPIView(APIView):
             broadcast_member_update(self.realtime_resource)
 
         return Response({'detail': 'Order updated.'}, status=status.HTTP_200_OK)
+
+
+class PublicStatsAPIView(APIView):
+    """Public, read-only aggregate counts for external badges (e.g. shields.io).
+
+    Returns aggregate integers only — no PII. Cached for 15 minutes and
+    rate-limited per IP. GET only; other methods return 405.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+    throttle_classes = [PublicStatsAnonThrottle]
+
+    def get(self, request):
+        payload = cache.get(PUBLIC_STATS_CACHE_KEY)
+        if payload is None:
+            payload = {
+                'members': MemberProfile.objects.count(),
+                'officers': User.objects.filter(
+                    is_active=True,
+                    is_superuser=False,
+                    role__in=[User.Role.ADMIN, User.Role.OFFICER],
+                ).count(),
+            }
+            cache.set(PUBLIC_STATS_CACHE_KEY, payload, PUBLIC_STATS_CACHE_TIMEOUT)
+        return Response(payload)
