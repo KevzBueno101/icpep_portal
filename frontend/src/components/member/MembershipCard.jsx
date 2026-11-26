@@ -20,7 +20,20 @@ const FONT_DISPLAY = "'Orbitron','Rajdhani',ui-sans-serif,system-ui,sans-serif"
 const FONT_TECH = "'Rajdhani','Inter',ui-sans-serif,system-ui,sans-serif"
 const FONT_BODY = "'Inter','Poppins',ui-sans-serif,system-ui,sans-serif"
 
-const ACADEMIC_YEAR = '2025–2026'
+// CatSU calendar: 1st Semester runs Aug–Dec, 2nd Semester runs Jan–Jul.
+// Keeping this computed means the card never shows a stale A.Y.
+function getTermInfo() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  const isFirstSemester = month >= 8
+  const startYear = isFirstSemester ? year : year - 1
+  return {
+    semester: isFirstSemester ? '1st Semester' : '2nd Semester',
+    academicYear: `${startYear}–${startYear + 1}`,
+  }
+}
+
 const EMPTY_OFFICERS = []
 
 const officerName = (o) =>
@@ -88,6 +101,7 @@ function CardQR({ value, size, fgColor = C.bg0, imgSrc }) {
 /* ─── Front face: member identity | official seal ─────────────────────────── */
 
 function FrontFace({ profile, fullName, yearText, avatarInitial, cacheKey, membershipFee, president, adviser, onFlip }) {
+  const { academicYear } = getTermInfo()
   const isPlus = membershipFee === 'PLUS'
   return (
     <div
@@ -173,7 +187,7 @@ function FrontFace({ profile, fullName, yearText, avatarInitial, cacheKey, membe
             {[
               ['ID No.', profile?.student_number || '—'],
               ['Block', profile?.section || '—'],
-              ['A.Y.', ACADEMIC_YEAR],
+              ['A.Y.', academicYear],
             ].map(([label, value]) => (
               <span key={label} style={{ fontSize: 6, fontWeight: 600, letterSpacing: '0.08em', color: C.muted, textTransform: 'uppercase', fontFamily: FONT_TECH }}>
                 {label} <span style={{ color: C.silver }}>{value}</span>
@@ -279,6 +293,7 @@ function FrontFace({ profile, fullName, yearText, avatarInitial, cacheKey, membe
 
 function BackFace({ qrPayload, qrImageSrc, onFlip, membershipFee }) {
   const isPlus = membershipFee === 'PLUS'
+  const { semester, academicYear } = getTermInfo()
   return (
     <div
       style={{
@@ -326,6 +341,9 @@ function BackFace({ qrPayload, qrImageSrc, onFlip, membershipFee }) {
               This is to certify that the person whose name and photograph appear herein is a duly registered member of{' '}
               <span style={{ fontFamily: FONT_TECH, fontWeight: 700, letterSpacing: '0.05em', color: C.cyan }}>
                 ICpEP.SE CatSU Chapter
+              </span>{' '}
+              <span style={{ fontWeight: 700, color: C.silver }}>
+                {semester} A.Y. {academicYear}
               </span>{' '}
               and shall enjoy the benefits of members as defined in the Article III of the ICPEP.SE Constitution and By-Laws
             </div>
